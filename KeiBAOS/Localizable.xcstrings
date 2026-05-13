@@ -1,454 +1,77 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "app.name" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "KeiBAOS"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "KeiBAOS"
-          }
-        }
-      }
-    },
-    "home.foundation.detail" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The app is ready for BA feature wiring: tabs, navigation stacks, localization, and shared glass surfaces are in place."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "BA 功能接线基底已就绪：标签页、导航栈、本地化和共享玻璃容器已经落好。"
-          }
-        }
-      }
-    },
-    "home.foundation.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Foundation ready"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "基底已就绪"
-          }
-        }
-      }
-    },
-    "home.hero.subtitle" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A native SwiftUI base for the Blue Archive area, prepared for iOS, iPadOS, macOS, and later watchOS work."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "面向蔚蓝档案板块的 SwiftUI 原生基底，已为 iOS、iPadOS、macOS 和后续 watchOS 工作做好入口。"
-          }
-        }
-      }
-    },
-    "home.hero.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "KeiBAOS"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "KeiBAOS"
-          }
-        }
-      }
-    },
-    "home.metric.data.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Data"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "数据"
-          }
-        }
-      }
-    },
-    "home.metric.data.value" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Local first"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "本地优先"
-          }
-        }
-      }
-    },
-    "home.metric.platform.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Platforms"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "平台"
-          }
-        }
-      }
-    },
-    "home.metric.shell.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shell"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "框架"
-          }
-        }
-      }
-    },
-    "home.metric.shell.value" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tabs + Stack"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "标签 + 导航"
-          }
-        }
-      }
-    },
-    "home.metric.watch.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Watch rule"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "手表规则"
-          }
-        }
-      }
-    },
-    "settings.hero.subtitle" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The first pass keeps platform baselines explicit and leaves feature settings ready for later BA services."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "首轮先把平台基线显式落好，并为后续 BA 服务设置预留干净入口。"
-          }
-        }
-      }
-    },
-    "settings.hero.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Settings base"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "设置基底"
-          }
-        }
-      }
-    },
-    "settings.watch.rule.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Future watchOS target"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "后续 watchOS Target"
-          }
-        }
-      }
-    },
-    "students.card.catalog.detail" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A native catalog entry point for schools, roles, and search."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "面向学院、职责和搜索的原生图鉴入口。"
-          }
-        }
-      }
-    },
-    "students.card.catalog.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Catalog"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "图鉴"
-          }
-        }
-      }
-    },
-    "students.card.media.detail" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A future space for gallery, voice, and memory assets."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "为鉴赏、语音和回忆资源预留的后续空间。"
-          }
-        }
-      }
-    },
-    "students.card.media.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Media"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "媒体"
-          }
-        }
-      }
-    },
-    "students.card.profile.detail" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A place for student identity, school, weapon, and stats."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "用于承载学生身份、学院、武器和数值。"
-          }
-        }
-      }
-    },
-    "students.card.profile.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Profile"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "档案"
-          }
-        }
-      }
-    },
-    "students.card.relationship.detail" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Prepared for favor, gifts, and relationship milestones."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "为好感、礼物和羁绊节点做好结构预留。"
-          }
-        }
-      }
-    },
-    "students.card.relationship.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bond"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "羁绊"
-          }
-        }
-      }
-    },
-    "students.hero.eyebrow" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "BA students"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "BA 学生"
-          }
-        }
-      }
-    },
-    "students.hero.subtitle" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Student-facing modules start from clear cards so the data pipeline can attach cleanly later."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "学生相关模块先从清晰卡片开始，后续数据链路可以干净接入。"
-          }
-        }
-      }
-    },
-    "students.hero.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Student guide shell"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "学生指南框架"
-          }
-        }
-      }
-    },
-    "tab.home" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Home"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "主页"
-          }
-        }
-      }
-    },
-    "tab.settings" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Settings"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "设置"
-          }
-        }
-      }
-    },
-    "tab.students" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Students"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "学生"
-          }
-        }
-      }
-    }
+    "app.name" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"KeiBAOS"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"KeiBAOS"}}}},
+    "ba.action.debug.message" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Debug tools are ready for the native BA service wiring pass."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"调试工具入口已预留给后续原生 BA 服务接线。"}}}},
+    "ba.action.debug.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Debug Tools"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"调试工具"}}}},
+    "ba.action.dismiss" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Done"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"完成"}}}},
+    "ba.action.edit.message" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Office identity, server, AP limits, and cafe level will live here."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"办公室身份、服务器、AP 上限和咖啡厅等级会放在这里。"}}}},
+    "ba.action.edit.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Edit Office"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"编辑办公室"}}}},
+    "ba.action.notifications.message" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"AP, cafe AP, visit refresh, and activity reminders will share this entry."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"AP、咖啡厅 AP、访客刷新和活动提醒会共用这个入口。"}}}},
+    "ba.action.notifications.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Notifications"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"通知设置"}}}},
+    "ba.cafe.action.availableAt.value" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Available at 05-15 06:36"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"05-15 06:36 可用"}}}},
+    "ba.cafe.action.headpat" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Headpat"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"摸头"}}}},
+    "ba.cafe.action.invite.cooldown.value" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"23h 54m"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"23h 54m"}}}},
+    "ba.cafe.action.invite1" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Invite Ticket 1"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"邀请券 1"}}}},
+    "ba.cafe.action.invite2" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Invite Ticket 2"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"邀请券 2"}}}},
+    "ba.cafe.action.ready" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Ready"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"已就绪"}}}},
+    "ba.cafe.actions.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Cafe actions"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"咖啡厅动作"}}}},
+    "ba.cafe.detail" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Cafe AP, student visit refresh, and ticket cooldowns are split into scan-friendly native cards."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"咖啡厅 AP、访客刷新和邀请券冷却被拆成更适合 iOS 扫读的原生卡片。"}}}},
+    "ba.cafe.eyebrow" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Cafe"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"咖啡厅"}}}},
+    "ba.cafe.metric.tactical" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Tactical Challenge"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"战术对抗"}}}},
+    "ba.cafe.metric.visit" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Student Visit"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"学生来访"}}}},
+    "ba.cafe.storage.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Cafe AP storage"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"咖啡厅 AP 储量"}}}},
+    "ba.cafe.tacticalRefresh.value" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"11h 18m"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"11h 18m"}}}},
+    "ba.cafe.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Cafe"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"咖啡厅"}}}},
+    "ba.cafe.visitRefresh.value" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"2h 42m"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"2h 42m"}}}},
+    "ba.catalog.detail" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Catalog, server, and search affordances are shaped as native iOS sections."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"图鉴、服务器和搜索入口按原生 iOS 分区方式整理。"}}}},
+    "ba.catalog.eyebrow" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Archive"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"图鉴"}}}},
+    "ba.catalog.npc.detail" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"NPC profiles, story roles, and related metadata."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"NPC 档案、剧情职责和关联资料。"}}}},
+    "ba.catalog.npc.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"NPC"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"NPC"}}}},
+    "ba.catalog.satellite.detail" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Satellite entries and future students."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"卫星角色和未来学生条目。"}}}},
+    "ba.catalog.satellite.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Satellite"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"卫星图鉴"}}}},
+    "ba.catalog.search.prompt" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Search BA catalog"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"搜索 BA 图鉴"}}}},
+    "ba.catalog.students.detail" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Student roster, schools, roles, gifts, and media."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"学生名册、学院、职责、礼物和媒体。"}}}},
+    "ba.catalog.students.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Students"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"学生"}}}},
+    "ba.catalog.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Student, NPC, Satellite"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"学生/NPC/卫星图鉴"}}}},
+    "ba.navigation.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"BlueArchive"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"BlueArchive"}}}},
+    "ba.office.ap.full.label" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Full AP"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"AP 回满"}}}},
+    "ba.office.ap.fullAt.value" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"05-15 06:36"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"05-15 06:36"}}}},
+    "ba.office.ap.fullRemain.value" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"23h 51m"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"23h 51m"}}}},
+    "ba.office.ap.label" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"AP"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"AP"}}}},
+    "ba.office.ap.next.value" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"3m 31s"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"3m 31s"}}}},
+    "ba.office.ap.status.format" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"AP +1 %@ · Full AP %@"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"AP +1 %@ · Full AP %@"}}}},
+    "ba.office.ap.sync.label" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"AP Sync"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"AP 同步"}}}},
+    "ba.office.ap.syncAt.value" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"05-14 06:42"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"05-14 06:42"}}}},
+    "ba.office.cafeAp.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Cafe AP"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"咖啡厅 AP"}}}},
+    "ba.office.catalog.label" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Catalog"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"图鉴"}}}},
+    "ba.office.catalog.value" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Students/NPC/Satellite"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"学生/NPC/卫星"}}}},
+    "ba.office.friendCode.label" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Friend Code"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"好友码"}}}},
+    "ba.office.friendCode.value" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"ARISUKEI"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"ARISUKEI"}}}},
+    "ba.office.nickname.label" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Nickname"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"昵称"}}}},
+    "ba.office.nickname.suffix" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Sensei"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"老师"}}}},
+    "ba.office.nickname.value" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Kei"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"Kei"}}}},
+    "ba.office.overview.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Schale Office Overview"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"夏莱办公室总览"}}}},
+    "ba.office.server.label" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Server"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"服务器"}}}},
+    "ba.office.server.value" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"JP"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"日服"}}}},
+    "ba.overview.detail" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"AP, cafe AP, server, and identity signals are grouped for quick native iOS scanning."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"AP、咖啡厅 AP、服务器和身份状态按原生 iOS 扫读方式组合。"}}}},
+    "ba.overview.eyebrow" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Schale"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"夏莱"}}}},
+    "ba.overview.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Office Dashboard"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"办公室仪表盘"}}}},
+    "ba.settings.detail" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"BA preferences and platform baselines stay in one focused native settings surface."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"BA 偏好和平台基线集中在一个清晰的原生设置面板里。"}}}},
+    "ba.settings.eyebrow" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Settings"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"设置"}}}},
+    "ba.settings.notifications.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Notifications"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"通知"}}}},
+    "ba.settings.notifications.value" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"AP + Cafe"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"AP + 咖啡厅"}}}},
+    "ba.settings.platform.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Platform baseline"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"平台基线"}}}},
+    "ba.settings.preferences.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"BA preferences"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"BA 偏好"}}}},
+    "ba.settings.refresh.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Refresh cadence"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"刷新节奏"}}}},
+    "ba.settings.refresh.value" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Native"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"原生"}}}},
+    "ba.settings.server.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Server"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"服务器"}}}},
+    "ba.settings.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"BA Settings"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"BA 设置"}}}},
+    "ba.settings.watch.rule.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Future watchOS target"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"后续 watchOS Target"}}}},
+    "ba.tab.cafe" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Cafe"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"咖啡厅"}}}},
+    "ba.tab.catalog" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Catalog"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"图鉴"}}}},
+    "ba.tab.overview" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Overview"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"总览"}}}},
+    "ba.tab.settings" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Settings"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"设置"}}}}
   },
   "version" : "1.0"
 }

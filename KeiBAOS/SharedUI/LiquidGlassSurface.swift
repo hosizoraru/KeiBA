@@ -36,7 +36,7 @@ struct LiquidGlassSurface<Content: View>: View {
     }
 }
 
-private extension View {
+extension View {
     @ViewBuilder
     func liquidGlassSurface(cornerRadius: CGFloat, tint: Color, isInteractive: Bool) -> some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
