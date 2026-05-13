@@ -9,11 +9,20 @@ import SwiftUI
 
 extension View {
     @ViewBuilder
-    func platformInlineNavigationTitle() -> some View {
+    func platformLargeNavigationTitle() -> some View {
 #if os(iOS)
-        navigationBarTitleDisplayMode(.inline)
+        navigationBarTitleDisplayMode(.large)
 #else
         self
+#endif
+    }
+
+    @ViewBuilder
+    func platformInsetGroupedListStyle() -> some View {
+#if os(iOS)
+        listStyle(.insetGrouped)
+#else
+        listStyle(.inset)
 #endif
     }
 }

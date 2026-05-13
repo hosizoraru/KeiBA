@@ -8,12 +8,12 @@
 import SwiftUI
 
 enum BaDesign {
-    static let blue = Color(red: 0.18, green: 0.50, blue: 0.95)
-    static let green = Color(red: 0.12, green: 0.76, blue: 0.42)
-    static let pink = Color(red: 0.93, green: 0.36, blue: 0.68)
-    static let violet = Color(red: 0.54, green: 0.42, blue: 0.92)
-    static let amber = Color(red: 0.94, green: 0.58, blue: 0.18)
-    static let cyan = Color(red: 0.16, green: 0.64, blue: 0.86)
+    static let blue = Color.blue
+    static let green = Color.green
+    static let pink = Color.pink
+    static let violet = Color.purple
+    static let amber = Color.orange
+    static let cyan = Color.cyan
 }
 
 struct BaOfficeSnapshot {
@@ -88,10 +88,10 @@ struct BaCatalogEntry: Identifiable {
     }
 }
 
-enum BaQuickAction: String, CaseIterable, Identifiable {
+enum BaPresentedSheet: String, Identifiable {
     case notifications
-    case edit
-    case debug
+    case editOffice
+    case debugTools
 
     var id: Self { self }
 
@@ -99,43 +99,32 @@ enum BaQuickAction: String, CaseIterable, Identifiable {
         switch self {
         case .notifications:
             String(localized: "ba.action.notifications.title")
-        case .edit:
+        case .editOffice:
             String(localized: "ba.action.edit.title")
-        case .debug:
+        case .debugTools:
             String(localized: "ba.action.debug.title")
         }
     }
 
-    var message: String {
+    var menuTitle: String {
         switch self {
         case .notifications:
-            String(localized: "ba.action.notifications.message")
-        case .edit:
-            String(localized: "ba.action.edit.message")
-        case .debug:
-            String(localized: "ba.action.debug.message")
+            title
+        case .editOffice:
+            String(localized: "ba.action.edit.menuTitle")
+        case .debugTools:
+            String(localized: "ba.action.debug.menuTitle")
         }
     }
 
     var systemImage: String {
         switch self {
         case .notifications:
-            "bell.fill"
-        case .edit:
+            "bell"
+        case .editOffice:
             "square.and.pencil"
-        case .debug:
-            "flask.fill"
-        }
-    }
-
-    var tint: Color {
-        switch self {
-        case .notifications:
-            BaDesign.blue
-        case .edit:
-            BaDesign.violet
-        case .debug:
-            BaDesign.amber
+        case .debugTools:
+            "flask"
         }
     }
 }

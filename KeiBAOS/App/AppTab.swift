@@ -29,7 +29,7 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
     }
 
     var navigationTitle: String {
-        String(localized: "ba.navigation.title")
+        title
     }
 
     var systemImage: String {

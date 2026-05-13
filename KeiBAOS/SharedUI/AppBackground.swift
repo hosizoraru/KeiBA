@@ -13,9 +13,9 @@ struct AppBackground: View {
             baseColor
             LinearGradient(
                 colors: [
-                    Color.cyan.opacity(0.08),
-                    Color.indigo.opacity(0.06),
-                    Color.mint.opacity(0.07)
+                    Color.blue.opacity(0.035),
+                    Color.clear,
+                    Color.cyan.opacity(0.025)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing

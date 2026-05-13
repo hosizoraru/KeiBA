@@ -26,26 +26,23 @@ struct AppShell: View {
 
 private struct BaNavigationRoot: View {
     let tab: AppTab
-    @State private var presentedAction: BaQuickAction?
+    @State private var presentedSheet: BaPresentedSheet?
 
     var body: some View {
         NavigationStack {
             tab.rootView
                 .navigationTitle(tab.navigationTitle)
-                .platformInlineNavigationTitle()
+                .platformLargeNavigationTitle()
                 .toolbar {
                     ToolbarItemGroup(placement: .primaryAction) {
-                        BaTopActionBar { action in
-                            presentedAction = action
+                        BaTopActionBar { sheet in
+                            presentedSheet = sheet
                         }
                     }
                 }
-                .alert(item: $presentedAction) { action in
-                    Alert(
-                        title: Text(action.title),
-                        message: Text(action.message),
-                        dismissButton: .default(Text(String(localized: "ba.action.dismiss")))
-                    )
+                .sheet(item: $presentedSheet) { sheet in
+                    BaActionSheetRoot(sheet: sheet)
+                        .baActionSheetPresentation()
                 }
         }
     }

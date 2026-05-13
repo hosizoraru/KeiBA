@@ -7,142 +7,167 @@
 
 import SwiftUI
 
-struct BaScreenIntro: View {
-    let eyebrow: String
-    let title: String
-    let detail: String
-    let systemImage: String
-    var tint: Color = BaDesign.blue
+struct BaScreenScaffold<Content: View>: View {
+    let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
 
     var body: some View {
-        LiquidGlassSurface(cornerRadius: 30, tint: tint.opacity(0.12)) {
-            HStack(alignment: .top, spacing: 16) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 29, weight: .semibold))
-                    .foregroundStyle(tint)
-                    .frame(width: 42, height: 42)
-
-                VStack(alignment: .leading, spacing: 7) {
-                    Text(eyebrow)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(tint)
-                        .textCase(.uppercase)
-
-                    Text(title)
-                        .font(.title2.bold())
-                        .foregroundStyle(.primary)
-                        .lineLimit(2)
-
-                    Text(detail)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                content
             }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+            .safeAreaPadding(.bottom, 16)
         }
+        .background(AppBackground())
     }
 }
 
-struct BaInfoPanel<Content: View>: View {
-    var tint: Color = BaDesign.blue
+struct BaScreenHeader: View {
+    let title: String
+    let detail: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(.primary)
+
+            Text(detail)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+struct BaGlassCard<Content: View>: View {
+    var tint: Color = .secondary
     let content: Content
 
-    init(tint: Color = BaDesign.blue, @ViewBuilder content: () -> Content) {
+    init(tint: Color = .secondary, @ViewBuilder content: () -> Content) {
         self.tint = tint
         self.content = content()
     }
 
     var body: some View {
         content
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
+            .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .liquidGlassSurface(cornerRadius: 22, tint: tint.opacity(0.10), isInteractive: false)
+            .liquidGlassSurface(cornerRadius: 24, tint: tint.opacity(0.045), isInteractive: false)
     }
 }
 
-struct BaValueRow: View {
+struct BaSectionHeader: View {
     let title: String
-    let value: String
-    var suffix: String?
     var systemImage: String?
-    var tint: Color = BaDesign.blue
 
     var body: some View {
-        HStack(spacing: 12) {
-            HStack(spacing: 7) {
-                if let systemImage {
-                    Image(systemName: systemImage)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(tint)
-                }
+        HStack(spacing: 8) {
+            if let systemImage {
+                Image(systemName: systemImage)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
 
+            Text(title)
+                .font(.headline)
+                .foregroundStyle(.primary)
+        }
+    }
+}
+
+struct BaMetricGroup<Content: View>: View {
+    let title: String
+    var systemImage: String?
+    let content: Content
+
+    init(
+        title: String,
+        systemImage: String? = nil,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.title = title
+        self.systemImage = systemImage
+        self.content = content()
+    }
+
+    var body: some View {
+        BaGlassCard {
+            VStack(alignment: .leading, spacing: 14) {
+                BaSectionHeader(title: title, systemImage: systemImage)
+                VStack(spacing: 0) {
+                    content
+                }
+            }
+        }
+    }
+}
+
+struct BaMetricRow: View {
+    let title: String
+    let value: String
+    var detail: String?
+    var systemImage: String?
+    var valueColor: Color = .primary
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            if let systemImage {
+                Image(systemName: systemImage)
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 24)
+            }
+
+            VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.body.weight(.medium))
+                    .font(.body)
                     .foregroundStyle(.primary)
-                    .lineLimit(1)
+
+                if let detail {
+                    Text(detail)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
             }
 
             Spacer(minLength: 12)
 
-            HStack(spacing: 6) {
-                LiquidGlassPill(tint: tint) {
-                    Text(value)
-                        .font(.callout.weight(.semibold))
-                        .foregroundStyle(tint)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                }
-
-                if let suffix {
-                    Text(suffix)
-                        .font(.callout.weight(.semibold))
-                        .foregroundStyle(tint)
-                }
-            }
+            Text(value)
+                .font(.body.monospacedDigit().weight(.semibold))
+                .foregroundStyle(valueColor)
+                .multilineTextAlignment(.trailing)
+                .lineLimit(2)
+                .minimumScaleFactor(0.82)
         }
+        .padding(.vertical, 10)
     }
 }
 
-struct BaMetricTile: View {
-    let title: String
+struct BaValueChip: View {
     let value: String
-    var detail: String?
-    var systemImage: String
-    var tint: Color = BaDesign.blue
+    var tint: Color
 
     var body: some View {
-        LiquidGlassSurface(
-            cornerRadius: 24,
-            padding: EdgeInsets(top: 14, leading: 14, bottom: 14, trailing: 14),
-            tint: tint.opacity(0.10)
-        ) {
-            VStack(alignment: .leading, spacing: 10) {
-                Image(systemName: systemImage)
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(tint)
+        Text(value)
+            .font(.body.monospacedDigit().weight(.semibold))
+            .foregroundStyle(tint)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 7)
+            .liquidGlassSurface(cornerRadius: 999, tint: tint.opacity(0.09), isInteractive: false)
+    }
+}
 
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(title)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-
-                    Text(value)
-                        .font(.headline.monospacedDigit().weight(.bold))
-                        .foregroundStyle(tint)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.78)
-
-                    if let detail {
-                        Text(detail)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
-        }
+struct BaDivider: View {
+    var body: some View {
+        Divider()
+            .padding(.leading, 36)
     }
 }

@@ -8,21 +8,35 @@
 import SwiftUI
 
 struct BaTopActionBar: View {
-    let onAction: (BaQuickAction) -> Void
+    let onPresentSheet: (BaPresentedSheet) -> Void
 
     var body: some View {
-        HStack(spacing: 8) {
-            ForEach(BaQuickAction.allCases) { action in
-                LiquidGlassIconButton(
-                    systemImage: action.systemImage,
-                    accessibilityLabel: action.title,
-                    tint: action.tint,
-                    size: 36
-                ) {
-                    onAction(action)
-                }
-            }
+        Button {
+            onPresentSheet(.notifications)
+        } label: {
+            Label(BaPresentedSheet.notifications.title, systemImage: BaPresentedSheet.notifications.systemImage)
         }
-        .accessibilityElement(children: .contain)
+        .labelStyle(.iconOnly)
+        .accessibilityLabel(Text(BaPresentedSheet.notifications.title))
+
+        Menu {
+            Button {
+                onPresentSheet(.editOffice)
+            } label: {
+                Label(BaPresentedSheet.editOffice.menuTitle, systemImage: BaPresentedSheet.editOffice.systemImage)
+            }
+
+            Divider()
+
+            Button {
+                onPresentSheet(.debugTools)
+            } label: {
+                Label(BaPresentedSheet.debugTools.menuTitle, systemImage: BaPresentedSheet.debugTools.systemImage)
+            }
+        } label: {
+            Label(String(localized: "ba.action.more.title"), systemImage: "ellipsis.circle")
+        }
+        .labelStyle(.iconOnly)
+        .accessibilityLabel(Text(String(localized: "ba.action.more.title")))
     }
 }
