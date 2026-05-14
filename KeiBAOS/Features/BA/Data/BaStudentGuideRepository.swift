@@ -150,17 +150,38 @@ struct BaStudentGuideRepository {
     }
 
     private func stats(from profileRows: [BaGuideRow], fallback: BaGuideCatalogEntry) -> [BaGuideRow] {
-        let preferred = profileRows.filter { row in
-            let key = row.title
-            return key.contains("学院") ||
-                key.contains("社团") ||
-                key.contains("生日") ||
-                key.contains("实装") ||
-                key.localizedCaseInsensitiveContains("school") ||
-                key.localizedCaseInsensitiveContains("club")
+        let priorities: [[String]] = [
+            ["稀有度", "星级"],
+            ["学院", "学园", "school"],
+            ["社团", "club"],
+            ["战术位置作用", "战术位置", "战术作用"],
+            ["攻击类型"],
+            ["防御类型"],
+            ["武器类型"],
+            ["市街"],
+            ["屋外"],
+            ["室内", "屋内"],
+            ["生日"],
+            ["实装"],
+        ]
+
+        var used = Set<String>()
+        var preferred: [BaGuideRow] = []
+        for keywords in priorities {
+            guard let row = profileRows.first(where: { row in
+                let merged = "\(row.title) \(row.value)"
+                return keywords.contains { keyword in
+                    merged.localizedCaseInsensitiveContains(keyword)
+                }
+            }) else {
+                continue
+            }
+            if used.insert(row.id).inserted {
+                preferred.append(row)
+            }
         }
         if preferred.isEmpty == false {
-            return Array(preferred.prefix(6))
+            return Array(preferred.prefix(8))
         }
         return [
             BaGuideRow(

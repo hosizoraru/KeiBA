@@ -92,8 +92,8 @@ enum BaStudentGuideMeta {
         let key = row.title
         let movedKeywords = [
             "头像", "角色头像", "角色图片",
-            "稀有度", "星级", "所属学园", "所属学院", "所属社团",
-            "战术作用", "攻击类型", "防御类型", "位置", "武器类型",
+            "稀有度", "星级", "学院", "学园", "所属学园", "所属学院", "所属社团",
+            "战术位置作用", "战术位置", "战术作用", "攻击类型", "防御类型", "位置", "武器类型",
             "市街", "屋外", "屋内", "室内",
         ]
         if movedKeywords.contains(where: { key.localizedCaseInsensitiveContains($0) }) {
@@ -106,12 +106,13 @@ enum BaStudentGuideMeta {
         info: BaStudentGuideInfo,
         rows: [BaGuideRow]
     ) -> BaGuideMetaItem {
+        let iconRows = rows + info.stats
         let tacticalIcon = findFirstRowByKeywords(
-            rows: rows,
+            rows: iconRows,
             keywords: ["战术作用", "作用"],
             requireImage: true
         )?.imageURL
-        let positionIcon = findFirstRowByKeywords(rows: rows, keywords: ["位置"], requireImage: true)?.imageURL
+        let positionIcon = findFirstRowByKeywords(rows: iconRows, keywords: ["位置"], requireImage: true)?.imageURL
         return BaGuideMetaItem(
             title: String(localized: "ba.student.detail.meta.tacticalPosition"),
             value: sanitizeMetaValue(
@@ -166,7 +167,7 @@ enum BaStudentGuideMeta {
         rows: [BaGuideRow],
         stats: [BaGuideRow]
     ) -> BaGuideMetaItem {
-        let iconRow = findFirstRowByKeywords(rows: rows, keywords: valueKeywords, requireImage: true)
+        let iconRow = findFirstRowByKeywords(rows: rows + stats, keywords: valueKeywords, requireImage: true)
         return BaGuideMetaItem(
             title: title,
             value: sanitizeMetaValue(

@@ -104,14 +104,16 @@ private struct BaStudentMetaLine: View {
             Text(item.title)
                 .font(.callout.weight(.semibold))
                 .foregroundStyle(.secondary)
-                .frame(width: 70, alignment: .leading)
+                .frame(width: 84, alignment: .leading)
+                .lineLimit(1)
+                .minimumScaleFactor(0.82)
 
             BaStudentMetaImages(item: item, tint: tint, size: 22)
 
             Text(item.value)
                 .font(.body.weight(.semibold))
                 .foregroundStyle(.primary)
-                .lineLimit(2)
+                .lineLimit(1)
                 .minimumScaleFactor(0.82)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -126,7 +128,7 @@ private struct BaStudentCombatMetaRow: View {
             Text(item.title)
                 .font(.callout.weight(.semibold))
                 .foregroundStyle(.secondary)
-                .frame(width: 96, alignment: .leading)
+                .frame(width: 112, alignment: .leading)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
 
@@ -140,9 +142,9 @@ private struct BaStudentCombatMetaRow: View {
 
             BaStudentMetaImages(item: item, tint: BaDesign.blue, size: 24)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(.white.opacity(0.10), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(.white.opacity(0.10), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 }
 

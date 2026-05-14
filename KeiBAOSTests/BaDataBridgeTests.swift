@@ -363,6 +363,56 @@ final class BaDataBridgeTests: XCTestCase {
                     ["value": "为了参加派对上了礼服裙。"],
                 ],
                 [
+                    ["value": "稀有度"],
+                    ["value": "3星"],
+                    ["type": "image", "value": "//cdnimg.gamekee.com/wiki2.0/images/w_44/h_44/star.png"],
+                ],
+                [
+                    ["value": "学院"],
+                    ["value": "格黑娜学园"],
+                    ["type": "image", "value": "//cdnimg.gamekee.com/wiki2.0/images/w_44/h_44/school.png"],
+                ],
+                [
+                    ["value": "所属社团"],
+                    ["value": "风纪委员会"],
+                ],
+                [
+                    ["value": "战术位置作用"],
+                    ["value": "输出"],
+                    ["type": "image", "value": "//cdnimg.gamekee.com/wiki2.0/images/w_44/h_44/striker.png"],
+                    ["type": "image", "value": "//cdnimg.gamekee.com/wiki2.0/images/w_44/h_44/back.png"],
+                ],
+                [
+                    ["value": "攻击类型"],
+                    ["value": "爆炸"],
+                    ["type": "image", "value": "//cdnimg.gamekee.com/wiki2.0/images/w_44/h_44/explosion.png"],
+                ],
+                [
+                    ["value": "防御类型"],
+                    ["value": "弹力装甲"],
+                    ["type": "image", "value": "//cdnimg.gamekee.com/wiki2.0/images/w_44/h_44/armor.png"],
+                ],
+                [
+                    ["value": "武器类型"],
+                    ["value": "MG"],
+                    ["type": "image", "value": "//cdnimg.gamekee.com/wiki2.0/images/w_44/h_44/mg.png"],
+                ],
+                [
+                    ["value": "市街"],
+                    ["value": "D"],
+                    ["type": "image", "value": "//cdnimg.gamekee.com/wiki2.0/images/w_44/h_44/street.png"],
+                ],
+                [
+                    ["value": "屋外"],
+                    ["value": "A"],
+                    ["type": "image", "value": "//cdnimg.gamekee.com/wiki2.0/images/w_44/h_44/outdoor.png"],
+                ],
+                [
+                    ["value": "室内"],
+                    ["value": "S"],
+                    ["type": "image", "value": "//cdnimg.gamekee.com/wiki2.0/images/w_44/h_44/indoor.png"],
+                ],
+                [
                     ["value": "角色技能"],
                     ["value": "技能名称"],
                     ["value": "开幕演出"],
@@ -421,9 +471,82 @@ final class BaDataBridgeTests: XCTestCase {
             html: nil,
             entry: makeCatalogEntry(contentId: 170_295, name: "日奈(礼服)", alias: "日奈")
         )
+        let info = BaStudentGuideInfo(
+            contentId: 170_295,
+            sourceURL: URL(string: "https://www.gamekee.com/ba/tj/170295.html"),
+            title: "日奈(礼服)",
+            subtitle: "GameKee",
+            summary: parsed.summary,
+            imageURL: parsed.imageURL,
+            stats: parsed.stats,
+            profileRows: parsed.profileRows,
+            skillRows: parsed.skillRows,
+            voiceRows: parsed.voiceRows,
+            galleryItems: parsed.galleryItems,
+            growthRows: parsed.growthRows,
+            simulateRows: parsed.simulateRows,
+            contentSource: "content_json",
+            syncedAt: Date(timeIntervalSince1970: 0)
+        )
 
         XCTAssertEqual(parsed.summary, "为了参加派对上了礼服裙。")
-        XCTAssertTrue(parsed.profileRows.map(\.title).contains("介绍"))
+        XCTAssertEqual(parsed.profileRows.map(\.title), [
+            "角色名称",
+            "全名",
+            "假名注音",
+            "简中译名",
+            "年龄",
+            "生日",
+            "身高",
+            "画师",
+            "实装日期",
+            "声优",
+            "兴趣爱好",
+            "介绍",
+            "稀有度",
+            "学院",
+            "所属社团",
+            "战术位置作用",
+            "攻击类型",
+            "防御类型",
+            "武器类型",
+            "市街",
+            "屋外",
+            "室内",
+        ])
+        XCTAssertEqual(parsed.stats.map(\.title), [
+            "稀有度",
+            "学院",
+            "所属社团",
+            "战术位置作用",
+            "攻击类型",
+            "防御类型",
+            "武器类型",
+            "市街",
+        ])
+        XCTAssertEqual(info.profileSections.map(\.title), [
+            String(localized: "ba.student.detail.profile.names.title"),
+            String(localized: "ba.student.detail.profile.info.title"),
+            String(localized: "ba.student.detail.profile.hobby.title"),
+        ])
+        XCTAssertEqual(info.profileSections[0].rows.map(\.title), [
+            "角色名称",
+            "全名",
+            "假名注音",
+            "简中译名",
+        ])
+        XCTAssertEqual(info.profileSections[1].rows.map(\.title), [
+            "年龄",
+            "生日",
+            "身高",
+            "画师",
+            "实装日期",
+            "声优",
+        ])
+        XCTAssertEqual(info.profileSections[2].rows.map(\.title), [
+            "兴趣爱好",
+            "介绍",
+        ])
         XCTAssertEqual(parsed.skillRows.first?.title, "角色技能")
         XCTAssertEqual(parsed.voiceRows.first?.lineHeaders, ["日配", "中配", "韩配"])
         XCTAssertEqual(parsed.galleryItems.first?.mediaKind, .image)
