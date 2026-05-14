@@ -133,6 +133,17 @@ final class BaAppModel {
         }
     }
 
+    func setAPEditorValues(currentAP: Int, apLimit: Int, apNotifyThreshold: Int) {
+        updateCurrentProfile { profile in
+            let now = Date()
+            profile.apCurrent = BaTimeMath.normalizedAP(Double(min(max(currentAP, 0), BaTimeMath.apMax)))
+            profile.apLimit = min(max(apLimit, 0), BaTimeMath.apLimitMax)
+            profile.apNotifyThreshold = min(max(apNotifyThreshold, 0), BaTimeMath.apMax)
+            profile.apRegenBaseAt = now
+            profile.apSyncAt = now
+        }
+    }
+
     func claimCafeAP() {
         updateCurrentProfile { profile in
             let now = Date()

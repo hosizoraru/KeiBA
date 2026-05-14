@@ -29,10 +29,45 @@ private struct BaNotificationSettingsSheet: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section(String(localized: "ba.settings.resources.section")) {
+                    Toggle(String(localized: "ba.sheet.notifications.ap.title"), isOn: profileBinding(\.apNotificationsEnabled))
+                    Toggle(String(localized: "ba.sheet.notifications.cafeAp.title"), isOn: profileBinding(\.cafeApNotificationsEnabled))
+                    Toggle(String(localized: "ba.sheet.notifications.visit.title"), isOn: profileBinding(\.visitNotificationsEnabled))
+                    Toggle(
+                        String(localized: "ba.settings.arena.notifications.title"),
+                        isOn: profileBinding(\.arenaRefreshNotificationsEnabled)
+                    )
+                }
+
                 Section {
-                    Toggle(String(localized: "ba.sheet.notifications.ap.title"), isOn: binding(\.apNotificationsEnabled))
-                    Toggle(String(localized: "ba.sheet.notifications.cafeAp.title"), isOn: binding(\.cafeApNotificationsEnabled))
-                    Toggle(String(localized: "ba.sheet.notifications.visit.title"), isOn: binding(\.visitNotificationsEnabled))
+                    Toggle(
+                        String(localized: "ba.settings.activity.start.notifications.title"),
+                        isOn: globalBoolBinding(\.calendarUpcomingNotificationsEnabled)
+                    )
+                    Toggle(
+                        String(localized: "ba.settings.activity.end.notifications.title"),
+                        isOn: globalBoolBinding(\.calendarEndingNotificationsEnabled)
+                    )
+                    Toggle(
+                        String(localized: "ba.settings.pool.start.notifications.title"),
+                        isOn: globalBoolBinding(\.poolUpcomingNotificationsEnabled)
+                    )
+                    Toggle(
+                        String(localized: "ba.settings.pool.end.notifications.title"),
+                        isOn: globalBoolBinding(\.poolEndingNotificationsEnabled)
+                    )
+                    Toggle(
+                        String(localized: "ba.settings.calendarPool.change.notifications.title"),
+                        isOn: globalBoolBinding(\.calendarPoolChangeNotificationsEnabled)
+                    )
+                    Picker(String(localized: "ba.settings.notifyLead.title"), selection: notifyLeadBinding) {
+                        ForEach(BaCalendarPoolNotifyLead.allCases) { lead in
+                            Text(lead.title)
+                                .tag(lead)
+                        }
+                    }
+                } header: {
+                    Text(String(localized: "ba.settings.activityPool.title"))
                 } footer: {
                     Text(String(localized: "ba.sheet.notifications.footer"))
                 }
@@ -48,11 +83,29 @@ private struct BaNotificationSettingsSheet: View {
         }
     }
 
-    private func binding(_ keyPath: WritableKeyPath<BaAppSettings, Bool>) -> Binding<Bool> {
+    private var notifyLeadBinding: Binding<BaCalendarPoolNotifyLead> {
         Binding(
-            get: { model.settings[keyPath: keyPath] },
+            get: { model.envelope.globalSettings.calendarPoolNotifyLead },
+            set: { lead in
+                model.updateGlobalSettings { $0.calendarPoolNotifyLead = lead }
+            }
+        )
+    }
+
+    private func globalBoolBinding(_ keyPath: WritableKeyPath<BaGlobalSettings, Bool>) -> Binding<Bool> {
+        Binding(
+            get: { model.envelope.globalSettings[keyPath: keyPath] },
             set: { value in
-                model.updateSettings { $0[keyPath: keyPath] = value }
+                model.updateGlobalSettings { $0[keyPath: keyPath] = value }
+            }
+        )
+    }
+
+    private func profileBinding(_ keyPath: WritableKeyPath<BaServerProfile, Bool>) -> Binding<Bool> {
+        Binding(
+            get: { model.currentProfile[keyPath: keyPath] },
+            set: { value in
+                model.updateCurrentProfile { $0[keyPath: keyPath] = value }
             }
         )
     }
@@ -67,6 +120,10 @@ private struct BaEditOfficeSheet: View {
         NavigationStack {
             Form {
                 Section(String(localized: "ba.sheet.edit.identity.title")) {
+                    Toggle(
+                        String(localized: "ba.settings.identity.independent.title"),
+                        isOn: $draft.identityIndependentByServer
+                    )
                     TextField(String(localized: "ba.office.nickname.label"), text: $draft.nickname)
                     TextField(String(localized: "ba.office.friendCode.label"), text: $draft.friendCode)
                     Picker(String(localized: "ba.office.server.label"), selection: $draft.server) {
@@ -125,6 +182,14 @@ private struct BaDebugToolsSheet: View {
                 Section(String(localized: "ba.sheet.debug.state.title")) {
                     LabeledContent(String(localized: "ba.sheet.debug.build.title")) {
                         Text(AppPlatformBaseline.summary)
+                    }
+                    ForEach(AppPlatformBaseline.allCases) { baseline in
+                        LabeledContent(baseline.displayName) {
+                            Text(baseline.minimumVersion)
+                        }
+                    }
+                    LabeledContent(String(localized: "ba.settings.watch.rule.title")) {
+                        Text(AppPlatformBaseline.watchRule)
                     }
                     LabeledContent(String(localized: "ba.sheet.debug.data.title")) {
                         Text(debugDataText)

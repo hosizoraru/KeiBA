@@ -13,10 +13,11 @@ struct BaOverviewAPEditorSheet: View {
     let currentAP: String
     let apThreshold: String
     let apLimit: String
-    let onSave: (Int, Int) -> Void
+    let onSave: (Int, Int, Int) -> Void
 
     @State private var currentText = ""
     @State private var thresholdText = ""
+    @State private var limitText = ""
 
     var body: some View {
         NavigationStack {
@@ -32,13 +33,13 @@ struct BaOverviewAPEditorSheet: View {
                         text: $thresholdText,
                         fallback: apThreshold
                     )
-                } footer: {
-                    Text(
-                        String(
-                            format: String(localized: "ba.overview.ap.editor.footer.format"),
-                            apLimit
-                        )
+                    numberField(
+                        title: String(localized: "ba.office.ap.limit.title"),
+                        text: $limitText,
+                        fallback: apLimit
                     )
+                } footer: {
+                    Text(String(localized: "ba.overview.ap.editor.footer"))
                 }
             }
             .navigationTitle(String(localized: "ba.overview.ap.editor.title"))
@@ -54,7 +55,7 @@ struct BaOverviewAPEditorSheet: View {
             }
         }
         #if os(iOS)
-        .presentationDetents([.height(330), .medium])
+        .presentationDetents([.height(380), .medium])
         .presentationDragIndicator(.visible)
         #else
         .frame(minWidth: 360, minHeight: 300)
@@ -62,6 +63,7 @@ struct BaOverviewAPEditorSheet: View {
         .onAppear(perform: syncDraft)
         .onChange(of: currentAP) { _, _ in syncDraft() }
         .onChange(of: apThreshold) { _, _ in syncDraft() }
+        .onChange(of: apLimit) { _, _ in syncDraft() }
     }
 
     private func numberField(
@@ -89,12 +91,14 @@ struct BaOverviewAPEditorSheet: View {
     private func syncDraft() {
         currentText = currentAP
         thresholdText = apThreshold
+        limitText = apLimit
     }
 
     private func save() {
         let current = Int(currentText) ?? Int(currentAP) ?? 0
         let threshold = Int(thresholdText) ?? Int(apThreshold) ?? 0
-        onSave(current, threshold)
+        let limit = Int(limitText) ?? Int(apLimit) ?? 0
+        onSave(current, limit, threshold)
         dismiss()
     }
 }

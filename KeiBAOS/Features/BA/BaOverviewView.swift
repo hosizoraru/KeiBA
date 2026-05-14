@@ -21,22 +21,24 @@ struct BaOverviewView: View {
 
             BaOverviewIdentityCard(
                 settings: model.settings,
-                onServerSelected: selectServer
+                onServerSelected: selectServer,
+                onIdentityIndependentChanged: setIdentityIndependent
             )
             TimelineView(.periodic(from: .now, by: 1)) { context in
                 BaOverviewAPCard(
                     office: model.officeAPSnapshot(now: context.date),
                     settings: model.settings,
-                    onCurrentAPCommit: model.setCurrentAP,
-                    onThresholdCommit: model.setAPNotifyThreshold
+                    onCommit: model.setAPEditorValues
                 )
             }
             TimelineView(.periodic(from: .now, by: 60)) { context in
                 BaOverviewCafeCard(
                     office: model.officeSnapshot(now: context.date),
+                    settings: model.settings,
                     onClaimCafeAP: model.claimCafeAP,
                     onPerformAction: model.performCafeAction,
-                    onResetAction: model.resetCafeAction
+                    onResetAction: model.resetCafeAction,
+                    onCafeSettingsCommit: setCafeSettings
                 )
                 BaOverviewTimelineSummaryCard(
                     summary: BaOverviewTimelineSummary(
@@ -62,6 +64,19 @@ struct BaOverviewView: View {
         Task {
             await model.loadActivitiesIfNeeded()
             await model.loadPoolsIfNeeded()
+        }
+    }
+
+    private func setIdentityIndependent(_ isIndependent: Bool) {
+        model.updateGlobalSettings { settings in
+            settings.identityIndependentByServer = isIndependent
+        }
+    }
+
+    private func setCafeSettings(level: Int, threshold: Int) {
+        model.updateCurrentProfile { profile in
+            profile.cafeLevel = min(max(level, 1), 10)
+            profile.cafeApNotifyThreshold = min(max(threshold, 0), BaTimeMath.apMax)
         }
     }
 }

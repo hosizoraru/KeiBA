@@ -1,16 +1,16 @@
 //
-//  BaCatalogView.swift
+//  BaLibraryView.swift
 //  KeiBAOS
 //
-//  Created by Voyager on 2026/05/14.
+//  Created by Codex on 2026/05/15.
 //
 
 import SwiftUI
 
-struct BaCatalogView: View {
+struct BaLibraryView: View {
     @Environment(BaAppModel.self) private var model
 
-    @State private var selectedCategory: BaCatalogCategory = .students
+    @State private var selectedCategory: BaCatalogCategory = .studentBgm
     @State private var searchText = ""
 
     private var entries: [BaGuideCatalogEntry] {
@@ -20,8 +20,8 @@ struct BaCatalogView: View {
     var body: some View {
         List {
             Section {
-                Picker(String(localized: "ba.catalog.category.picker"), selection: $selectedCategory) {
-                    ForEach(BaCatalogCategory.catalogCases) { category in
+                Picker(String(localized: "ba.library.category.picker"), selection: $selectedCategory) {
+                    ForEach(BaCatalogCategory.libraryCases) { category in
                         Text(category.title)
                             .tag(category)
                     }
@@ -31,11 +31,21 @@ struct BaCatalogView: View {
             }
 
             Section {
-                catalogContent
+                libraryContent
             } header: {
                 Text(selectedCategory.title)
             } footer: {
                 Text(footerText)
+            }
+
+            Section {
+                Toggle(String(localized: "ba.settings.media.images.title"), isOn: globalBoolBinding(\.showPreviewImages))
+                Toggle(String(localized: "ba.settings.media.autoplay.title"), isOn: globalBoolBinding(\.mediaAutoplayEnabled))
+                Toggle(String(localized: "ba.settings.media.download.title"), isOn: globalBoolBinding(\.mediaDownloadEnabled))
+            } header: {
+                Text(String(localized: "ba.settings.media.title"))
+            } footer: {
+                Text(String(localized: "ba.settings.media.footer"))
             }
         }
         .platformInsetGroupedListStyle()
@@ -51,7 +61,7 @@ struct BaCatalogView: View {
     }
 
     @ViewBuilder
-    private var catalogContent: some View {
+    private var libraryContent: some View {
         if model.catalogState.isLoading, entries.isEmpty {
             ProgressView()
                 .frame(maxWidth: .infinity, alignment: .center)
@@ -59,7 +69,7 @@ struct BaCatalogView: View {
         } else if entries.isEmpty {
             ContentUnavailableView(
                 String(localized: "ba.catalog.empty.title"),
-                systemImage: "magnifyingglass",
+                systemImage: selectedCategory == .favorites ? "star" : "music.note",
                 description: Text(emptyDetail)
             )
         } else {
@@ -96,11 +106,11 @@ struct BaCatalogView: View {
 
     private var categoryFooter: String {
         switch selectedCategory {
-        case .students:
-            String(localized: "ba.catalog.footer.students.live")
-        case .npcSatellite:
-            String(localized: "ba.catalog.footer.npc.live")
-        case .studentBgm, .favorites:
+        case .studentBgm:
+            String(localized: "ba.catalog.footer.bgm")
+        case .favorites:
+            String(localized: "ba.catalog.footer.favorites.live")
+        case .students, .npcSatellite:
             String(localized: "ba.catalog.placeholder.footer")
         }
     }
@@ -117,12 +127,21 @@ struct BaCatalogView: View {
             ? String(localized: "ba.catalog.favorite.remove")
             : String(localized: "ba.catalog.favorite.add")
     }
+
+    private func globalBoolBinding(_ keyPath: WritableKeyPath<BaGlobalSettings, Bool>) -> Binding<Bool> {
+        Binding(
+            get: { model.envelope.globalSettings[keyPath: keyPath] },
+            set: { value in
+                model.updateGlobalSettings { $0[keyPath: keyPath] = value }
+            }
+        )
+    }
 }
 
 #Preview {
     NavigationStack {
-        BaCatalogView()
-            .navigationTitle(AppTab.catalog.title)
+        BaLibraryView()
+            .navigationTitle(AppTab.library.title)
     }
     .environment(BaAppModel.live())
 }

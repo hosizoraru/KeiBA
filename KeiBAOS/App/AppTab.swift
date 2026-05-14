@@ -12,7 +12,7 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
     case activity
     case pool
     case catalog
-    case settings
+    case library
 
     var id: Self {
         self
@@ -28,8 +28,8 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
             String(localized: "ba.tab.pool")
         case .catalog:
             String(localized: "ba.tab.catalog")
-        case .settings:
-            String(localized: "ba.tab.settings")
+        case .library:
+            String(localized: "ba.tab.library")
         }
     }
 
@@ -47,8 +47,8 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
             "rectangle.stack.badge.person.crop"
         case .catalog:
             "person.3.fill"
-        case .settings:
-            "gearshape.fill"
+        case .library:
+            "music.note.list"
         }
     }
 
@@ -67,8 +67,8 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
             BaPoolView()
         case .catalog:
             BaCatalogView()
-        case .settings:
-            BaSettingsView()
+        case .library:
+            BaLibraryView()
         }
     }
 }

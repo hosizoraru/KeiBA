@@ -36,6 +36,7 @@ enum BaOverviewMetricStyle {
 struct BaOverviewIdentityCard: View {
     let settings: BaAppSettings
     let onServerSelected: (BaServer) -> Void
+    let onIdentityIndependentChanged: (Bool) -> Void
 
     var body: some View {
         BaGlassCard(tint: BaDesign.blue) {
@@ -71,14 +72,13 @@ struct BaOverviewIdentityCard: View {
                     .pickerStyle(.menu)
                 }
 
-                BaOverviewInfoPill(
-                    title: String(localized: "ba.settings.identity.mode.title"),
-                    value: settings.identityIndependentByServer
-                        ? String(localized: "ba.settings.identity.mode.independent")
-                        : String(localized: "ba.settings.identity.mode.shared"),
-                    systemImage: "person.2.badge.gearshape",
-                    tint: BaDesign.blue
-                )
+                Toggle(isOn: identityIndependentBinding) {
+                    Label(
+                        String(localized: "ba.settings.identity.independent.title"),
+                        systemImage: "person.2.badge.gearshape"
+                    )
+                    .font(BaOverviewTextToken.rowTitle)
+                }
             }
         }
     }
@@ -89,13 +89,19 @@ struct BaOverviewIdentityCard: View {
             set: onServerSelected
         )
     }
+
+    private var identityIndependentBinding: Binding<Bool> {
+        Binding(
+            get: { settings.identityIndependentByServer },
+            set: onIdentityIndependentChanged
+        )
+    }
 }
 
 struct BaOverviewAPCard: View {
     let office: BaOfficeAPSnapshot
     let settings: BaAppSettings
-    let onCurrentAPCommit: (Int) -> Void
-    let onThresholdCommit: (Int) -> Void
+    let onCommit: (Int, Int, Int) -> Void
 
     @State private var isEditorPresented = false
 
@@ -153,9 +159,8 @@ struct BaOverviewAPCard: View {
                 currentAP: office.apCurrent,
                 apThreshold: "\(settings.apNotifyThreshold)",
                 apLimit: office.apLimit
-            ) { currentAP, threshold in
-                onCurrentAPCommit(currentAP)
-                onThresholdCommit(threshold)
+            ) { currentAP, apLimit, threshold in
+                onCommit(currentAP, apLimit, threshold)
             }
         }
     }
@@ -163,9 +168,13 @@ struct BaOverviewAPCard: View {
 
 struct BaOverviewCafeCard: View {
     let office: BaOfficeSnapshot
+    let settings: BaAppSettings
     let onClaimCafeAP: () -> Void
     let onPerformAction: (BaCafeActionKind) -> Void
     let onResetAction: (BaCafeActionKind) -> Void
+    let onCafeSettingsCommit: (Int, Int) -> Void
+
+    @State private var isEditorPresented = false
 
     var body: some View {
         BaGlassCard(tint: BaDesign.pink) {
@@ -173,6 +182,15 @@ struct BaOverviewCafeCard: View {
                 HStack(spacing: 10) {
                     BaOverviewSectionTitle(title: String(localized: "ba.cafe.title"), asset: .cafeAP)
                     Spacer()
+                    Button {
+                        isEditorPresented = true
+                    } label: {
+                        Label(String(localized: "ba.overview.cafe.edit.title"), systemImage: "slider.horizontal.3")
+                            .labelStyle(.iconOnly)
+                    }
+                    .buttonStyle(.glass)
+                    .accessibilityLabel(String(localized: "ba.overview.cafe.edit.title"))
+
                     Button(action: onClaimCafeAP) {
                         Label(String(localized: "ba.cafe.action.claimAp"), systemImage: "tray.and.arrow.down.fill")
                             .labelStyle(.iconOnly)
@@ -241,6 +259,13 @@ struct BaOverviewCafeCard: View {
                     }
                 }
             }
+        }
+        .sheet(isPresented: $isEditorPresented) {
+            BaOverviewCafeEditorSheet(
+                cafeLevel: settings.cafeLevel,
+                cafeThreshold: settings.cafeApNotifyThreshold,
+                onSave: onCafeSettingsCommit
+            )
         }
     }
 

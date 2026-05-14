@@ -687,6 +687,9 @@ nonisolated enum BaCatalogCategory: String, CaseIterable, Codable, Identifiable,
     case studentBgm
     case favorites
 
+    static let catalogCases: [BaCatalogCategory] = [.students, .npcSatellite]
+    static let libraryCases: [BaCatalogCategory] = [.studentBgm, .favorites]
+
     var id: Self {
         self
     }

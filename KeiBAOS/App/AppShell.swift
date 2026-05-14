@@ -63,8 +63,8 @@ private struct BaNavigationRoot: View {
             BaPoolView(statusFilter: $poolFilter)
         case .catalog:
             BaCatalogView()
-        case .settings:
-            BaSettingsView()
+        case .library:
+            BaLibraryView()
         }
     }
 
@@ -87,7 +87,7 @@ private struct BaNavigationRoot: View {
             }
             .labelStyle(.iconOnly)
             .disabled(model.poolState.isLoading)
-        case .overview, .catalog, .settings:
+        case .overview, .catalog, .library:
             EmptyView()
         }
     }
@@ -141,6 +141,13 @@ private struct BaNavigationRoot: View {
                     }
                 }
             }
+            Section(String(localized: "ba.settings.preferences.title")) {
+                Toggle(
+                    String(localized: "ba.settings.activity.showEnded.title"),
+                    isOn: globalBoolBinding(\.showEndedActivities)
+                )
+                refreshIntervalPicker
+            }
             Divider()
         case .pool:
             Section(String(localized: "ba.pool.action.filter")) {
@@ -154,10 +161,44 @@ private struct BaNavigationRoot: View {
                     }
                 }
             }
+            Section(String(localized: "ba.settings.preferences.title")) {
+                Toggle(
+                    String(localized: "ba.settings.pool.showEnded.title"),
+                    isOn: globalBoolBinding(\.showEndedPools)
+                )
+                refreshIntervalPicker
+            }
             Divider()
-        case .overview, .catalog, .settings:
+        case .overview, .catalog, .library:
             EmptyView()
         }
+    }
+
+    private var refreshIntervalPicker: some View {
+        Picker(String(localized: "ba.settings.refresh.title"), selection: refreshIntervalBinding) {
+            ForEach(BaRefreshInterval.allCases) { interval in
+                Text(interval.title)
+                    .tag(interval)
+            }
+        }
+    }
+
+    private var refreshIntervalBinding: Binding<BaRefreshInterval> {
+        Binding(
+            get: { model.envelope.globalSettings.refreshInterval },
+            set: { interval in
+                model.updateGlobalSettings { $0.refreshInterval = interval }
+            }
+        )
+    }
+
+    private func globalBoolBinding(_ keyPath: WritableKeyPath<BaGlobalSettings, Bool>) -> Binding<Bool> {
+        Binding(
+            get: { model.envelope.globalSettings[keyPath: keyPath] },
+            set: { value in
+                model.updateGlobalSettings { $0[keyPath: keyPath] = value }
+            }
+        )
     }
 
     private func timelineFilterButton(
