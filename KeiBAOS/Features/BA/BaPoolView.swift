@@ -222,10 +222,11 @@ private struct BaPoolNavigationCard: View, Equatable {
                         url: row.pool.imageURL,
                         fallbackSystemImage: row.fallbackSystemImage,
                         tint: row.status.tint,
-                        width: 92,
-                        height: 118,
-                        cornerRadius: 20,
+                        width: 108,
+                        height: 108,
+                        cornerRadius: 22,
                         contentMode: .fit,
+                        usesImageBackdrop: true,
                         fallbackFont: .system(size: 33, weight: .semibold)
                     )
 

@@ -346,6 +346,7 @@ struct BaRemoteImageSurface: View {
     var height: CGFloat
     var cornerRadius: CGFloat
     var contentMode: ContentMode = .fill
+    var usesImageBackdrop = false
     var fallbackFont: Font = .title3.weight(.semibold)
 
     @State private var phase: BaRemoteImagePhase = .placeholder
@@ -353,6 +354,15 @@ struct BaRemoteImageSurface: View {
     var body: some View {
         ZStack {
             if case let .success(image) = phase {
+                if usesImageBackdrop {
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .scaleEffect(1.08)
+                        .blur(radius: 10)
+                        .saturation(1.05)
+                        .opacity(0.42)
+                }
                 image
                     .resizable()
                     .aspectRatio(contentMode: contentMode)
