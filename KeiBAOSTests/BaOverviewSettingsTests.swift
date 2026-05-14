@@ -116,6 +116,14 @@ final class BaOverviewSettingsTests: XCTestCase {
         )
 
         XCTAssertEqual(snapshot.apCurrent, "12")
+        XCTAssertEqual(
+            snapshot.apCurrentLimit,
+            String(format: String(localized: "ba.office.ap.currentLimit.format"), "12", "240")
+        )
+        XCTAssertEqual(
+            snapshot.apRemaining,
+            String(format: String(localized: "ba.office.ap.remaining.format"), "228")
+        )
     }
 
     func testAPAboveLimitStaysVisibleAndPausesNaturalRecovery() {
@@ -139,6 +147,36 @@ final class BaOverviewSettingsTests: XCTestCase {
         XCTAssertEqual(BaDisplayFormatters.compactDuration(90, includingSeconds: true), "1m 30s")
         XCTAssertEqual(BaDisplayFormatters.compactDuration(90, includingSeconds: false), "2m")
         XCTAssertEqual(BaDisplayFormatters.compactDuration(3661, includingSeconds: false), "1h 2m")
+    }
+
+    func testServerRefreshTimesRenderInLocalTimeZone() throws {
+        let localTimeZone = try XCTUnwrap(TimeZone(identifier: "Asia/Shanghai"))
+        let reference = Date(timeIntervalSince1970: 1_700_000_000)
+
+        XCTAssertEqual(
+            BaTimeMath.localCafeStudentRefreshTimes(
+                server: .jp,
+                reference: reference,
+                localTimeZone: localTimeZone
+            ),
+            "03:00 / 15:00"
+        )
+        XCTAssertEqual(
+            BaTimeMath.localArenaRefreshTime(
+                server: .global,
+                reference: reference,
+                localTimeZone: localTimeZone
+            ),
+            "13:00"
+        )
+        XCTAssertEqual(
+            BaTimeMath.localCafeStudentRefreshTimes(
+                server: .cn,
+                reference: reference,
+                localTimeZone: localTimeZone
+            ),
+            "04:00 / 16:00"
+        )
     }
 
     func testOverviewSyncTimeDropsSeconds() {
@@ -201,6 +239,22 @@ final class BaOverviewSettingsTests: XCTestCase {
 
         XCTAssertEqual(
             BaTimeMath.nextHeadpatAvailable(lastHeadpatAt: lastHeadpat, server: .cn),
+            expectedRefresh
+        )
+    }
+
+    func testHeadpatCooldownUsesSelectedServerStudentRefreshBoundary() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "Asia/Shanghai"))
+        let lastHeadpat = try XCTUnwrap(
+            calendar.date(from: DateComponents(year: 2026, month: 5, day: 15, hour: 2, minute: 30))
+        )
+        let expectedRefresh = try XCTUnwrap(
+            calendar.date(from: DateComponents(year: 2026, month: 5, day: 15, hour: 3))
+        )
+
+        XCTAssertEqual(
+            BaTimeMath.nextHeadpatAvailable(lastHeadpatAt: lastHeadpat, server: .jp),
             expectedRefresh
         )
     }

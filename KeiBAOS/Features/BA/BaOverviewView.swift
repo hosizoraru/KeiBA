@@ -25,9 +25,10 @@ struct BaOverviewView: View {
             )
             TimelineView(.periodic(from: .now, by: 1)) { context in
                 BaOverviewAPCard(
-                    office: model.officeSnapshot(now: context.date),
+                    office: model.officeAPSnapshot(now: context.date),
                     settings: model.settings,
-                    onCurrentAPCommit: model.setCurrentAP
+                    onCurrentAPCommit: model.setCurrentAP,
+                    onThresholdCommit: model.setAPNotifyThreshold
                 )
             }
             TimelineView(.periodic(from: .now, by: 60)) { context in

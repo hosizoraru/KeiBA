@@ -11,9 +11,12 @@ struct BaOverviewAPEditorSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     let currentAP: String
-    let onSave: (Int) -> Void
+    let apThreshold: String
+    let apLimit: String
+    let onSave: (Int, Int) -> Void
 
     @State private var currentText = ""
+    @State private var thresholdText = ""
 
     var body: some View {
         NavigationStack {
@@ -24,8 +27,18 @@ struct BaOverviewAPEditorSheet: View {
                         text: $currentText,
                         fallback: currentAP
                     )
+                    numberField(
+                        title: String(localized: "ba.settings.ap.threshold.title"),
+                        text: $thresholdText,
+                        fallback: apThreshold
+                    )
                 } footer: {
-                    Text(String(localized: "ba.overview.ap.editor.footer"))
+                    Text(
+                        String(
+                            format: String(localized: "ba.overview.ap.editor.footer.format"),
+                            apLimit
+                        )
+                    )
                 }
             }
             .navigationTitle(String(localized: "ba.overview.ap.editor.title"))
@@ -41,13 +54,14 @@ struct BaOverviewAPEditorSheet: View {
             }
         }
         #if os(iOS)
-        .presentationDetents([.height(250), .medium])
+        .presentationDetents([.height(330), .medium])
         .presentationDragIndicator(.visible)
         #else
-        .frame(minWidth: 360, minHeight: 220)
+        .frame(minWidth: 360, minHeight: 300)
         #endif
         .onAppear(perform: syncDraft)
         .onChange(of: currentAP) { _, _ in syncDraft() }
+        .onChange(of: apThreshold) { _, _ in syncDraft() }
     }
 
     private func numberField(
@@ -74,11 +88,13 @@ struct BaOverviewAPEditorSheet: View {
 
     private func syncDraft() {
         currentText = currentAP
+        thresholdText = apThreshold
     }
 
     private func save() {
         let current = Int(currentText) ?? Int(currentAP) ?? 0
-        onSave(current)
+        let threshold = Int(thresholdText) ?? Int(apThreshold) ?? 0
+        onSave(current, threshold)
         dismiss()
     }
 }

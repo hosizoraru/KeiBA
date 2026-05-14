@@ -85,9 +85,10 @@ struct BaOverviewIdentityCard: View {
 }
 
 struct BaOverviewAPCard: View {
-    let office: BaOfficeSnapshot
+    let office: BaOfficeAPSnapshot
     let settings: BaAppSettings
     let onCurrentAPCommit: (Int) -> Void
+    let onThresholdCommit: (Int) -> Void
 
     @State private var isEditorPresented = false
 
@@ -97,7 +98,8 @@ struct BaOverviewAPCard: View {
                 BaOverviewSectionTitle(title: String(localized: "ba.office.ap.label"), asset: .actionPoint)
 
                 BaOverviewAPReadout(
-                    currentAP: office.apCurrent,
+                    currentAP: office.apCurrentLimit,
+                    remaining: office.apRemaining,
                     onEdit: { isEditorPresented = true }
                 )
 
@@ -105,11 +107,7 @@ struct BaOverviewAPCard: View {
                     BaOverviewMetricTile(
                         title: String(localized: "ba.office.ap.next.title"),
                         value: office.apNext,
-                        detail: String(
-                            format: String(localized: "ba.office.ap.status.format"),
-                            office.apNext,
-                            office.apFullRemain
-                        ),
+                        detail: String(localized: "ba.office.ap.next.detail"),
                         asset: .actionPointTight,
                         tint: BaDesign.green
                     )
@@ -127,21 +125,30 @@ struct BaOverviewAPCard: View {
                         systemImage: "clock.arrow.circlepath",
                         tint: BaDesign.blue
                     )
-                    BaOverviewMetricTile(
-                        title: String(localized: "ba.settings.ap.threshold.title"),
-                        value: "\(settings.apNotifyThreshold)",
-                        detail: String(localized: "ba.settings.threshold.detail"),
-                        systemImage: "bell.badge",
-                        tint: BaDesign.amber
-                    )
+                    Button {
+                        isEditorPresented = true
+                    } label: {
+                        BaOverviewMetricTile(
+                            title: String(localized: "ba.settings.ap.threshold.title"),
+                            value: "\(settings.apNotifyThreshold)",
+                            detail: String(localized: "ba.settings.threshold.edit.detail"),
+                            systemImage: "bell.badge",
+                            tint: BaDesign.amber
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(String(localized: "ba.overview.ap.edit.title"))
                 }
             }
         }
         .sheet(isPresented: $isEditorPresented) {
             BaOverviewAPEditorSheet(
-                currentAP: office.apCurrent
-            ) { currentAP in
+                currentAP: office.apCurrent,
+                apThreshold: "\(settings.apNotifyThreshold)",
+                apLimit: office.apLimit
+            ) { currentAP, threshold in
                 onCurrentAPCommit(currentAP)
+                onThresholdCommit(threshold)
             }
         }
     }
@@ -191,14 +198,14 @@ struct BaOverviewCafeCard: View {
                     BaOverviewMetricTile(
                         title: String(localized: "ba.cafe.metric.visit"),
                         value: office.cafeVisitRefresh,
-                        detail: String(localized: "ba.cafe.metric.visit.detail"),
+                        detail: office.cafeVisitDetail,
                         asset: .lobbyWork,
                         tint: BaDesign.pink
                     )
                     BaOverviewMetricTile(
                         title: String(localized: "ba.cafe.metric.tactical"),
                         value: office.tacticalRefresh,
-                        detail: String(localized: "ba.cafe.metric.tactical.detail"),
+                        detail: office.tacticalRefreshDetail,
                         asset: .arenaCoin,
                         tint: BaDesign.amber
                     )

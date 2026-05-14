@@ -17,6 +17,8 @@ nonisolated enum BaTimeMath {
     static let headpatCooldown: TimeInterval = 3 * 60 * 60
     static let inviteCooldown: TimeInterval = 20 * 60 * 60
     static let cafeDailyAPByLevel = [92, 152, 222, 302, 390, 460, 530, 600, 570, 740]
+    static let cafeStudentRefreshHours = [4, 16]
+    static let arenaRefreshHour = 14
 
     static func displayAP(_ value: Double) -> Int {
         Int(max(value, 0))
@@ -107,8 +109,18 @@ nonisolated enum BaTimeMath {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = server.timeZone
         let start = calendar.startOfDay(for: date)
-        let refresh4 = calendar.date(bySettingHour: 4, minute: 0, second: 0, of: start) ?? start
-        let refresh16 = calendar.date(bySettingHour: 16, minute: 0, second: 0, of: start) ?? start
+        let refresh4 = calendar.date(
+            bySettingHour: cafeStudentRefreshHours[0],
+            minute: 0,
+            second: 0,
+            of: start
+        ) ?? start
+        let refresh16 = calendar.date(
+            bySettingHour: cafeStudentRefreshHours[1],
+            minute: 0,
+            second: 0,
+            of: start
+        ) ?? start
         if date < refresh4 {
             return refresh4
         }
@@ -116,19 +128,24 @@ nonisolated enum BaTimeMath {
             return refresh16
         }
         let tomorrow = calendar.date(byAdding: .day, value: 1, to: start) ?? date
-        return calendar.date(bySettingHour: 4, minute: 0, second: 0, of: tomorrow) ?? tomorrow
+        return calendar.date(
+            bySettingHour: cafeStudentRefreshHours[0],
+            minute: 0,
+            second: 0,
+            of: tomorrow
+        ) ?? tomorrow
     }
 
     static func nextArenaRefresh(from date: Date, server: BaServer) -> Date {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = server.timeZone
         let start = calendar.startOfDay(for: date)
-        let today = calendar.date(bySettingHour: 14, minute: 0, second: 0, of: start) ?? start
+        let today = calendar.date(bySettingHour: arenaRefreshHour, minute: 0, second: 0, of: start) ?? start
         if date < today {
             return today
         }
         let tomorrow = calendar.date(byAdding: .day, value: 1, to: start) ?? date
-        return calendar.date(bySettingHour: 14, minute: 0, second: 0, of: tomorrow) ?? tomorrow
+        return calendar.date(bySettingHour: arenaRefreshHour, minute: 0, second: 0, of: tomorrow) ?? tomorrow
     }
 
     static func nextHeadpatAvailable(lastHeadpatAt: Date?, server: BaServer) -> Date? {
@@ -140,6 +157,35 @@ nonisolated enum BaTimeMath {
 
     static func nextInviteAvailable(lastInviteAt: Date?) -> Date? {
         lastInviteAt?.addingTimeInterval(inviteCooldown)
+    }
+
+    static func localCafeStudentRefreshTimes(
+        server: BaServer,
+        reference: Date = Date(),
+        localTimeZone: TimeZone = .current
+    ) -> String {
+        cafeStudentRefreshHours
+            .compactMap { serverDate(hour: $0, server: server, reference: reference) }
+            .map { BaDisplayFormatters.clockTime($0, timeZone: localTimeZone) }
+            .joined(separator: " / ")
+    }
+
+    static func localArenaRefreshTime(
+        server: BaServer,
+        reference: Date = Date(),
+        localTimeZone: TimeZone = .current
+    ) -> String {
+        guard let date = serverDate(hour: arenaRefreshHour, server: server, reference: reference) else {
+            return "--:--"
+        }
+        return BaDisplayFormatters.clockTime(date, timeZone: localTimeZone)
+    }
+
+    private static func serverDate(hour: Int, server: BaServer, reference: Date) -> Date? {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = server.timeZone
+        let start = calendar.startOfDay(for: reference)
+        return calendar.date(bySettingHour: hour, minute: 0, second: 0, of: start)
     }
 }
 
@@ -162,6 +208,12 @@ nonisolated enum BaDisplayFormatters {
         return formatter
     }()
 
+    private static let clockFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter
+    }()
+
     static func dateTime(_ date: Date, server: BaServer? = nil) -> String {
         if let server {
             dateFormatter.timeZone = server.timeZone
@@ -175,6 +227,11 @@ nonisolated enum BaDisplayFormatters {
         let formatter = includingSeconds ? syncFormatter : syncMinuteFormatter
         formatter.timeZone = .current
         return formatter.string(from: date)
+    }
+
+    static func clockTime(_ date: Date, timeZone: TimeZone = .current) -> String {
+        clockFormatter.timeZone = timeZone
+        return clockFormatter.string(from: date)
     }
 
     static func compactRemaining(

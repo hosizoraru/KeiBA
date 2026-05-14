@@ -127,6 +127,12 @@ final class BaAppModel {
         }
     }
 
+    func setAPNotifyThreshold(_ value: Int) {
+        updateCurrentProfile { profile in
+            profile.apNotifyThreshold = min(max(value, 0), BaTimeMath.apMax)
+        }
+    }
+
     func claimCafeAP() {
         updateCurrentProfile { profile in
             let now = Date()
@@ -212,9 +218,15 @@ final class BaAppModel {
         var profile = currentProfile
         profile.nickname = next.nickname
         profile.friendCode = next.friendCode
-        profile.apCurrent = next.apCurrent
+        let now = Date()
+        if next.apLimit != previous.apLimit {
+            profile.apCurrent = BaTimeMath.currentAP(settings: previous, now: now)
+            profile.apRegenBaseAt = now
+        } else {
+            profile.apCurrent = next.apCurrent
+            profile.apRegenBaseAt = next.apRegenBaseAt
+        }
         profile.apLimit = next.apLimit
-        profile.apRegenBaseAt = next.apRegenBaseAt
         profile.apSyncAt = next.apSyncAt
         profile.cafeLevel = next.cafeLevel
         profile.cafeApCurrent = next.cafeApCurrent
@@ -249,6 +261,10 @@ final class BaAppModel {
 
     func officeSnapshot(now: Date = Date()) -> BaOfficeSnapshot {
         officeRepository.snapshot(settings: settings, now: now)
+    }
+
+    func officeAPSnapshot(now: Date = Date()) -> BaOfficeAPSnapshot {
+        officeRepository.apSnapshot(settings: settings, now: now)
     }
 
     func loadActivitiesIfNeeded() async {

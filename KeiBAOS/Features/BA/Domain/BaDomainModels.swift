@@ -513,6 +513,8 @@ nonisolated struct BaOfficeSnapshot: Equatable {
     let server: String
     let apCurrent: String
     let apLimit: String
+    let apCurrentLimit: String
+    let apRemaining: String
     let apNext: String
     let apFullRemain: String
     let apSyncAt: String
@@ -521,10 +523,23 @@ nonisolated struct BaOfficeSnapshot: Equatable {
     let cafeApLimit: String
     let cafeLevel: String
     let cafeVisitRefresh: String
+    let cafeVisitDetail: String
     let tacticalRefresh: String
+    let tacticalRefreshDetail: String
     let headpatRemain: String
     let headpatDetail: String
     let cafeActions: [BaCafeActionSnapshot]
+}
+
+nonisolated struct BaOfficeAPSnapshot: Equatable {
+    let apCurrent: String
+    let apLimit: String
+    let apCurrentLimit: String
+    let apRemaining: String
+    let apNext: String
+    let apFullRemain: String
+    let apSyncAt: String
+    let apFullAt: String
 }
 
 nonisolated enum BaCafeActionKind: String, CaseIterable, Codable, Identifiable, Hashable {

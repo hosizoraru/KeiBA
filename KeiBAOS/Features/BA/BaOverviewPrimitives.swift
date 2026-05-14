@@ -107,6 +107,7 @@ struct BaOverviewMetricTile: View {
 
 struct BaOverviewAPReadout: View {
     let currentAP: String
+    let remaining: String
     let onEdit: () -> Void
 
     var body: some View {
@@ -121,7 +122,13 @@ struct BaOverviewAPReadout: View {
                     .font(.largeTitle.monospacedDigit().weight(.semibold))
                     .foregroundStyle(BaDesign.green)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.72)
                     .contentTransition(.numericText())
+                Text(remaining)
+                    .font(BaOverviewTextToken.timeDetail)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.82)
             }
 
             Spacer(minLength: 10)
