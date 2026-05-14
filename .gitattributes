@@ -1,0 +1,15 @@
+* text=auto
+
+*.swift text diff=swift
+*.xcstrings text
+*.pbxproj text
+*.resolved text
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.pdf binary
+*.ipa binary
+*.xcarchive binary
