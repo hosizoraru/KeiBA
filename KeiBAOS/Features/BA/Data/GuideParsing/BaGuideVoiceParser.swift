@@ -57,8 +57,9 @@ struct BaGuideVoiceParser {
                 break
             }
 
+            let isVoiceCategory = isVoiceCategoryKey(key)
             let section: String
-            if isVoiceCategoryKey(key) {
+            if isVoiceCategory {
                 currentSection = key
                 section = key
             } else {
@@ -69,23 +70,28 @@ struct BaGuideVoiceParser {
             let rowContent = parseVoiceRowCells(
                 row.dropFirst(),
                 defaultTitle: key,
-                canAssignTitle: languageHeaders.isEmpty && isVoiceCategoryKey(key) == false,
+                canAssignTitle: isVoiceCategory,
                 sourceURL: sourceURL
             )
             let audioURLs = BaGuideTextNormalizer.dedupe(rowContent.audioURLs)
-            let linePairs = linePairs(lines: rowContent.lines, headers: languageHeaders, audioCount: audioURLs.count)
-            guard linePairs.isEmpty == false || audioURLs.isEmpty == false else { continue }
+            let records = voiceLineRecords(
+                textByAudioSegment: rowContent.textByAudioSegment,
+                headers: languageHeaders,
+                audioURLs: audioURLs
+            )
+            let alignedAudioURLs = alignedAudioURLs(records: records, audioURLs: audioURLs)
+            guard records.isEmpty == false || audioURLs.isEmpty == false else { continue }
             entries.append(
                 BaGuideVoiceEntry(
                     id: "voice-\(rowIndex)-\(abs("\(section)|\(rowContent.title)".hashValue))",
                     title: rowContent.title,
                     subtitle: section,
-                    transcript: linePairs.map(\.1).joined(separator: "\n"),
-                    audioURL: audioURLs.first,
+                    transcript: records.map(\.text).joined(separator: "\n"),
+                    audioURL: alignedAudioURLs.first ?? audioURLs.first,
                     section: section,
-                    lineHeaders: linePairs.map(\.0),
-                    lines: linePairs.map(\.1),
-                    audioURLs: audioURLs.isEmpty ? nil : audioURLs
+                    lineHeaders: records.map(\.label),
+                    lines: records.map(\.text),
+                    audioURLs: alignedAudioURLs.isEmpty ? nil : alignedAudioURLs
                 )
             )
         }
@@ -100,23 +106,36 @@ struct BaGuideVoiceParser {
     ) -> ParsedVoiceRowContent {
         var title = defaultTitle
         var titleAssigned = false
-        var lines: [String] = []
+        var textByAudioSegment: [Int: [String]] = [:]
         var audioURLs: [URL] = []
+
+        func appendAudio(from cell: BaJSONObject, rawValue: String) {
+            for url in extractAudioURLs(in: cell, rawValue: rawValue, sourceURL: sourceURL)
+                where audioURLs.contains(url) == false
+            {
+                audioURLs.append(url)
+            }
+        }
 
         for cell in cells {
             let rawValue = cell.string("value") ?? ""
             let cleaned = BaGuideTextNormalizer.clean(rawValue)
-            audioURLs.append(contentsOf: extractAudioURLs(in: cell, rawValue: rawValue, sourceURL: sourceURL))
+            let type = (cell.string("type") ?? "").lowercased()
+            if type == "audio" {
+                appendAudio(from: cell, rawValue: rawValue)
+                continue
+            }
             guard cleaned.isEmpty == false, shouldDisplayVoiceText(cleaned) else { continue }
             if canAssignTitle, titleAssigned == false {
                 title = cleaned
                 titleAssigned = true
             } else {
-                lines.append(cleaned)
+                textByAudioSegment[audioURLs.count, default: []].append(cleaned)
+                appendAudio(from: cell, rawValue: rawValue)
             }
         }
 
-        return ParsedVoiceRowContent(title: title, lines: lines, audioURLs: audioURLs)
+        return ParsedVoiceRowContent(title: title, textByAudioSegment: textByAudioSegment, audioURLs: audioURLs)
     }
 
     private func extractAudioURLs(in cell: BaJSONObject, rawValue: String, sourceURL: URL?) -> [URL] {
@@ -138,18 +157,87 @@ struct BaGuideVoiceParser {
         return BaGuideTextNormalizer.looksLikeAudioURL(url) == false
     }
 
-    private func linePairs(lines: [String], headers: [String], audioCount: Int) -> [(String, String)] {
-        let labels = normalizedHeaders(headers: headers, count: max(lines.count, audioCount))
-        return lines.enumerated()
-            .map { index, line in
-                (labels.indices.contains(index) ? labels[index] : defaultLanguageLabel(index), line)
+    private func voiceLineRecords(
+        textByAudioSegment: [Int: [String]],
+        headers: [String],
+        audioURLs: [URL]
+    ) -> [VoiceLineRecord] {
+        let maxTextCount = textByAudioSegment.values.map(\.count).max() ?? 0
+        let dubbingCount = max(headers.count, audioURLs.count, maxTextCount)
+        guard dubbingCount > 0 else {
+            return []
+        }
+
+        var remainingText = textByAudioSegment
+        var dubbingTexts = Array(repeating: "", count: dubbingCount)
+        var segmentZero = remainingText[0] ?? []
+        for index in dubbingTexts.indices where segmentZero.isEmpty == false {
+            dubbingTexts[index] = segmentZero.removeFirst().trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        remainingText[0] = segmentZero
+
+        for index in dubbingTexts.indices where dubbingTexts[index].isEmpty {
+            var bucket = remainingText[index] ?? []
+            if bucket.isEmpty == false {
+                dubbingTexts[index] = bucket.removeFirst().trimmingCharacters(in: .whitespacesAndNewlines)
+                remainingText[index] = bucket
             }
-            .map { pair in
-                (canonicalLanguageLabel(pair.0).ifBlank(pair.0), pair.1)
-            }
+        }
+
+        let officialTranslation = remainingText
+            .sorted { $0.key < $1.key }
+            .flatMap(\.value)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .first { $0.isEmpty == false } ?? ""
+
+        var records: [VoiceLineRecord] = []
+        let labels = normalizedHeaders(headers: headers, count: dubbingCount)
+        for index in dubbingTexts.indices {
+            let text = dubbingTexts[index].trimmingCharacters(in: .whitespacesAndNewlines)
+            guard text.isEmpty == false else { continue }
+            let label = labels.indices.contains(index) ? labels[index] : defaultLanguageLabel(index)
+            records.append(
+                VoiceLineRecord(
+                    label: canonicalLanguageLabel(label).ifBlank(label),
+                    text: text,
+                    audioIndex: index
+                )
+            )
+        }
+        if officialTranslation.isEmpty == false {
+            records.append(
+                VoiceLineRecord(
+                    label: "官翻",
+                    text: officialTranslation,
+                    audioIndex: nil
+                )
+            )
+        }
+
+        return records
+            .enumerated()
             .sorted { lhs, rhs in
-                voicePriority(lhs.0) < voicePriority(rhs.0)
+                let lhsPriority = voicePriority(lhs.element.label)
+                let rhsPriority = voicePriority(rhs.element.label)
+                return lhsPriority < rhsPriority || (lhsPriority == rhsPriority && lhs.offset < rhs.offset)
             }
+            .map(\.element)
+    }
+
+    private func alignedAudioURLs(records: [VoiceLineRecord], audioURLs: [URL]) -> [URL] {
+        guard audioURLs.isEmpty == false else { return [] }
+        var used = Set<Int>()
+        var indexes: [Int] = records.compactMap { record in
+            guard let index = record.audioIndex,
+                  audioURLs.indices.contains(index),
+                  used.insert(index).inserted
+            else {
+                return nil
+            }
+            return index
+        }
+        indexes.append(contentsOf: audioURLs.indices.filter { used.contains($0) == false })
+        return indexes.map { audioURLs[$0] }
     }
 
     private func normalizedHeaders(headers: [String], count: Int) -> [String] {
@@ -238,8 +326,14 @@ struct BaGuideVoiceParser {
 
     private struct ParsedVoiceRowContent {
         let title: String
-        let lines: [String]
+        let textByAudioSegment: [Int: [String]]
         let audioURLs: [URL]
+    }
+
+    private struct VoiceLineRecord {
+        let label: String
+        let text: String
+        let audioIndex: Int?
     }
 }
 

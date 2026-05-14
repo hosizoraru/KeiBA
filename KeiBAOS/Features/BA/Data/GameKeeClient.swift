@@ -44,7 +44,7 @@ struct GameKeeClient {
     private let session: URLSession
     private let retryAttempts: Int
 
-    init(
+    nonisolated init(
         session: URLSession = GameKeeClient.makeSession(),
         retryAttempts: Int = 2
     ) {
@@ -75,6 +75,19 @@ struct GameKeeClient {
         for userAgent in imageRetryUserAgents {
             do {
                 return try await executeImage(request, userAgent: userAgent)
+            } catch {
+                lastError = error
+            }
+        }
+        throw lastError ?? GameKeeError.emptyBody
+    }
+
+    func fetchAudioData(url: URL, refererPath: String = "/ba") async throws -> Data {
+        let request = GameKeeRequest(pathOrURL: url.absoluteString, refererPath: refererPath)
+        var lastError: Error?
+        for userAgent in imageRetryUserAgents {
+            do {
+                return try await executeAudio(request, userAgent: userAgent)
             } catch {
                 lastError = error
             }
@@ -177,6 +190,43 @@ struct GameKeeClient {
         }
         let contentType = httpResponse.value(forHTTPHeaderField: "Content-Type")?.lowercased() ?? ""
         guard contentType.contains("image") || looksLikeImageData(data) else {
+            let preview = String(decoding: data.prefix(120), as: UTF8.self)
+            throw GameKeeError.invalidResponse(preview)
+        }
+        return data
+    }
+
+    private func executeAudio(_ request: GameKeeRequest, userAgent: String) async throws -> Data {
+        guard let url = normalizedURL(request.pathOrURL) else {
+            throw GameKeeError.invalidURL(request.pathOrURL)
+        }
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "GET"
+        urlRequest.timeoutInterval = 18
+        urlRequest.cachePolicy = .reloadRevalidatingCacheData
+        urlRequest.setValue("audio/*,application/octet-stream,*/*", forHTTPHeaderField: "Accept")
+        urlRequest.setValue("zh-CN", forHTTPHeaderField: "Accept-Language")
+        urlRequest.setValue(resolveReferer(pathOrURL: request.pathOrURL, refererPath: request.refererPath), forHTTPHeaderField: "Referer")
+        urlRequest.setValue(userAgent, forHTTPHeaderField: "User-Agent")
+        for (key, value) in request.extraHeaders {
+            urlRequest.setValue(value, forHTTPHeaderField: key)
+        }
+
+        let (data, response) = try await session.data(for: urlRequest)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw GameKeeError.invalidResponse(response.description)
+        }
+        guard (200 ..< 300).contains(httpResponse.statusCode) else {
+            throw GameKeeError.httpStatus(httpResponse.statusCode)
+        }
+        guard data.isEmpty == false else {
+            throw GameKeeError.emptyBody
+        }
+        let contentType = httpResponse.value(forHTTPHeaderField: "Content-Type")?.lowercased() ?? ""
+        guard contentType.contains("audio") ||
+            (contentType.contains("octet-stream") && looksLikeAudioData(data)) ||
+            looksLikeAudioData(data)
+        else {
             let preview = String(decoding: data.prefix(120), as: UTF8.self)
             throw GameKeeError.invalidResponse(preview)
         }
@@ -307,7 +357,27 @@ struct GameKeeClient {
         return false
     }
 
-    private static func makeSession() -> URLSession {
+    private func looksLikeAudioData(_ data: Data) -> Bool {
+        let bytes = [UInt8](data.prefix(16))
+        if bytes.starts(with: [0x49, 0x44, 0x33]) { return true }
+        if bytes.count >= 2, bytes[0] == 0xFF, (bytes[1] & 0xE0) == 0xE0 { return true }
+        if bytes.starts(with: [0x4F, 0x67, 0x67, 0x53]) { return true }
+        if bytes.starts(with: [0x66, 0x4C, 0x61, 0x43]) { return true }
+        if bytes.count >= 12,
+           bytes[0 ..< 4].elementsEqual([0x52, 0x49, 0x46, 0x46]),
+           bytes[8 ..< 12].elementsEqual([0x57, 0x41, 0x56, 0x45])
+        {
+            return true
+        }
+        if bytes.count >= 8,
+           bytes[4 ..< 8].elementsEqual([0x66, 0x74, 0x79, 0x70])
+        {
+            return true
+        }
+        return false
+    }
+
+    private nonisolated static func makeSession() -> URLSession {
         let cache = URLCache(
             memoryCapacity: 16 * 1024 * 1024,
             diskCapacity: 64 * 1024 * 1024,

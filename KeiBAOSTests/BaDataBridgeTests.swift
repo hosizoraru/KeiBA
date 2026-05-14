@@ -206,6 +206,7 @@ final class BaDataBridgeTests: XCTestCase {
             ],
             [
                 ["value": "通常"],
+                ["value": "标题"],
                 ["value": "中文"],
                 ["value": "日本語"],
                 ["value": "한국어"],
@@ -216,6 +217,73 @@ final class BaDataBridgeTests: XCTestCase {
         XCTAssertEqual(rows.count, 1)
         XCTAssertEqual(rows[0].lineHeaders, ["日配", "中配", "韩配"])
         XCTAssertEqual(rows[0].lines, ["日本語", "中文", "한국어"])
+    }
+
+    func testVoiceParserAlignsAudioURLsAfterLanguageSort() throws {
+        let cnURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/voice/cn.mp3"))
+        let jpURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/voice/jp.mp3"))
+        let baseData: [[BaJSONObject]] = [
+            [
+                ["value": "配音语言"],
+                ["value": "中配"],
+                ["value": "日配"],
+            ],
+            [
+                ["value": "通常"],
+                ["value": "大厅1"],
+                ["value": "中文台词"],
+                ["value": "日本語"],
+                ["type": "audio", "value": cnURL.absoluteString],
+                ["type": "audio", "value": jpURL.absoluteString],
+            ],
+        ]
+        let entry = try XCTUnwrap(BaGuideVoiceParser().parse(baseData: baseData, content: nil, sourceURL: nil).first)
+
+        XCTAssertEqual(entry.title, "大厅1")
+        XCTAssertEqual(entry.lineHeaders, ["日配", "中配"])
+        XCTAssertEqual(entry.lines, ["日本語", "中文台词"])
+        XCTAssertEqual(entry.audioURLs, [jpURL, cnURL])
+    }
+
+    func testVoiceResolverChoosesAudioForSelectedLanguage() throws {
+        let jpURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/voice/jp.mp3"))
+        let cnURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/voice/cn.mp3"))
+        let entry = BaGuideVoiceEntry(
+            id: "voice-1",
+            title: "登录",
+            subtitle: "通常",
+            transcript: "JP\nCN",
+            audioURL: jpURL,
+            section: "通常",
+            lineHeaders: ["日配", "中配", "官翻"],
+            lines: ["JP", "CN", "官方翻译"],
+            audioURLs: [jpURL, cnURL]
+        )
+
+        let headers = BaVoiceLanguageResolver.playbackHeaders(for: [entry])
+        XCTAssertEqual(headers, ["日配", "中配"])
+        XCTAssertEqual(
+            BaVoiceLanguageResolver.playbackURL(for: entry, headers: headers, selectedHeader: "中配"),
+            cnURL
+        )
+        let jpOnlyEntry = BaGuideVoiceEntry(
+            id: "voice-2",
+            title: "登录",
+            subtitle: "通常",
+            transcript: "JP\nCN",
+            audioURL: jpURL,
+            section: "通常",
+            lineHeaders: ["日配", "中配"],
+            lines: ["JP", "CN"],
+            audioURLs: [jpURL]
+        )
+        XCTAssertNil(
+            BaVoiceLanguageResolver.playbackURL(for: jpOnlyEntry, headers: ["日配", "中配"], selectedHeader: "中配")
+        )
+        XCTAssertEqual(
+            BaVoiceLanguageResolver.linePairs(for: entry, fallbackHeaders: headers).map(\.language),
+            ["日配", "中配", "官翻"]
+        )
     }
 
     func testGalleryParserClassifiesVideoMedia() {
