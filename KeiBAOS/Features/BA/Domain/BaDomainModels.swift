@@ -428,21 +428,6 @@ nonisolated enum BaStudentDetailPage: String, CaseIterable, Codable, Identifiabl
             String(localized: "ba.student.detail.page.simulate")
         }
     }
-
-    var systemImage: String {
-        switch self {
-        case .overviewProfile:
-            "person.text.rectangle"
-        case .skills:
-            "sparkles"
-        case .voice:
-            "waveform"
-        case .gallery:
-            "photo.on.rectangle.angled"
-        case .simulate:
-            "chart.xyaxis.line"
-        }
-    }
 }
 
 nonisolated struct BaGuideRow: Identifiable, Codable, Hashable {

@@ -24,19 +24,18 @@ struct BaStudentDetailView: View {
     }
 
     var body: some View {
-        TabView(selection: $selectedPage) {
-            ForEach(BaStudentDetailPage.allCases) { page in
-                Tab(page.title, systemImage: page.systemImage, value: page) {
-                    BaStudentDetailTabContent(
-                        page: page,
-                        entry: entry,
-                        state: state,
-                        info: info,
-                        headerTint: headerTint,
-                        voiceSearchText: $voiceSearchText
-                    )
-                }
+        List {
+            BaStudentDetailPagePicker(selection: $selectedPage)
+
+            if state.isLoading, info == nil {
+                loadingSection
             }
+
+            if let error = state.errorMessage, error.isEmpty == false {
+                errorSection(error)
+            }
+
+            activePageSections
         }
         .navigationTitle(info?.title ?? entry.name)
         .toolbar {
@@ -69,74 +68,26 @@ struct BaStudentDetailView: View {
                 .labelStyle(.iconOnly)
             }
         }
-        .background(AppBackground())
-        .modifier(BaStudentVoiceSearchModifier(isActive: selectedPage == .voice, text: $voiceSearchText))
-        #if os(iOS)
-            .toolbar(.hidden, for: .tabBar)
-        #endif
-            .task(id: entry.contentId) {
-                await model.loadStudentDetail(entry: entry)
-            }
-            .onChange(of: selectedPage) { _, page in
-                if page != .voice {
-                    voiceSearchText = ""
-                }
-            }
-    }
-
-    private var headerTint: Color {
-        switch entry.category {
-        case .students:
-            BaDesign.blue
-        case .npcSatellite:
-            BaDesign.violet
-        case .studentBgm:
-            BaDesign.amber
-        case .favorites:
-            BaDesign.green
-        }
-    }
-
-    private var favoriteTitle: String {
-        model.isFavorite(entry)
-            ? String(localized: "ba.catalog.favorite.remove")
-            : String(localized: "ba.catalog.favorite.add")
-    }
-}
-
-private struct BaStudentDetailTabContent: View {
-    @Environment(BaAppModel.self) private var model
-
-    let page: BaStudentDetailPage
-    let entry: BaGuideCatalogEntry
-    let state: BaLoadableState<BaStudentGuideInfo>
-    let info: BaStudentGuideInfo?
-    let headerTint: Color
-    @Binding var voiceSearchText: String
-
-    var body: some View {
-        List {
-            if state.isLoading, info == nil {
-                loadingSection
-            }
-
-            if let error = state.errorMessage, error.isEmpty == false {
-                errorSection(error)
-            }
-
-            activePageSections
-        }
         .platformInsetGroupedListStyle()
         .scrollContentBackground(.hidden)
         .background(AppBackground())
+        .modifier(BaStudentVoiceSearchModifier(isActive: selectedPage == .voice, text: $voiceSearchText))
+        .task(id: entry.contentId) {
+            await model.loadStudentDetail(entry: entry)
+        }
         .refreshable {
             await model.loadStudentDetail(entry: entry, force: true)
+        }
+        .onChange(of: selectedPage) { _, page in
+            if page != .voice {
+                voiceSearchText = ""
+            }
         }
     }
 
     @ViewBuilder
     private var activePageSections: some View {
-        switch page {
+        switch selectedPage {
         case .overviewProfile:
             if let info {
                 BaStudentDetailOverviewSections(info: info, entry: entry, tint: headerTint)
@@ -175,6 +126,42 @@ private struct BaStudentDetailTabContent: View {
     private var emptyDetailSection: some View {
         Section {
             BaStudentDetailEmptyRow(section: .profile)
+        }
+    }
+
+    private var headerTint: Color {
+        switch entry.category {
+        case .students:
+            BaDesign.blue
+        case .npcSatellite:
+            BaDesign.violet
+        case .studentBgm:
+            BaDesign.amber
+        case .favorites:
+            BaDesign.green
+        }
+    }
+
+    private var favoriteTitle: String {
+        model.isFavorite(entry)
+            ? String(localized: "ba.catalog.favorite.remove")
+            : String(localized: "ba.catalog.favorite.add")
+    }
+}
+
+private struct BaStudentDetailPagePicker: View {
+    @Binding var selection: BaStudentDetailPage
+
+    var body: some View {
+        Section {
+            Picker(String(localized: "ba.student.detail.page.picker"), selection: $selection) {
+                ForEach(BaStudentDetailPage.allCases) { page in
+                    Text(page.title)
+                        .tag(page)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
         }
     }
 }

@@ -265,6 +265,7 @@
     "ba.student.detail.page.gallery" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Gallery"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"影画鉴赏"}}}},
     "ba.student.detail.page.overviewProfile" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Overview"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"属性概览"}}}},
     "ba.student.detail.page.overviewSkills" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Overview"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"概览"}}}},
+    "ba.student.detail.page.picker" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Student detail section"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"学生详情板块"}}}},
     "ba.student.detail.page.profile" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Profile"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"档案"}}}},
     "ba.student.detail.page.simulate" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Sim"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"养成模拟"}}}},
     "ba.student.detail.page.skills" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Skills"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"角色技能"}}}},
