@@ -25,12 +25,12 @@ struct AppShell: View {
 }
 
 private struct BaNavigationRoot: View {
+    @Environment(BaAppModel.self) private var model
+
     let tab: AppTab
     @State private var presentedSheet: BaPresentedSheet?
     @State private var activityFilter: BaTimelineStatus?
     @State private var poolFilter: BaTimelineStatus?
-    @State private var activityRefreshStamp = String(localized: "ba.activity.refresh.preview")
-    @State private var poolRefreshStamp = String(localized: "ba.pool.refresh.preview")
 
     var body: some View {
         NavigationStack {
@@ -57,15 +57,9 @@ private struct BaNavigationRoot: View {
         case .overview:
             BaOverviewView()
         case .activity:
-            BaActivityView(
-                statusFilter: $activityFilter,
-                refreshStamp: $activityRefreshStamp
-            )
+            BaActivityView(statusFilter: $activityFilter)
         case .pool:
-            BaPoolView(
-                statusFilter: $poolFilter,
-                refreshStamp: $poolRefreshStamp
-            )
+            BaPoolView(statusFilter: $poolFilter)
         case .catalog:
             BaCatalogView()
         case .settings:
@@ -78,18 +72,20 @@ private struct BaNavigationRoot: View {
         switch tab {
         case .activity:
             Button {
-                activityRefreshStamp = String(localized: "ba.activity.refresh.justNow")
+                Task { await model.refreshActivities(force: true) }
             } label: {
                 Label(String(localized: "ba.activity.action.refresh"), systemImage: "arrow.clockwise")
             }
             .labelStyle(.iconOnly)
+            .disabled(model.activityState.isLoading)
         case .pool:
             Button {
-                poolRefreshStamp = String(localized: "ba.pool.refresh.justNow")
+                Task { await model.refreshPools(force: true) }
             } label: {
                 Label(String(localized: "ba.pool.action.refresh"), systemImage: "arrow.clockwise")
             }
             .labelStyle(.iconOnly)
+            .disabled(model.poolState.isLoading)
         case .overview, .catalog, .settings:
             EmptyView()
         }
@@ -176,4 +172,5 @@ private struct BaNavigationRoot: View {
 
 #Preview {
     AppShell()
+        .environment(BaAppModel.live())
 }

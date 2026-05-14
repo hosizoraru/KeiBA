@@ -8,7 +8,11 @@
 import SwiftUI
 
 struct BaOverviewView: View {
-    private let office = BaOfficeSnapshot.preview
+    @Environment(BaAppModel.self) private var model
+
+    private var office: BaOfficeSnapshot {
+        model.officeSnapshot
+    }
 
     var body: some View {
         BaScreenScaffold {
@@ -20,6 +24,9 @@ struct BaOverviewView: View {
             identitySection
             apSection
             cafeSection
+        }
+        .task {
+            model.refreshOfficeSnapshot()
         }
     }
 
@@ -131,16 +138,16 @@ struct BaOverviewView: View {
             BaDivider()
             BaMetricRow(
                 title: String(localized: "ba.cafe.action.headpat"),
-                value: String(localized: "ba.cafe.action.ready.value"),
-                detail: String(localized: "ba.cafe.action.ready"),
+                value: office.headpatRemain,
+                detail: office.headpatDetail,
                 systemImage: "hand.tap",
                 valueColor: BaDesign.green
             )
             BaDivider()
             BaMetricRow(
                 title: String(localized: "ba.cafe.action.invite1"),
-                value: String(localized: "ba.cafe.action.invite.cooldown.value"),
-                detail: String(localized: "ba.cafe.action.availableAt.value"),
+                value: office.inviteRemain,
+                detail: office.inviteDetail,
                 systemImage: "ticket",
                 valueColor: BaDesign.violet
             )
@@ -160,4 +167,5 @@ struct BaOverviewView: View {
     NavigationStack {
         BaOverviewView()
     }
+    .environment(BaAppModel.live())
 }

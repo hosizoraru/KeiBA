@@ -1,0 +1,249 @@
+//
+//  GameKeeClient.swift
+//  KeiBAOS
+//
+//  Created by Codex on 2026/05/14.
+//
+
+import Foundation
+
+struct GameKeeRequest: Hashable {
+    let pathOrURL: String
+    let refererPath: String
+    var extraHeaders: [String: String] = [:]
+}
+
+enum GameKeeError: LocalizedError {
+    case invalidURL(String)
+    case invalidResponse(String)
+    case httpStatus(Int)
+    case emptyBody
+    case apiCode(Int)
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidURL(let value):
+            "Invalid URL: \(value)"
+        case .invalidResponse(let value):
+            "Invalid response: \(value)"
+        case .httpStatus(let code):
+            "HTTP \(code)"
+        case .emptyBody:
+            "Empty response"
+        case .apiCode(let code):
+            "GameKee API code \(code)"
+        }
+    }
+}
+
+struct GameKeeClient {
+    static let baseURL = URL(string: "https://www.gamekee.com")!
+
+    private let session: URLSession
+    private let retryAttempts: Int
+
+    init(
+        session: URLSession = GameKeeClient.makeSession(),
+        retryAttempts: Int = 2
+    ) {
+        self.session = session
+        self.retryAttempts = max(retryAttempts, 1)
+    }
+
+    func fetchJSONData(_ request: GameKeeRequest) async throws -> Data {
+        try await fetchData(
+            request,
+            acceptHeader: "application/json, text/plain, */*",
+            requireJSONBody: true
+        )
+    }
+
+    func fetchHTML(_ request: GameKeeRequest) async throws -> String {
+        let data = try await fetchData(
+            request,
+            acceptHeader: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            requireJSONBody: false
+        )
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    func fetchImageData(url: URL, refererPath: String = "/ba") async throws -> Data {
+        try await fetchData(
+            GameKeeRequest(pathOrURL: url.absoluteString, refererPath: refererPath),
+            acceptHeader: "image/*,*/*",
+            requireJSONBody: false
+        )
+    }
+
+    private func fetchData(
+        _ request: GameKeeRequest,
+        acceptHeader: String,
+        requireJSONBody: Bool
+    ) async throws -> Data {
+        var lastError: Error?
+        for attempt in 0..<retryAttempts {
+            do {
+                return try await execute(
+                    request,
+                    acceptHeader: acceptHeader,
+                    requireJSONBody: requireJSONBody
+                )
+            } catch {
+                lastError = error
+                if attempt < retryAttempts - 1 {
+                    try? await Task.sleep(for: .milliseconds(300))
+                }
+            }
+        }
+        throw lastError ?? GameKeeError.emptyBody
+    }
+
+    private func execute(
+        _ request: GameKeeRequest,
+        acceptHeader: String,
+        requireJSONBody: Bool
+    ) async throws -> Data {
+        guard let url = normalizedURL(request.pathOrURL) else {
+            throw GameKeeError.invalidURL(request.pathOrURL)
+        }
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "GET"
+        urlRequest.timeoutInterval = 12
+        urlRequest.cachePolicy = .reloadRevalidatingCacheData
+        urlRequest.setValue(acceptHeader, forHTTPHeaderField: "Accept")
+        urlRequest.setValue("zh-CN", forHTTPHeaderField: "Accept-Language")
+        urlRequest.setValue(resolveReferer(pathOrURL: request.pathOrURL, refererPath: request.refererPath), forHTTPHeaderField: "Referer")
+        urlRequest.setValue("Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1", forHTTPHeaderField: "User-Agent")
+        request.extraHeaders.forEach { key, value in
+            urlRequest.setValue(value, forHTTPHeaderField: key)
+        }
+
+        let (data, response) = try await session.data(for: urlRequest)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw GameKeeError.invalidResponse(response.description)
+        }
+        guard (200..<300).contains(httpResponse.statusCode) else {
+            throw GameKeeError.httpStatus(httpResponse.statusCode)
+        }
+        guard data.isEmpty == false else {
+            throw GameKeeError.emptyBody
+        }
+        if requireJSONBody, isJSONLike(data) == false {
+            throw GameKeeError.invalidResponse(String(decoding: data.prefix(120), as: UTF8.self))
+        }
+        return data
+    }
+
+    private func normalizedURL(_ pathOrURL: String) -> URL? {
+        let raw = pathOrURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        if raw.hasPrefix("http://") {
+            return URL(string: raw.replacingOccurrences(of: "http://", with: "https://", options: [.anchored, .caseInsensitive]))
+        }
+        if raw.hasPrefix("https://") {
+            return URL(string: raw)
+        }
+        if raw.hasPrefix("//") {
+            return URL(string: "https:\(raw)")
+        }
+        if raw.hasPrefix("/") {
+            return URL(string: raw, relativeTo: Self.baseURL)?.absoluteURL
+        }
+        return URL(string: "/\(raw)", relativeTo: Self.baseURL)?.absoluteURL
+    }
+
+    private func resolveReferer(pathOrURL: String, refererPath: String) -> String {
+        let requestHint = pathHint(pathOrURL).lowercased()
+        let refererHint = pathHint(refererPath).lowercased()
+        let merged = "\(requestHint) \(refererHint)"
+        if let detailId = detailContentID(requestHint) ?? detailContentID(refererHint) {
+            return "https://www.gamekee.com/ba/tj/\(detailId).html"
+        }
+        if let referer = normalizedReferer(refererPath) {
+            return referer
+        }
+        if merged.contains("/ba/huodong") {
+            return "https://www.gamekee.com/ba/huodong/15"
+        }
+        if merged.contains("/ba/kachi") {
+            return "https://www.gamekee.com/ba/kachi/15"
+        }
+        return "https://www.gamekee.com/ba"
+    }
+
+    private func pathHint(_ pathOrURL: String) -> String {
+        let raw = pathOrURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard raw.isEmpty == false else { return "" }
+        if let url = URL(string: raw), let host = url.host, host.isEmpty == false {
+            var path = url.path
+            if let query = url.query, query.isEmpty == false {
+                path += "?\(query)"
+            }
+            return path
+        }
+        if raw.hasPrefix("//"), let url = URL(string: "https:\(raw)") {
+            return url.path
+        }
+        return raw.hasPrefix("/") ? raw : "/\(raw)"
+    }
+
+    private func normalizedReferer(_ refererPath: String) -> String? {
+        let raw = refererPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard raw.isEmpty == false else { return nil }
+        if raw.hasPrefix("http://") {
+            return raw.replacingOccurrences(of: "http://", with: "https://", options: [.anchored, .caseInsensitive])
+        }
+        if raw.hasPrefix("https://") {
+            return raw
+        }
+        if raw.hasPrefix("//") {
+            return "https:\(raw)"
+        }
+        if raw.hasPrefix("/") {
+            return "https://www.gamekee.com\(raw)"
+        }
+        return "https://www.gamekee.com/\(raw)"
+    }
+
+    private func detailContentID(_ hint: String) -> String? {
+        if let range = hint.range(of: #"/v1/content/detail/(\d+)"#, options: .regularExpression) {
+            return String(hint[range]).split(separator: "/").last.map(String.init)
+        }
+        if let range = hint.range(of: #"/ba/tj/(\d+)\.html"#, options: .regularExpression) {
+            let matched = String(hint[range])
+            return matched
+                .replacingOccurrences(of: "/ba/tj/", with: "")
+                .replacingOccurrences(of: ".html", with: "")
+        }
+        return nil
+    }
+
+    private func isJSONLike(_ data: Data) -> Bool {
+        guard let text = String(data: data.prefix(128), encoding: .utf8) else { return false }
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.hasPrefix("{") || trimmed.hasPrefix("[")
+    }
+
+    private static func makeSession() -> URLSession {
+        let cache = URLCache(
+            memoryCapacity: 16 * 1024 * 1024,
+            diskCapacity: 64 * 1024 * 1024,
+            diskPath: "ba_gamekee_http_cache"
+        )
+        let configuration = URLSessionConfiguration.default
+        configuration.timeoutIntervalForRequest = 12
+        configuration.timeoutIntervalForResource = 20
+        configuration.waitsForConnectivity = true
+        configuration.requestCachePolicy = .reloadRevalidatingCacheData
+        configuration.urlCache = cache
+        return URLSession(configuration: configuration)
+    }
+}
+
+extension GameKeeClient {
+    static var baHeaders: [String: String] {
+        [
+            "device-num": "1",
+            "game-alias": "ba"
+        ]
+    }
+}

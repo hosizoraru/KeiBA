@@ -8,13 +8,14 @@
 import SwiftUI
 
 struct BaCatalogView: View {
+    @Environment(BaAppModel.self) private var model
+
     @State private var selectedCategory: BaCatalogCategory = .students
     @State private var searchText = ""
 
-    private let students = BaStudentPreview.previewStudents
-    private let favorites = BaStudentPreview.favoriteStudents
-    private let npcEntries = BaCatalogInfoEntry.npcSatellitePreview
-    private let bgmEntries = BaCatalogInfoEntry.bgmPreview
+    private var entries: [BaGuideCatalogEntry] {
+        model.entries(for: selectedCategory, query: searchText)
+    }
 
     var body: some View {
         List {
@@ -30,237 +31,167 @@ struct BaCatalogView: View {
             }
 
             Section {
-                categoryContent
+                catalogContent
             } header: {
                 Text(selectedCategory.title)
             } footer: {
-                Text(categoryFooter)
+                Text(footerText)
             }
         }
         .platformInsetGroupedListStyle()
         .scrollContentBackground(.hidden)
         .background(AppBackground())
         .searchable(text: $searchText, prompt: Text(selectedCategory.searchPrompt))
+        .task {
+            await model.loadCatalogIfNeeded()
+        }
+        .refreshable {
+            await model.refreshCatalog(force: true)
+        }
     }
 
     @ViewBuilder
-    private var categoryContent: some View {
-        switch selectedCategory {
-        case .students:
-            studentRows(students)
-        case .npcSatellite:
-            infoRows(filteredInfoEntries(npcEntries))
-        case .studentBgm:
-            infoRows(filteredInfoEntries(bgmEntries))
-        case .favorites:
-            studentRows(favorites)
+    private var catalogContent: some View {
+        if model.catalogState.isLoading, entries.isEmpty {
+            ProgressView()
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, 24)
+        } else if entries.isEmpty {
+            ContentUnavailableView(
+                String(localized: "ba.catalog.empty.title"),
+                systemImage: "magnifyingglass",
+                description: Text(emptyDetail)
+            )
+        } else {
+            ForEach(entries) { entry in
+                NavigationLink {
+                    BaStudentDetailView(entry: entry)
+                } label: {
+                    BaCatalogEntryRow(entry: entry, isFavorite: model.isFavorite(entry))
+                }
+                .swipeActions(edge: .trailing) {
+                    Button {
+                        model.toggleFavorite(entry)
+                    } label: {
+                        Label(favoriteActionTitle(for: entry), systemImage: model.isFavorite(entry) ? "star.slash" : "star")
+                    }
+                    .tint(.yellow)
+                }
+            }
         }
+    }
+
+    private var footerText: String {
+        if let error = model.catalogState.errorMessage, error.isEmpty == false {
+            return String(format: String(localized: "ba.state.error.format"), error)
+        }
+        if let lastSyncAt = model.catalogState.lastSyncAt {
+            let syncText = model.catalogState.isShowingCache
+                ? String(format: String(localized: "ba.state.cachedAt.format"), BaDisplayFormatters.syncTime(lastSyncAt))
+                : String(format: String(localized: "ba.state.syncedAt.format"), BaDisplayFormatters.syncTime(lastSyncAt))
+            return "\(categoryFooter) \(syncText)"
+        }
+        return categoryFooter
     }
 
     private var categoryFooter: String {
         switch selectedCategory {
         case .students:
-            String(localized: "ba.catalog.footer.students")
+            String(localized: "ba.catalog.footer.students.live")
         case .npcSatellite:
-            String(localized: "ba.catalog.footer.npc")
+            String(localized: "ba.catalog.footer.npc.live")
         case .studentBgm:
             String(localized: "ba.catalog.footer.bgm")
         case .favorites:
-            String(localized: "ba.catalog.footer.favorites")
+            String(localized: "ba.catalog.footer.favorites.live")
         }
     }
 
-    @ViewBuilder
-    private func studentRows(_ source: [BaStudentPreview]) -> some View {
-        let matches = filteredStudents(source)
-        if matches.isEmpty {
-            ContentUnavailableView(
-                String(localized: "ba.catalog.empty.title"),
-                systemImage: "magnifyingglass",
-                description: Text(String(localized: "ba.catalog.empty.detail"))
-            )
-        } else {
-            ForEach(matches) { student in
-                NavigationLink {
-                    BaStudentDetailView(student: student)
-                } label: {
-                    BaStudentRow(student: student)
-                }
-            }
+    private var emptyDetail: String {
+        if selectedCategory == .favorites {
+            return String(localized: "ba.catalog.empty.favorites.detail")
         }
+        return String(localized: "ba.catalog.empty.detail")
     }
 
-    @ViewBuilder
-    private func infoRows(_ source: [BaCatalogInfoEntry]) -> some View {
-        if source.isEmpty {
-            ContentUnavailableView(
-                String(localized: "ba.catalog.empty.title"),
-                systemImage: "magnifyingglass",
-                description: Text(String(localized: "ba.catalog.empty.detail"))
-            )
-        } else {
-            ForEach(source) { entry in
-                NavigationLink {
-                    BaCatalogPlaceholderDetail(entry: entry)
-                } label: {
-                    BaCatalogInfoRow(entry: entry)
-                }
-            }
-        }
-    }
-
-    private func filteredStudents(_ source: [BaStudentPreview]) -> [BaStudentPreview] {
-        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard query.isEmpty == false else { return source }
-
-        return source.filter { student in
-            student.name.localizedCaseInsensitiveContains(query) ||
-            student.school.localizedCaseInsensitiveContains(query) ||
-            student.role.localizedCaseInsensitiveContains(query) ||
-            student.summary.localizedCaseInsensitiveContains(query)
-        }
-    }
-
-    private func filteredInfoEntries(_ source: [BaCatalogInfoEntry]) -> [BaCatalogInfoEntry] {
-        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard query.isEmpty == false else { return source }
-
-        return source.filter { entry in
-            entry.title.localizedCaseInsensitiveContains(query) ||
-            entry.detail.localizedCaseInsensitiveContains(query)
-        }
+    private func favoriteActionTitle(for entry: BaGuideCatalogEntry) -> String {
+        model.isFavorite(entry)
+            ? String(localized: "ba.catalog.favorite.remove")
+            : String(localized: "ba.catalog.favorite.add")
     }
 }
 
-private struct BaStudentRow: View {
-    let student: BaStudentPreview
+private struct BaCatalogEntryRow: View {
+    let entry: BaGuideCatalogEntry
+    let isFavorite: Bool
 
     var body: some View {
-        Label {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(student.name)
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(.primary)
+        HStack(alignment: .top, spacing: 12) {
+            BaRowThumbnail(
+                url: entry.iconURL,
+                fallbackSystemImage: entry.category == .studentBgm ? "music.note" : "person.crop.circle",
+                tint: tint
+            )
 
-                Text(
-                    String(
-                        format: String(localized: "ba.catalog.student.subtitle.format"),
-                        student.school,
-                        student.role
-                    )
-                )
-                    .font(.subheadline)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(entry.name)
+                        .font(BaTextToken.rowTitle)
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+
+                    if isFavorite {
+                        Image(systemName: "star.fill")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.yellow)
+                    }
+                }
+
+                Text(subtitle)
+                    .font(BaTextToken.rowSubtitle)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
 
-                Text(student.summary)
-                    .font(.caption)
+                Text(detail)
+                    .font(BaTextToken.rowCaption)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
             }
-        } icon: {
-            Image(systemName: student.systemImage)
-                .foregroundStyle(student.tint)
         }
         .padding(.vertical, 4)
     }
-}
 
-private struct BaCatalogInfoEntry: Identifiable {
-    let id: String
-    let title: String
-    let detail: String
-    let systemImage: String
-    let tint: Color
-
-    static var npcSatellitePreview: [BaCatalogInfoEntry] {
-        [
-            BaCatalogInfoEntry(
-                id: "arona",
-                title: String(localized: "ba.catalog.npc.arona.title"),
-                detail: String(localized: "ba.catalog.npc.arona.detail"),
-                systemImage: "person.crop.circle.badge.questionmark.fill",
-                tint: BaDesign.blue
-            ),
-            BaCatalogInfoEntry(
-                id: "seia",
-                title: String(localized: "ba.catalog.satellite.seia.title"),
-                detail: String(localized: "ba.catalog.satellite.seia.detail"),
-                systemImage: "sparkles.rectangle.stack.fill",
-                tint: BaDesign.violet
-            )
-        ]
-    }
-
-    static var bgmPreview: [BaCatalogInfoEntry] {
-        [
-            BaCatalogInfoEntry(
-                id: "hoshino-bgm",
-                title: String(localized: "ba.catalog.bgm.hoshino.title"),
-                detail: String(localized: "ba.catalog.bgm.hoshino.detail"),
-                systemImage: "music.note",
-                tint: BaDesign.amber
-            ),
-            BaCatalogInfoEntry(
-                id: "shiroko-bgm",
-                title: String(localized: "ba.catalog.bgm.shiroko.title"),
-                detail: String(localized: "ba.catalog.bgm.shiroko.detail"),
-                systemImage: "music.quarternote.3",
-                tint: BaDesign.cyan
-            )
-        ]
-    }
-}
-
-private struct BaCatalogInfoRow: View {
-    let entry: BaCatalogInfoEntry
-
-    var body: some View {
-        Label {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(entry.title)
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(.primary)
-
-                Text(entry.detail)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-            }
-        } icon: {
-            Image(systemName: entry.systemImage)
-                .foregroundStyle(entry.tint)
+    private var subtitle: String {
+        if entry.aliasDisplay.isEmpty {
+            return String(format: String(localized: "ba.catalog.contentId.format"), entry.contentId)
         }
-        .padding(.vertical, 4)
+        return entry.aliasDisplay
     }
-}
 
-private struct BaCatalogPlaceholderDetail: View {
-    let entry: BaCatalogInfoEntry
-
-    var body: some View {
-        List {
-            Section {
-                Label {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(entry.title)
-                            .font(.headline)
-
-                        Text(entry.detail)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                } icon: {
-                    BaSymbolTile(systemImage: entry.systemImage, tint: entry.tint)
-                }
-            } footer: {
-                Text(String(localized: "ba.catalog.placeholder.footer"))
-            }
+    private var detail: String {
+        if entry.category == .studentBgm {
+            return String(localized: "ba.catalog.bgm.entry.detail")
         }
-        .navigationTitle(entry.title)
-        .platformInsetGroupedListStyle()
-        .scrollContentBackground(.hidden)
-        .background(AppBackground())
+        if let createdAt = entry.createdAt {
+            return String(
+                format: String(localized: "ba.catalog.createdAt.format"),
+                BaDisplayFormatters.dateTime(createdAt)
+            )
+        }
+        return String(format: String(localized: "ba.catalog.contentId.format"), entry.contentId)
+    }
+
+    private var tint: Color {
+        switch entry.category {
+        case .students:
+            BaDesign.blue
+        case .npcSatellite:
+            BaDesign.violet
+        case .studentBgm:
+            BaDesign.amber
+        case .favorites:
+            BaDesign.green
+        }
     }
 }
 
@@ -269,4 +200,5 @@ private struct BaCatalogPlaceholderDetail: View {
         BaCatalogView()
             .navigationTitle(AppTab.catalog.title)
     }
+    .environment(BaAppModel.live())
 }

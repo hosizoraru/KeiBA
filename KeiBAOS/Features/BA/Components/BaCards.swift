@@ -6,6 +6,23 @@
 //
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
+
+enum BaIconToken {
+    static let symbolTile: CGFloat = 42
+    static let rowThumbnail: CGFloat = 58
+    static let detailImageHeight: CGFloat = 220
+}
+
+enum BaTextToken {
+    static let rowTitle = Font.body.weight(.semibold)
+    static let rowSubtitle = Font.subheadline
+    static let rowCaption = Font.caption
+}
 
 struct BaScreenScaffold<Content: View>: View {
     let content: Content
@@ -90,7 +107,7 @@ struct BaSymbolTile: View {
         Image(systemName: systemImage)
             .font(.title3.weight(.semibold))
             .foregroundStyle(tint)
-            .frame(width: 42, height: 42)
+            .frame(width: BaIconToken.symbolTile, height: BaIconToken.symbolTile)
             .liquidGlassSurface(cornerRadius: 14, tint: tint.opacity(0.08), isInteractive: false)
     }
 }
@@ -217,5 +234,117 @@ struct BaDivider: View {
     var body: some View {
         Divider()
             .padding(.leading, 36)
+    }
+}
+
+struct BaRowThumbnail: View {
+    @Environment(BaAppModel.self) private var model
+
+    let url: URL?
+    var fallbackSystemImage: String
+    var tint: Color
+    var size: CGFloat = BaIconToken.rowThumbnail
+
+    @State private var image: Image?
+
+    var body: some View {
+        ZStack {
+            if let image {
+                image
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Image(systemName: fallbackSystemImage)
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(tint)
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .liquidGlassSurface(cornerRadius: 16, tint: tint.opacity(0.08), isInteractive: false)
+        .task(id: cacheTaskID) {
+            await loadImage()
+        }
+        .onChange(of: model.settings.showPreviewImages) { _, _ in
+            Task { await loadImage() }
+        }
+    }
+
+    private var cacheTaskID: String {
+        "\(url?.absoluteString ?? "nil")-\(model.settings.showPreviewImages)"
+    }
+
+    private func loadImage() async {
+        guard model.settings.showPreviewImages, let url else {
+            image = nil
+            return
+        }
+        guard let data = try? await model.imageData(for: url),
+              let loaded = Self.image(from: data) else {
+            return
+        }
+        image = loaded
+    }
+
+    fileprivate static func image(from data: Data) -> Image? {
+#if canImport(UIKit)
+        guard let uiImage = UIImage(data: data) else { return nil }
+        return Image(uiImage: uiImage)
+#elseif canImport(AppKit)
+        guard let nsImage = NSImage(data: data) else { return nil }
+        return Image(nsImage: nsImage)
+#else
+        return nil
+#endif
+    }
+}
+
+struct BaDetailRemoteImage: View {
+    @Environment(BaAppModel.self) private var model
+
+    let url: URL?
+    var fallbackSystemImage: String
+    var tint: Color
+
+    @State private var image: Image?
+
+    var body: some View {
+        ZStack {
+            if let image {
+                image
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Image(systemName: fallbackSystemImage)
+                    .font(.system(size: 52, weight: .semibold))
+                    .foregroundStyle(tint)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: BaIconToken.detailImageHeight)
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .liquidGlassSurface(cornerRadius: 24, tint: tint.opacity(0.08), isInteractive: false)
+        .task(id: cacheTaskID) {
+            await loadImage()
+        }
+        .onChange(of: model.settings.showPreviewImages) { _, _ in
+            Task { await loadImage() }
+        }
+    }
+
+    private var cacheTaskID: String {
+        "\(url?.absoluteString ?? "nil")-\(model.settings.showPreviewImages)"
+    }
+
+    private func loadImage() async {
+        guard model.settings.showPreviewImages, let url else {
+            image = nil
+            return
+        }
+        guard let data = try? await model.imageData(for: url),
+              let loaded = BaRowThumbnail.image(from: data) else {
+            return
+        }
+        image = loaded
     }
 }

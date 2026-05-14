@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct KeiBAOSApp: App {
+    @State private var baModel = BaAppModel.live()
+
     var body: some Scene {
         WindowGroup {
             AppShell()
+                .environment(baModel)
         }
     }
 }

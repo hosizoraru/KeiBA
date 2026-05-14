@@ -8,22 +8,23 @@
 import SwiftUI
 
 struct BaActivityView: View {
-    @Binding private var statusFilter: BaTimelineStatus?
-    @Binding private var refreshStamp: String
+    @Environment(BaAppModel.self) private var model
 
-    private let entries = BaActivityEntry.preview
+    @Binding private var statusFilter: BaTimelineStatus?
 
     init(
-        statusFilter: Binding<BaTimelineStatus?> = .constant(nil),
-        refreshStamp: Binding<String> = .constant(String(localized: "ba.activity.refresh.preview"))
+        statusFilter: Binding<BaTimelineStatus?> = .constant(nil)
     ) {
         _statusFilter = statusFilter
-        _refreshStamp = refreshStamp
     }
 
     private var filteredEntries: [BaActivityEntry] {
-        guard let statusFilter else { return entries }
-        return entries.filter { $0.status == statusFilter }
+        let now = Date()
+        let source = (model.activityState.value ?? []).filter { entry in
+            model.settings.showEndedActivities || entry.status(at: now) != .ended
+        }
+        guard let statusFilter else { return source }
+        return source.filter { $0.status(at: now) == statusFilter }
     }
 
     var body: some View {
@@ -35,18 +36,36 @@ struct BaActivityView: View {
             }
 
             Section {
-                ForEach(filteredEntries) { entry in
-                    BaActivityRow(entry: entry)
+                if model.activityState.isLoading, filteredEntries.isEmpty {
+                    ProgressView()
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical, 24)
+                } else if filteredEntries.isEmpty {
+                    ContentUnavailableView(
+                        String(localized: "ba.activity.empty.title"),
+                        systemImage: "calendar.badge.exclamationmark",
+                        description: Text(String(localized: "ba.activity.empty.detail"))
+                    )
+                } else {
+                    ForEach(filteredEntries) { entry in
+                        BaActivityRow(entry: entry, server: model.settings.server)
+                    }
                 }
             } header: {
                 Text(currentFilterTitle)
             } footer: {
-                Text(String(localized: "ba.activity.footer"))
+                Text(footerText)
             }
         }
         .platformInsetGroupedListStyle()
         .scrollContentBackground(.hidden)
         .background(AppBackground())
+        .task(id: model.settings.server) {
+            await model.loadActivitiesIfNeeded()
+        }
+        .refreshable {
+            await model.refreshActivities(force: true)
+        }
     }
 
     private var activitySummary: some View {
@@ -75,7 +94,7 @@ struct BaActivityView: View {
                     )
                 }
 
-                Label(refreshStamp, systemImage: "clock.arrow.circlepath")
+                Label(summarySyncText, systemImage: "clock.arrow.circlepath")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -87,50 +106,81 @@ struct BaActivityView: View {
     }
 
     private func count(for status: BaTimelineStatus) -> Int {
-        entries.filter { $0.status == status }.count
+        let now = Date()
+        return (model.activityState.value ?? []).filter { $0.status(at: now) == status }.count
+    }
+
+    private var summarySyncText: String {
+        guard let lastSyncAt = model.activityState.lastSyncAt else {
+            return String(localized: "ba.state.notSynced")
+        }
+        if model.activityState.isShowingCache {
+            return String(
+                format: String(localized: "ba.state.cachedAt.format"),
+                BaDisplayFormatters.syncTime(lastSyncAt)
+            )
+        }
+        return String(
+            format: String(localized: "ba.state.syncedAt.format"),
+            BaDisplayFormatters.syncTime(lastSyncAt)
+        )
+    }
+
+    private var footerText: String {
+        if let error = model.activityState.errorMessage, error.isEmpty == false {
+            return String(format: String(localized: "ba.state.error.format"), error)
+        }
+        return String(localized: "ba.activity.footer.live")
     }
 }
 
 private struct BaActivityRow: View {
     let entry: BaActivityEntry
+    let server: BaServer
 
     var body: some View {
+        let now = Date()
+        let status = entry.status(at: now)
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top, spacing: 12) {
-                BaSymbolTile(systemImage: entry.systemImage, tint: entry.status.tint)
+                BaRowThumbnail(
+                    url: entry.imageURL,
+                    fallbackSystemImage: status == .running ? "flag.checkered" : "calendar",
+                    tint: status.tint
+                )
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(entry.title)
-                        .font(.body.weight(.semibold))
+                        .font(BaTextToken.rowTitle)
                         .foregroundStyle(.primary)
 
-                    Text(entry.kind)
-                        .font(.subheadline)
+                    Text(BaTimelineLabels.calendarKindTitle(kindId: entry.kindId, fallback: entry.kindName))
+                        .font(BaTextToken.rowSubtitle)
                         .foregroundStyle(.secondary)
                 }
 
                 Spacer(minLength: 12)
 
-                BaStatusBadge(title: entry.status.title, tint: entry.status.tint)
+                BaStatusBadge(title: status.title, tint: status.tint)
             }
 
             BaDivider()
 
             BaMetricRow(
                 title: String(localized: "ba.timeline.start"),
-                value: entry.startTime,
+                value: BaDisplayFormatters.dateTime(entry.beginAt, server: server),
                 systemImage: "calendar.badge.clock"
             )
             BaDivider()
             BaMetricRow(
                 title: String(localized: "ba.timeline.end"),
-                value: entry.endTime,
-                detail: entry.remaining,
+                value: BaDisplayFormatters.dateTime(entry.endAt, server: server),
+                detail: BaDisplayFormatters.timelineDetail(start: entry.beginAt, end: entry.endAt, now: now),
                 systemImage: "calendar.badge.checkmark",
-                valueColor: entry.status.tint
+                valueColor: status.tint
             )
             BaDivider()
-            Label(entry.linkLabel, systemImage: "link")
+            Label(entry.linkURL?.host ?? String(localized: "ba.activity.link.gamekee"), systemImage: "link")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .padding(.vertical, 6)
@@ -144,4 +194,5 @@ private struct BaActivityRow: View {
         BaActivityView()
             .navigationTitle(AppTab.activity.title)
     }
+    .environment(BaAppModel.live())
 }
