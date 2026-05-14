@@ -177,6 +177,42 @@ final class BaOverviewSettingsTests: XCTestCase {
             ),
             "04:00 / 16:00"
         )
+
+        let slots = BaTimeMath.localCafeStudentRefreshSlots(
+            server: .jp,
+            reference: reference,
+            localTimeZone: localTimeZone
+        )
+        XCTAssertEqual(slots.map(\.localClockTime), ["03:00", "15:00"])
+        XCTAssertEqual(slots.map(\.id), [1, 2])
+    }
+
+    func testOverviewCafeSnapshotSplitsBothStudentVisitSlots() throws {
+        let localTimeZone = try XCTUnwrap(TimeZone(identifier: "Asia/Shanghai"))
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = localTimeZone
+        let now = try XCTUnwrap(
+            calendar.date(from: DateComponents(year: 2026, month: 5, day: 15, hour: 2, minute: 57))
+        )
+        var settings = BaAppSettings.defaults(now: now)
+        settings.server = .jp
+
+        let snapshot = BaOfficeRepository().snapshot(settings: settings, now: now)
+
+        XCTAssertEqual(snapshot.cafeVisitSlots.count, 2)
+        XCTAssertEqual(
+            snapshot.cafeVisitSlots[0].title,
+            String(format: String(localized: "ba.cafe.metric.visit.index.format"), "1")
+        )
+        XCTAssertEqual(
+            snapshot.cafeVisitSlots[0].detail,
+            String(format: String(localized: "ba.cafe.metric.visit.detail.format"), "03:00")
+        )
+        XCTAssertEqual(
+            snapshot.cafeVisitSlots[1].detail,
+            String(format: String(localized: "ba.cafe.metric.visit.detail.format"), "15:00")
+        )
+        XCTAssertEqual(snapshot.cafeVisitSlots[0].value, "3m")
     }
 
     func testOverviewSyncTimeDropsSeconds() {

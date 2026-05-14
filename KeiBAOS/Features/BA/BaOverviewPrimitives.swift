@@ -9,14 +9,8 @@ import SwiftUI
 
 enum BaOverviewGrid {
     static let columns = [
-        GridItem(.flexible(), spacing: 10),
-        GridItem(.flexible(), spacing: 10),
-    ]
-
-    static let actionColumns = [
-        GridItem(.flexible(), spacing: 10),
-        GridItem(.flexible(), spacing: 10),
-        GridItem(.flexible(), spacing: 10),
+        GridItem(.flexible(), spacing: 10, alignment: .top),
+        GridItem(.flexible(), spacing: 10, alignment: .top),
     ]
 }
 
@@ -71,7 +65,7 @@ struct BaOverviewMetricTile: View {
     let tint: Color
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: BaOverviewMetricStyle.compactTileSpacing) {
             HStack(spacing: 7) {
                 if let asset {
                     BaGameAssetIcon(asset, size: BaOverviewMetricStyle.rowIcon)
@@ -86,21 +80,25 @@ struct BaOverviewMetricTile: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.82)
             }
+            .frame(height: BaOverviewMetricStyle.compactHeaderHeight, alignment: .leading)
 
             Text(value)
                 .font(BaOverviewTextToken.timeValue)
                 .foregroundStyle(tint)
                 .lineLimit(1)
-                .minimumScaleFactor(0.76)
+                .minimumScaleFactor(0.68)
+                .contentTransition(.numericText())
+                .frame(height: BaOverviewMetricStyle.compactValueHeight, alignment: .leading)
 
             Text(detail)
                 .font(BaOverviewTextToken.timeDetail)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
-                .minimumScaleFactor(0.82)
+                .minimumScaleFactor(0.76)
+                .frame(height: BaOverviewMetricStyle.compactDetailHeight, alignment: .topLeading)
         }
-        .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading)
-        .padding(12)
+        .frame(maxWidth: .infinity, minHeight: BaOverviewMetricStyle.metricTileHeight, alignment: .topLeading)
+        .padding(BaOverviewMetricStyle.compactTilePadding)
         .liquidGlassSurface(cornerRadius: 18, tint: tint.opacity(0.045), isInteractive: false)
     }
 }
@@ -152,38 +150,50 @@ struct BaOverviewActionTile: View {
 
     var body: some View {
         Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
+            VStack(alignment: .leading, spacing: BaOverviewMetricStyle.compactTileSpacing) {
+                HStack(spacing: 7) {
                     BaGameAssetIcon(action.asset, size: BaOverviewMetricStyle.rowIcon)
-                    Spacer()
+                        .frame(width: BaOverviewMetricStyle.rowIcon, height: BaOverviewMetricStyle.rowIcon)
+
+                    Text(action.title)
+                        .font(BaOverviewTextToken.rowTitle)
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.82)
+
+                    Spacer(minLength: 0)
+
                     Image(systemName: action.isReady ? "checkmark.circle.fill" : "clock.fill")
                         .font(.system(size: BaOverviewMetricStyle.badgeIcon, weight: .semibold))
                         .foregroundStyle(action.isReady ? BaDesign.green : tint)
+                        .frame(width: BaOverviewMetricStyle.badgeIcon, height: BaOverviewMetricStyle.badgeIcon)
                 }
-                Text(action.title)
-                    .font(BaOverviewTextToken.rowTitle)
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.76)
+                .frame(height: BaOverviewMetricStyle.compactHeaderHeight, alignment: .leading)
+
                 Text(action.value)
                     .font(BaOverviewTextToken.timeValue)
                     .foregroundStyle(tint)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.76)
+                    .minimumScaleFactor(0.68)
+                    .contentTransition(.numericText())
+                    .frame(height: BaOverviewMetricStyle.compactValueHeight, alignment: .leading)
+
                 Text(action.detail)
                     .font(BaOverviewTextToken.timeDetail)
                     .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.72)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.76)
+                    .frame(height: BaOverviewMetricStyle.compactDetailHeight, alignment: .topLeading)
             }
             .frame(
                 maxWidth: .infinity,
                 minHeight: BaOverviewMetricStyle.actionMinHeight,
                 alignment: .topLeading
             )
-            .padding(12)
+            .padding(BaOverviewMetricStyle.compactTilePadding)
+            .liquidGlassSurface(cornerRadius: 20, tint: tint.opacity(0.05), isInteractive: true)
         }
-        .buttonStyle(.glass)
+        .buttonStyle(.plain)
         .contextMenu {
             Button(
                 String(localized: "ba.overview.action.resetCooldown"),
@@ -223,26 +233,30 @@ struct BaOverviewTimelineTile: View {
             Label(title, systemImage: systemImage)
                 .font(BaOverviewTextToken.rowTitle)
                 .foregroundStyle(.primary)
+                .frame(height: 24, alignment: .leading)
 
             Text(entryTitle)
                 .font(.subheadline)
                 .foregroundStyle(.primary)
                 .lineLimit(2)
                 .minimumScaleFactor(0.82)
+                .frame(height: 44, alignment: .topLeading)
 
             Text(timeText)
                 .font(BaOverviewTextToken.timeValue)
                 .foregroundStyle(tint)
                 .lineLimit(1)
                 .minimumScaleFactor(0.76)
+                .frame(height: 24, alignment: .leading)
 
             Text(syncText)
                 .font(BaOverviewTextToken.timeDetail)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.76)
+                .frame(height: 18, alignment: .leading)
         }
-        .frame(maxWidth: .infinity, minHeight: 118, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: BaOverviewMetricStyle.timelineTileHeight, alignment: .topLeading)
         .padding(12)
         .liquidGlassSurface(cornerRadius: 18, tint: tint.opacity(0.045), isInteractive: false)
     }

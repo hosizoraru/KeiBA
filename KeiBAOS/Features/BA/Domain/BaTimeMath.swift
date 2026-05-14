@@ -106,34 +106,9 @@ nonisolated enum BaTimeMath {
     }
 
     static func nextCafeStudentRefresh(from date: Date, server: BaServer) -> Date {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = server.timeZone
-        let start = calendar.startOfDay(for: date)
-        let refresh4 = calendar.date(
-            bySettingHour: cafeStudentRefreshHours[0],
-            minute: 0,
-            second: 0,
-            of: start
-        ) ?? start
-        let refresh16 = calendar.date(
-            bySettingHour: cafeStudentRefreshHours[1],
-            minute: 0,
-            second: 0,
-            of: start
-        ) ?? start
-        if date < refresh4 {
-            return refresh4
-        }
-        if date < refresh16 {
-            return refresh16
-        }
-        let tomorrow = calendar.date(byAdding: .day, value: 1, to: start) ?? date
-        return calendar.date(
-            bySettingHour: cafeStudentRefreshHours[0],
-            minute: 0,
-            second: 0,
-            of: tomorrow
-        ) ?? tomorrow
+        cafeStudentRefreshHours
+            .map { nextServerRefresh(hour: $0, from: date, server: server) }
+            .min() ?? date
     }
 
     static func nextArenaRefresh(from date: Date, server: BaServer) -> Date {
@@ -170,6 +145,21 @@ nonisolated enum BaTimeMath {
             .joined(separator: " / ")
     }
 
+    static func localCafeStudentRefreshSlots(
+        server: BaServer,
+        reference: Date = Date(),
+        localTimeZone: TimeZone = .current
+    ) -> [BaCafeRefreshSlot] {
+        cafeStudentRefreshHours.enumerated().map { index, hour in
+            let localDate = serverDate(hour: hour, server: server, reference: reference) ?? reference
+            return BaCafeRefreshSlot(
+                id: index + 1,
+                localClockTime: BaDisplayFormatters.clockTime(localDate, timeZone: localTimeZone),
+                nextAt: nextServerRefresh(hour: hour, from: reference, server: server)
+            )
+        }
+    }
+
     static func localArenaRefreshTime(
         server: BaServer,
         reference: Date = Date(),
@@ -187,6 +177,24 @@ nonisolated enum BaTimeMath {
         let start = calendar.startOfDay(for: reference)
         return calendar.date(bySettingHour: hour, minute: 0, second: 0, of: start)
     }
+
+    private static func nextServerRefresh(hour: Int, from date: Date, server: BaServer) -> Date {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = server.timeZone
+        let start = calendar.startOfDay(for: date)
+        let today = calendar.date(bySettingHour: hour, minute: 0, second: 0, of: start) ?? start
+        if date < today {
+            return today
+        }
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: start) ?? date
+        return calendar.date(bySettingHour: hour, minute: 0, second: 0, of: tomorrow) ?? tomorrow
+    }
+}
+
+nonisolated struct BaCafeRefreshSlot: Identifiable, Equatable, Hashable {
+    let id: Int
+    let localClockTime: String
+    let nextAt: Date
 }
 
 nonisolated enum BaDisplayFormatters {

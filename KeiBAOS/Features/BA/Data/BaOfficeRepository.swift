@@ -13,6 +13,7 @@ struct BaOfficeRepository {
         let cafeAP = BaTimeMath.currentCafeAP(settings: settings, now: now)
         let cafeLimit = BaTimeMath.cafeDailyCapacity(level: settings.cafeLevel)
         let visitRefresh = BaTimeMath.nextCafeStudentRefresh(from: now, server: settings.server)
+        let visitSlots = cafeVisitSnapshots(settings: settings, now: now)
         let tacticalRefresh = BaTimeMath.nextArenaRefresh(from: now, server: settings.server)
         let headpatAvailable = BaTimeMath.nextHeadpatAvailable(
             lastHeadpatAt: settings.lastHeadpatAt,
@@ -54,6 +55,7 @@ struct BaOfficeRepository {
                 format: String(localized: "ba.cafe.metric.visit.detail.format"),
                 BaTimeMath.localCafeStudentRefreshTimes(server: settings.server, reference: now)
             ),
+            cafeVisitSlots: visitSlots,
             tacticalRefresh: BaDisplayFormatters.compactRemaining(
                 until: tacticalRefresh,
                 now: now,
@@ -67,6 +69,28 @@ struct BaOfficeRepository {
             headpatDetail: cooldownDetail(availableAt: headpatAvailable, now: now),
             cafeActions: cafeActions
         )
+    }
+
+    private func cafeVisitSnapshots(settings: BaAppSettings, now: Date) -> [BaCafeVisitSnapshot] {
+        BaTimeMath.localCafeStudentRefreshSlots(server: settings.server, reference: now)
+            .map { slot in
+                BaCafeVisitSnapshot(
+                    id: slot.id,
+                    title: String(
+                        format: String(localized: "ba.cafe.metric.visit.index.format"),
+                        "\(slot.id)"
+                    ),
+                    value: BaDisplayFormatters.compactRemaining(
+                        until: slot.nextAt,
+                        now: now,
+                        includingSeconds: false
+                    ),
+                    detail: String(
+                        format: String(localized: "ba.cafe.metric.visit.detail.format"),
+                        slot.localClockTime
+                    )
+                )
+            }
     }
 
     func apSnapshot(settings: BaAppSettings, now: Date = Date()) -> BaOfficeAPSnapshot {

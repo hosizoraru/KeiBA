@@ -23,7 +23,14 @@ enum BaOverviewMetricStyle {
     static let mainIcon: CGFloat = 32
     static let rowIcon: CGFloat = 24
     static let badgeIcon: CGFloat = 16
-    static let actionMinHeight: CGFloat = 92
+    static let compactTilePadding: CGFloat = 10
+    static let compactTileSpacing: CGFloat = 6
+    static let compactHeaderHeight: CGFloat = 24
+    static let compactValueHeight: CGFloat = 22
+    static let compactDetailHeight: CGFloat = 28
+    static let metricTileHeight: CGFloat = 100
+    static let actionMinHeight: CGFloat = 100
+    static let timelineTileHeight: CGFloat = 138
 }
 
 struct BaOverviewIdentityCard: View {
@@ -195,13 +202,18 @@ struct BaOverviewCafeCard: View {
                 }
 
                 LazyVGrid(columns: BaOverviewGrid.columns, spacing: 10) {
-                    BaOverviewMetricTile(
-                        title: String(localized: "ba.cafe.metric.visit"),
-                        value: office.cafeVisitRefresh,
-                        detail: office.cafeVisitDetail,
-                        asset: .lobbyWork,
-                        tint: BaDesign.pink
-                    )
+                    ForEach(office.cafeVisitSlots) { slot in
+                        BaOverviewMetricTile(
+                            title: slot.title,
+                            value: slot.value,
+                            detail: slot.detail,
+                            asset: .lobbyWork,
+                            tint: BaDesign.pink
+                        )
+                    }
+                }
+
+                LazyVGrid(columns: BaOverviewGrid.columns, spacing: 10) {
                     BaOverviewMetricTile(
                         title: String(localized: "ba.cafe.metric.tactical"),
                         value: office.tacticalRefresh,
@@ -209,10 +221,18 @@ struct BaOverviewCafeCard: View {
                         asset: .arenaCoin,
                         tint: BaDesign.amber
                     )
+
+                    if let headpatAction {
+                        BaOverviewActionTile(
+                            action: headpatAction,
+                            onTap: { onPerformAction(headpatAction.kind) },
+                            onReset: { onResetAction(headpatAction.kind) }
+                        )
+                    }
                 }
 
-                LazyVGrid(columns: BaOverviewGrid.actionColumns, spacing: 10) {
-                    ForEach(office.cafeActions) { action in
+                LazyVGrid(columns: BaOverviewGrid.columns, spacing: 10) {
+                    ForEach(inviteActions) { action in
                         BaOverviewActionTile(
                             action: action,
                             onTap: { onPerformAction(action.kind) },
@@ -221,6 +241,16 @@ struct BaOverviewCafeCard: View {
                     }
                 }
             }
+        }
+    }
+
+    private var headpatAction: BaCafeActionSnapshot? {
+        office.cafeActions.first { $0.kind == .headpat }
+    }
+
+    private var inviteActions: [BaCafeActionSnapshot] {
+        [.inviteTicket1, .inviteTicket2].compactMap { kind in
+            office.cafeActions.first { $0.kind == kind }
         }
     }
 }

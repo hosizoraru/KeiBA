@@ -524,6 +524,7 @@ nonisolated struct BaOfficeSnapshot: Equatable {
     let cafeLevel: String
     let cafeVisitRefresh: String
     let cafeVisitDetail: String
+    let cafeVisitSlots: [BaCafeVisitSnapshot]
     let tacticalRefresh: String
     let tacticalRefreshDetail: String
     let headpatRemain: String
@@ -540,6 +541,13 @@ nonisolated struct BaOfficeAPSnapshot: Equatable {
     let apFullRemain: String
     let apSyncAt: String
     let apFullAt: String
+}
+
+nonisolated struct BaCafeVisitSnapshot: Identifiable, Codable, Equatable, Hashable {
+    let id: Int
+    let title: String
+    let value: String
+    let detail: String
 }
 
 nonisolated enum BaCafeActionKind: String, CaseIterable, Codable, Identifiable, Hashable {

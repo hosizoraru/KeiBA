@@ -62,6 +62,7 @@
     "ba.cafe.metric.visit" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Student Visit"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"学生来访"}}}},
     "ba.cafe.metric.visit.detail" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Refreshes at 04:00 / 16:00"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"04:00 / 16:00 刷新"}}}},
     "ba.cafe.metric.visit.detail.format" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Refreshes at %@"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"%@ 刷新"}}}},
+    "ba.cafe.metric.visit.index.format" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Visit %@"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"来访 %@"}}}},
     "ba.cafe.refresh.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Refresh Timers"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"刷新计时"}}}},
     "ba.cafe.storage.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Cafe AP storage"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"咖啡厅 AP 储量"}}}},
     "ba.cafe.tacticalRefresh.value" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"11h 18m"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"11h 18m"}}}},
@@ -266,7 +267,7 @@
     "ba.state.cachedAt.format" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Cached at %@"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"缓存于 %@"}}}},
     "ba.state.error.format" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Network failed: %@"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"网络失败：%@"}}}},
     "ba.state.notSynced" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Not synced yet"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"尚未同步"}}}},
-    "ba.state.syncedAt.format" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Synced at %@"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"同步于 %@"}}}},
+    "ba.state.syncedAt.format" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Synced %@"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"同步 %@"}}}},
     "ba.status.ended" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Ended"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"已结束"}}}},
     "ba.status.running" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Running"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"进行中"}}}},
     "ba.status.upcoming" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Upcoming"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"即将开始"}}}},
@@ -378,8 +379,8 @@
     "ba.tab.settings" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Settings"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"设置"}}}},
     "ba.timeline.end" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Ends"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"结束"}}}},
     "ba.timeline.remaining.ended" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Ended"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"已结束"}}}},
-    "ba.timeline.remaining.endsIn.format" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Ends in %@"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"%@ 后结束"}}}},
-    "ba.timeline.remaining.startsIn.format" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Starts in %@"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"%@ 后开始"}}}},
+    "ba.timeline.remaining.endsIn.format" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Ends in %@"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"剩余 %@"}}}},
+    "ba.timeline.remaining.startsIn.format" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Starts in %@"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"还有 %@"}}}},
     "ba.timeline.start" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Starts"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"开始"}}}}
   },
   "version" : "1.0"
