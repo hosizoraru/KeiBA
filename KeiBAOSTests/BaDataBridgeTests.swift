@@ -76,6 +76,155 @@ final class BaDataBridgeTests: XCTestCase {
         XCTAssertEqual(entries[0].imageURL?.absoluteString, "https://cdnimg.gamekee.com/pool.png")
     }
 
+    func testPoolParserExtractsExplicitStudentGuideLinks() throws {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let json = """
+        {
+          "code": 0,
+          "data": [
+            {
+              "id": 11,
+              "name": "妃咲",
+              "start_at": 1699990000,
+              "end_at": 1700010000,
+              "tag_id": "9",
+              "link_url": "/ba/tj/68993.html"
+            },
+            {
+              "id": 12,
+              "name": "妃咲",
+              "start_at": 1699990000,
+              "end_at": 1700010000,
+              "tag_id": "9",
+              "link_url": "/v1/content/detail/68993"
+            }
+          ]
+        }
+        """
+        let repository = BaActivityPoolRepository(client: GameKeeClient())
+        let entries = try repository.parsePools(data: Data(json.utf8), now: now)
+
+        XCTAssertEqual(entries.map { $0.studentGuideURL?.absoluteString }, [
+            "https://www.gamekee.com/ba/tj/68993.html",
+            "https://www.gamekee.com/ba/tj/68993.html",
+        ])
+    }
+
+    func testPoolParserLeavesCNPoolSourceLinkOutOfStudentGuideURL() throws {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let json = """
+        {
+          "code": 0,
+          "data": [
+            {
+              "id": 2388,
+              "name": "优香(体操服)",
+              "start_at": 1699990000,
+              "end_at": 1700010000,
+              "tag_id": "6",
+              "link_url": "https://www.gamekee.com/ba/701261.html",
+              "content_id": 0
+            }
+          ]
+        }
+        """
+        let repository = BaActivityPoolRepository(client: GameKeeClient())
+        let entry = try XCTUnwrap(repository.parsePools(data: Data(json.utf8), now: now).first)
+
+        XCTAssertEqual(entry.linkURL?.absoluteString, "https://www.gamekee.com/ba/701261.html")
+        XCTAssertNil(entry.studentGuideURL)
+    }
+
+    func testPoolStudentGuideResolverMapsCNPoolByExactCatalogName() throws {
+        let resolver = BaPoolStudentGuideResolver(
+            catalogEntries: [
+                makeCatalogEntry(contentId: 67_658, name: "优香"),
+                makeCatalogEntry(contentId: 170_295, name: "优香(体操服)"),
+            ]
+        )
+        let sportswearPool = makePoolEntry(
+            id: 2388,
+            name: "优香(体操服)",
+            linkURL: try XCTUnwrap(URL(string: "https://www.gamekee.com/ba/701261.html"))
+        )
+        let basePool = makePoolEntry(
+            id: 2387,
+            name: "优香",
+            linkURL: try XCTUnwrap(URL(string: "https://www.gamekee.com/ba/701261.html"))
+        )
+
+        XCTAssertEqual(
+            resolver.resolve(sportswearPool).studentGuideURL?.absoluteString,
+            "https://www.gamekee.com/ba/tj/170295.html"
+        )
+        XCTAssertEqual(
+            resolver.resolve(basePool).studentGuideURL?.absoluteString,
+            "https://www.gamekee.com/ba/tj/67658.html"
+        )
+    }
+
+    func testPoolCacheRoundTripPreservesStudentGuideURL() throws {
+        let guideURL = try XCTUnwrap(URL(string: "https://www.gamekee.com/ba/tj/170295.html"))
+        let pool = makePoolEntry(
+            id: 2388,
+            name: "优香(体操服)",
+            linkURL: try XCTUnwrap(URL(string: "https://www.gamekee.com/ba/701261.html")),
+            studentGuideURL: guideURL
+        )
+        let envelope = BaCacheEnvelope(schemaVersion: 6, syncedAt: Date(timeIntervalSince1970: 1_700_000_000), value: [pool])
+        let data = try JSONEncoder.ba.encode(envelope)
+        let decoded = try JSONDecoder.ba.decode(BaCacheEnvelope<[BaPoolEntry]>.self, from: data)
+
+        XCTAssertEqual(decoded.schemaVersion, 6)
+        XCTAssertEqual(decoded.value.single?.linkURL?.absoluteString, "https://www.gamekee.com/ba/701261.html")
+        XCTAssertEqual(decoded.value.single?.studentGuideURL?.absoluteString, "https://www.gamekee.com/ba/tj/170295.html")
+    }
+
+    func testPoolCacheDecodesLegacyEntryWithoutStudentGuideURL() throws {
+        let raw = """
+        {
+          "schemaVersion": 5,
+          "syncedAt": "2023-11-14T22:13:20Z",
+          "value": [
+            {
+              "id": 2388,
+              "name": "优香(体操服)",
+              "tagId": 6,
+              "tagName": "",
+              "alias": "",
+              "startAt": "2023-11-14T19:26:40Z",
+              "endAt": "2023-11-15T01:00:00Z",
+              "linkURL": "https://www.gamekee.com/ba/701261.html",
+              "imageURL": null,
+              "contentId": null
+            }
+          ]
+        }
+        """
+        let decoded = try JSONDecoder.ba.decode(BaCacheEnvelope<[BaPoolEntry]>.self, from: Data(raw.utf8))
+
+        XCTAssertEqual(decoded.schemaVersion, 5)
+        XCTAssertEqual(decoded.value.single?.name, "优香(体操服)")
+        XCTAssertNil(decoded.value.single?.studentGuideURL)
+    }
+
+    @MainActor
+    func testResolvedPoolBuildsStudentCatalogEntryForDetailNavigation() throws {
+        let model = BaAppModel.live()
+        let pool = makePoolEntry(
+            id: 2388,
+            name: "优香(体操服)",
+            linkURL: try XCTUnwrap(URL(string: "https://www.gamekee.com/ba/701261.html")),
+            studentGuideURL: try XCTUnwrap(URL(string: "https://www.gamekee.com/ba/tj/170295.html"))
+        )
+        let entry = try XCTUnwrap(model.studentCatalogEntry(for: pool))
+
+        XCTAssertEqual(entry.contentId, 170_295)
+        XCTAssertEqual(entry.name, "优香(体操服)")
+        XCTAssertEqual(entry.detailURL?.absoluteString, "https://www.gamekee.com/ba/tj/170295.html")
+        XCTAssertEqual(entry.category, .students)
+    }
+
     func testCatalogTreeParserBuildsDetailURL() throws {
         let json = """
         {
@@ -337,21 +486,52 @@ final class BaDataBridgeTests: XCTestCase {
         XCTAssertEqual(components.day, 24)
     }
 
-    private func makeCatalogEntry() -> BaGuideCatalogEntry {
+    private func makeCatalogEntry(
+        contentId: Int64 = 609_145,
+        name: String = "Test",
+        alias: String = ""
+    ) -> BaGuideCatalogEntry {
         BaGuideCatalogEntry(
-            entryId: 1,
+            entryId: Int(contentId),
             pid: 49443,
-            contentId: 609_145,
-            name: "Test",
-            alias: "",
-            aliasDisplay: "",
+            contentId: contentId,
+            name: name,
+            alias: alias,
+            aliasDisplay: alias,
             iconURL: nil,
             type: 0,
             order: 0,
             createdAt: nil,
             releaseDate: nil,
-            detailURL: URL(string: "https://www.gamekee.com/ba/tj/609145.html"),
+            detailURL: URL(string: "https://www.gamekee.com/ba/tj/\(contentId).html"),
             category: .students
         )
+    }
+
+    private func makePoolEntry(
+        id: Int,
+        name: String,
+        linkURL: URL,
+        studentGuideURL: URL? = nil
+    ) -> BaPoolEntry {
+        BaPoolEntry(
+            id: id,
+            name: name,
+            tagId: 6,
+            tagName: "",
+            alias: "",
+            startAt: Date(timeIntervalSince1970: 1_699_990_000),
+            endAt: Date(timeIntervalSince1970: 1_700_010_000),
+            linkURL: linkURL,
+            imageURL: nil,
+            contentId: nil,
+            studentGuideURL: studentGuideURL
+        )
+    }
+}
+
+private extension Array {
+    var single: Element? {
+        count == 1 ? first : nil
     }
 }

@@ -18,45 +18,72 @@ struct BaPoolView: View {
         _statusFilter = statusFilter
     }
 
-    private var filteredPools: [BaPoolEntry] {
+    private var poolSnapshot: BaPoolListSnapshot {
         let now = Date()
-        let source = (model.poolState.value ?? []).filter { pool in
-            model.settings.showEndedPools || pool.status(at: now) != .ended
+        var counts: [BaTimelineStatus: Int] = [:]
+        var rows: [BaPoolRowDisplayModel] = []
+
+        for pool in model.poolState.value ?? [] {
+            let status = pool.status(at: now)
+            counts[status, default: 0] += 1
+
+            guard model.settings.showEndedPools || status != .ended else { continue }
+            guard statusFilter == nil || statusFilter == status else { continue }
+
+            rows.append(
+                BaPoolRowDisplayModel(
+                    pool: pool,
+                    status: status,
+                    tagTitle: BaTimelineLabels.poolTagTitle(tagId: pool.tagId, fallback: pool.tagName),
+                    subtitle: pool.alias.isEmpty ? String(localized: "ba.pool.linkedStudent.detail") : pool.alias,
+                    timelineDetail: BaDisplayFormatters.timelineDetail(start: pool.startAt, end: pool.endAt, now: now),
+                    startText: BaDisplayFormatters.dateTime(pool.startAt, server: model.settings.server),
+                    endText: BaDisplayFormatters.dateTime(pool.endAt, server: model.settings.server),
+                    progress: status == .running ? pool.progress(at: now) : nil
+                )
+            )
         }
-        guard let statusFilter else { return source }
-        return source.filter { $0.status(at: now) == statusFilter }
+
+        return BaPoolListSnapshot(rows: rows, counts: counts)
     }
 
     var body: some View {
+        let snapshot = poolSnapshot
+
         List {
             Section {
-                poolSummary
+                poolSummary(snapshot: snapshot)
                     .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                     .listRowBackground(Color.clear)
             }
 
             Section {
-                if model.poolState.isLoading, filteredPools.isEmpty {
+                if model.poolState.isLoading, snapshot.rows.isEmpty {
                     ProgressView()
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.vertical, 24)
-                } else if filteredPools.isEmpty {
+                } else if snapshot.rows.isEmpty {
                     ContentUnavailableView(
                         String(localized: "ba.pool.empty.title"),
                         systemImage: "rectangle.stack.badge.person.crop",
                         description: Text(String(localized: "ba.pool.empty.detail"))
                     )
                 } else {
-                    ForEach(filteredPools) { pool in
+                    ForEach(snapshot.rows) { row in
                         NavigationLink {
-                            if let entry = model.linkedCatalogEntry(for: pool) {
+                            if let entry = model.studentCatalogEntry(for: row.pool) {
                                 BaStudentDetailView(entry: entry)
                             } else {
-                                BaPoolSourceDetailView(pool: pool, server: model.settings.server)
+                                BaPoolSourceDetailView(pool: row.pool, server: model.settings.server)
                             }
                         } label: {
-                            BaPoolRow(pool: pool, server: model.settings.server)
+                            BaPoolNavigationCard(row: row)
+                                .equatable()
                         }
+                        .buttonStyle(.plain)
+                        .listRowInsets(EdgeInsets(top: 7, leading: 16, bottom: 7, trailing: 16))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                     }
                 }
             } header: {
@@ -77,28 +104,28 @@ struct BaPoolView: View {
         }
     }
 
-    private var poolSummary: some View {
+    private func poolSummary(snapshot: BaPoolListSnapshot) -> some View {
         BaGlassCard(tint: BaDesign.violet) {
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 12) {
                 BaSectionHeader(
                     title: String(localized: "ba.pool.summary.title"),
                     asset: .weaponStarBadge
                 )
 
-                HStack(spacing: 12) {
+                HStack(alignment: .top, spacing: 10) {
                     BaSummaryMetric(
                         title: String(localized: "ba.status.running"),
-                        value: "\(count(for: .running))",
+                        value: "\(snapshot.count(for: .running))",
                         tint: BaDesign.green
                     )
                     BaSummaryMetric(
                         title: String(localized: "ba.status.upcoming"),
-                        value: "\(count(for: .upcoming))",
+                        value: "\(snapshot.count(for: .upcoming))",
                         tint: BaDesign.blue
                     )
                     BaSummaryMetric(
                         title: String(localized: "ba.status.ended"),
-                        value: "\(count(for: .ended))",
+                        value: "\(snapshot.count(for: .ended))",
                         tint: .secondary
                     )
                 }
@@ -112,11 +139,6 @@ struct BaPoolView: View {
 
     private var currentFilterTitle: String {
         statusFilter?.title ?? String(localized: "ba.filter.all")
-    }
-
-    private func count(for status: BaTimelineStatus) -> Int {
-        let now = Date()
-        return (model.poolState.value ?? []).filter { $0.status(at: now) == status }.count
     }
 
     private var summarySyncText: String {
@@ -143,73 +165,118 @@ struct BaPoolView: View {
     }
 }
 
-private struct BaPoolRow: View {
+private struct BaPoolListSnapshot {
+    let rows: [BaPoolRowDisplayModel]
+    let counts: [BaTimelineStatus: Int]
+
+    func count(for status: BaTimelineStatus) -> Int {
+        counts[status] ?? 0
+    }
+}
+
+private struct BaPoolRowDisplayModel: Identifiable, Equatable {
     let pool: BaPoolEntry
-    let server: BaServer
+    let status: BaTimelineStatus
+    let tagTitle: String
+    let subtitle: String
+    let timelineDetail: String
+    let startText: String
+    let endText: String
+    let progress: Double?
+
+    var id: BaPoolEntry.ID {
+        pool.id
+    }
+
+    var fallbackSystemImage: String {
+        status == .running ? "sparkles" : "calendar"
+    }
+}
+
+private struct BaPoolNavigationCard: View, Equatable {
+    let row: BaPoolRowDisplayModel
 
     var body: some View {
-        let now = Date()
-        let status = pool.status(at: now)
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .top, spacing: 12) {
-                BaRemoteImageSurface(
-                    url: pool.imageURL,
-                    fallbackSystemImage: status == .running ? "sparkles" : "calendar",
-                    tint: status.tint,
-                    width: 96,
-                    height: 128,
-                    cornerRadius: 18,
-                    contentMode: .fit,
-                    fallbackFont: .system(size: 34, weight: .semibold)
-                )
+        HStack(alignment: .center, spacing: 12) {
+            RoundedRectangle(cornerRadius: 999, style: .continuous)
+                .fill(row.status.tint.opacity(0.78))
+                .frame(width: 4)
+                .padding(.vertical, 18)
 
-                VStack(alignment: .leading, spacing: 7) {
-                    HStack(alignment: .firstTextBaseline) {
-                        BaStatusBadge(title: status.title, tint: status.tint)
-                        Spacer(minLength: 8)
-                    }
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    BaPoolStatusPill(title: row.status.title, tint: row.status.tint)
 
-                    Text(BaTimelineLabels.poolTagTitle(tagId: pool.tagId, fallback: pool.tagName))
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                    Spacer(minLength: 8)
 
-                    Text(pool.name)
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(.primary)
-                        .lineLimit(2)
-
-                    Text(pool.alias.isEmpty ? String(localized: "ba.pool.linkedStudent.detail") : pool.alias)
-                        .font(BaTextToken.rowCaption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-
-                    VStack(alignment: .leading, spacing: 3) {
-                        Label(
-                            BaDisplayFormatters.dateTime(pool.startAt, server: server),
-                            systemImage: "calendar.badge.clock"
-                        )
-                        Label(
-                            BaDisplayFormatters.dateTime(pool.endAt, server: server),
-                            systemImage: "calendar.badge.checkmark"
-                        )
-                    }
-                    .font(.caption2.monospacedDigit())
-                    .foregroundStyle(.tertiary)
-
-                    Text(BaDisplayFormatters.timelineDetail(start: pool.startAt, end: pool.endAt, now: now))
+                    Text(row.timelineDetail)
                         .font(.caption.monospacedDigit().weight(.semibold))
-                        .foregroundStyle(status.tint)
+                        .foregroundStyle(row.status.tint)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.82)
+                        .minimumScaleFactor(0.78)
                 }
-            }
 
-            ProgressView(value: pool.progress(at: now))
-                .tint(status.tint)
-                .controlSize(.small)
+                HStack(alignment: .top, spacing: 13) {
+                    BaRemoteImageSurface(
+                        url: row.pool.imageURL,
+                        fallbackSystemImage: row.fallbackSystemImage,
+                        tint: row.status.tint,
+                        width: 92,
+                        height: 118,
+                        cornerRadius: 20,
+                        contentMode: .fit,
+                        fallbackFont: .system(size: 33, weight: .semibold)
+                    )
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(row.tagTitle)
+                            .font(BaTextToken.rowCaption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+
+                        Text(row.pool.name)
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(.primary)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        Text(row.subtitle)
+                            .font(BaTextToken.rowCaption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                BaTimelineDatePair(
+                    start: row.startText,
+                    end: row.endText,
+                    detail: "",
+                    tint: row.status.tint,
+                    progress: row.progress
+                )
+            }
         }
-        .padding(.vertical, 6)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 13)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .liquidGlassSurface(cornerRadius: 24, tint: row.status.tint.opacity(0.055), isInteractive: false)
+        .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+    }
+}
+
+private struct BaPoolStatusPill: View {
+    let title: String
+    var tint: Color
+
+    var body: some View {
+        Text(title)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(tint)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 5)
+            .background(tint.opacity(0.10), in: Capsule())
     }
 }
 

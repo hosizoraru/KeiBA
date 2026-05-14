@@ -121,18 +121,25 @@ final class BaAppModel {
 
     func refreshPools(force _: Bool) async {
         if poolState.isLoading { return }
+        let server = settings.server
         poolState.isLoading = true
         poolState.errorMessage = nil
         do {
-            let snapshot = try await activityPoolRepository.fetchPools(server: settings.server)
+            let snapshot = try await activityPoolRepository.fetchPools(server: server)
+            let entries = await resolvePoolStudentGuideURLs(
+                entries: snapshot.value,
+                server: server,
+                allowCatalogNetwork: true
+            )
+            guard settings.server == server else { return }
             poolState = BaLoadableState(
-                value: snapshot.value,
+                value: entries,
                 isLoading: false,
                 errorMessage: snapshot.sourceErrors.first,
                 lastSyncAt: snapshot.syncedAt,
                 isShowingCache: false
             )
-            await cacheStore.save(snapshot.value, for: .pools(settings.server), schemaVersion: 5, syncedAt: snapshot.syncedAt)
+            await cacheStore.save(entries, for: .pools(server), schemaVersion: Self.poolCacheSchemaVersion, syncedAt: snapshot.syncedAt)
         } catch {
             await applyPoolFailure(error)
         }
@@ -267,20 +274,26 @@ final class BaAppModel {
         }
     }
 
-    func linkedCatalogEntry(for pool: BaPoolEntry) -> BaGuideCatalogEntry? {
-        guard let bundle = catalogState.value else { return nil }
+    func studentCatalogEntry(for pool: BaPoolEntry) -> BaGuideCatalogEntry? {
+        let studentEntries = catalogState.value?.entries(in: .students) ?? []
         if let contentId = pool.contentId {
-            return bundle.entries.first { $0.contentId == contentId }
+            if let entry = studentEntries.first(where: { $0.contentId == contentId }) {
+                return entry
+            }
+            return fallbackStudentCatalogEntry(pool: pool, contentId: contentId, detailURL: pool.studentGuideOpenURL)
         }
-        let poolName = pool.name
-            .baNormalizedGuideMatchKey
-        return bundle.entries.first { entry in
-            let name = entry.name.baNormalizedGuideMatchKey
-            let alias = entry.alias.baNormalizedGuideMatchKey
-            return name == poolName ||
-                poolName.contains(name) ||
-                (alias.isEmpty == false && (alias.contains(poolName) || poolName.contains(alias)))
+
+        let resolvedPool = BaPoolStudentGuideResolver(catalogEntries: studentEntries).resolve(pool)
+        guard let guideURL = resolvedPool.studentGuideOpenURL,
+              let contentId = BaPoolStudentGuideResolver.contentID(from: guideURL)
+        else {
+            return nil
         }
+
+        if let entry = studentEntries.first(where: { $0.contentId == contentId }) {
+            return entry
+        }
+        return fallbackStudentCatalogEntry(pool: resolvedPool, contentId: contentId, detailURL: guideURL)
     }
 
     private func loadCachedActivities() async {
@@ -295,14 +308,23 @@ final class BaAppModel {
     }
 
     private func loadCachedPools() async {
-        guard let cached = await cacheStore.load([BaPoolEntry].self, for: .pools(settings.server)) else { return }
+        let server = settings.server
+        guard let cached = await cacheStore.load([BaPoolEntry].self, for: .pools(server)) else { return }
+        let entries = await resolvePoolStudentGuideURLs(
+            entries: cached.value,
+            server: server,
+            allowCatalogNetwork: false
+        )
         poolState = BaLoadableState(
-            value: cached.value,
+            value: entries,
             isLoading: false,
             errorMessage: nil,
             lastSyncAt: cached.syncedAt,
             isShowingCache: true
         )
+        if entries != cached.value {
+            await cacheStore.save(entries, for: .pools(server), schemaVersion: Self.poolCacheSchemaVersion, syncedAt: cached.syncedAt)
+        }
     }
 
     private func loadCachedCatalog() async {
@@ -342,17 +364,71 @@ final class BaAppModel {
         catalogState.errorMessage = error.localizedDescription
         catalogState.isShowingCache = catalogState.value != nil
     }
-}
 
-private extension String {
-    var baNormalizedGuideMatchKey: String {
-        replacingOccurrences(of: "（", with: "(")
-            .replacingOccurrences(of: "）", with: ")")
-            .replacingOccurrences(of: #"\(.+?\)"#, with: "", options: .regularExpression)
-            .replacingOccurrences(of: "Pickup", with: "", options: [.caseInsensitive])
-            .replacingOccurrences(of: "ピックアップ", with: "")
-            .components(separatedBy: CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters))
-            .joined()
-            .lowercased()
+    private func resolvePoolStudentGuideURLs(
+        entries: [BaPoolEntry],
+        server: BaServer,
+        allowCatalogNetwork: Bool
+    ) async -> [BaPoolEntry] {
+        guard entries.isEmpty == false else { return entries }
+
+        var resolved = entries.map(BaPoolStudentGuideResolver.empty.resolve)
+        if needsStudentCatalogResolution(resolved) == false {
+            return resolved
+        }
+
+        let cachedEntries = await availableStudentCatalogEntries()
+        if cachedEntries.isEmpty == false {
+            let cachedResolver = BaPoolStudentGuideResolver(catalogEntries: cachedEntries)
+            resolved = resolved.map(cachedResolver.resolve)
+        }
+        guard server == .cn, allowCatalogNetwork, needsStudentCatalogResolution(resolved) else {
+            return resolved
+        }
+
+        guard let networkSnapshot = try? await catalogRepository.fetchStudentCatalog() else {
+            return resolved
+        }
+        let networkResolver = BaPoolStudentGuideResolver(catalogEntries: networkSnapshot.value)
+        return resolved.map(networkResolver.resolve)
     }
+
+    private func availableStudentCatalogEntries() async -> [BaGuideCatalogEntry] {
+        if let bundle = catalogState.value {
+            return bundle.entries(in: .students)
+        }
+        if let cached = await cacheStore.load(BaGuideCatalogBundle.self, for: .catalog) {
+            return cached.value.entries(in: .students)
+        }
+        return []
+    }
+
+    private func needsStudentCatalogResolution(_ entries: [BaPoolEntry]) -> Bool {
+        entries.contains { $0.studentGuideOpenURL == nil }
+    }
+
+    private func fallbackStudentCatalogEntry(
+        pool: BaPoolEntry,
+        contentId: Int64,
+        detailURL: URL?
+    ) -> BaGuideCatalogEntry {
+        BaGuideCatalogEntry(
+            entryId: Int(contentId),
+            pid: Self.studentCatalogPID,
+            contentId: contentId,
+            name: pool.name,
+            alias: pool.alias,
+            aliasDisplay: pool.alias,
+            iconURL: pool.imageURL,
+            type: 0,
+            order: 0,
+            createdAt: nil,
+            releaseDate: nil,
+            detailURL: detailURL ?? URL(string: "https://www.gamekee.com/ba/tj/\(contentId).html"),
+            category: .students
+        )
+    }
+
+    private static let poolCacheSchemaVersion = 6
+    private static let studentCatalogPID = 49_443
 }

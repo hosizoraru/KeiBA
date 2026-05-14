@@ -227,6 +227,7 @@ nonisolated struct BaPoolEntry: Identifiable, Codable, Hashable {
     let linkURL: URL?
     let imageURL: URL?
     let contentId: Int64?
+    let studentGuideURL: URL?
 
     func status(at now: Date = Date()) -> BaTimelineStatus {
         if now >= startAt && now < endAt {
@@ -243,6 +244,22 @@ nonisolated struct BaPoolEntry: Identifiable, Codable, Hashable {
         let elapsed = now.timeIntervalSince(startAt)
         let total = endAt.timeIntervalSince(startAt)
         return min(max(elapsed / total, 0), 1)
+    }
+
+    func withStudentGuideURL(_ studentGuideURL: URL?) -> BaPoolEntry {
+        BaPoolEntry(
+            id: id,
+            name: name,
+            tagId: tagId,
+            tagName: tagName,
+            alias: alias,
+            startAt: startAt,
+            endAt: endAt,
+            linkURL: linkURL,
+            imageURL: imageURL,
+            contentId: contentId,
+            studentGuideURL: studentGuideURL
+        )
     }
 }
 

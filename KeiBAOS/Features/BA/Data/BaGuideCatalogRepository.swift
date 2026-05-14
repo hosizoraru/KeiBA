@@ -32,6 +32,11 @@ struct BaGuideCatalogRepository {
         )
     }
 
+    func fetchStudentCatalog(now: Date = Date()) async throws -> BaRepositorySnapshot<[BaGuideCatalogEntry]> {
+        let entries = try await fetchEntries(pid: Self.studentPID, category: .students)
+        return BaRepositorySnapshot(value: entries, syncedAt: now, sourceErrors: [])
+    }
+
     private func fetchEntries(pid: Int, category: BaCatalogCategory) async throws -> [BaGuideCatalogEntry] {
         let data = try await client.fetchJSONData(
             GameKeeRequest(

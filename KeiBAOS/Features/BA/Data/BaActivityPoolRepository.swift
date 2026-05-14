@@ -87,6 +87,7 @@ struct BaActivityPoolRepository {
             guard let tagId else { return nil }
             let rawTagName = normalizePoolTag(item.string("tag") ?? item.string("tagName") ?? "")
             let contentId = item.int64("content_id").flatMap { $0 > 0 ? $0 : nil }
+            let linkURL = GameKeeJSON.normalizeGameKeeLink(item.string("link_url") ?? "", fallback: "https://www.gamekee.com/ba/kachi")
             return BaPoolEntry(
                 id: item.int("id") ?? name.hashValue,
                 name: name,
@@ -95,9 +96,10 @@ struct BaActivityPoolRepository {
                 alias: item.string("name_alias") ?? "",
                 startAt: startAt,
                 endAt: endAt,
-                linkURL: GameKeeJSON.normalizeGameKeeLink(item.string("link_url") ?? "", fallback: "https://www.gamekee.com/ba/kachi"),
+                linkURL: linkURL,
                 imageURL: GameKeeJSON.findImageURL(in: item),
-                contentId: contentId
+                contentId: contentId,
+                studentGuideURL: BaPoolStudentGuideResolver.canonicalStudentGuideURL(from: linkURL)
             )
         }
         return normalizePools(parsed, now: now)
