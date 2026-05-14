@@ -295,13 +295,17 @@ struct BaDivider: View {
     }
 }
 
-struct BaRowThumbnail: View {
+struct BaRemoteImageSurface: View {
     @Environment(BaAppModel.self) private var model
 
     let url: URL?
     var fallbackSystemImage: String
     var tint: Color
-    var size: CGFloat = BaIconToken.rowThumbnail
+    var width: CGFloat?
+    var height: CGFloat
+    var cornerRadius: CGFloat
+    var contentMode: ContentMode = .fill
+    var fallbackFont: Font = .title3.weight(.semibold)
 
     @State private var phase: BaRemoteImagePhase = .placeholder
 
@@ -310,14 +314,16 @@ struct BaRowThumbnail: View {
             if case .success(let image) = phase {
                 image
                     .resizable()
-                    .scaledToFill()
+                    .aspectRatio(contentMode: contentMode)
             } else {
                 placeholder
             }
         }
-        .frame(width: size, height: size)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .liquidGlassSurface(cornerRadius: 16, tint: tint.opacity(0.08), isInteractive: false)
+        .frame(maxWidth: width == nil ? .infinity : nil)
+        .frame(width: width, height: height)
+        .clipped()
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+        .liquidGlassSurface(cornerRadius: cornerRadius, tint: tint.opacity(0.08), isInteractive: false)
         .task(id: cacheTaskID) {
             await loadImage()
         }
@@ -364,7 +370,7 @@ struct BaRowThumbnail: View {
 
     private func fallbackIcon(systemImage: String, tint: Color) -> some View {
         Image(systemName: systemImage)
-            .font(.title3.weight(.semibold))
+            .font(fallbackFont)
             .foregroundStyle(tint)
     }
 
@@ -381,77 +387,39 @@ struct BaRowThumbnail: View {
     }
 }
 
-struct BaDetailRemoteImage: View {
-    @Environment(BaAppModel.self) private var model
+struct BaRowThumbnail: View {
+    let url: URL?
+    var fallbackSystemImage: String
+    var tint: Color
+    var size: CGFloat = BaIconToken.rowThumbnail
 
+    var body: some View {
+        BaRemoteImageSurface(
+            url: url,
+            fallbackSystemImage: fallbackSystemImage,
+            tint: tint,
+            width: size,
+            height: size,
+            cornerRadius: 16
+        )
+    }
+}
+
+struct BaDetailRemoteImage: View {
     let url: URL?
     var fallbackSystemImage: String
     var tint: Color
 
-    @State private var phase: BaRemoteImagePhase = .placeholder
-
     var body: some View {
-        ZStack {
-            if case .success(let image) = phase {
-                image
-                    .resizable()
-                    .scaledToFill()
-            } else {
-                placeholder
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: BaIconToken.detailImageHeight)
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .liquidGlassSurface(cornerRadius: 24, tint: tint.opacity(0.08), isInteractive: false)
-        .task(id: cacheTaskID) {
-            await loadImage()
-        }
-        .onChange(of: model.settings.showPreviewImages) { _, _ in
-            Task { await loadImage() }
-        }
-    }
-
-    private var cacheTaskID: String {
-        "\(url?.absoluteString ?? "nil")-\(model.settings.showPreviewImages)"
-    }
-
-    private func loadImage() async {
-        guard model.settings.showPreviewImages, let url else {
-            phase = model.settings.showPreviewImages ? .placeholder : .hidden
-            return
-        }
-        phase = .loading
-        guard let data = try? await model.imageData(for: url),
-              let loaded = BaRowThumbnail.image(from: data) else {
-            phase = .failed
-            return
-        }
-        phase = .success(loaded)
-    }
-
-    @ViewBuilder
-    private var placeholder: some View {
-        switch phase {
-        case .loading:
-            ZStack {
-                fallbackIcon(systemImage: fallbackSystemImage, tint: tint.opacity(0.55))
-                ProgressView()
-                    .controlSize(.regular)
-            }
-        case .failed:
-            fallbackIcon(systemImage: "photo.badge.exclamationmark", tint: .secondary)
-        case .hidden:
-            fallbackIcon(systemImage: fallbackSystemImage, tint: .secondary)
-        case .placeholder, .success:
-            fallbackIcon(systemImage: fallbackSystemImage, tint: tint)
-        }
-    }
-
-    private func fallbackIcon(systemImage: String, tint: Color) -> some View {
-        Image(systemName: systemImage)
-            .font(.system(size: 52, weight: .semibold))
-            .foregroundStyle(tint)
+        BaRemoteImageSurface(
+            url: url,
+            fallbackSystemImage: fallbackSystemImage,
+            tint: tint,
+            width: nil,
+            height: BaIconToken.detailImageHeight,
+            cornerRadius: 24,
+            fallbackFont: .system(size: 52, weight: .semibold)
+        )
     }
 }
 

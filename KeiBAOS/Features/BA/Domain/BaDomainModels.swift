@@ -391,6 +391,46 @@ nonisolated enum BaStudentDetailSection: String, CaseIterable, Codable, Identifi
     }
 }
 
+nonisolated enum BaStudentDetailPage: String, CaseIterable, Codable, Identifiable, Hashable {
+    case overviewSkills
+    case profile
+    case voice
+    case gallery
+    case simulate
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .overviewSkills:
+            String(localized: "ba.student.detail.page.overviewSkills")
+        case .profile:
+            String(localized: "ba.student.detail.page.profile")
+        case .voice:
+            String(localized: "ba.student.detail.page.voice")
+        case .gallery:
+            String(localized: "ba.student.detail.page.gallery")
+        case .simulate:
+            String(localized: "ba.student.detail.page.simulate")
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .overviewSkills:
+            "sparkles.rectangle.stack"
+        case .profile:
+            "person.text.rectangle"
+        case .voice:
+            "waveform"
+        case .gallery:
+            "photo.on.rectangle.angled"
+        case .simulate:
+            "chart.xyaxis.line"
+        }
+    }
+}
+
 nonisolated struct BaGuideRow: Identifiable, Codable, Hashable {
     let id: String
     let title: String

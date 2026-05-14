@@ -12,6 +12,8 @@ struct BaStudentDetailView: View {
 
     let entry: BaGuideCatalogEntry
 
+    @State private var selectedPage: BaStudentDetailPage = .overviewSkills
+
     private var state: BaLoadableState<BaStudentGuideInfo> {
         model.studentDetailStates[entry.contentId] ?? BaLoadableState<BaStudentGuideInfo>()
     }
@@ -27,6 +29,18 @@ struct BaStudentDetailView: View {
                     .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16))
                     .listRowBackground(Color.clear)
             }
+
+            Section {
+                Picker(String(localized: "ba.student.detail.sections.title"), selection: $selectedPage) {
+                    ForEach(BaStudentDetailPage.allCases) { page in
+                        Text(page.title).tag(page)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+            }
+            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+            .listRowBackground(Color.clear)
 
             if state.isLoading, info == nil {
                 Section {
@@ -45,13 +59,7 @@ struct BaStudentDetailView: View {
                 }
             }
 
-            overviewSection
-            profileSection
-            skillsSection
-            growthSection
-            voiceSection
-            gallerySection
-            simulateSection
+            activePageSections
         }
         .navigationTitle(info?.title ?? entry.name)
         .toolbar {
@@ -70,11 +78,32 @@ struct BaStudentDetailView: View {
         .platformInsetGroupedListStyle()
         .scrollContentBackground(.hidden)
         .background(AppBackground())
+#if os(iOS)
+        .toolbar(.hidden, for: .tabBar)
+#endif
         .task(id: entry.contentId) {
             await model.loadStudentDetail(entry: entry)
         }
         .refreshable {
             await model.loadStudentDetail(entry: entry, force: true)
+        }
+    }
+
+    @ViewBuilder
+    private var activePageSections: some View {
+        switch selectedPage {
+        case .overviewSkills:
+            overviewSection
+            skillsSection
+            growthSection
+        case .profile:
+            profileSection
+        case .voice:
+            voiceSection
+        case .gallery:
+            gallerySection
+        case .simulate:
+            simulateSection
         }
     }
 

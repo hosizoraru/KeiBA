@@ -49,6 +49,9 @@ struct BaActivityView: View {
                 } else {
                     ForEach(filteredEntries) { entry in
                         BaActivityRow(entry: entry, server: model.settings.server)
+                            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
                     }
                 }
             } header: {
@@ -141,44 +144,60 @@ private struct BaActivityRow: View {
     var body: some View {
         let now = Date()
         let status = entry.status(at: now)
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .top, spacing: 12) {
-                BaRowThumbnail(
+        BaGlassCard(tint: status.tint) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    BaStatusBadge(title: status.title, tint: status.tint)
+                    Spacer(minLength: 8)
+                    Text(BaDisplayFormatters.timelineDetail(start: entry.beginAt, end: entry.endAt, now: now))
+                        .font(.caption.monospacedDigit().weight(.semibold))
+                        .foregroundStyle(status.tint)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.82)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(BaTimelineLabels.calendarKindTitle(kindId: entry.kindId, fallback: entry.kindName))
+                        .font(BaTextToken.rowCaption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+
+                    Text(entry.title)
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+                }
+
+                BaRemoteImageSurface(
                     url: entry.imageURL,
                     fallbackSystemImage: status == .running ? "flag.checkered" : "calendar",
                     tint: status.tint,
-                    size: 52
+                    width: nil,
+                    height: 164,
+                    cornerRadius: 18,
+                    fallbackFont: .system(size: 40, weight: .semibold)
                 )
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(entry.title)
-                        .font(BaTextToken.rowTitle)
-                        .foregroundStyle(.primary)
+                BaTimelineDatePair(
+                    start: BaDisplayFormatters.dateTime(entry.beginAt, server: server),
+                    end: BaDisplayFormatters.dateTime(entry.endAt, server: server),
+                    detail: "",
+                    tint: status.tint,
+                    progress: status == .running ? entry.progress(at: now) : nil
+                )
 
-                    Text(BaTimelineLabels.calendarKindTitle(kindId: entry.kindId, fallback: entry.kindName))
-                        .font(BaTextToken.rowSubtitle)
+                if let linkURL = entry.linkURL {
+                    Link(destination: linkURL) {
+                        Label(linkURL.host ?? String(localized: "ba.activity.link.gamekee"), systemImage: "link")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    Label(String(localized: "ba.activity.link.gamekee"), systemImage: "link")
+                        .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
-
-                Spacer(minLength: 12)
-
-                BaStatusBadge(title: status.title, tint: status.tint)
             }
-
-            BaTimelineDatePair(
-                start: BaDisplayFormatters.dateTime(entry.beginAt, server: server),
-                end: BaDisplayFormatters.dateTime(entry.endAt, server: server),
-                detail: BaDisplayFormatters.timelineDetail(start: entry.beginAt, end: entry.endAt, now: now),
-                tint: status.tint,
-                progress: status == .running ? entry.progress(at: now) : nil
-            )
-            BaDivider()
-            Label(entry.linkURL?.host ?? String(localized: "ba.activity.link.gamekee"), systemImage: "link")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .padding(.vertical, 6)
         }
-        .padding(.vertical, 6)
     }
 }
 

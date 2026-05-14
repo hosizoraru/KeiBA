@@ -150,45 +150,58 @@ private struct BaPoolRow: View {
     var body: some View {
         let now = Date()
         let status = pool.status(at: now)
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top, spacing: 12) {
-                BaRowThumbnail(
+                BaRemoteImageSurface(
                     url: pool.imageURL,
                     fallbackSystemImage: status == .running ? "sparkles" : "calendar",
                     tint: status.tint,
-                    size: 52
+                    width: 96,
+                    height: 128,
+                    cornerRadius: 18,
+                    contentMode: .fit,
+                    fallbackFont: .system(size: 34, weight: .semibold)
                 )
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(pool.name)
-                        .font(BaTextToken.rowTitle)
-                        .foregroundStyle(.primary)
+                VStack(alignment: .leading, spacing: 7) {
+                    HStack(alignment: .firstTextBaseline) {
+                        BaStatusBadge(title: status.title, tint: status.tint)
+                        Spacer(minLength: 8)
+                    }
 
                     Text(BaTimelineLabels.poolTagTitle(tagId: pool.tagId, fallback: pool.tagName))
-                        .font(BaTextToken.rowSubtitle)
+                        .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
+                        .lineLimit(1)
+
+                    Text(pool.name)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+
+                    Text(pool.alias.isEmpty ? String(localized: "ba.pool.linkedStudent.detail") : pool.alias)
+                        .font(BaTextToken.rowCaption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Label(BaDisplayFormatters.dateTime(pool.startAt, server: server), systemImage: "calendar.badge.clock")
+                        Label(BaDisplayFormatters.dateTime(pool.endAt, server: server), systemImage: "calendar.badge.checkmark")
+                    }
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(.tertiary)
+
+                    Text(BaDisplayFormatters.timelineDetail(start: pool.startAt, end: pool.endAt, now: now))
+                        .font(.caption.monospacedDigit().weight(.semibold))
+                        .foregroundStyle(status.tint)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.82)
                 }
-
-                Spacer(minLength: 12)
-
-                BaStatusBadge(title: status.title, tint: status.tint)
             }
 
-            BaTimelineDatePair(
-                start: BaDisplayFormatters.dateTime(pool.startAt, server: server),
-                end: BaDisplayFormatters.dateTime(pool.endAt, server: server),
-                detail: BaDisplayFormatters.timelineDetail(start: pool.startAt, end: pool.endAt, now: now),
-                tint: status.tint,
-                progress: status == .running ? pool.progress(at: now) : nil
-            )
-            BaDivider()
-            BaMetricRow(
-                title: String(localized: "ba.pool.linkedStudent.title"),
-                value: pool.name,
-                detail: pool.alias.isEmpty ? String(localized: "ba.pool.linkedStudent.detail") : pool.alias,
-                systemImage: "person.crop.circle",
-                valueColor: BaDesign.violet
-            )
+            ProgressView(value: pool.progress(at: now))
+                .tint(status.tint)
+                .controlSize(.small)
         }
         .padding(.vertical, 6)
     }
