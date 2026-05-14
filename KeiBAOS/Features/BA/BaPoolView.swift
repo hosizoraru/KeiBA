@@ -19,7 +19,7 @@ struct BaPoolView: View {
     }
 
     private var poolSnapshot: BaPoolListSnapshot {
-        let now = Date().baPoolTimelineDisplayDate
+        let now = Date().baTimelineDisplayDate
         let settings = model.settings
         var counts: [BaTimelineStatus: Int] = [:]
         var rows: [BaPoolRowDisplayModel] = []
@@ -206,7 +206,7 @@ private struct BaPoolNavigationCard: View, Equatable {
 
             VStack(alignment: .leading, spacing: 14) {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    BaPoolStatusPill(title: row.status.title, tint: row.status.tint)
+                    BaTimelineStatusPill(title: row.status.title, tint: row.status.tint)
 
                     Spacer(minLength: 8)
 
@@ -262,43 +262,8 @@ private struct BaPoolNavigationCard: View, Equatable {
         .padding(.horizontal, 14)
         .padding(.vertical, 13)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .baPoolScrollCardSurface(tint: row.status.tint)
+        .baTimelineScrollCardSurface(tint: row.status.tint)
         .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-    }
-}
-
-private extension View {
-    func baPoolScrollCardSurface(tint: Color) -> some View {
-        let shape = RoundedRectangle(cornerRadius: 24, style: .continuous)
-
-        return background(.ultraThinMaterial, in: shape)
-            .overlay {
-                shape.fill(tint.opacity(0.045))
-            }
-            .overlay {
-                shape.strokeBorder(.white.opacity(0.16), lineWidth: 1)
-            }
-            .shadow(color: tint.opacity(0.08), radius: 12, x: 0, y: 6)
-    }
-}
-
-private extension Date {
-    var baPoolTimelineDisplayDate: Date {
-        Date(timeIntervalSince1970: floor(timeIntervalSince1970 / 60) * 60)
-    }
-}
-
-private struct BaPoolStatusPill: View {
-    let title: String
-    var tint: Color
-
-    var body: some View {
-        Text(title)
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(tint)
-            .padding(.horizontal, 9)
-            .padding(.vertical, 5)
-            .background(tint.opacity(0.10), in: Capsule())
     }
 }
 

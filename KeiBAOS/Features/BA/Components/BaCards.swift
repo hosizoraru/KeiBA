@@ -280,6 +280,41 @@ struct BaTimelineDatePair: View {
     }
 }
 
+struct BaTimelineStatusPill: View {
+    let title: String
+    var tint: Color
+
+    var body: some View {
+        Text(title)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(tint)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 5)
+            .background(tint.opacity(0.10), in: Capsule())
+    }
+}
+
+extension View {
+    func baTimelineScrollCardSurface(tint: Color) -> some View {
+        let shape = RoundedRectangle(cornerRadius: 24, style: .continuous)
+
+        return background(.ultraThinMaterial, in: shape)
+            .overlay {
+                shape.fill(tint.opacity(0.045))
+            }
+            .overlay {
+                shape.strokeBorder(.white.opacity(0.16), lineWidth: 1)
+            }
+            .shadow(color: tint.opacity(0.08), radius: 12, x: 0, y: 6)
+    }
+}
+
+extension Date {
+    var baTimelineDisplayDate: Date {
+        Date(timeIntervalSince1970: floor(timeIntervalSince1970 / 60) * 60)
+    }
+}
+
 struct BaValueChip: View {
     let value: String
     var tint: Color

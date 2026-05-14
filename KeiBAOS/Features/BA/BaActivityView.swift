@@ -18,38 +18,61 @@ struct BaActivityView: View {
         _statusFilter = statusFilter
     }
 
-    private var filteredEntries: [BaActivityEntry] {
-        let now = Date()
-        let source = (model.activityState.value ?? []).filter { entry in
-            model.settings.showEndedActivities || entry.status(at: now) != .ended
+    private var activitySnapshot: BaActivityListSnapshot {
+        let now = Date().baTimelineDisplayDate
+        let settings = model.settings
+        var counts: [BaTimelineStatus: Int] = [:]
+        var rows: [BaActivityRowDisplayModel] = []
+
+        for entry in model.activityState.value ?? [] {
+            let status = entry.status(at: now)
+            counts[status, default: 0] += 1
+
+            guard settings.showEndedActivities || status != .ended else { continue }
+            guard statusFilter == nil || statusFilter == status else { continue }
+
+            rows.append(
+                BaActivityRowDisplayModel(
+                    entry: entry,
+                    status: status,
+                    kindTitle: BaTimelineLabels.calendarKindTitle(kindId: entry.kindId, fallback: entry.kindName),
+                    timelineDetail: BaDisplayFormatters.timelineDetail(start: entry.beginAt, end: entry.endAt, now: now),
+                    startText: BaDisplayFormatters.dateTime(entry.beginAt, server: settings.server),
+                    endText: BaDisplayFormatters.dateTime(entry.endAt, server: settings.server),
+                    progress: status == .running ? entry.progress(at: now) : nil
+                )
+            )
         }
-        guard let statusFilter else { return source }
-        return source.filter { $0.status(at: now) == statusFilter }
+
+        return BaActivityListSnapshot(rows: rows, counts: counts)
     }
 
     var body: some View {
+        let snapshot = activitySnapshot
+
         List {
             Section {
-                activitySummary
+                activitySummary(snapshot: snapshot)
                     .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                     .listRowBackground(Color.clear)
             }
 
             Section {
-                if model.activityState.isLoading, filteredEntries.isEmpty {
+                if model.activityState.isLoading, snapshot.rows.isEmpty {
                     ProgressView()
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.vertical, 24)
-                } else if filteredEntries.isEmpty {
+                } else if snapshot.rows.isEmpty {
                     ContentUnavailableView(
                         String(localized: "ba.activity.empty.title"),
                         systemImage: "calendar.badge.exclamationmark",
                         description: Text(String(localized: "ba.activity.empty.detail"))
                     )
                 } else {
-                    ForEach(filteredEntries) { entry in
-                        BaActivityRow(entry: entry, server: model.settings.server)
-                            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                    ForEach(snapshot.rows) { row in
+                        BaActivityCard(row: row)
+                            .equatable()
+                            .listRowInsets(EdgeInsets(top: 7, leading: 16, bottom: 7, trailing: 16))
                             .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
                     }
@@ -71,28 +94,28 @@ struct BaActivityView: View {
         }
     }
 
-    private var activitySummary: some View {
+    private func activitySummary(snapshot: BaActivityListSnapshot) -> some View {
         BaGlassCard(tint: BaDesign.blue) {
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 12) {
                 BaSectionHeader(
                     title: String(localized: "ba.activity.summary.title"),
                     asset: .guideMission
                 )
 
-                HStack(spacing: 12) {
+                HStack(alignment: .top, spacing: 10) {
                     BaSummaryMetric(
                         title: String(localized: "ba.status.running"),
-                        value: "\(count(for: .running))",
+                        value: "\(snapshot.count(for: .running))",
                         tint: BaDesign.green
                     )
                     BaSummaryMetric(
                         title: String(localized: "ba.status.upcoming"),
-                        value: "\(count(for: .upcoming))",
+                        value: "\(snapshot.count(for: .upcoming))",
                         tint: BaDesign.blue
                     )
                     BaSummaryMetric(
                         title: String(localized: "ba.status.ended"),
-                        value: "\(count(for: .ended))",
+                        value: "\(snapshot.count(for: .ended))",
                         tint: .secondary
                     )
                 }
@@ -106,11 +129,6 @@ struct BaActivityView: View {
 
     private var currentFilterTitle: String {
         statusFilter?.title ?? String(localized: "ba.filter.all")
-    }
-
-    private func count(for status: BaTimelineStatus) -> Int {
-        let now = Date()
-        return (model.activityState.value ?? []).filter { $0.status(at: now) == status }.count
     }
 
     private var summarySyncText: String {
@@ -137,40 +155,73 @@ struct BaActivityView: View {
     }
 }
 
-private struct BaActivityRow: View {
+private struct BaActivityListSnapshot {
+    let rows: [BaActivityRowDisplayModel]
+    let counts: [BaTimelineStatus: Int]
+
+    func count(for status: BaTimelineStatus) -> Int {
+        counts[status] ?? 0
+    }
+}
+
+private struct BaActivityRowDisplayModel: Identifiable, Equatable {
     let entry: BaActivityEntry
-    let server: BaServer
+    let status: BaTimelineStatus
+    let kindTitle: String
+    let timelineDetail: String
+    let startText: String
+    let endText: String
+    let progress: Double?
+
+    var id: BaActivityEntry.ID {
+        entry.id
+    }
+
+    var fallbackSystemImage: String {
+        status == .running ? "flag.checkered" : "calendar"
+    }
+}
+
+private struct BaActivityCard: View, Equatable {
+    let row: BaActivityRowDisplayModel
 
     var body: some View {
-        let now = Date()
-        let status = entry.status(at: now)
-        BaGlassCard(tint: status.tint) {
-            VStack(alignment: .leading, spacing: 12) {
+        HStack(alignment: .top, spacing: 12) {
+            RoundedRectangle(cornerRadius: 999, style: .continuous)
+                .fill(row.status.tint.opacity(0.78))
+                .frame(width: 4)
+                .padding(.vertical, 7)
+
+            VStack(alignment: .leading, spacing: 13) {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    BaStatusBadge(title: status.title, tint: status.tint)
+                    BaTimelineStatusPill(title: row.status.title, tint: row.status.tint)
+
                     Spacer(minLength: 8)
-                    Text(BaDisplayFormatters.timelineDetail(start: entry.beginAt, end: entry.endAt, now: now))
+
+                    Text(row.timelineDetail)
                         .font(.caption.monospacedDigit().weight(.semibold))
-                        .foregroundStyle(status.tint)
+                        .foregroundStyle(row.status.tint)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.82)
+                        .minimumScaleFactor(0.78)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(BaTimelineLabels.calendarKindTitle(kindId: entry.kindId, fallback: entry.kindName))
+                    Text(row.kindTitle)
                         .font(BaTextToken.rowCaption.weight(.semibold))
                         .foregroundStyle(.secondary)
+                        .lineLimit(1)
 
-                    Text(entry.title)
+                    Text(row.entry.title)
                         .font(.title3.weight(.semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 BaRemoteImageSurface(
-                    url: entry.imageURL,
-                    fallbackSystemImage: status == .running ? "flag.checkered" : "calendar",
-                    tint: status.tint,
+                    url: row.entry.imageURL,
+                    fallbackSystemImage: row.fallbackSystemImage,
+                    tint: row.status.tint,
                     width: nil,
                     height: 164,
                     cornerRadius: 18,
@@ -178,26 +229,18 @@ private struct BaActivityRow: View {
                 )
 
                 BaTimelineDatePair(
-                    start: BaDisplayFormatters.dateTime(entry.beginAt, server: server),
-                    end: BaDisplayFormatters.dateTime(entry.endAt, server: server),
+                    start: row.startText,
+                    end: row.endText,
                     detail: "",
-                    tint: status.tint,
-                    progress: status == .running ? entry.progress(at: now) : nil
+                    tint: row.status.tint,
+                    progress: row.progress
                 )
-
-                if let linkURL = entry.linkURL {
-                    Link(destination: linkURL) {
-                        Label(linkURL.host ?? String(localized: "ba.activity.link.gamekee"), systemImage: "link")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                } else {
-                    Label(String(localized: "ba.activity.link.gamekee"), systemImage: "link")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
             }
         }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 13)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .baTimelineScrollCardSurface(tint: row.status.tint)
     }
 }
 
