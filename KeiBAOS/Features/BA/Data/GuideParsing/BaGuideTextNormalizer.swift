@@ -21,7 +21,7 @@ enum BaGuideTextNormalizer {
     }
 
     nonisolated static func cleanDisplayText(_ raw: String) -> String {
-        let mediaPattern = #"((?:https?:)?//[^\s"'<>\\]+|/[A-Za-z0-9_\-./%]+\.(?:png|jpe?g|webp|gif|mp3|m4a|wav|aac|mp4|mov|m3u8)(?:\?[^\s"'<>\\]+)?)"#
+        let mediaPattern = #"((?:https?:)?//[^\s"'<>\\]+|/[A-Za-z0-9_\-./%]+\.(?:png|jpe?g|webp|gif|mp3|m4a|wav|aac|ogg|oga|opus|flac|mp4|mov|m3u8)(?:\?[^\s"'<>\\]+)?)"#
         return clean(raw)
             .replacingOccurrences(of: mediaPattern, with: "", options: [.regularExpression, .caseInsensitive])
             .replacingOccurrences(of: #"\s*/\s*$"#, with: "", options: .regularExpression)
@@ -64,7 +64,7 @@ enum BaGuideTextNormalizer {
     nonisolated static func looksLikeImageURL(_ url: URL) -> Bool {
         let value = url.absoluteString.lowercased()
         let pathExtension = url.pathExtension.lowercased()
-        if ["json", "mp4", "mov", "m3u8", "mp3", "m4a", "wav", "aac"].contains(pathExtension) {
+        if ["json", "mp4", "mov", "m3u8", "mp3", "m4a", "wav", "aac", "ogg", "oga", "opus", "flac"].contains(pathExtension) {
             return false
         }
         if ["jpg", "jpeg", "png", "webp", "gif", "svg"].contains(pathExtension) {
@@ -92,6 +92,7 @@ enum BaGuideTextNormalizer {
             value.hasSuffix(".wav") ||
             value.hasSuffix(".aac") ||
             value.hasSuffix(".ogg") ||
+            value.hasSuffix(".oga") ||
             value.hasSuffix(".opus") ||
             value.hasSuffix(".flac") ||
             value.contains("audio")
@@ -189,7 +190,7 @@ enum BaGuideTextNormalizer {
     }
 
     private nonisolated static func extractURLs(_ raw: String, sourceURL: URL?) -> [URL] {
-        let pattern = #"((?:https?:)?//[^\s"'<>\\]+|/[A-Za-z0-9_\-./%]+(?:\?[^\s"'<>\\]+)?|[A-Za-z0-9_\-./%]+\.(?:png|jpe?g|webp|gif|mp3|m4a|wav|aac|mp4|mov|m3u8)(?:\?[^\s"'<>\\]+)?)"#
+        let pattern = #"((?:https?:)?//[^\s"'<>\\]+|/[A-Za-z0-9_\-./%]+(?:\?[^\s"'<>\\]+)?|[A-Za-z0-9_\-./%]+\.(?:png|jpe?g|webp|gif|mp3|m4a|wav|aac|ogg|oga|opus|flac|mp4|mov|m3u8)(?:\?[^\s"'<>\\]+)?)"#
         guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return [] }
         let range = NSRange(raw.startIndex ..< raw.endIndex, in: raw)
         let urls = regex.matches(in: raw, range: range).compactMap { match -> URL? in

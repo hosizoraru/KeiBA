@@ -198,7 +198,15 @@ struct BaStudentGuideRepository {
     private func voiceRows(from rows: [BaGuideRow], content: Any?) -> [BaGuideVoiceEntry] {
         let audioURLs = GameKeeJSON.findURLs(in: content) { raw in
             let lower = raw.lowercased()
-            return lower.hasSuffix(".mp3") || lower.hasSuffix(".m4a") || lower.hasSuffix(".wav") || lower.contains("audio")
+            return lower.hasSuffix(".mp3") ||
+                lower.hasSuffix(".m4a") ||
+                lower.hasSuffix(".wav") ||
+                lower.hasSuffix(".aac") ||
+                lower.hasSuffix(".ogg") ||
+                lower.hasSuffix(".oga") ||
+                lower.hasSuffix(".opus") ||
+                lower.hasSuffix(".flac") ||
+                lower.contains("audio")
         }
         let voiceTextRows = rows.filter { row in
             isVoiceKey(row.title) || isVoiceKey(row.value)

@@ -145,7 +145,7 @@ enum GameKeeJSON {
         guard let url = normalizeImageURL(raw) else { return false }
         let value = url.absoluteString.lowercased()
         let pathExtension = url.pathExtension.lowercased()
-        if ["json", "mp4", "mov", "m3u8", "mp3", "m4a", "wav", "aac"].contains(pathExtension) {
+        if ["json", "mp4", "mov", "m3u8", "mp3", "m4a", "wav", "aac", "ogg", "oga", "opus", "flac"].contains(pathExtension) {
             return false
         }
         guard value.hasPrefix("http") || value.hasPrefix("//") || value.hasPrefix("/") else {
