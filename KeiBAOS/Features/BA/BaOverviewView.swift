@@ -33,7 +33,7 @@ struct BaOverviewView: View {
     private var identitySection: some View {
         BaMetricGroup(
             title: String(localized: "ba.office.overview.title"),
-            systemImage: "building.2"
+            asset: .schale
         ) {
             BaMetricRow(
                 title: String(localized: "ba.office.nickname.label"),
@@ -64,7 +64,7 @@ struct BaOverviewView: View {
     private var apSection: some View {
         BaMetricGroup(
             title: String(localized: "ba.office.ap.label"),
-            systemImage: "bolt"
+            asset: .actionPoint
         ) {
             HStack(spacing: 10) {
                 Text(String(localized: "ba.office.ap.current.title"))
@@ -89,7 +89,7 @@ struct BaOverviewView: View {
                 title: String(localized: "ba.office.ap.next.title"),
                 value: office.apNext,
                 detail: apStatusText,
-                systemImage: "clock",
+                asset: .actionPointTight,
                 valueColor: BaDesign.green
             )
             BaDivider()
@@ -112,27 +112,27 @@ struct BaOverviewView: View {
     private var cafeSection: some View {
         BaMetricGroup(
             title: String(localized: "ba.office.cafeAp.title"),
-            systemImage: "cup.and.saucer"
+            asset: .cafeAP
         ) {
             BaMetricRow(
                 title: String(localized: "ba.cafe.storage.title"),
                 value: "\(office.cafeApCurrent)/\(office.cafeApLimit)",
                 detail: office.cafeLevel,
-                systemImage: "leaf",
+                asset: .cafeAP,
                 valueColor: BaDesign.pink
             )
             BaDivider()
             BaMetricRow(
                 title: String(localized: "ba.cafe.metric.visit"),
                 value: office.cafeVisitRefresh,
-                systemImage: "person.2.badge.clock",
+                asset: .lobbyWork,
                 valueColor: BaDesign.pink
             )
             BaDivider()
             BaMetricRow(
                 title: String(localized: "ba.cafe.metric.tactical"),
                 value: office.tacticalRefresh,
-                systemImage: "target",
+                asset: .arenaCoin,
                 valueColor: BaDesign.amber
             )
             BaDivider()
@@ -140,7 +140,7 @@ struct BaOverviewView: View {
                 title: String(localized: "ba.cafe.action.headpat"),
                 value: office.headpatRemain,
                 detail: office.headpatDetail,
-                systemImage: "hand.tap",
+                asset: .dailyReward,
                 valueColor: BaDesign.green
             )
             BaDivider()
@@ -148,7 +148,7 @@ struct BaOverviewView: View {
                 title: String(localized: "ba.cafe.action.invite1"),
                 value: office.inviteRemain,
                 detail: office.inviteDetail,
-                systemImage: "ticket",
+                asset: .cafeCoupon,
                 valueColor: BaDesign.violet
             )
         }

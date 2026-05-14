@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "ba_ap_icon_tight.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

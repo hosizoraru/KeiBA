@@ -82,7 +82,7 @@ struct BaPoolView: View {
             VStack(alignment: .leading, spacing: 14) {
                 BaSectionHeader(
                     title: String(localized: "ba.pool.summary.title"),
-                    systemImage: "rectangle.stack.badge.person.crop"
+                    asset: .weaponStarBadge
                 )
 
                 HStack(spacing: 12) {
@@ -185,8 +185,14 @@ private struct BaPoolRow: View {
                         .lineLimit(2)
 
                     VStack(alignment: .leading, spacing: 3) {
-                        Label(BaDisplayFormatters.dateTime(pool.startAt, server: server), systemImage: "calendar.badge.clock")
-                        Label(BaDisplayFormatters.dateTime(pool.endAt, server: server), systemImage: "calendar.badge.checkmark")
+                        Label(
+                            BaDisplayFormatters.dateTime(pool.startAt, server: server),
+                            systemImage: "calendar.badge.clock"
+                        )
+                        Label(
+                            BaDisplayFormatters.dateTime(pool.endAt, server: server),
+                            systemImage: "calendar.badge.checkmark"
+                        )
                     }
                     .font(.caption2.monospacedDigit())
                     .foregroundStyle(.tertiary)

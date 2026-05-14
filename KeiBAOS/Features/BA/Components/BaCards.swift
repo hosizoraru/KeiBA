@@ -79,10 +79,13 @@ struct BaGlassCard<Content: View>: View {
 struct BaSectionHeader: View {
     let title: String
     var systemImage: String?
+    var asset: BaGameAsset?
 
     var body: some View {
         HStack(spacing: 8) {
-            if let systemImage {
+            if let asset {
+                BaGameAssetIcon(asset, size: 21)
+            } else if let systemImage {
                 Image(systemName: systemImage)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.secondary)
@@ -146,22 +149,25 @@ struct BaSummaryMetric: View {
 struct BaMetricGroup<Content: View>: View {
     let title: String
     var systemImage: String?
+    var asset: BaGameAsset?
     let content: Content
 
     init(
         title: String,
         systemImage: String? = nil,
+        asset: BaGameAsset? = nil,
         @ViewBuilder content: () -> Content
     ) {
         self.title = title
         self.systemImage = systemImage
+        self.asset = asset
         self.content = content()
     }
 
     var body: some View {
         BaGlassCard {
             VStack(alignment: .leading, spacing: 14) {
-                BaSectionHeader(title: title, systemImage: systemImage)
+                BaSectionHeader(title: title, systemImage: systemImage, asset: asset)
                 VStack(spacing: 0) {
                     content
                 }
@@ -175,11 +181,15 @@ struct BaMetricRow: View {
     let value: String
     var detail: String?
     var systemImage: String?
+    var asset: BaGameAsset?
     var valueColor: Color = .primary
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
-            if let systemImage {
+            if let asset {
+                BaGameAssetIcon(asset, size: 25)
+                    .frame(width: 24)
+            } else if let systemImage {
                 Image(systemName: systemImage)
                     .font(.callout.weight(.semibold))
                     .foregroundStyle(.secondary)

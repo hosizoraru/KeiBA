@@ -443,6 +443,21 @@ nonisolated enum BaStudentDetailPage: String, CaseIterable, Codable, Identifiabl
             "chart.xyaxis.line"
         }
     }
+
+    var asset: BaGameAsset {
+        switch self {
+        case .overviewProfile:
+            .tabProfile
+        case .skills:
+            .tabSkill
+        case .voice:
+            .tabBGM
+        case .gallery:
+            .tabPlay
+        case .simulate:
+            .tabSimulate
+        }
+    }
 }
 
 nonisolated struct BaGuideRow: Identifiable, Codable, Hashable {

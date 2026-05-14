@@ -76,7 +76,7 @@ struct BaActivityView: View {
             VStack(alignment: .leading, spacing: 14) {
                 BaSectionHeader(
                     title: String(localized: "ba.activity.summary.title"),
-                    systemImage: "calendar"
+                    asset: .guideMission
                 )
 
                 HStack(spacing: 12) {

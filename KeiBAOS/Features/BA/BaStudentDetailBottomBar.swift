@@ -52,9 +52,13 @@ private struct BaStudentDetailBottomTabButton: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 4) {
-                Image(systemName: page.systemImage)
-                    .font(.system(size: 18, weight: .semibold))
-                    .frame(height: 20)
+                BaGameAssetIcon(
+                    page.asset,
+                    size: 20,
+                    renderingMode: .template,
+                    tint: isSelected ? BaDesign.blue : .secondary
+                )
+                .frame(height: 20)
 
                 Text(page.title)
                     .font(.caption2.weight(isSelected ? .semibold : .regular))
