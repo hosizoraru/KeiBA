@@ -547,6 +547,34 @@ final class BaDataBridgeTests: XCTestCase {
             "兴趣爱好",
             "介绍",
         ])
+        let profileMeta = BaStudentGuideMeta.profileMetaItems(from: info)
+        XCTAssertEqual(profileMeta.map(\.value), [
+            "3星",
+            "格黑娜学园",
+            "风纪委员会",
+        ])
+        let combatMetaValues = Dictionary(uniqueKeysWithValues: BaStudentGuideMeta.combatMetaItems(from: info).map {
+            ($0.title, $0.value)
+        })
+        XCTAssertEqual(
+            combatMetaValues[String(localized: "ba.student.detail.meta.tacticalPosition")],
+            "输出"
+        )
+        XCTAssertEqual(
+            combatMetaValues[String(localized: "ba.student.detail.meta.attackType")],
+            "爆炸"
+        )
+        XCTAssertEqual(
+            combatMetaValues[String(localized: "ba.student.detail.meta.defenseType")],
+            "弹力装甲"
+        )
+        XCTAssertEqual(
+            combatMetaValues[String(localized: "ba.student.detail.meta.weaponType")],
+            "MG"
+        )
+        XCTAssertEqual(combatMetaValues[String(localized: "ba.student.detail.meta.street")], "D")
+        XCTAssertEqual(combatMetaValues[String(localized: "ba.student.detail.meta.outdoor")], "A")
+        XCTAssertEqual(combatMetaValues[String(localized: "ba.student.detail.meta.indoor")], "S")
         XCTAssertEqual(parsed.skillRows.first?.title, "角色技能")
         XCTAssertEqual(parsed.voiceRows.first?.lineHeaders, ["日配", "中配", "韩配"])
         XCTAssertEqual(parsed.galleryItems.first?.mediaKind, .image)

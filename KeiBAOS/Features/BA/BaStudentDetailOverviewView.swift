@@ -80,15 +80,9 @@ private struct BaStudentCombatMetaCard: View {
 
     var body: some View {
         BaGlassCard(tint: BaDesign.blue) {
-            VStack(alignment: .leading, spacing: 10) {
-                Text(String(localized: "ba.student.detail.combat.title"))
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(.primary)
-
-                VStack(spacing: 7) {
-                    ForEach(items) { item in
-                        BaStudentCombatMetaRow(item: item)
-                    }
+            VStack(spacing: 8) {
+                ForEach(items) { item in
+                    BaStudentCombatMetaRow(item: item)
                 }
             }
         }
@@ -128,7 +122,7 @@ private struct BaStudentCombatMetaRow: View {
             Text(item.title)
                 .font(.callout.weight(.semibold))
                 .foregroundStyle(.secondary)
-                .frame(width: 112, alignment: .leading)
+                .frame(width: 100, alignment: .leading)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
 
@@ -137,6 +131,7 @@ private struct BaStudentCombatMetaRow: View {
                 .foregroundStyle(.primary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.82)
+                .layoutPriority(1)
 
             Spacer(minLength: 8)
 
