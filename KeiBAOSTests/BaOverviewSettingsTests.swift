@@ -103,6 +103,74 @@ final class BaOverviewSettingsTests: XCTestCase {
         XCTAssertEqual(BaTimeMath.currentCafeAP(profile: profile, now: now), expected, accuracy: 0.001)
     }
 
+    func testOverviewAPSnapshotRecoversWithTime() {
+        let base = Date(timeIntervalSince1970: 1_700_000_000)
+        var settings = BaAppSettings.defaults(now: base)
+        settings.apCurrent = 10
+        settings.apLimit = 240
+        settings.apRegenBaseAt = base
+
+        let snapshot = BaOfficeRepository().snapshot(
+            settings: settings,
+            now: base.addingTimeInterval(BaTimeMath.apRegenInterval * 2)
+        )
+
+        XCTAssertEqual(snapshot.apCurrent, "12")
+    }
+
+    func testAPAboveLimitStaysVisibleAndPausesNaturalRecovery() {
+        let base = Date(timeIntervalSince1970: 1_700_000_000)
+        var settings = BaAppSettings.defaults(now: base)
+        settings.apCurrent = 300
+        settings.apLimit = 240
+        settings.apRegenBaseAt = base
+
+        let snapshot = BaOfficeRepository().snapshot(
+            settings: settings,
+            now: base.addingTimeInterval(BaTimeMath.apRegenInterval * 2)
+        )
+
+        XCTAssertEqual(snapshot.apCurrent, "300")
+        XCTAssertEqual(snapshot.apNext, String(localized: "ba.office.ap.paused.value"))
+        XCTAssertEqual(snapshot.apFullRemain, String(localized: "ba.office.ap.full.ready"))
+    }
+
+    func testOverviewMinuteDurationsDropSecondsOutsideAPNext() {
+        XCTAssertEqual(BaDisplayFormatters.compactDuration(90, includingSeconds: true), "1m 30s")
+        XCTAssertEqual(BaDisplayFormatters.compactDuration(90, includingSeconds: false), "2m")
+        XCTAssertEqual(BaDisplayFormatters.compactDuration(3661, includingSeconds: false), "1h 2m")
+    }
+
+    func testOverviewSyncTimeDropsSeconds() {
+        let date = Date(timeIntervalSince1970: 1_700_000_000)
+        XCTAssertEqual(BaDisplayFormatters.syncTime(date, includingSeconds: false).split(separator: ":").count, 2)
+        XCTAssertEqual(BaDisplayFormatters.syncTime(date, includingSeconds: true).split(separator: ":").count, 3)
+    }
+
+    func testOverviewTimelineSummaryDropsSeconds() {
+        let base = Date(timeIntervalSince1970: 1_700_000_000)
+        let activity = BaActivityEntry(
+            id: 1,
+            title: "Event",
+            kindId: 1,
+            kindName: "Event",
+            beginAt: base.addingTimeInterval(-60),
+            endAt: base.addingTimeInterval(90),
+            linkURL: nil,
+            imageURL: nil
+        )
+        let summary = BaOverviewTimelineSummary(
+            activities: [activity],
+            pools: [],
+            now: base
+        )
+
+        XCTAssertEqual(
+            summary.activityTime,
+            String(format: String(localized: "ba.timeline.remaining.endsIn.format"), "2m")
+        )
+    }
+
     func testInviteTicketsHaveIndependentTwentyHourCooldowns() throws {
         let base = Date(timeIntervalSince1970: 1_700_000_000)
         var settings = BaAppSettings.defaults(now: base)

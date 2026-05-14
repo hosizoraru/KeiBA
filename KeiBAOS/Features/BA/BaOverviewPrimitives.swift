@@ -62,47 +62,6 @@ struct BaOverviewInfoPill: View {
     }
 }
 
-struct BaOverviewNumberField: View {
-    let title: String
-    @Binding var text: String
-    let fallback: String
-    let tint: Color
-    let onCommit: (Int) -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(BaOverviewTextToken.caption)
-                .foregroundStyle(.secondary)
-            TextField(fallback, text: $text)
-                .font(BaOverviewTextToken.primaryNumber)
-                .foregroundStyle(tint)
-                .multilineTextAlignment(.center)
-                .textFieldStyle(.roundedBorder)
-                .frame(minWidth: 72)
-                .onSubmit(commit)
-            #if os(iOS)
-                .keyboardType(.numberPad)
-            #endif
-        }
-        .onChange(of: text) { _, value in
-            let filtered = value.filter(\.isNumber).prefix(3)
-            let next = String(filtered)
-            if next != value {
-                text = next
-            }
-        }
-    }
-
-    private func commit() {
-        guard let value = Int(text) else {
-            text = fallback
-            return
-        }
-        onCommit(value)
-    }
-}
-
 struct BaOverviewMetricTile: View {
     let title: String
     let value: String
@@ -143,6 +102,39 @@ struct BaOverviewMetricTile: View {
         .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading)
         .padding(12)
         .liquidGlassSurface(cornerRadius: 18, tint: tint.opacity(0.045), isInteractive: false)
+    }
+}
+
+struct BaOverviewAPReadout: View {
+    let currentAP: String
+    let onEdit: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            BaGameAssetIcon(.actionPoint, size: BaOverviewMetricStyle.mainIcon)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(String(localized: "ba.office.ap.current.title"))
+                    .font(BaOverviewTextToken.caption)
+                    .foregroundStyle(.secondary)
+                Text(currentAP)
+                    .font(.largeTitle.monospacedDigit().weight(.semibold))
+                    .foregroundStyle(BaDesign.green)
+                    .lineLimit(1)
+                    .contentTransition(.numericText())
+            }
+
+            Spacer(minLength: 10)
+
+            Button(action: onEdit) {
+                Label(String(localized: "ba.overview.ap.edit.title"), systemImage: "pencil")
+                    .labelStyle(.iconOnly)
+            }
+            .buttonStyle(.glass)
+            .accessibilityLabel(String(localized: "ba.overview.ap.edit.title"))
+        }
+        .padding(12)
+        .liquidGlassSurface(cornerRadius: 18, tint: BaDesign.green.opacity(0.045), isInteractive: false)
     }
 }
 
@@ -254,7 +246,7 @@ struct BaOverviewTimelineTile: View {
         }
         return String(
             format: String(localized: "ba.state.syncedAt.format"),
-            BaDisplayFormatters.syncTime(syncAt)
+            BaDisplayFormatters.syncTime(syncAt, includingSeconds: false)
         )
     }
 }

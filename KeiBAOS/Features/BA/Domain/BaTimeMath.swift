@@ -28,10 +28,37 @@ nonisolated enum BaTimeMath {
     }
 
     static func currentAP(settings: BaAppSettings, now: Date = Date()) -> Double {
-        let elapsed = max(now.timeIntervalSince(settings.apRegenBaseAt), 0)
+        currentAP(
+            baseAP: settings.apCurrent,
+            apLimit: settings.apLimit,
+            apRegenBaseAt: settings.apRegenBaseAt,
+            now: now
+        )
+    }
+
+    static func currentAP(profile: BaServerProfile, now: Date = Date()) -> Double {
+        currentAP(
+            baseAP: profile.apCurrent,
+            apLimit: profile.apLimit,
+            apRegenBaseAt: profile.apRegenBaseAt,
+            now: now
+        )
+    }
+
+    static func currentAP(
+        baseAP: Double,
+        apLimit: Int,
+        apRegenBaseAt: Date,
+        now: Date = Date()
+    ) -> Double {
+        let base = normalizedAP(baseAP)
+        let limit = Double(min(max(apLimit, 0), apLimitMax))
+        guard limit > 0, base < limit else {
+            return base
+        }
+        let elapsed = max(now.timeIntervalSince(apRegenBaseAt), 0)
         let recovered = floor(elapsed / apRegenInterval)
-        let limit = Double(min(max(settings.apLimit, 0), apLimitMax))
-        return normalizedAP(min(settings.apCurrent + recovered, limit))
+        return normalizedAP(min(base + recovered, limit))
     }
 
     static func nextAPPointAt(settings: BaAppSettings, now: Date = Date()) -> Date {
@@ -129,6 +156,12 @@ nonisolated enum BaDisplayFormatters {
         return formatter
     }()
 
+    private static let syncMinuteFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MM-dd HH:mm"
+        return formatter
+    }()
+
     static func dateTime(_ date: Date, server: BaServer? = nil) -> String {
         if let server {
             dateFormatter.timeZone = server.timeZone
@@ -138,16 +171,24 @@ nonisolated enum BaDisplayFormatters {
         return dateFormatter.string(from: date)
     }
 
-    static func syncTime(_ date: Date) -> String {
-        syncFormatter.timeZone = .current
-        return syncFormatter.string(from: date)
+    static func syncTime(_ date: Date, includingSeconds: Bool = true) -> String {
+        let formatter = includingSeconds ? syncFormatter : syncMinuteFormatter
+        formatter.timeZone = .current
+        return formatter.string(from: date)
     }
 
-    static func compactRemaining(until target: Date, now: Date = Date()) -> String {
-        compactDuration(max(target.timeIntervalSince(now), 0))
+    static func compactRemaining(
+        until target: Date,
+        now: Date = Date(),
+        includingSeconds: Bool = true
+    ) -> String {
+        compactDuration(max(target.timeIntervalSince(now), 0), includingSeconds: includingSeconds)
     }
 
-    static func compactDuration(_ interval: TimeInterval) -> String {
+    static func compactDuration(_ interval: TimeInterval, includingSeconds: Bool = true) -> String {
+        if includingSeconds == false {
+            return compactMinuteDuration(interval)
+        }
         var seconds = Int(ceil(max(interval, 0)))
         let days = seconds / 86400
         seconds %= 86400
@@ -164,19 +205,38 @@ nonisolated enum BaDisplayFormatters {
         return parts.joined(separator: " ")
     }
 
-    static func timelineDetail(start: Date, end: Date, now: Date = Date()) -> String {
+    static func timelineDetail(
+        start: Date,
+        end: Date,
+        now: Date = Date(),
+        includingSeconds: Bool = true
+    ) -> String {
         if now < start {
             return String(
                 format: String(localized: "ba.timeline.remaining.startsIn.format"),
-                compactRemaining(until: start, now: now)
+                compactRemaining(until: start, now: now, includingSeconds: includingSeconds)
             )
         }
         if now < end {
             return String(
                 format: String(localized: "ba.timeline.remaining.endsIn.format"),
-                compactRemaining(until: end, now: now)
+                compactRemaining(until: end, now: now, includingSeconds: includingSeconds)
             )
         }
         return String(localized: "ba.timeline.remaining.ended")
+    }
+
+    private static func compactMinuteDuration(_ interval: TimeInterval) -> String {
+        var minutesTotal = Int(ceil(max(interval, 0) / 60))
+        let days = minutesTotal / 1440
+        minutesTotal %= 1440
+        let hours = minutesTotal / 60
+        let minutes = minutesTotal % 60
+
+        var parts: [String] = []
+        if days > 0 { parts.append("\(days)d") }
+        if hours > 0 { parts.append("\(hours)h") }
+        if minutes > 0 || parts.isEmpty { parts.append("\(minutes)m") }
+        return parts.joined(separator: " ")
     }
 }

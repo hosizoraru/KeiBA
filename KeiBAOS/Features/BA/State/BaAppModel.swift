@@ -109,8 +109,10 @@ final class BaAppModel {
 
     func setCurrentAP(_ value: Int) {
         updateCurrentProfile { profile in
-            let currentFraction = BaTimeMath.normalizedAP(profile.apCurrent) - Double(BaTimeMath.displayAP(profile.apCurrent))
-            profile.apCurrent = BaTimeMath.normalizedAP(Double(min(max(value, 0), BaTimeMath.apMax)) + currentFraction)
+            let currentFraction = BaTimeMath.normalizedAP(profile.apCurrent) -
+                Double(BaTimeMath.displayAP(profile.apCurrent))
+            let clampedValue = Double(min(max(value, 0), BaTimeMath.apMax))
+            profile.apCurrent = BaTimeMath.normalizedAP(clampedValue + currentFraction)
             profile.apRegenBaseAt = Date()
             profile.apSyncAt = Date()
         }
@@ -118,6 +120,9 @@ final class BaAppModel {
 
     func setAPLimit(_ value: Int) {
         updateCurrentProfile { profile in
+            let now = Date()
+            profile.apCurrent = BaTimeMath.currentAP(profile: profile, now: now)
+            profile.apRegenBaseAt = now
             profile.apLimit = min(max(value, 0), BaTimeMath.apLimitMax)
         }
     }
@@ -125,9 +130,10 @@ final class BaAppModel {
     func claimCafeAP() {
         updateCurrentProfile { profile in
             let now = Date()
+            let currentAP = BaTimeMath.currentAP(profile: profile, now: now)
             let currentCafeAP = BaTimeMath.currentCafeAP(profile: profile, now: now)
             guard currentCafeAP > 0 else { return }
-            profile.apCurrent = BaTimeMath.normalizedAP(profile.apCurrent + currentCafeAP)
+            profile.apCurrent = BaTimeMath.normalizedAP(currentAP + currentCafeAP)
             profile.apRegenBaseAt = now
             profile.apSyncAt = now
             profile.cafeApCurrent = 0
@@ -140,7 +146,10 @@ final class BaAppModel {
             let now = Date()
             switch kind {
             case .headpat:
-                let availableAt = BaTimeMath.nextHeadpatAvailable(lastHeadpatAt: profile.lastHeadpatAt, server: settings.server)
+                let availableAt = BaTimeMath.nextHeadpatAvailable(
+                    lastHeadpatAt: profile.lastHeadpatAt,
+                    server: settings.server
+                )
                 guard availableAt.map({ $0 <= now }) ?? true else { return }
                 profile.lastHeadpatAt = now
             case .inviteTicket1:
@@ -236,6 +245,10 @@ final class BaAppModel {
 
     func refreshOfficeSnapshot(now: Date = Date()) {
         officeSnapshot = officeRepository.snapshot(settings: settings, now: now)
+    }
+
+    func officeSnapshot(now: Date = Date()) -> BaOfficeSnapshot {
+        officeRepository.snapshot(settings: settings, now: now)
     }
 
     func loadActivitiesIfNeeded() async {

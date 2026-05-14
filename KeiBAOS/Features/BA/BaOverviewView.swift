@@ -23,26 +23,31 @@ struct BaOverviewView: View {
                 settings: model.settings,
                 onServerSelected: selectServer
             )
-            BaOverviewAPCard(
-                office: model.officeSnapshot,
-                settings: model.settings,
-                onCurrentAPCommit: model.setCurrentAP,
-                onLimitCommit: model.setAPLimit
-            )
-            BaOverviewCafeCard(
-                office: model.officeSnapshot,
-                onClaimCafeAP: model.claimCafeAP,
-                onPerformAction: model.performCafeAction,
-                onResetAction: model.resetCafeAction
-            )
-            BaOverviewTimelineSummaryCard(
-                activities: model.activityState.value ?? [],
-                pools: model.poolState.value ?? [],
-                activitySyncAt: model.activityState.lastSyncAt,
-                poolSyncAt: model.poolState.lastSyncAt,
-                server: model.settings.server,
-                onOpenTab: onOpenTab
-            )
+            TimelineView(.periodic(from: .now, by: 1)) { context in
+                BaOverviewAPCard(
+                    office: model.officeSnapshot(now: context.date),
+                    settings: model.settings,
+                    onCurrentAPCommit: model.setCurrentAP
+                )
+            }
+            TimelineView(.periodic(from: .now, by: 60)) { context in
+                BaOverviewCafeCard(
+                    office: model.officeSnapshot(now: context.date),
+                    onClaimCafeAP: model.claimCafeAP,
+                    onPerformAction: model.performCafeAction,
+                    onResetAction: model.resetCafeAction
+                )
+                BaOverviewTimelineSummaryCard(
+                    summary: BaOverviewTimelineSummary(
+                        activities: model.activityState.value ?? [],
+                        pools: model.poolState.value ?? [],
+                        now: context.date
+                    ),
+                    activitySyncAt: model.activityState.lastSyncAt,
+                    poolSyncAt: model.poolState.lastSyncAt,
+                    onOpenTab: onOpenTab
+                )
+            }
         }
         .task(id: model.settings.server) {
             model.refreshOfficeSnapshot()

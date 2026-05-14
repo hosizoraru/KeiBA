@@ -64,22 +64,14 @@ struct BaOverviewIdentityCard: View {
                     .pickerStyle(.menu)
                 }
 
-                HStack(spacing: 10) {
-                    BaOverviewInfoPill(
-                        title: String(localized: "ba.office.catalog.label"),
-                        value: String(localized: "ba.office.catalog.value"),
-                        systemImage: "rectangle.stack.person.crop",
-                        tint: BaDesign.cyan
-                    )
-                    BaOverviewInfoPill(
-                        title: String(localized: "ba.settings.identity.mode.title"),
-                        value: settings.identityIndependentByServer
-                            ? String(localized: "ba.settings.identity.mode.independent")
-                            : String(localized: "ba.settings.identity.mode.shared"),
-                        systemImage: "person.2.badge.gearshape",
-                        tint: BaDesign.blue
-                    )
-                }
+                BaOverviewInfoPill(
+                    title: String(localized: "ba.settings.identity.mode.title"),
+                    value: settings.identityIndependentByServer
+                        ? String(localized: "ba.settings.identity.mode.independent")
+                        : String(localized: "ba.settings.identity.mode.shared"),
+                    systemImage: "person.2.badge.gearshape",
+                    tint: BaDesign.blue
+                )
             }
         }
     }
@@ -96,36 +88,18 @@ struct BaOverviewAPCard: View {
     let office: BaOfficeSnapshot
     let settings: BaAppSettings
     let onCurrentAPCommit: (Int) -> Void
-    let onLimitCommit: (Int) -> Void
 
-    @State private var currentText = ""
-    @State private var limitText = ""
+    @State private var isEditorPresented = false
 
     var body: some View {
         BaGlassCard(tint: BaDesign.green) {
             VStack(alignment: .leading, spacing: BaOverviewMetricStyle.cardSpacing) {
                 BaOverviewSectionTitle(title: String(localized: "ba.office.ap.label"), asset: .actionPoint)
 
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    BaGameAssetIcon(.actionPoint, size: BaOverviewMetricStyle.mainIcon)
-                    BaOverviewNumberField(
-                        title: String(localized: "ba.office.ap.current.title"),
-                        text: $currentText,
-                        fallback: office.apCurrent,
-                        tint: BaDesign.green,
-                        onCommit: onCurrentAPCommit
-                    )
-                    Text("/")
-                        .font(BaOverviewTextToken.primaryNumber)
-                        .foregroundStyle(.secondary)
-                    BaOverviewNumberField(
-                        title: String(localized: "ba.office.ap.limit.title"),
-                        text: $limitText,
-                        fallback: office.apLimit,
-                        tint: BaDesign.green,
-                        onCommit: onLimitCommit
-                    )
-                }
+                BaOverviewAPReadout(
+                    currentAP: office.apCurrent,
+                    onEdit: { isEditorPresented = true }
+                )
 
                 LazyVGrid(columns: BaOverviewGrid.columns, spacing: 10) {
                     BaOverviewMetricTile(
@@ -163,14 +137,13 @@ struct BaOverviewAPCard: View {
                 }
             }
         }
-        .onAppear(perform: syncText)
-        .onChange(of: office.apCurrent) { _, _ in syncText() }
-        .onChange(of: office.apLimit) { _, _ in syncText() }
-    }
-
-    private func syncText() {
-        currentText = office.apCurrent
-        limitText = office.apLimit
+        .sheet(isPresented: $isEditorPresented) {
+            BaOverviewAPEditorSheet(
+                currentAP: office.apCurrent
+            ) { currentAP in
+                onCurrentAPCommit(currentAP)
+            }
+        }
     }
 }
 
@@ -245,12 +218,47 @@ struct BaOverviewCafeCard: View {
     }
 }
 
+struct BaOverviewTimelineSummary: Equatable {
+    let activityTitle: String
+    let activityTime: String
+    let poolTitle: String
+    let poolTime: String
+
+    init(activities: [BaActivityEntry], pools: [BaPoolEntry], now: Date) {
+        let activity = activities
+            .filter { $0.status(at: now) != .ended }
+            .sorted { $0.beginAt < $1.beginAt }
+            .first
+        let pool = pools
+            .filter { $0.status(at: now) != .ended }
+            .sorted { $0.startAt < $1.startAt }
+            .first
+
+        activityTitle = activity?.title ?? String(localized: "ba.overview.timeline.empty")
+        activityTime = activity.map {
+            BaDisplayFormatters.timelineDetail(
+                start: $0.beginAt,
+                end: $0.endAt,
+                now: now,
+                includingSeconds: false
+            )
+        } ?? String(localized: "ba.state.notSynced")
+        poolTitle = pool?.name ?? String(localized: "ba.overview.timeline.empty")
+        poolTime = pool.map {
+            BaDisplayFormatters.timelineDetail(
+                start: $0.startAt,
+                end: $0.endAt,
+                now: now,
+                includingSeconds: false
+            )
+        } ?? String(localized: "ba.state.notSynced")
+    }
+}
+
 struct BaOverviewTimelineSummaryCard: View {
-    let activities: [BaActivityEntry]
-    let pools: [BaPoolEntry]
+    let summary: BaOverviewTimelineSummary
     let activitySyncAt: Date?
     let poolSyncAt: Date?
-    let server: BaServer
     let onOpenTab: (AppTab) -> Void
 
     var body: some View {
@@ -264,8 +272,8 @@ struct BaOverviewTimelineSummaryCard: View {
                     } label: {
                         BaOverviewTimelineTile(
                             title: String(localized: "ba.tab.activity"),
-                            entryTitle: activityTitle,
-                            timeText: activityTime,
+                            entryTitle: summary.activityTitle,
+                            timeText: summary.activityTime,
                             syncAt: activitySyncAt,
                             systemImage: "calendar",
                             tint: BaDesign.blue
@@ -279,8 +287,8 @@ struct BaOverviewTimelineSummaryCard: View {
                     } label: {
                         BaOverviewTimelineTile(
                             title: String(localized: "ba.tab.pool"),
-                            entryTitle: poolTitle,
-                            timeText: poolTime,
+                            entryTitle: summary.poolTitle,
+                            timeText: summary.poolTime,
                             syncAt: poolSyncAt,
                             systemImage: "sparkles",
                             tint: BaDesign.violet
@@ -291,39 +299,5 @@ struct BaOverviewTimelineSummaryCard: View {
                 }
             }
         }
-    }
-
-    private var activity: BaActivityEntry? {
-        let now = Date()
-        return activities
-            .filter { $0.status(at: now) != .ended }
-            .sorted { $0.beginAt < $1.beginAt }
-            .first
-    }
-
-    private var pool: BaPoolEntry? {
-        let now = Date()
-        return pools
-            .filter { $0.status(at: now) != .ended }
-            .sorted { $0.startAt < $1.startAt }
-            .first
-    }
-
-    private var activityTitle: String {
-        activity?.title ?? String(localized: "ba.overview.timeline.empty")
-    }
-
-    private var activityTime: String {
-        guard let activity else { return String(localized: "ba.state.notSynced") }
-        return BaDisplayFormatters.timelineDetail(start: activity.beginAt, end: activity.endAt)
-    }
-
-    private var poolTitle: String {
-        pool?.name ?? String(localized: "ba.overview.timeline.empty")
-    }
-
-    private var poolTime: String {
-        guard let pool else { return String(localized: "ba.state.notSynced") }
-        return BaDisplayFormatters.timelineDetail(start: pool.startAt, end: pool.endAt)
     }
 }
