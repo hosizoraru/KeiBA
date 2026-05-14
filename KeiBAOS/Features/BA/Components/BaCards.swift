@@ -82,6 +82,54 @@ struct BaSectionHeader: View {
     }
 }
 
+struct BaSymbolTile: View {
+    let systemImage: String
+    var tint: Color
+
+    var body: some View {
+        Image(systemName: systemImage)
+            .font(.title3.weight(.semibold))
+            .foregroundStyle(tint)
+            .frame(width: 42, height: 42)
+            .liquidGlassSurface(cornerRadius: 14, tint: tint.opacity(0.08), isInteractive: false)
+    }
+}
+
+struct BaStatusBadge: View {
+    let title: String
+    var tint: Color
+
+    var body: some View {
+        Text(title)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(tint)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 5)
+            .liquidGlassSurface(cornerRadius: 999, tint: tint.opacity(0.08), isInteractive: false)
+    }
+}
+
+struct BaSummaryMetric: View {
+    let title: String
+    let value: String
+    var tint: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(value)
+                .font(.title3.monospacedDigit().weight(.semibold))
+                .foregroundStyle(tint)
+
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.82)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
 struct BaMetricGroup<Content: View>: View {
     let title: String
     var systemImage: String?

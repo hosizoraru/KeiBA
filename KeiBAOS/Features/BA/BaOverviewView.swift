@@ -128,6 +128,22 @@ struct BaOverviewView: View {
                 systemImage: "target",
                 valueColor: BaDesign.amber
             )
+            BaDivider()
+            BaMetricRow(
+                title: String(localized: "ba.cafe.action.headpat"),
+                value: String(localized: "ba.cafe.action.ready.value"),
+                detail: String(localized: "ba.cafe.action.ready"),
+                systemImage: "hand.tap",
+                valueColor: BaDesign.green
+            )
+            BaDivider()
+            BaMetricRow(
+                title: String(localized: "ba.cafe.action.invite1"),
+                value: String(localized: "ba.cafe.action.invite.cooldown.value"),
+                detail: String(localized: "ba.cafe.action.availableAt.value"),
+                systemImage: "ticket",
+                valueColor: BaDesign.violet
+            )
         }
     }
 

@@ -9,8 +9,9 @@ import SwiftUI
 
 enum AppTab: String, CaseIterable, Identifiable, Hashable {
     case overview
+    case activity
+    case pool
     case catalog
-    case cafe
     case settings
 
     var id: Self { self }
@@ -19,10 +20,12 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .overview:
             String(localized: "ba.tab.overview")
+        case .activity:
+            String(localized: "ba.tab.activity")
+        case .pool:
+            String(localized: "ba.tab.pool")
         case .catalog:
             String(localized: "ba.tab.catalog")
-        case .cafe:
-            String(localized: "ba.tab.cafe")
         case .settings:
             String(localized: "ba.tab.settings")
         }
@@ -36,10 +39,12 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .overview:
             "sparkles"
+        case .activity:
+            "calendar"
+        case .pool:
+            "rectangle.stack.badge.person.crop"
         case .catalog:
             "person.3.fill"
-        case .cafe:
-            "cup.and.saucer.fill"
         case .settings:
             "gearshape.fill"
         }
@@ -54,10 +59,12 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .overview:
             BaOverviewView()
+        case .activity:
+            BaActivityView()
+        case .pool:
+            BaPoolView()
         case .catalog:
             BaCatalogView()
-        case .cafe:
-            BaCafeView()
         case .settings:
             BaSettingsView()
         }

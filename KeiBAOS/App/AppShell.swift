@@ -27,23 +27,149 @@ struct AppShell: View {
 private struct BaNavigationRoot: View {
     let tab: AppTab
     @State private var presentedSheet: BaPresentedSheet?
+    @State private var activityFilter: BaTimelineStatus?
+    @State private var poolFilter: BaTimelineStatus?
+    @State private var activityRefreshStamp = String(localized: "ba.activity.refresh.preview")
+    @State private var poolRefreshStamp = String(localized: "ba.pool.refresh.preview")
 
     var body: some View {
         NavigationStack {
-            tab.rootView
+            rootContent
                 .navigationTitle(tab.navigationTitle)
                 .platformLargeNavigationTitle()
                 .toolbar {
                     ToolbarItemGroup(placement: .primaryAction) {
-                        BaTopActionBar { sheet in
-                            presentedSheet = sheet
-                        }
+                        pageRefreshButton
+                        notificationButton
+                        moreMenu
                     }
                 }
                 .sheet(item: $presentedSheet) { sheet in
                     BaActionSheetRoot(sheet: sheet)
                         .baActionSheetPresentation()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var rootContent: some View {
+        switch tab {
+        case .overview:
+            BaOverviewView()
+        case .activity:
+            BaActivityView(
+                statusFilter: $activityFilter,
+                refreshStamp: $activityRefreshStamp
+            )
+        case .pool:
+            BaPoolView(
+                statusFilter: $poolFilter,
+                refreshStamp: $poolRefreshStamp
+            )
+        case .catalog:
+            BaCatalogView()
+        case .settings:
+            BaSettingsView()
+        }
+    }
+
+    @ViewBuilder
+    private var pageRefreshButton: some View {
+        switch tab {
+        case .activity:
+            Button {
+                activityRefreshStamp = String(localized: "ba.activity.refresh.justNow")
+            } label: {
+                Label(String(localized: "ba.activity.action.refresh"), systemImage: "arrow.clockwise")
+            }
+            .labelStyle(.iconOnly)
+        case .pool:
+            Button {
+                poolRefreshStamp = String(localized: "ba.pool.refresh.justNow")
+            } label: {
+                Label(String(localized: "ba.pool.action.refresh"), systemImage: "arrow.clockwise")
+            }
+            .labelStyle(.iconOnly)
+        case .overview, .catalog, .settings:
+            EmptyView()
+        }
+    }
+
+    private var notificationButton: some View {
+        Button {
+            presentedSheet = .notifications
+        } label: {
+            Label(BaPresentedSheet.notifications.title, systemImage: BaPresentedSheet.notifications.systemImage)
+        }
+        .labelStyle(.iconOnly)
+        .accessibilityLabel(Text(BaPresentedSheet.notifications.title))
+    }
+
+    private var moreMenu: some View {
+        Menu {
+            pageFilterMenu
+
+            Button {
+                presentedSheet = .editOffice
+            } label: {
+                Label(BaPresentedSheet.editOffice.menuTitle, systemImage: BaPresentedSheet.editOffice.systemImage)
+            }
+
+            Divider()
+
+            Button {
+                presentedSheet = .debugTools
+            } label: {
+                Label(BaPresentedSheet.debugTools.menuTitle, systemImage: BaPresentedSheet.debugTools.systemImage)
+            }
+        } label: {
+            Label(String(localized: "ba.action.more.title"), systemImage: "ellipsis.circle")
+        }
+        .labelStyle(.iconOnly)
+        .accessibilityLabel(Text(String(localized: "ba.action.more.title")))
+    }
+
+    @ViewBuilder
+    private var pageFilterMenu: some View {
+        switch tab {
+        case .activity:
+            Section(String(localized: "ba.activity.action.filter")) {
+                timelineFilterButton(title: String(localized: "ba.filter.all"), selected: activityFilter == nil) {
+                    activityFilter = nil
                 }
+
+                ForEach(BaTimelineStatus.allCases) { status in
+                    timelineFilterButton(title: status.title, selected: activityFilter == status) {
+                        activityFilter = status
+                    }
+                }
+            }
+            Divider()
+        case .pool:
+            Section(String(localized: "ba.pool.action.filter")) {
+                timelineFilterButton(title: String(localized: "ba.filter.all"), selected: poolFilter == nil) {
+                    poolFilter = nil
+                }
+
+                ForEach(BaTimelineStatus.allCases) { status in
+                    timelineFilterButton(title: status.title, selected: poolFilter == status) {
+                        poolFilter = status
+                    }
+                }
+            }
+            Divider()
+        case .overview, .catalog, .settings:
+            EmptyView()
+        }
+    }
+
+    private func timelineFilterButton(
+        title: String,
+        selected: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: selected ? "checkmark" : "circle")
         }
     }
 }
