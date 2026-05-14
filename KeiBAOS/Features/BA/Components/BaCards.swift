@@ -216,6 +216,64 @@ struct BaMetricRow: View {
     }
 }
 
+struct BaTimelineDatePair: View {
+    let start: String
+    let end: String
+    let detail: String
+    var tint: Color
+    var progress: Double?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .top, spacing: 16) {
+                timelineColumn(
+                    title: String(localized: "ba.timeline.start"),
+                    value: start,
+                    systemImage: "calendar.badge.clock",
+                    tint: .secondary
+                )
+                timelineColumn(
+                    title: String(localized: "ba.timeline.end"),
+                    value: end,
+                    systemImage: "calendar.badge.checkmark",
+                    tint: tint
+                )
+            }
+            if let progress {
+                ProgressView(value: progress)
+                    .tint(tint)
+                    .controlSize(.small)
+            }
+            if detail.isEmpty == false {
+                Text(detail)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    private func timelineColumn(title: String, value: String, systemImage: String, tint: Color) -> some View {
+        Label {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Text(value)
+                    .font(.caption.monospacedDigit().weight(.semibold))
+                    .foregroundStyle(tint)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.82)
+            }
+        } icon: {
+            Image(systemName: systemImage)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
 struct BaValueChip: View {
     let value: String
     var tint: Color
@@ -245,18 +303,16 @@ struct BaRowThumbnail: View {
     var tint: Color
     var size: CGFloat = BaIconToken.rowThumbnail
 
-    @State private var image: Image?
+    @State private var phase: BaRemoteImagePhase = .placeholder
 
     var body: some View {
         ZStack {
-            if let image {
+            if case .success(let image) = phase {
                 image
                     .resizable()
                     .scaledToFill()
             } else {
-                Image(systemName: fallbackSystemImage)
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(tint)
+                placeholder
             }
         }
         .frame(width: size, height: size)
@@ -276,14 +332,40 @@ struct BaRowThumbnail: View {
 
     private func loadImage() async {
         guard model.settings.showPreviewImages, let url else {
-            image = nil
+            phase = model.settings.showPreviewImages ? .placeholder : .hidden
             return
         }
+        phase = .loading
         guard let data = try? await model.imageData(for: url),
               let loaded = Self.image(from: data) else {
+            phase = .failed
             return
         }
-        image = loaded
+        phase = .success(loaded)
+    }
+
+    @ViewBuilder
+    private var placeholder: some View {
+        switch phase {
+        case .loading:
+            ZStack {
+                fallbackIcon(systemImage: fallbackSystemImage, tint: tint.opacity(0.55))
+                ProgressView()
+                    .controlSize(.small)
+            }
+        case .failed:
+            fallbackIcon(systemImage: "photo.badge.exclamationmark", tint: .secondary)
+        case .hidden:
+            fallbackIcon(systemImage: fallbackSystemImage, tint: .secondary)
+        case .placeholder, .success:
+            fallbackIcon(systemImage: fallbackSystemImage, tint: tint)
+        }
+    }
+
+    private func fallbackIcon(systemImage: String, tint: Color) -> some View {
+        Image(systemName: systemImage)
+            .font(.title3.weight(.semibold))
+            .foregroundStyle(tint)
     }
 
     fileprivate static func image(from data: Data) -> Image? {
@@ -306,18 +388,16 @@ struct BaDetailRemoteImage: View {
     var fallbackSystemImage: String
     var tint: Color
 
-    @State private var image: Image?
+    @State private var phase: BaRemoteImagePhase = .placeholder
 
     var body: some View {
         ZStack {
-            if let image {
+            if case .success(let image) = phase {
                 image
                     .resizable()
                     .scaledToFill()
             } else {
-                Image(systemName: fallbackSystemImage)
-                    .font(.system(size: 52, weight: .semibold))
-                    .foregroundStyle(tint)
+                placeholder
             }
         }
         .frame(maxWidth: .infinity)
@@ -338,13 +418,47 @@ struct BaDetailRemoteImage: View {
 
     private func loadImage() async {
         guard model.settings.showPreviewImages, let url else {
-            image = nil
+            phase = model.settings.showPreviewImages ? .placeholder : .hidden
             return
         }
+        phase = .loading
         guard let data = try? await model.imageData(for: url),
               let loaded = BaRowThumbnail.image(from: data) else {
+            phase = .failed
             return
         }
-        image = loaded
+        phase = .success(loaded)
     }
+
+    @ViewBuilder
+    private var placeholder: some View {
+        switch phase {
+        case .loading:
+            ZStack {
+                fallbackIcon(systemImage: fallbackSystemImage, tint: tint.opacity(0.55))
+                ProgressView()
+                    .controlSize(.regular)
+            }
+        case .failed:
+            fallbackIcon(systemImage: "photo.badge.exclamationmark", tint: .secondary)
+        case .hidden:
+            fallbackIcon(systemImage: fallbackSystemImage, tint: .secondary)
+        case .placeholder, .success:
+            fallbackIcon(systemImage: fallbackSystemImage, tint: tint)
+        }
+    }
+
+    private func fallbackIcon(systemImage: String, tint: Color) -> some View {
+        Image(systemName: systemImage)
+            .font(.system(size: 52, weight: .semibold))
+            .foregroundStyle(tint)
+    }
+}
+
+private enum BaRemoteImagePhase {
+    case placeholder
+    case hidden
+    case loading
+    case failed
+    case success(Image)
 }

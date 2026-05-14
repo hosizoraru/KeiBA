@@ -231,6 +231,13 @@ nonisolated struct BaPoolEntry: Identifiable, Codable, Hashable {
         }
         return .ended
     }
+
+    func progress(at now: Date = Date()) -> Double {
+        guard endAt > startAt else { return 0 }
+        let elapsed = now.timeIntervalSince(startAt)
+        let total = endAt.timeIntervalSince(startAt)
+        return min(max(elapsed / total, 0), 1)
+    }
 }
 
 nonisolated enum BaCatalogCategory: String, CaseIterable, Codable, Identifiable, Hashable {
@@ -310,6 +317,24 @@ nonisolated struct BaGuideCatalogEntry: Identifiable, Codable, Hashable {
             category: category
         )
     }
+
+    func withReleaseDate(_ releaseDate: Date?) -> BaGuideCatalogEntry {
+        BaGuideCatalogEntry(
+            entryId: entryId,
+            pid: pid,
+            contentId: contentId,
+            name: name,
+            alias: alias,
+            aliasDisplay: aliasDisplay,
+            iconURL: iconURL,
+            type: type,
+            order: order,
+            createdAt: createdAt,
+            releaseDate: releaseDate ?? self.releaseDate,
+            detailURL: detailURL,
+            category: category
+        )
+    }
 }
 
 nonisolated struct BaGuideCatalogBundle: Codable, Hashable {
@@ -324,6 +349,7 @@ nonisolated struct BaGuideCatalogBundle: Codable, Hashable {
 nonisolated enum BaStudentDetailSection: String, CaseIterable, Codable, Identifiable, Hashable {
     case profile
     case skills
+    case growth
     case voice
     case gallery
     case simulate
@@ -336,6 +362,8 @@ nonisolated enum BaStudentDetailSection: String, CaseIterable, Codable, Identifi
             String(localized: "ba.student.detail.section.profile")
         case .skills:
             String(localized: "ba.student.detail.section.skills")
+        case .growth:
+            String(localized: "ba.student.detail.section.growth")
         case .voice:
             String(localized: "ba.student.detail.section.voice")
         case .gallery:
@@ -351,6 +379,8 @@ nonisolated enum BaStudentDetailSection: String, CaseIterable, Codable, Identifi
             "person.text.rectangle"
         case .skills:
             "sparkles"
+        case .growth:
+            "shield.lefthalf.filled"
         case .voice:
             "waveform"
         case .gallery:
@@ -366,6 +396,45 @@ nonisolated struct BaGuideRow: Identifiable, Codable, Hashable {
     let title: String
     let value: String
     let imageURL: URL?
+    var imageURLs: [URL]? = nil
+}
+
+nonisolated enum BaGuideMediaKind: String, Codable, Hashable {
+    case image
+    case video
+    case audio
+    case live2d
+    case unknown
+
+    var systemImage: String {
+        switch self {
+        case .image:
+            "photo"
+        case .video:
+            "play.rectangle"
+        case .audio:
+            "waveform"
+        case .live2d:
+            "person.crop.square"
+        case .unknown:
+            "paperclip"
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .image:
+            String(localized: "ba.student.detail.media.image")
+        case .video:
+            String(localized: "ba.student.detail.media.video")
+        case .audio:
+            String(localized: "ba.student.detail.media.audio")
+        case .live2d:
+            String(localized: "ba.student.detail.media.live2d")
+        case .unknown:
+            String(localized: "ba.student.detail.media.unknown")
+        }
+    }
 }
 
 nonisolated struct BaGuideGalleryItem: Identifiable, Codable, Hashable {
@@ -374,6 +443,9 @@ nonisolated struct BaGuideGalleryItem: Identifiable, Codable, Hashable {
     let detail: String
     let imageURL: URL?
     let mediaURL: URL?
+    var mediaKind: BaGuideMediaKind? = nil
+    var memoryUnlockLevel: String? = nil
+    var note: String? = nil
 }
 
 nonisolated struct BaGuideVoiceEntry: Identifiable, Codable, Hashable {
@@ -382,6 +454,10 @@ nonisolated struct BaGuideVoiceEntry: Identifiable, Codable, Hashable {
     let subtitle: String
     let transcript: String
     let audioURL: URL?
+    var section: String? = nil
+    var lineHeaders: [String]? = nil
+    var lines: [String]? = nil
+    var audioURLs: [URL]? = nil
 }
 
 nonisolated struct BaStudentGuideInfo: Identifiable, Codable, Hashable {

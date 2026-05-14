@@ -48,6 +48,7 @@ struct BaStudentDetailView: View {
             overviewSection
             profileSection
             skillsSection
+            growthSection
             voiceSection
             gallerySection
             simulateSection
@@ -129,6 +130,10 @@ struct BaStudentDetailView: View {
         guideRowSection(section: .skills, rows: info?.skillRows ?? [])
     }
 
+    private var growthSection: some View {
+        guideRowSection(section: .growth, rows: info?.growthRows ?? [])
+    }
+
     private var simulateSection: some View {
         guideRowSection(section: .simulate, rows: info?.simulateRows ?? [])
     }
@@ -144,16 +149,29 @@ struct BaStudentDetailView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(row.title)
                                 .font(BaTextToken.rowTitle)
-                            if row.subtitle.isEmpty == false {
-                                Text(row.subtitle)
+                            if let section = row.section, section.isEmpty == false {
+                                Text(section)
                                     .font(BaTextToken.rowCaption)
                                     .foregroundStyle(.secondary)
                             }
-                            if row.transcript.isEmpty == false {
+                            let pairedLines = Array(zip(row.lineHeaders ?? [], row.lines ?? []))
+                            if pairedLines.isEmpty == false {
+                                ForEach(pairedLines.prefix(4), id: \.0) { label, line in
+                                    Text("\(label): \(line)")
+                                        .font(BaTextToken.rowCaption)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(2)
+                                }
+                            } else if row.transcript.isEmpty == false {
                                 Text(row.transcript)
                                     .font(BaTextToken.rowCaption)
                                     .foregroundStyle(.secondary)
                                     .lineLimit(3)
+                            }
+                            if let audioCount = row.audioURLs?.count, audioCount > 0 {
+                                Text(String(format: String(localized: "ba.student.detail.voice.audioCount.format"), audioCount))
+                                    .font(.caption2)
+                                    .foregroundStyle(.tertiary)
                             }
                         }
                     } icon: {
@@ -173,14 +191,21 @@ struct BaStudentDetailView: View {
             } else {
                 ForEach(items) { item in
                     HStack(alignment: .top, spacing: 12) {
-                        BaRowThumbnail(url: item.imageURL, fallbackSystemImage: "photo", tint: BaDesign.pink)
+                        let kind = item.mediaKind ?? .image
+                        BaRowThumbnail(url: item.imageURL, fallbackSystemImage: kind.systemImage, tint: BaDesign.pink)
                         VStack(alignment: .leading, spacing: 4) {
                             Text(item.title)
                                 .font(BaTextToken.rowTitle)
-                            Text(item.detail)
+                            Text(galleryDetail(item))
                                 .font(BaTextToken.rowCaption)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(2)
+                            if let mediaURL = item.mediaURL {
+                                Text(mediaURL.host ?? mediaURL.lastPathComponent)
+                                    .font(.caption2)
+                                    .foregroundStyle(.tertiary)
+                                    .lineLimit(1)
+                            }
                         }
                     }
                     .padding(.vertical, 4)
@@ -195,18 +220,27 @@ struct BaStudentDetailView: View {
                 emptySectionRow(section)
             } else {
                 ForEach(rows.prefix(18)) { row in
-                    Label {
+                    HStack(alignment: .top, spacing: 12) {
+                        if row.imageURL != nil {
+                            BaRowThumbnail(url: row.imageURL, fallbackSystemImage: section.systemImage, tint: headerTint, size: 44)
+                        } else {
+                            Image(systemName: section.systemImage)
+                                .foregroundStyle(headerTint)
+                                .frame(width: 28)
+                        }
                         VStack(alignment: .leading, spacing: 4) {
                             Text(row.title)
                                 .font(BaTextToken.rowTitle)
-                            Text(row.value)
+                            Text(row.value.isEmpty ? String(localized: "ba.common.none") : row.value)
                                 .font(BaTextToken.rowCaption)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(4)
+                            if let count = row.imageURLs?.count, count > 1 {
+                                Text(String(format: String(localized: "ba.student.detail.imageCount.format"), count))
+                                    .font(.caption2)
+                                    .foregroundStyle(.tertiary)
+                            }
                         }
-                    } icon: {
-                        Image(systemName: section.systemImage)
-                            .foregroundStyle(headerTint)
                     }
                     .padding(.vertical, 3)
                 }
@@ -246,6 +280,21 @@ struct BaStudentDetailView: View {
         case .favorites:
             BaDesign.green
         }
+    }
+
+    private func galleryDetail(_ item: BaGuideGalleryItem) -> String {
+        let kind = item.mediaKind ?? .image
+        var parts = [kind.title]
+        if item.detail.isEmpty == false, item.detail != kind.title {
+            parts.append(item.detail)
+        }
+        if let unlock = item.memoryUnlockLevel, unlock.isEmpty == false {
+            parts.append(String(format: String(localized: "ba.student.detail.memory.unlock.format"), unlock))
+        }
+        if let note = item.note, note.isEmpty == false, parts.contains(note) == false {
+            parts.append(note)
+        }
+        return parts.joined(separator: " · ")
     }
 }
 

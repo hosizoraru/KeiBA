@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct BaRepositorySnapshot<Value> {
+nonisolated struct BaRepositorySnapshot<Value> {
     let value: Value
     let syncedAt: Date
     let sourceErrors: [String]

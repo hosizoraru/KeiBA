@@ -172,6 +172,12 @@ private struct BaCatalogEntryRow: View {
         if entry.category == .studentBgm {
             return String(localized: "ba.catalog.bgm.entry.detail")
         }
+        if let releaseDate = entry.releaseDate {
+            return String(
+                format: String(localized: "ba.catalog.releaseDate.format"),
+                BaDisplayFormatters.dateTime(releaseDate)
+            )
+        }
         if let createdAt = entry.createdAt {
             return String(
                 format: String(localized: "ba.catalog.createdAt.format"),

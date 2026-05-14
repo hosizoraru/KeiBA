@@ -108,21 +108,15 @@ struct BaStudentGuideRepository {
     ) -> BaStudentGuideInfo {
         let title = apiData.string("title") ?? entry.name
         let subtitle = apiData.object("game")?.string("name") ?? "GameKee"
-        let htmlMeta = html.map(parseHTMLMeta) ?? HTMLMeta()
-        let apiSummary = apiData.string("summary") ?? htmlMeta.summary ?? ""
-        let pairs = GameKeeJSON.extractTextPairs(in: content)
-        let rows = rows(from: pairs)
-        let profileRows = rows.filter { isProfileKey($0.title) }
-        let skillRows = rows.filter { isSkillKey($0.title) || isSkillKey($0.value) }
-        let simulateRows = rows.filter { isSimulateKey($0.title) || isSimulateKey($0.value) }
-        let growthRows = rows.filter { isGrowthKey($0.title) || isGrowthKey($0.value) }
-        let voiceRows = voiceRows(from: rows, content: content)
-        let galleryItems = galleryItems(from: content, apiData: apiData)
-        let imageURL = GameKeeJSON.normalizeImageURL(apiData.string("thumb") ?? "")
-            ?? GameKeeJSON.findImageURL(in: apiData)
-            ?? galleryItems.first?.imageURL
-            ?? htmlMeta.imageURL
-            ?? entry.iconURL
+        let parsed = BaGuideContentParser().parse(content: content, apiData: apiData, html: html, entry: entry)
+        let apiSummary = parsed.summary
+        let profileRows = parsed.profileRows
+        let skillRows = parsed.skillRows
+        let simulateRows = parsed.simulateRows
+        let growthRows = parsed.growthRows
+        let voiceRows = parsed.voiceRows
+        let galleryItems = parsed.galleryItems
+        let imageURL = parsed.imageURL ?? entry.iconURL
 
         return BaStudentGuideInfo(
             contentId: entry.contentId,
@@ -131,7 +125,7 @@ struct BaStudentGuideRepository {
             subtitle: subtitle,
             summary: apiSummary.isEmpty ? entry.aliasDisplay : apiSummary,
             imageURL: imageURL,
-            stats: stats(from: profileRows, fallback: entry),
+            stats: parsed.stats.isEmpty ? stats(from: profileRows, fallback: entry) : parsed.stats,
             profileRows: profileRows.isEmpty ? fallbackProfileRows(entry: entry, summary: apiSummary) : profileRows,
             skillRows: skillRows,
             voiceRows: voiceRows,

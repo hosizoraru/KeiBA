@@ -114,4 +114,178 @@ final class BaDataBridgeTests: XCTestCase {
         XCTAssertEqual(BaTimeMath.displayAP(BaTimeMath.currentAP(settings: settings, now: now)), 12)
         XCTAssertEqual(BaTimeMath.nextAPPointAt(settings: settings, now: now), now.addingTimeInterval(6 * 60))
     }
+
+    func testImageRequestStrategyUsesGameKeeRootRefererAndFallbackUA() {
+        let client = GameKeeClient()
+
+        XCTAssertEqual(
+            client.resolvedReferer(
+                pathOrURL: "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_61/h_61/480420.webp",
+                refererPath: "/ba/huodong/16"
+            ),
+            "https://www.gamekee.com/"
+        )
+        XCTAssertEqual(client.imageRetryUserAgents.count, 2)
+        XCTAssertTrue(client.imageRetryUserAgents[0].contains("Safari"))
+        XCTAssertTrue(client.imageRetryUserAgents[1].contains("Firefox"))
+    }
+
+    func testHTMLAttributeExtractionUsesSourceValue() {
+        let html = #"<div><img class="gift-img" src="//cdnimg.gamekee.com/gift.webp"></div>"#
+        let urls = BaGuideTextNormalizer.imageURLsFromHTML(html, sourceURL: nil)
+
+        XCTAssertEqual(urls.map(\.absoluteString), ["https://cdnimg.gamekee.com/gift.webp"])
+    }
+
+    func testDisplayTextRemovesEmbeddedMediaURL() {
+        let raw = #"贯通 / //cdnimg-v2.gamekee.com/wiki2.0/images/w_43/h_32/type.png"#
+
+        XCTAssertEqual(BaGuideTextNormalizer.cleanDisplayText(raw), "贯通")
+    }
+
+    func testContentJSONBaseDataUnwrapsObjectAndArrayRows() {
+        let objectContent: BaJSONObject = [
+            "baseData": [
+                [
+                    ["value": "学生信息"],
+                    ["value": "实装日期 2024-01-24"]
+                ]
+            ]
+        ]
+        let arrayContent: [Any] = [
+            [
+                ["value": "学生信息"],
+                ["value": "实装日期 2024-01-24"]
+            ]
+        ]
+
+        XCTAssertEqual(BaGuideContentParser.baseDataRows(from: objectContent).count, 1)
+        XCTAssertEqual(BaGuideContentParser.baseDataRows(from: arrayContent).count, 1)
+    }
+
+    func testContentParserReadsHTMLMetaSummary() {
+        let html = #"<html><head><meta name="description" content="GameKee summary"></head></html>"#
+        let parsed = BaGuideContentParser().parse(
+            content: nil,
+            apiData: [:],
+            html: html,
+            entry: makeCatalogEntry()
+        )
+
+        XCTAssertEqual(parsed.summary, "GameKee summary")
+    }
+
+    func testContentParserSkipsContentCDNAsCoverImage() {
+        let content: BaJSONObject = [
+            "baseData": [
+                [
+                    ["value": "角色图片"],
+                    ["value": "//cdnimg-v2.gamekee.com/wiki2.0/images/w_404/h_456/829/72324/cover.png"]
+                ]
+            ]
+        ]
+        let parsed = BaGuideContentParser().parse(
+            content: content,
+            apiData: [
+                "content_cdn": "//api-cdn.gamekee.com/wiki2.0/pro/829/content/67664.json?v=20260507153720.894682"
+            ],
+            html: nil,
+            entry: makeCatalogEntry()
+        )
+
+        XCTAssertEqual(
+            parsed.imageURL?.absoluteString,
+            "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_404/h_456/829/72324/cover.png"
+        )
+    }
+
+    func testGiftParserKeepsGiftAndEmojiImages() {
+        let baseData: [[BaJSONObject]] = [
+            [["value": "礼物偏好"]],
+            [
+                ["value": #"<img class="gif-emoji" src="//cdnimg.gamekee.com/w_61/h_61/emoji.webp">"#],
+                ["value": #"<img class="gif-img" src="//cdnimg.gamekee.com/items/gift.webp">喜欢"#]
+            ]
+        ]
+        let rows = BaGuideGiftParser().parse(baseData: baseData, sourceURL: nil)
+
+        XCTAssertEqual(rows.count, 1)
+        XCTAssertEqual(rows[0].imageURL?.absoluteString, "https://cdnimg.gamekee.com/items/gift.webp")
+        XCTAssertEqual(
+            rows[0].imageURLs?.map(\.absoluteString),
+            [
+                "https://cdnimg.gamekee.com/items/gift.webp",
+                "https://cdnimg.gamekee.com/w_61/h_61/emoji.webp"
+            ]
+        )
+    }
+
+    func testVoiceParserSortsLanguageLines() {
+        let baseData: [[BaJSONObject]] = [
+            [
+                ["value": "配音语言"],
+                ["value": "中配"],
+                ["value": "日配"],
+                ["value": "韩配"]
+            ],
+            [
+                ["value": "通常"],
+                ["value": "中文"],
+                ["value": "日本語"],
+                ["value": "한국어"]
+            ]
+        ]
+        let rows = BaGuideVoiceParser().parse(baseData: baseData, content: nil, sourceURL: nil)
+
+        XCTAssertEqual(rows.count, 1)
+        XCTAssertEqual(rows[0].lineHeaders, ["日配", "中配", "韩配"])
+        XCTAssertEqual(rows[0].lines, ["日本語", "中文", "한국어"])
+    }
+
+    func testGalleryParserClassifiesVideoMedia() {
+        let baseData: [[BaJSONObject]] = [
+            [
+                ["value": "回忆大厅视频"],
+                ["type": "video", "value": "https://cdnimg.gamekee.com/media/memory.mp4"]
+            ]
+        ]
+        let items = BaGuideMediaParser().parse(
+            baseData: baseData,
+            styleData: [],
+            content: nil,
+            apiData: [:],
+            sourceURL: nil
+        )
+
+        XCTAssertEqual(items.count, 1)
+        XCTAssertEqual(items[0].mediaKind, .video)
+        XCTAssertEqual(items[0].mediaURL?.absoluteString, "https://cdnimg.gamekee.com/media/memory.mp4")
+    }
+
+    func testReleaseDateExtractionHandlesGameKeeChineseDate() throws {
+        let date = BaGuideTextNormalizer.extractDate(from: "实装日期：2024年1月24日")
+        let components = Calendar.current.dateComponents([.year, .month, .day], from: try XCTUnwrap(date))
+
+        XCTAssertEqual(components.year, 2024)
+        XCTAssertEqual(components.month, 1)
+        XCTAssertEqual(components.day, 24)
+    }
+
+    private func makeCatalogEntry() -> BaGuideCatalogEntry {
+        BaGuideCatalogEntry(
+            entryId: 1,
+            pid: 49443,
+            contentId: 609145,
+            name: "Test",
+            alias: "",
+            aliasDisplay: "",
+            iconURL: nil,
+            type: 0,
+            order: 0,
+            createdAt: nil,
+            releaseDate: nil,
+            detailURL: URL(string: "https://www.gamekee.com/ba/tj/609145.html"),
+            category: .students
+        )
+    }
 }

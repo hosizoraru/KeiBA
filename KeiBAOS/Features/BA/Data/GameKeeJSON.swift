@@ -142,19 +142,23 @@ enum GameKeeJSON {
     ]
 
     nonisolated private static func looksLikeImageURL(_ raw: String) -> Bool {
-        let value = raw.lowercased()
+        guard let url = normalizeImageURL(raw) else { return false }
+        let value = url.absoluteString.lowercased()
+        let pathExtension = url.pathExtension.lowercased()
+        if ["json", "mp4", "mov", "m3u8", "mp3", "m4a", "wav", "aac"].contains(pathExtension) {
+            return false
+        }
         guard value.hasPrefix("http") || value.hasPrefix("//") || value.hasPrefix("/") else {
             return false
         }
-        return value.hasSuffix(".jpg") ||
-            value.hasSuffix(".jpeg") ||
-            value.hasSuffix(".png") ||
-            value.hasSuffix(".webp") ||
-            value.hasSuffix(".gif") ||
+        if ["jpg", "jpeg", "png", "webp", "gif", "svg"].contains(pathExtension) {
+            return true
+        }
+        let host = url.host?.lowercased() ?? ""
+        return host.contains("cdnimg") ||
             value.contains("image") ||
             value.contains("img") ||
-            value.contains("upload") ||
-            value.contains("cdn")
+            value.contains("upload")
     }
 
     nonisolated private static func extractURLs(from raw: String) -> [URL] {

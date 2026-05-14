@@ -38,6 +38,8 @@ enum GameKeeError: LocalizedError {
 
 struct GameKeeClient {
     static let baseURL = URL(string: "https://www.gamekee.com")!
+    nonisolated static let safariUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1"
+    nonisolated static let firefoxAndroidUserAgent = "Mozilla/5.0 (Android 15; Mobile; rv:140.0) Gecko/140.0 Firefox/140.0"
 
     private let session: URLSession
     private let retryAttempts: Int
@@ -68,11 +70,24 @@ struct GameKeeClient {
     }
 
     func fetchImageData(url: URL, refererPath: String = "/ba") async throws -> Data {
-        try await fetchData(
-            GameKeeRequest(pathOrURL: url.absoluteString, refererPath: refererPath),
-            acceptHeader: "image/*,*/*",
-            requireJSONBody: false
-        )
+        let request = GameKeeRequest(pathOrURL: url.absoluteString, refererPath: refererPath)
+        var lastError: Error?
+        for userAgent in imageRetryUserAgents {
+            do {
+                return try await executeImage(request, userAgent: userAgent)
+            } catch {
+                lastError = error
+            }
+        }
+        throw lastError ?? GameKeeError.emptyBody
+    }
+
+    nonisolated var imageRetryUserAgents: [String] {
+        [Self.safariUserAgent, Self.firefoxAndroidUserAgent]
+    }
+
+    nonisolated func resolvedReferer(pathOrURL: String, refererPath: String) -> String {
+        resolveReferer(pathOrURL: pathOrURL, refererPath: refererPath)
     }
 
     private func fetchData(
@@ -113,7 +128,7 @@ struct GameKeeClient {
         urlRequest.setValue(acceptHeader, forHTTPHeaderField: "Accept")
         urlRequest.setValue("zh-CN", forHTTPHeaderField: "Accept-Language")
         urlRequest.setValue(resolveReferer(pathOrURL: request.pathOrURL, refererPath: request.refererPath), forHTTPHeaderField: "Referer")
-        urlRequest.setValue("Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1", forHTTPHeaderField: "User-Agent")
+        urlRequest.setValue(Self.safariUserAgent, forHTTPHeaderField: "User-Agent")
         request.extraHeaders.forEach { key, value in
             urlRequest.setValue(value, forHTTPHeaderField: key)
         }
@@ -130,6 +145,40 @@ struct GameKeeClient {
         }
         if requireJSONBody, isJSONLike(data) == false {
             throw GameKeeError.invalidResponse(String(decoding: data.prefix(120), as: UTF8.self))
+        }
+        return data
+    }
+
+    private func executeImage(_ request: GameKeeRequest, userAgent: String) async throws -> Data {
+        guard let url = normalizedURL(request.pathOrURL) else {
+            throw GameKeeError.invalidURL(request.pathOrURL)
+        }
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "GET"
+        urlRequest.timeoutInterval = 12
+        urlRequest.cachePolicy = .reloadRevalidatingCacheData
+        urlRequest.setValue("image/*,*/*", forHTTPHeaderField: "Accept")
+        urlRequest.setValue("zh-CN", forHTTPHeaderField: "Accept-Language")
+        urlRequest.setValue(resolveReferer(pathOrURL: request.pathOrURL, refererPath: request.refererPath), forHTTPHeaderField: "Referer")
+        urlRequest.setValue(userAgent, forHTTPHeaderField: "User-Agent")
+        request.extraHeaders.forEach { key, value in
+            urlRequest.setValue(value, forHTTPHeaderField: key)
+        }
+
+        let (data, response) = try await session.data(for: urlRequest)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw GameKeeError.invalidResponse(response.description)
+        }
+        guard (200..<300).contains(httpResponse.statusCode) else {
+            throw GameKeeError.httpStatus(httpResponse.statusCode)
+        }
+        guard data.isEmpty == false else {
+            throw GameKeeError.emptyBody
+        }
+        let contentType = httpResponse.value(forHTTPHeaderField: "Content-Type")?.lowercased() ?? ""
+        guard contentType.contains("image") || looksLikeImageData(data) else {
+            let preview = String(decoding: data.prefix(120), as: UTF8.self)
+            throw GameKeeError.invalidResponse(preview)
         }
         return data
     }
@@ -151,10 +200,16 @@ struct GameKeeClient {
         return URL(string: "/\(raw)", relativeTo: Self.baseURL)?.absoluteURL
     }
 
-    private func resolveReferer(pathOrURL: String, refererPath: String) -> String {
+    private nonisolated func resolveReferer(pathOrURL: String, refererPath: String) -> String {
         let requestHint = pathHint(pathOrURL).lowercased()
         let refererHint = pathHint(refererPath).lowercased()
         let merged = "\(requestHint) \(refererHint)"
+        let requestHost = hostHint(pathOrURL)
+        let refererHost = hostHint(refererPath)
+        let effectiveHost = requestHost.isEmpty ? refererHost : requestHost
+        if effectiveHost.hasSuffix("gamekee.com"), effectiveHost != "www.gamekee.com" {
+            return "https://www.gamekee.com/"
+        }
         if let detailId = detailContentID(requestHint) ?? detailContentID(refererHint) {
             return "https://www.gamekee.com/ba/tj/\(detailId).html"
         }
@@ -170,7 +225,7 @@ struct GameKeeClient {
         return "https://www.gamekee.com/ba"
     }
 
-    private func pathHint(_ pathOrURL: String) -> String {
+    private nonisolated func pathHint(_ pathOrURL: String) -> String {
         let raw = pathOrURL.trimmingCharacters(in: .whitespacesAndNewlines)
         guard raw.isEmpty == false else { return "" }
         if let url = URL(string: raw), let host = url.host, host.isEmpty == false {
@@ -186,7 +241,19 @@ struct GameKeeClient {
         return raw.hasPrefix("/") ? raw : "/\(raw)"
     }
 
-    private func normalizedReferer(_ refererPath: String) -> String? {
+    private nonisolated func hostHint(_ pathOrURL: String) -> String {
+        let raw = pathOrURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard raw.isEmpty == false else { return "" }
+        if let url = URL(string: raw), let host = url.host, host.isEmpty == false {
+            return host.lowercased()
+        }
+        if raw.hasPrefix("//"), let url = URL(string: "https:\(raw)"), let host = url.host {
+            return host.lowercased()
+        }
+        return ""
+    }
+
+    private nonisolated func normalizedReferer(_ refererPath: String) -> String? {
         let raw = refererPath.trimmingCharacters(in: .whitespacesAndNewlines)
         guard raw.isEmpty == false else { return nil }
         if raw.hasPrefix("http://") {
@@ -204,7 +271,7 @@ struct GameKeeClient {
         return "https://www.gamekee.com/\(raw)"
     }
 
-    private func detailContentID(_ hint: String) -> String? {
+    private nonisolated func detailContentID(_ hint: String) -> String? {
         if let range = hint.range(of: #"/v1/content/detail/(\d+)"#, options: .regularExpression) {
             return String(hint[range]).split(separator: "/").last.map(String.init)
         }
@@ -221,6 +288,22 @@ struct GameKeeClient {
         guard let text = String(data: data.prefix(128), encoding: .utf8) else { return false }
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.hasPrefix("{") || trimmed.hasPrefix("[")
+    }
+
+    private func looksLikeImageData(_ data: Data) -> Bool {
+        let bytes = [UInt8](data.prefix(16))
+        if bytes.starts(with: [0xFF, 0xD8, 0xFF]) { return true }
+        if bytes.starts(with: [0x89, 0x50, 0x4E, 0x47]) { return true }
+        if bytes.starts(with: [0x47, 0x49, 0x46]) { return true }
+        if bytes.count >= 12,
+           bytes[0..<4].elementsEqual([0x52, 0x49, 0x46, 0x46]),
+           bytes[8..<12].elementsEqual([0x57, 0x45, 0x42, 0x50]) {
+            return true
+        }
+        if let head = String(data: data.prefix(128), encoding: .utf8) {
+            return head.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("<svg")
+        }
+        return false
     }
 
     private static func makeSession() -> URLSession {

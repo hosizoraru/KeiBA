@@ -141,12 +141,13 @@ private struct BaActivityRow: View {
     var body: some View {
         let now = Date()
         let status = entry.status(at: now)
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .top, spacing: 12) {
                 BaRowThumbnail(
                     url: entry.imageURL,
                     fallbackSystemImage: status == .running ? "flag.checkered" : "calendar",
-                    tint: status.tint
+                    tint: status.tint,
+                    size: 52
                 )
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -164,20 +165,12 @@ private struct BaActivityRow: View {
                 BaStatusBadge(title: status.title, tint: status.tint)
             }
 
-            BaDivider()
-
-            BaMetricRow(
-                title: String(localized: "ba.timeline.start"),
-                value: BaDisplayFormatters.dateTime(entry.beginAt, server: server),
-                systemImage: "calendar.badge.clock"
-            )
-            BaDivider()
-            BaMetricRow(
-                title: String(localized: "ba.timeline.end"),
-                value: BaDisplayFormatters.dateTime(entry.endAt, server: server),
+            BaTimelineDatePair(
+                start: BaDisplayFormatters.dateTime(entry.beginAt, server: server),
+                end: BaDisplayFormatters.dateTime(entry.endAt, server: server),
                 detail: BaDisplayFormatters.timelineDetail(start: entry.beginAt, end: entry.endAt, now: now),
-                systemImage: "calendar.badge.checkmark",
-                valueColor: status.tint
+                tint: status.tint,
+                progress: status == .running ? entry.progress(at: now) : nil
             )
             BaDivider()
             Label(entry.linkURL?.host ?? String(localized: "ba.activity.link.gamekee"), systemImage: "link")
