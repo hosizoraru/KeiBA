@@ -6,6 +6,10 @@
 	objectVersion = 100;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		98BA01032FB7000000000103 /* AudioStreaming in Frameworks */ = {isa = PBXBuildFile; productRef = 98BA01022FB7000000000102 /* AudioStreaming */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		98BA00072FB6000000000007 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -38,6 +42,7 @@
 		9893E4702FB52F57001F2D43 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				98BA01032FB7000000000103 /* AudioStreaming in Frameworks */,
 			);
 		};
 		98BA00042FB6000000000004 /* Frameworks */ = {
@@ -83,6 +88,9 @@
 				9893E4752FB52F57001F2D43 /* KeiBAOS */,
 			);
 			name = KeiBAOS;
+			packageProductDependencies = (
+				98BA01022FB7000000000102 /* AudioStreaming */,
+			);
 			productName = KeiBAOS;
 			productReference = 9893E4732FB52F57001F2D43 /* KeiBAOS.app */;
 			productType = "com.apple.product-type.application";
@@ -136,6 +144,9 @@
 			);
 			mainGroup = 9893E46A2FB52F57001F2D43;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				98BA01012FB7000000000101 /* XCRemoteSwiftPackageReference "AudioStreaming" */,
+			);
 			preferredProjectObjectVersion = 100;
 			productRefGroup = 9893E4742FB52F57001F2D43 /* Products */;
 			projectDirPath = "";
@@ -474,6 +485,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		98BA01012FB7000000000101 /* XCRemoteSwiftPackageReference "AudioStreaming" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/dimitris-c/AudioStreaming.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.4.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		98BA01022FB7000000000102 /* AudioStreaming */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 98BA01012FB7000000000101 /* XCRemoteSwiftPackageReference "AudioStreaming" */;
+			productName = AudioStreaming;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 9893E46B2FB52F57001F2D43 /* Project object */;
 }

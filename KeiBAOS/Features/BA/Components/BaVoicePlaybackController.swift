@@ -15,6 +15,9 @@ final class BaVoicePlaybackController {
     private nonisolated static let nativePlaybackExtensions = Set(
         "aac aif aifc aiff caf m4a m4b m4p mp3 mp4 wav".split(separator: " ").map(String.init)
     )
+    private nonisolated static let oggPlaybackExtensions = Set(
+        "oga ogg opus".split(separator: " ").map(String.init)
+    )
 
     var currentRemoteURL: URL?
     var isLoading = false
@@ -23,12 +26,17 @@ final class BaVoicePlaybackController {
     var errorMessage: String?
 
     private let audioCache: BaAudioCache
+    @ObservationIgnored private let oggPlayer = BaOggVoicePlayer()
     private var player: AVAudioPlayer?
+    private var playbackBackend: PlaybackBackend?
     private var loadToken = UUID()
     private var progressTimer: Timer?
 
     init(audioCache: BaAudioCache = .shared) {
         self.audioCache = audioCache
+        oggPlayer.onEvent = { [weak self] event in
+            self?.handleOggEvent(event)
+        }
     }
 
     nonisolated static func supportsNativePlayback(_ url: URL) -> Bool {
@@ -37,8 +45,18 @@ final class BaVoicePlaybackController {
         return nativePlaybackExtensions.contains(ext)
     }
 
+    nonisolated static func supportsOggPlayback(_ url: URL) -> Bool {
+        let ext = url.pathExtension.lowercased()
+        guard ext.isEmpty == false else { return false }
+        return oggPlaybackExtensions.contains(ext)
+    }
+
+    nonisolated static func supportsPlayback(_ url: URL) -> Bool {
+        supportsNativePlayback(url) || supportsOggPlayback(url)
+    }
+
     func toggle(remoteURL: URL) {
-        guard Self.supportsNativePlayback(remoteURL) else {
+        guard Self.supportsPlayback(remoteURL) else {
             fail(message: String(localized: "ba.student.detail.voice.error.unsupported"))
             return
         }
@@ -56,27 +74,31 @@ final class BaVoicePlaybackController {
     func stop() {
         loadToken = UUID()
         tearDownPlayer()
+        stopOggPlayer()
         currentRemoteURL = nil
         isLoading = false
         isPlaying = false
         progress = 0
+        playbackBackend = nil
     }
 
     private func play(remoteURL: URL) {
         let token = UUID()
         loadToken = token
         tearDownPlayer()
+        stopOggPlayer()
         currentRemoteURL = remoteURL
         errorMessage = nil
         isLoading = true
         isPlaying = false
         progress = 0
+        playbackBackend = Self.supportsNativePlayback(remoteURL) ? .avFoundation : .audioStreaming
 
         Task {
             do {
                 let localURL = try await audioCache.localURL(for: remoteURL)
                 guard loadToken == token, currentRemoteURL == remoteURL else { return }
-                startPlayer(localURL: localURL)
+                startPlayer(localURL: localURL, backend: playbackBackend)
             } catch {
                 guard loadToken == token, currentRemoteURL == remoteURL else { return }
                 fail(message: error.localizedDescription)
@@ -85,8 +107,13 @@ final class BaVoicePlaybackController {
     }
 
     private func resume() {
-        guard let player else { return }
         errorMessage = nil
+        if playbackBackend == .audioStreaming {
+            resumeOggPlayer()
+            isPlaying = true
+            return
+        }
+        guard let player else { return }
         configureAudioSession()
         player.play()
         isPlaying = true
@@ -94,12 +121,21 @@ final class BaVoicePlaybackController {
     }
 
     private func pause() {
+        if playbackBackend == .audioStreaming {
+            pauseOggPlayer()
+            isPlaying = false
+            return
+        }
         player?.pause()
         isPlaying = false
         stopProgressTimer()
     }
 
-    private func startPlayer(localURL: URL) {
+    private func startPlayer(localURL: URL, backend: PlaybackBackend?) {
+        if backend == .audioStreaming {
+            startOggPlayer(localURL: localURL)
+            return
+        }
         do {
             configureAudioSession()
             let nextPlayer = try AVAudioPlayer(contentsOf: localURL)
@@ -164,11 +200,56 @@ final class BaVoicePlaybackController {
         progressTimer = nil
     }
 
+    private enum PlaybackBackend {
+        case avFoundation
+        case audioStreaming
+    }
+
     private func configureAudioSession() {
         #if os(iOS) || os(tvOS) || os(watchOS)
             let session = AVAudioSession.sharedInstance()
             try? session.setCategory(.playback, mode: .spokenAudio, options: [])
             try? session.setActive(true)
         #endif
+    }
+}
+
+private extension BaVoicePlaybackController {
+    func startOggPlayer(localURL: URL) {
+        configureAudioSession()
+        oggPlayer.play(localURL: localURL)
+    }
+
+    func pauseOggPlayer() {
+        oggPlayer.pause()
+    }
+
+    func resumeOggPlayer() {
+        configureAudioSession()
+        oggPlayer.resume()
+    }
+
+    func stopOggPlayer() {
+        oggPlayer.stop()
+    }
+
+    func handleOggEvent(_ event: BaOggVoiceEvent) {
+        switch event {
+        case .ready:
+            isLoading = false
+        case .playing:
+            isLoading = false
+            isPlaying = true
+        case .paused:
+            isPlaying = false
+        case .ended:
+            isLoading = false
+            isPlaying = false
+            progress = 0
+        case let .progress(value):
+            progress = min(max(value, 0), 1)
+        case let .failed(message):
+            fail(message: message.isEmpty ? String(localized: "ba.student.detail.voice.error.playback") : message)
+        }
     }
 }

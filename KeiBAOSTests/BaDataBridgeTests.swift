@@ -286,6 +286,20 @@ final class BaDataBridgeTests: XCTestCase {
         )
     }
 
+    func testVoicePlaybackSupportsOggThroughStreamingPath() throws {
+        let mp3URL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/voice/jp.mp3"))
+        let oggURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/voice/jp.ogg"))
+        let opusURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/voice/jp.opus"))
+
+        XCTAssertTrue(BaVoicePlaybackController.supportsNativePlayback(mp3URL))
+        XCTAssertTrue(BaVoicePlaybackController.supportsPlayback(mp3URL))
+        XCTAssertFalse(BaVoicePlaybackController.supportsNativePlayback(oggURL))
+        XCTAssertTrue(BaVoicePlaybackController.supportsOggPlayback(oggURL))
+        XCTAssertTrue(BaVoicePlaybackController.supportsPlayback(oggURL))
+        XCTAssertTrue(BaVoicePlaybackController.supportsOggPlayback(opusURL))
+        XCTAssertTrue(BaVoicePlaybackController.supportsPlayback(opusURL))
+    }
+
     func testGalleryParserClassifiesVideoMedia() {
         let baseData: [[BaJSONObject]] = [
             [

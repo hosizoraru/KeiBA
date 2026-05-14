@@ -171,7 +171,7 @@ private struct BaStudentVoiceRow: View {
     @ViewBuilder
     private var playbackButton: some View {
         if let playbackURL {
-            if BaVoicePlaybackController.supportsNativePlayback(playbackURL) {
+            if BaVoicePlaybackController.supportsPlayback(playbackURL) {
                 Button {
                     playback.toggle(remoteURL: playbackURL)
                 } label: {
