@@ -131,6 +131,8 @@ struct BaStudentVoiceRow: View {
                     }
                     if let format = BaVoiceDisplayModel.audioFormatTitle(for: playbackURL) {
                         BaVoiceBadge(title: format, tint: BaDesign.blue)
+                    } else {
+                        BaVoiceBadge(title: String(localized: "ba.student.detail.voice.textOnly"), tint: .secondary)
                     }
                     if BaVoiceDisplayModel.audioCount(for: row) > 1 {
                         BaVoiceBadge(
@@ -182,12 +184,6 @@ struct BaStudentVoiceRow: View {
                     .frame(width: 34, height: 34)
                     .accessibilityLabel(String(localized: "ba.student.detail.voice.error.unsupported"))
             }
-        } else {
-            Image(systemName: "speaker.slash")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.tertiary)
-                .frame(width: 34, height: 34)
-                .accessibilityLabel(String(localized: "ba.student.detail.voice.noAudio"))
         }
     }
 
@@ -246,13 +242,12 @@ private struct BaVoicePlaybackButtonContent: View {
                 ProgressView()
                     .controlSize(.small)
             } else {
-                Image(systemName: isCurrent && isPlaying ? "pause.fill" : "play.fill")
-                    .font(.caption.weight(.semibold))
+                Image(systemName: isCurrent && isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                    .font(.title3.weight(.semibold))
             }
         }
         .foregroundStyle(BaDesign.blue)
         .frame(width: 34, height: 34)
-        .liquidGlassSurface(cornerRadius: 17, tint: BaDesign.blue.opacity(0.08), isInteractive: true)
         .overlay(alignment: .bottom) {
             if isCurrent, progress > 0 {
                 ProgressView(value: progress)
@@ -325,7 +320,7 @@ private struct BaVoiceBadge: View {
             .lineLimit(1)
             .padding(.horizontal, 7)
             .padding(.vertical, 3)
-            .liquidGlassSurface(cornerRadius: 999, tint: tint.opacity(0.08), isInteractive: false)
+            .background(.quaternary, in: Capsule())
     }
 }
 

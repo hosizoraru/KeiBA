@@ -13,7 +13,8 @@ import Observation
 @MainActor
 final class BaVoicePlaybackController {
     private nonisolated static let nativePlaybackExtensions = Set(
-        "aac aif aifc aiff caf m4a m4b m4p mp3 mp4 wav".split(separator: " ").map(String.init)
+        "3gp 3gpp aac aif aifc aiff amr caf flac m4a m4b m4p mp3 mp4 wav".split(separator: " ")
+            .map(String.init)
     )
     private nonisolated static let oggPlaybackExtensions = Set(
         "oga ogg opus".split(separator: " ").map(String.init)
@@ -41,7 +42,7 @@ final class BaVoicePlaybackController {
 
     nonisolated static func supportsNativePlayback(_ url: URL) -> Bool {
         let ext = url.pathExtension.lowercased()
-        guard ext.isEmpty == false else { return true }
+        guard ext.isEmpty == false else { return false }
         return nativePlaybackExtensions.contains(ext)
     }
 
@@ -52,7 +53,9 @@ final class BaVoicePlaybackController {
     }
 
     nonisolated static func supportsPlayback(_ url: URL) -> Bool {
-        supportsNativePlayback(url) || supportsOggPlayback(url)
+        supportsNativePlayback(url) ||
+            supportsOggPlayback(url) ||
+            looksLikeAudioSource(url)
     }
 
     func toggle(remoteURL: URL) {
@@ -92,7 +95,7 @@ final class BaVoicePlaybackController {
         isLoading = true
         isPlaying = false
         progress = 0
-        playbackBackend = Self.supportsNativePlayback(remoteURL) ? .avFoundation : .audioStreaming
+        playbackBackend = Self.preferredBackend(for: remoteURL)
 
         Task {
             do {
@@ -146,7 +149,11 @@ final class BaVoicePlaybackController {
             isPlaying = true
             startProgressTimer()
         } catch {
-            fail(message: String(localized: "ba.student.detail.voice.error.unsupported"))
+            if isOggFile(localURL) {
+                startOggPlayer(localURL: localURL)
+            } else {
+                fail(message: String(localized: "ba.student.detail.voice.error.unsupported"))
+            }
         }
     }
 
@@ -203,6 +210,29 @@ final class BaVoicePlaybackController {
     private enum PlaybackBackend {
         case avFoundation
         case audioStreaming
+    }
+
+    private nonisolated static func preferredBackend(for url: URL) -> PlaybackBackend {
+        supportsOggPlayback(url) ? .audioStreaming : .avFoundation
+    }
+
+    private nonisolated static func looksLikeAudioSource(_ url: URL) -> Bool {
+        guard url.pathExtension.isEmpty else { return false }
+        let path = url.path.lowercased()
+        let query = url.query?.lowercased() ?? ""
+        return path.contains("/voice/") ||
+            path.contains("/audio/") ||
+            query.contains("voice") ||
+            query.contains("audio")
+    }
+
+    private func isOggFile(_ url: URL) -> Bool {
+        guard let handle = try? FileHandle(forReadingFrom: url) else {
+            return false
+        }
+        defer { try? handle.close() }
+        guard let data = try? handle.read(upToCount: 4) else { return false }
+        return data.prefix(4).elementsEqual([0x4F, 0x67, 0x67, 0x53])
     }
 
     private func configureAudioSession() {

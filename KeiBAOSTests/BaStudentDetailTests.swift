@@ -132,6 +132,29 @@ final class BaStudentDetailTests: XCTestCase {
         XCTAssertEqual(entry.lines, ["ブルーアーカイブ。", "蔚蓝档案。"])
     }
 
+    func testVoiceParserKeepsTextOnlyTitleRowsUnplayable() throws {
+        let baseData: [[BaJSONObject]] = [
+            [
+                ["value": "配音语言"],
+                ["value": "日配"],
+                ["value": "中配"],
+            ],
+            [
+                ["value": "通常"],
+                ["value": "标题"],
+                ["value": "ブルーアーカイブ。"],
+                ["value": "蔚蓝档案。"],
+            ],
+        ]
+
+        let entry = try XCTUnwrap(BaGuideVoiceParser().parse(baseData: baseData, content: nil, sourceURL: nil).first)
+
+        XCTAssertEqual(entry.title, "标题")
+        XCTAssertNil(entry.audioURL)
+        XCTAssertNil(entry.audioURLs)
+        XCTAssertEqual(entry.lines, ["ブルーアーカイブ。", "蔚蓝档案。"])
+    }
+
     private func makeCatalogEntry() -> BaGuideCatalogEntry {
         BaGuideCatalogEntry(
             entryId: 1,

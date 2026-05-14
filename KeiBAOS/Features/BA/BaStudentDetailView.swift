@@ -13,6 +13,7 @@ struct BaStudentDetailView: View {
     let entry: BaGuideCatalogEntry
 
     @State private var selectedPage: BaStudentDetailPage = .overviewProfile
+    @State private var voiceSearchText = ""
 
     private var state: BaLoadableState<BaStudentGuideInfo> {
         model.studentDetailStates[entry.contentId] ?? BaLoadableState<BaStudentGuideInfo>()
@@ -68,6 +69,7 @@ struct BaStudentDetailView: View {
         .platformInsetGroupedListStyle()
         .scrollContentBackground(.hidden)
         .background(AppBackground())
+        .modifier(BaStudentVoiceSearchModifier(isActive: selectedPage == .voice, text: $voiceSearchText))
         .safeAreaInset(edge: .bottom) {
             BaStudentDetailBottomBar(selection: $selectedPage)
         }
@@ -79,6 +81,11 @@ struct BaStudentDetailView: View {
         }
         .refreshable {
             await model.loadStudentDetail(entry: entry, force: true)
+        }
+        .onChange(of: selectedPage) { _, page in
+            if page != .voice {
+                voiceSearchText = ""
+            }
         }
     }
 
@@ -95,7 +102,7 @@ struct BaStudentDetailView: View {
             BaStudentGuideRowsSection(section: .skills, rows: info?.skillDisplayRows ?? [], tint: headerTint)
             BaStudentGuideRowsSection(section: .growth, rows: info?.growthDisplayRows ?? [], tint: headerTint)
         case .voice:
-            BaStudentVoiceSection(rows: info?.voiceRows ?? [])
+            BaStudentVoiceSection(rows: info?.voiceRows ?? [], searchText: $voiceSearchText)
         case .gallery:
             BaStudentGallerySection(items: info?.galleryItems ?? [])
         case .simulate:
@@ -143,6 +150,22 @@ struct BaStudentDetailView: View {
         model.isFavorite(entry)
             ? String(localized: "ba.catalog.favorite.remove")
             : String(localized: "ba.catalog.favorite.add")
+    }
+}
+
+private struct BaStudentVoiceSearchModifier: ViewModifier {
+    let isActive: Bool
+    @Binding var text: String
+
+    func body(content: Content) -> some View {
+        if isActive {
+            content.searchable(
+                text: $text,
+                prompt: Text(String(localized: "ba.student.detail.voice.search.placeholder"))
+            )
+        } else {
+            content
+        }
     }
 }
 

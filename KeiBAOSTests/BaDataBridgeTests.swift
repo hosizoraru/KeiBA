@@ -277,8 +277,9 @@ final class BaDataBridgeTests: XCTestCase {
             lines: ["JP", "CN"],
             audioURLs: [jpURL]
         )
-        XCTAssertNil(
-            BaVoiceLanguageResolver.playbackURL(for: jpOnlyEntry, headers: ["日配", "中配"], selectedHeader: "中配")
+        XCTAssertEqual(
+            BaVoiceLanguageResolver.playbackURL(for: jpOnlyEntry, headers: ["日配", "中配"], selectedHeader: "中配"),
+            jpURL
         )
         XCTAssertEqual(
             BaVoiceLanguageResolver.linePairs(for: entry, fallbackHeaders: headers).map(\.language),
@@ -290,6 +291,9 @@ final class BaDataBridgeTests: XCTestCase {
         let mp3URL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/voice/jp.mp3"))
         let oggURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/voice/jp.ogg"))
         let opusURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/voice/jp.opus"))
+        let flacURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/voice/jp.flac"))
+        let unknownVoiceURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/voice/play"))
+        let pageURL = try XCTUnwrap(URL(string: "https://www.gamekee.com/ba/detail"))
 
         XCTAssertTrue(BaVoicePlaybackController.supportsNativePlayback(mp3URL))
         XCTAssertTrue(BaVoicePlaybackController.supportsPlayback(mp3URL))
@@ -298,6 +302,10 @@ final class BaDataBridgeTests: XCTestCase {
         XCTAssertTrue(BaVoicePlaybackController.supportsPlayback(oggURL))
         XCTAssertTrue(BaVoicePlaybackController.supportsOggPlayback(opusURL))
         XCTAssertTrue(BaVoicePlaybackController.supportsPlayback(opusURL))
+        XCTAssertTrue(BaVoicePlaybackController.supportsNativePlayback(flacURL))
+        XCTAssertTrue(BaVoicePlaybackController.supportsPlayback(flacURL))
+        XCTAssertTrue(BaVoicePlaybackController.supportsPlayback(unknownVoiceURL))
+        XCTAssertFalse(BaVoicePlaybackController.supportsPlayback(pageURL))
     }
 
     func testGalleryParserClassifiesVideoMedia() {

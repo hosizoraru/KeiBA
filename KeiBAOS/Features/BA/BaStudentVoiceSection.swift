@@ -9,10 +9,10 @@ import SwiftUI
 
 struct BaStudentVoiceSection: View {
     let rows: [BaGuideVoiceEntry]
+    @Binding var searchText: String
 
     @State private var selectedLanguage = ""
     @State private var sectionFilter = BaVoiceSectionFilter.all
-    @State private var searchText = ""
     @State private var playback = BaVoicePlaybackController()
 
     private var rowIDs: [String] {
@@ -65,7 +65,6 @@ struct BaStudentVoiceSection: View {
                 BaVoiceControlPanel(
                     selectedLanguage: $selectedLanguage,
                     sectionFilter: $sectionFilter,
-                    searchText: $searchText,
                     languages: languagePickerHeaders,
                     filters: sectionFilters,
                     visibleCount: filteredRows.count,
@@ -128,7 +127,6 @@ struct BaStudentVoiceSection: View {
 private struct BaVoiceControlPanel: View {
     @Binding var selectedLanguage: String
     @Binding var sectionFilter: BaVoiceSectionFilter
-    @Binding var searchText: String
 
     let languages: [String]
     let filters: [BaVoiceSectionFilter]
@@ -136,7 +134,7 @@ private struct BaVoiceControlPanel: View {
     let totalCount: Int
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             if languages.count > 1 {
                 if languages.count <= 3 {
                     Picker(String(localized: "ba.student.detail.voice.language.picker"), selection: $selectedLanguage) {
@@ -158,6 +156,10 @@ private struct BaVoiceControlPanel: View {
             }
 
             HStack(spacing: 12) {
+                Label(String(localized: "ba.student.detail.voice.filter.category"), systemImage: "line.3.horizontal.decrease.circle")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
                 Picker(String(localized: "ba.student.detail.voice.filter.category"), selection: $sectionFilter) {
                     ForEach(filters) { filter in
                         Text(filter.title)
@@ -171,26 +173,6 @@ private struct BaVoiceControlPanel: View {
                     .font(BaTextToken.rowCaption.monospacedDigit())
                     .foregroundStyle(.secondary)
             }
-
-            HStack(spacing: 8) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.secondary)
-                TextField(String(localized: "ba.student.detail.voice.search.placeholder"), text: $searchText)
-                    .textFieldStyle(.plain)
-                if searchText.isEmpty == false {
-                    Button {
-                        searchText = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.tertiary)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(String(localized: "ba.action.clear"))
-                }
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 9)
-            .liquidGlassSurface(cornerRadius: 14, tint: BaDesign.cyan.opacity(0.045), isInteractive: true)
         }
         .padding(.vertical, 4)
     }
@@ -222,13 +204,13 @@ private struct BaVoiceNowPlayingRow: View {
         HStack(spacing: 12) {
             Image(systemName: playback.isPlaying ? "waveform" : "waveform.circle")
                 .font(.headline.weight(.semibold))
-                .foregroundStyle(BaDesign.cyan)
+                .foregroundStyle(.secondary)
                 .frame(width: 28)
 
             VStack(alignment: .leading, spacing: 5) {
                 Text(String(localized: "ba.student.detail.voice.nowPlaying"))
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(BaDesign.cyan)
+                    .foregroundStyle(.secondary)
                 Text(BaVoiceLabelFormatter.entryTitle(entry.title))
                     .font(BaTextToken.rowTitle)
                     .lineLimit(1)
@@ -251,13 +233,9 @@ private struct BaVoiceNowPlayingRow: View {
                     .frame(width: 34, height: 34)
             }
             .buttonStyle(.glass)
-            .tint(BaDesign.cyan)
             .accessibilityLabel(String(localized: "ba.student.detail.voice.stop"))
         }
-        .padding(12)
-        .liquidGlassSurface(cornerRadius: 18, tint: BaDesign.cyan.opacity(0.06), isInteractive: false)
-        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
-        .listRowBackground(Color.clear)
+        .padding(.vertical, 4)
     }
 }
 

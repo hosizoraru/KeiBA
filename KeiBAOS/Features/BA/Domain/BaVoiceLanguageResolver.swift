@@ -49,7 +49,9 @@ nonisolated enum BaVoiceLanguageResolver {
         if selected.isEmpty == false,
            let index = headers.firstIndex(where: { canonicalLanguageLabel($0) == selected })
         {
-            return entry.audioURLs?.indices.contains(index) == true ? entry.audioURLs?[index] : nil
+            if let url = entry.audioURLs?.indices.contains(index) == true ? entry.audioURLs?[index] : nil {
+                return url
+            }
         }
         if let url = entry.audioURLs?.first(where: { $0.absoluteString.isEmpty == false }) {
             return url
