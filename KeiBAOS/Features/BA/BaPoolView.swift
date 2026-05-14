@@ -19,7 +19,8 @@ struct BaPoolView: View {
     }
 
     private var poolSnapshot: BaPoolListSnapshot {
-        let now = Date()
+        let now = Date().baPoolTimelineDisplayDate
+        let settings = model.settings
         var counts: [BaTimelineStatus: Int] = [:]
         var rows: [BaPoolRowDisplayModel] = []
 
@@ -27,7 +28,7 @@ struct BaPoolView: View {
             let status = pool.status(at: now)
             counts[status, default: 0] += 1
 
-            guard model.settings.showEndedPools || status != .ended else { continue }
+            guard settings.showEndedPools || status != .ended else { continue }
             guard statusFilter == nil || statusFilter == status else { continue }
 
             rows.append(
@@ -37,8 +38,8 @@ struct BaPoolView: View {
                     tagTitle: BaTimelineLabels.poolTagTitle(tagId: pool.tagId, fallback: pool.tagName),
                     subtitle: pool.alias.isEmpty ? String(localized: "ba.pool.linkedStudent.detail") : pool.alias,
                     timelineDetail: BaDisplayFormatters.timelineDetail(start: pool.startAt, end: pool.endAt, now: now),
-                    startText: BaDisplayFormatters.dateTime(pool.startAt, server: model.settings.server),
-                    endText: BaDisplayFormatters.dateTime(pool.endAt, server: model.settings.server),
+                    startText: BaDisplayFormatters.dateTime(pool.startAt, server: settings.server),
+                    endText: BaDisplayFormatters.dateTime(pool.endAt, server: settings.server),
                     progress: status == .running ? pool.progress(at: now) : nil
                 )
             )
@@ -261,8 +262,29 @@ private struct BaPoolNavigationCard: View, Equatable {
         .padding(.horizontal, 14)
         .padding(.vertical, 13)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .liquidGlassSurface(cornerRadius: 24, tint: row.status.tint.opacity(0.055), isInteractive: false)
+        .baPoolScrollCardSurface(tint: row.status.tint)
         .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+    }
+}
+
+private extension View {
+    func baPoolScrollCardSurface(tint: Color) -> some View {
+        let shape = RoundedRectangle(cornerRadius: 24, style: .continuous)
+
+        return background(.ultraThinMaterial, in: shape)
+            .overlay {
+                shape.fill(tint.opacity(0.045))
+            }
+            .overlay {
+                shape.strokeBorder(.white.opacity(0.16), lineWidth: 1)
+            }
+            .shadow(color: tint.opacity(0.08), radius: 12, x: 0, y: 6)
+    }
+}
+
+private extension Date {
+    var baPoolTimelineDisplayDate: Date {
+        Date(timeIntervalSince1970: floor(timeIntervalSince1970 / 60) * 60)
     }
 }
 
