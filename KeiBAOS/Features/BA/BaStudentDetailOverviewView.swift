@@ -33,26 +33,7 @@ struct BaStudentDetailOverviewSections: View {
                 .listRowBackground(Color.clear)
         }
 
-        Section(String(localized: "ba.student.detail.archive.title")) {
-            LabeledContent(String(localized: "ba.student.detail.contentId.title")) {
-                Text("\(entry.contentId)")
-            }
-            LabeledContent(String(localized: "ba.student.detail.source.title")) {
-                Text(String(localized: "ba.student.detail.dataSource.gamekee"))
-            }
-            LabeledContent(String(localized: "ba.student.detail.syncedAt.title")) {
-                Text(BaDisplayFormatters.syncTime(info.syncedAt))
-            }
-
-            let rows = info.overviewProfileRows
-            if rows.isEmpty {
-                BaStudentDetailEmptyRow(section: .profile)
-            } else {
-                ForEach(rows.prefix(28)) { row in
-                    BaStudentGuideRow(row: row, systemImage: BaStudentDetailSection.profile.systemImage, tint: tint)
-                }
-            }
-        }
+        BaStudentProfileCardsSection(info: info, tint: tint)
     }
 }
 
@@ -71,7 +52,8 @@ private struct BaStudentPortraitMetaCard: View {
                     width: 112,
                     height: 152,
                     cornerRadius: 20,
-                    contentMode: .fill,
+                    contentMode: .fit,
+                    usesImageBackdrop: true,
                     fallbackFont: .system(size: 42, weight: .semibold)
                 )
 

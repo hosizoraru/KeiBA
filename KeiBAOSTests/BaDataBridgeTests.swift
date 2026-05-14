@@ -324,6 +324,113 @@ final class BaDataBridgeTests: XCTestCase {
         XCTAssertEqual(parsed.summary, "GameKee summary")
     }
 
+    func testContentParserBuildsBenchmarkLikeBuckets() throws {
+        let content: BaJSONObject = [
+            "baseData": [
+                [
+                    ["value": "学生信息"],
+                    ["value": "角色名称"],
+                    ["value": "日奈（礼服）"],
+                    ["value": "全名"],
+                    ["value": "空崎ヒナ（ドレス）"],
+                    ["value": "假名注音"],
+                    ["value": "空崎 / そらさき"],
+                    ["value": "简中译名"],
+                    ["value": "日奈（礼服）"],
+                ],
+                [
+                    ["value": "学生信息"],
+                    ["value": "年龄"],
+                    ["value": "17岁"],
+                    ["value": "生日"],
+                    ["value": "2月19日"],
+                    ["value": "身高"],
+                    ["value": "142cm"],
+                    ["value": "画师"],
+                    ["value": "DoReMi"],
+                    ["value": "实装日期"],
+                    ["value": "2024/1/31"],
+                    ["value": "声优"],
+                    ["value": "日｜广桥凉｜中｜王雅欣｜韩｜박신희"],
+                ],
+                [
+                    ["value": "学生爱好"],
+                    ["value": "兴趣爱好"],
+                    ["value": "睡眠、休息"],
+                ],
+                [
+                    ["value": "介绍"],
+                    ["value": "为了参加派对上了礼服裙。"],
+                ],
+                [
+                    ["value": "角色技能"],
+                    ["value": "技能名称"],
+                    ["value": "开幕演出"],
+                    ["value": "技能类型"],
+                    ["value": "EX技能"],
+                    ["value": "技能等级"],
+                    ["value": "Lv.5"],
+                    ["value": "技能COST"],
+                    ["value": "COST: 6"],
+                    ["value": "技能描述"],
+                    ["value": "转换为集中射击姿态。"],
+                ],
+                [
+                    ["value": "配音语言"],
+                    ["value": "日配"],
+                    ["value": "中配"],
+                    ["value": "韩配"],
+                ],
+                [
+                    ["value": "通常"],
+                    ["value": "标题"],
+                    ["value": "ブルーアーカイブ。"],
+                    ["value": "蔚蓝档案。"],
+                    ["value": "Blue Archive"],
+                    ["type": "audio", "value": "//cdnimg.gamekee.com/voice/jp.mp3"],
+                    ["type": "audio", "value": "//cdnimg.gamekee.com/voice/cn.mp3"],
+                    ["type": "audio", "value": "//cdnimg.gamekee.com/voice/kr.mp3"],
+                ],
+                [
+                    ["value": "立绘"],
+                    ["type": "image", "value": "//cdnimg.gamekee.com/student/portrait.webp"],
+                ],
+                [
+                    ["value": "养成模拟"],
+                    ["value": "攻击力 9812 (+9389)"],
+                    ["value": "防御力 377 (+309)"],
+                ],
+            ],
+            "styleData": [
+                [
+                    "name": "默认",
+                    "data": [
+                        ["value": "//cdnimg.gamekee.com/student/gallery.webp"],
+                    ],
+                ],
+            ],
+            "thumb": "//cdnimg.gamekee.com/student/thumb.webp",
+            "summary": "Benchmark summary",
+        ]
+
+        let parsed = BaGuideContentParser().parse(
+            content: content,
+            apiData: [
+                "thumb": "//cdnimg.gamekee.com/student/thumb.webp",
+            ],
+            html: nil,
+            entry: makeCatalogEntry(contentId: 170_295, name: "日奈（礼服）", alias: "日奈")
+        )
+
+        XCTAssertEqual(parsed.summary, "为了参加派对上了礼服裙。")
+        XCTAssertTrue(parsed.profileRows.map(\.title).contains("介绍"))
+        XCTAssertEqual(parsed.skillRows.first?.title, "角色技能")
+        XCTAssertEqual(parsed.voiceRows.first?.lineHeaders, ["日配", "中配", "韩配"])
+        XCTAssertEqual(parsed.galleryItems.first?.mediaKind, .image)
+        XCTAssertFalse(parsed.simulateRows.isEmpty)
+        XCTAssertEqual(parsed.imageURL?.absoluteString, "https://cdnimg.gamekee.com/student/portrait.webp")
+    }
+
     func testGiftParserKeepsGiftAndEmojiImages() {
         let baseData: [[BaJSONObject]] = [
             [["value": "礼物偏好"]],

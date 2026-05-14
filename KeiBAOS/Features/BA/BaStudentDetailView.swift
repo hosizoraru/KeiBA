@@ -95,15 +95,25 @@ struct BaStudentDetailView: View {
                 emptyDetailSection
             }
         case .skills:
-            BaStudentGuideRowsSection(section: .skills, rows: info?.skillDisplayRows ?? [], tint: headerTint)
-            BaStudentGuideRowsSection(section: .growth, rows: info?.growthDisplayRows ?? [], tint: headerTint)
+            BaStudentSkillCardsSection(rows: info?.skillDisplayRows ?? [], tint: headerTint)
+            if let growthRows = info?.growthDisplayRows, growthRows.isEmpty == false {
+                BaStudentDetailRowsCardsSection(section: .growth, rows: growthRows, tint: BaDesign.green)
+            }
         case .voice:
             BaStudentVoiceSection(rows: info?.voiceRows ?? [], searchText: $voiceSearchText)
         case .gallery:
-            BaStudentGallerySection(items: info?.galleryItems ?? [])
+            BaStudentGalleryCardsSection(items: info?.galleryItems ?? [])
         case .simulate:
-            BaStudentGuideRowsSection(section: .simulate, rows: info?.simulateRows ?? [], tint: headerTint)
+            BaStudentSimulationCardsSection(rows: simulationRows, tint: BaDesign.violet)
         }
+    }
+
+    private var simulationRows: [BaGuideRow] {
+        guard let info else { return [] }
+        if info.simulateRows.isEmpty == false {
+            return info.simulateRows
+        }
+        return info.growthDisplayRows
     }
 
     private var loadingSection: some View {
