@@ -10,9 +10,7 @@ import SwiftUI
 struct BaOverviewView: View {
     @Environment(BaAppModel.self) private var model
 
-    private var office: BaOfficeSnapshot {
-        model.officeSnapshot
-    }
+    var onOpenTab: (AppTab) -> Void = { _ in }
 
     var body: some View {
         BaScreenScaffold {
@@ -21,145 +19,44 @@ struct BaOverviewView: View {
                 detail: String(localized: "ba.overview.detail")
             )
 
-            identitySection
-            apSection
-            cafeSection
+            BaOverviewIdentityCard(
+                settings: model.settings,
+                onServerSelected: selectServer
+            )
+            BaOverviewAPCard(
+                office: model.officeSnapshot,
+                settings: model.settings,
+                onCurrentAPCommit: model.setCurrentAP,
+                onLimitCommit: model.setAPLimit
+            )
+            BaOverviewCafeCard(
+                office: model.officeSnapshot,
+                onClaimCafeAP: model.claimCafeAP,
+                onPerformAction: model.performCafeAction,
+                onResetAction: model.resetCafeAction
+            )
+            BaOverviewTimelineSummaryCard(
+                activities: model.activityState.value ?? [],
+                pools: model.poolState.value ?? [],
+                activitySyncAt: model.activityState.lastSyncAt,
+                poolSyncAt: model.poolState.lastSyncAt,
+                server: model.settings.server,
+                onOpenTab: onOpenTab
+            )
         }
-        .task {
+        .task(id: model.settings.server) {
             model.refreshOfficeSnapshot()
+            await model.loadActivitiesIfNeeded()
+            await model.loadPoolsIfNeeded()
         }
     }
 
-    private var identitySection: some View {
-        BaMetricGroup(
-            title: String(localized: "ba.office.overview.title"),
-            asset: .schale
-        ) {
-            BaMetricRow(
-                title: String(localized: "ba.office.nickname.label"),
-                value: "\(office.nickname) \(office.teacherSuffix)",
-                systemImage: "person.crop.square"
-            )
-            BaDivider()
-            BaMetricRow(
-                title: String(localized: "ba.office.friendCode.label"),
-                value: office.friendCode,
-                systemImage: "number.square"
-            )
-            BaDivider()
-            BaMetricRow(
-                title: String(localized: "ba.office.server.label"),
-                value: office.server,
-                systemImage: "server.rack"
-            )
-            BaDivider()
-            BaMetricRow(
-                title: String(localized: "ba.office.catalog.label"),
-                value: String(localized: "ba.office.catalog.value"),
-                systemImage: "rectangle.stack.person.crop"
-            )
+    private func selectServer(_ server: BaServer) {
+        model.selectServer(server)
+        Task {
+            await model.loadActivitiesIfNeeded()
+            await model.loadPoolsIfNeeded()
         }
-    }
-
-    private var apSection: some View {
-        BaMetricGroup(
-            title: String(localized: "ba.office.ap.label"),
-            asset: .actionPoint
-        ) {
-            HStack(spacing: 10) {
-                Text(String(localized: "ba.office.ap.current.title"))
-                    .font(.body)
-                    .foregroundStyle(.primary)
-
-                Spacer(minLength: 12)
-
-                HStack(spacing: 8) {
-                    BaValueChip(value: office.apCurrent, tint: BaDesign.green)
-                    Text("/")
-                        .font(.body.weight(.medium))
-                        .foregroundStyle(.secondary)
-                    BaValueChip(value: office.apLimit, tint: BaDesign.green)
-                }
-            }
-            .padding(.vertical, 8)
-
-            BaDivider()
-
-            BaMetricRow(
-                title: String(localized: "ba.office.ap.next.title"),
-                value: office.apNext,
-                detail: apStatusText,
-                asset: .actionPointTight,
-                valueColor: BaDesign.green
-            )
-            BaDivider()
-            BaMetricRow(
-                title: String(localized: "ba.office.ap.sync.label"),
-                value: office.apSyncAt,
-                systemImage: "calendar.badge.clock",
-                valueColor: BaDesign.blue
-            )
-            BaDivider()
-            BaMetricRow(
-                title: String(localized: "ba.office.ap.full.label"),
-                value: office.apFullAt,
-                systemImage: "calendar.badge.checkmark",
-                valueColor: BaDesign.cyan
-            )
-        }
-    }
-
-    private var cafeSection: some View {
-        BaMetricGroup(
-            title: String(localized: "ba.office.cafeAp.title"),
-            asset: .cafeAP
-        ) {
-            BaMetricRow(
-                title: String(localized: "ba.cafe.storage.title"),
-                value: "\(office.cafeApCurrent)/\(office.cafeApLimit)",
-                detail: office.cafeLevel,
-                asset: .cafeAP,
-                valueColor: BaDesign.pink
-            )
-            BaDivider()
-            BaMetricRow(
-                title: String(localized: "ba.cafe.metric.visit"),
-                value: office.cafeVisitRefresh,
-                asset: .lobbyWork,
-                valueColor: BaDesign.pink
-            )
-            BaDivider()
-            BaMetricRow(
-                title: String(localized: "ba.cafe.metric.tactical"),
-                value: office.tacticalRefresh,
-                asset: .arenaCoin,
-                valueColor: BaDesign.amber
-            )
-            BaDivider()
-            BaMetricRow(
-                title: String(localized: "ba.cafe.action.headpat"),
-                value: office.headpatRemain,
-                detail: office.headpatDetail,
-                asset: .dailyReward,
-                valueColor: BaDesign.green
-            )
-            BaDivider()
-            BaMetricRow(
-                title: String(localized: "ba.cafe.action.invite1"),
-                value: office.inviteRemain,
-                detail: office.inviteDetail,
-                asset: .cafeCoupon,
-                valueColor: BaDesign.violet
-            )
-        }
-    }
-
-    private var apStatusText: String {
-        String(
-            format: String(localized: "ba.office.ap.status.format"),
-            office.apNext,
-            office.apFullRemain
-        )
     }
 }
 

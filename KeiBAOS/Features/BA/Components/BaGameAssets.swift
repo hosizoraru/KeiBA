@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-nonisolated enum BaGameAsset: String, Hashable {
+nonisolated enum BaGameAsset: String, Codable, Hashable {
     case schale = "BASchale"
     case actionPoint = "BAAP"
     case actionPointTight = "BAAPTight"

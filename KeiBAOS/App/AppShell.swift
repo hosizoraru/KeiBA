@@ -13,7 +13,7 @@ struct AppShell: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             ForEach(AppTab.allCases) { tab in
-                BaNavigationRoot(tab: tab)
+                BaNavigationRoot(tab: tab) { selectedTab = $0 }
                     .tabItem {
                         Label(tab.title, systemImage: tab.systemImage)
                     }
@@ -28,6 +28,7 @@ private struct BaNavigationRoot: View {
     @Environment(BaAppModel.self) private var model
 
     let tab: AppTab
+    let onSelectTab: (AppTab) -> Void
     @State private var presentedSheet: BaPresentedSheet?
     @State private var activityFilter: BaTimelineStatus?
     @State private var poolFilter: BaTimelineStatus?
@@ -55,7 +56,7 @@ private struct BaNavigationRoot: View {
     private var rootContent: some View {
         switch tab {
         case .overview:
-            BaOverviewView()
+            BaOverviewView(onOpenTab: onSelectTab)
         case .activity:
             BaActivityView(statusFilter: $activityFilter)
         case .pool:

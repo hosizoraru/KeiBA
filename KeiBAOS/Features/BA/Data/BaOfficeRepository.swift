@@ -20,7 +20,37 @@ struct BaOfficeRepository {
             lastHeadpatAt: settings.lastHeadpatAt,
             server: settings.server
         )
-        let inviteAvailable = BaTimeMath.nextInviteAvailable(lastInviteAt: settings.lastInviteTicketAt)
+        let invite1Available = BaTimeMath.nextInviteAvailable(lastInviteAt: settings.lastInviteTicket1At ?? settings.lastInviteTicketAt)
+        let invite2Available = BaTimeMath.nextInviteAvailable(lastInviteAt: settings.lastInviteTicket2At)
+        let cafeActions = [
+            cafeAction(
+                kind: .headpat,
+                title: String(localized: "ba.cafe.action.headpat"),
+                asset: .dailyReward,
+                tintName: "green",
+                availableAt: headpatAvailable,
+                now: now,
+                server: settings.server
+            ),
+            cafeAction(
+                kind: .inviteTicket1,
+                title: String(localized: "ba.cafe.action.invite1"),
+                asset: .cafeCoupon,
+                tintName: "violet",
+                availableAt: invite1Available,
+                now: now,
+                server: settings.server
+            ),
+            cafeAction(
+                kind: .inviteTicket2,
+                title: String(localized: "ba.cafe.action.invite2"),
+                asset: .cafeCoupon,
+                tintName: "violet",
+                availableAt: invite2Available,
+                now: now,
+                server: settings.server
+            ),
+        ]
 
         return BaOfficeSnapshot(
             nickname: settings.nickname,
@@ -31,7 +61,7 @@ struct BaOfficeRepository {
             apLimit: "\(settings.apLimit)",
             apNext: BaDisplayFormatters.compactRemaining(until: nextAP, now: now),
             apFullRemain: BaDisplayFormatters.compactRemaining(until: fullAP, now: now),
-            apSyncAt: BaDisplayFormatters.syncTime(settings.apRegenBaseAt),
+            apSyncAt: BaDisplayFormatters.syncTime(settings.apSyncAt ?? settings.apRegenBaseAt),
             apFullAt: BaDisplayFormatters.dateTime(fullAP, server: settings.server),
             cafeApCurrent: "\(BaTimeMath.displayAP(cafeAP))",
             cafeApLimit: "\(cafeLimit)",
@@ -40,8 +70,27 @@ struct BaOfficeRepository {
             tacticalRefresh: BaDisplayFormatters.compactRemaining(until: tacticalRefresh, now: now),
             headpatRemain: cooldownText(availableAt: headpatAvailable, now: now),
             headpatDetail: cooldownDetail(availableAt: headpatAvailable, now: now, server: settings.server),
-            inviteRemain: cooldownText(availableAt: inviteAvailable, now: now),
-            inviteDetail: cooldownDetail(availableAt: inviteAvailable, now: now, server: settings.server)
+            cafeActions: cafeActions
+        )
+    }
+
+    private func cafeAction(
+        kind: BaCafeActionKind,
+        title: String,
+        asset: BaGameAsset,
+        tintName: String,
+        availableAt: Date?,
+        now: Date,
+        server: BaServer
+    ) -> BaCafeActionSnapshot {
+        BaCafeActionSnapshot(
+            kind: kind,
+            title: title,
+            value: cooldownText(availableAt: availableAt, now: now),
+            detail: cooldownDetail(availableAt: availableAt, now: now, server: server),
+            asset: asset,
+            tintName: tintName,
+            isReady: availableAt.map { $0 <= now } ?? true
         )
     }
 

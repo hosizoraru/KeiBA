@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum BaTimeMath {
+nonisolated enum BaTimeMath {
     static let apMax = 999
     static let apLimitMax = 240
     static let apRegenInterval: TimeInterval = 6 * 60
@@ -70,6 +70,12 @@ enum BaTimeMath {
         return min(settings.cafeApCurrent + gained, Double(cafeDailyCapacity(level: settings.cafeLevel)))
     }
 
+    static func currentCafeAP(profile: BaServerProfile, now: Date = Date()) -> Double {
+        let elapsed = max(now.timeIntervalSince(profile.cafeStorageBaseAt), 0)
+        let gained = floor(elapsed / cafeHourlyInterval) * cafeHourlyGain(level: profile.cafeLevel)
+        return min(profile.cafeApCurrent + gained, Double(cafeDailyCapacity(level: profile.cafeLevel)))
+    }
+
     static func nextCafeStudentRefresh(from date: Date, server: BaServer) -> Date {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = server.timeZone
@@ -110,7 +116,7 @@ enum BaTimeMath {
     }
 }
 
-enum BaDisplayFormatters {
+nonisolated enum BaDisplayFormatters {
     private static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MM-dd HH:mm"
