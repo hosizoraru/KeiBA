@@ -17,7 +17,9 @@ enum AppPlatformBaseline: CaseIterable, Identifiable {
     static let watchRule = "watchOS 26.0"
     static let summary = "26.0+"
 
-    var id: Self { self }
+    var id: Self {
+        self
+    }
 
     var displayName: String {
         switch self {

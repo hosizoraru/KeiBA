@@ -163,15 +163,35 @@ struct BaStudentGuideRepository {
             return Array(preferred.prefix(6))
         }
         return [
-            BaGuideRow(id: "stat-content-id", title: String(localized: "ba.student.detail.contentId.title"), value: "\(fallback.contentId)", imageURL: nil)
+            BaGuideRow(
+                id: "stat-content-id",
+                title: String(localized: "ba.student.detail.contentId.title"),
+                value: "\(fallback.contentId)",
+                imageURL: nil
+            ),
         ]
     }
 
     private func fallbackProfileRows(entry: BaGuideCatalogEntry, summary: String) -> [BaGuideRow] {
         [
-            BaGuideRow(id: "profile-name", title: String(localized: "ba.student.detail.name.title"), value: entry.name, imageURL: nil),
-            BaGuideRow(id: "profile-alias", title: String(localized: "ba.student.detail.alias.title"), value: entry.aliasDisplay.isEmpty ? String(localized: "ba.common.none") : entry.aliasDisplay, imageURL: nil),
-            BaGuideRow(id: "profile-summary", title: String(localized: "ba.student.detail.summary.title"), value: summary.isEmpty ? String(localized: "ba.student.detail.summary.empty") : summary, imageURL: nil)
+            BaGuideRow(
+                id: "profile-name",
+                title: String(localized: "ba.student.detail.name.title"),
+                value: entry.name,
+                imageURL: nil
+            ),
+            BaGuideRow(
+                id: "profile-alias",
+                title: String(localized: "ba.student.detail.alias.title"),
+                value: entry.aliasDisplay.isEmpty ? String(localized: "ba.common.none") : entry.aliasDisplay,
+                imageURL: nil
+            ),
+            BaGuideRow(
+                id: "profile-summary",
+                title: String(localized: "ba.student.detail.summary.title"),
+                value: summary.isEmpty ? String(localized: "ba.student.detail.summary.empty") : summary,
+                imageURL: nil
+            ),
         ]
     }
 
@@ -247,9 +267,10 @@ struct BaStudentGuideRepository {
         for name in names {
             let pattern = #"<meta[^>]+(?:name|property)=["']\#(name)["'][^>]+content=["']([^"']+)["'][^>]*>"#
             guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { continue }
-            let range = NSRange(html.startIndex..<html.endIndex, in: html)
+            let range = NSRange(html.startIndex ..< html.endIndex, in: html)
             if let match = regex.firstMatch(in: html, range: range),
-               let contentRange = Range(match.range(at: 1), in: html) {
+               let contentRange = Range(match.range(at: 1), in: html)
+            {
                 return GameKeeJSON.extractPlainText(from: String(html[contentRange]))
             }
         }

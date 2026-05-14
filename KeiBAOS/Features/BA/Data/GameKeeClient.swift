@@ -22,15 +22,15 @@ enum GameKeeError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidURL(let value):
+        case let .invalidURL(value):
             "Invalid URL: \(value)"
-        case .invalidResponse(let value):
+        case let .invalidResponse(value):
             "Invalid response: \(value)"
-        case .httpStatus(let code):
+        case let .httpStatus(code):
             "HTTP \(code)"
         case .emptyBody:
             "Empty response"
-        case .apiCode(let code):
+        case let .apiCode(code):
             "GameKee API code \(code)"
         }
     }
@@ -96,7 +96,7 @@ struct GameKeeClient {
         requireJSONBody: Bool
     ) async throws -> Data {
         var lastError: Error?
-        for attempt in 0..<retryAttempts {
+        for attempt in 0 ..< retryAttempts {
             do {
                 return try await execute(
                     request,
@@ -129,7 +129,7 @@ struct GameKeeClient {
         urlRequest.setValue("zh-CN", forHTTPHeaderField: "Accept-Language")
         urlRequest.setValue(resolveReferer(pathOrURL: request.pathOrURL, refererPath: request.refererPath), forHTTPHeaderField: "Referer")
         urlRequest.setValue(Self.safariUserAgent, forHTTPHeaderField: "User-Agent")
-        request.extraHeaders.forEach { key, value in
+        for (key, value) in request.extraHeaders {
             urlRequest.setValue(value, forHTTPHeaderField: key)
         }
 
@@ -137,7 +137,7 @@ struct GameKeeClient {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw GameKeeError.invalidResponse(response.description)
         }
-        guard (200..<300).contains(httpResponse.statusCode) else {
+        guard (200 ..< 300).contains(httpResponse.statusCode) else {
             throw GameKeeError.httpStatus(httpResponse.statusCode)
         }
         guard data.isEmpty == false else {
@@ -161,7 +161,7 @@ struct GameKeeClient {
         urlRequest.setValue("zh-CN", forHTTPHeaderField: "Accept-Language")
         urlRequest.setValue(resolveReferer(pathOrURL: request.pathOrURL, refererPath: request.refererPath), forHTTPHeaderField: "Referer")
         urlRequest.setValue(userAgent, forHTTPHeaderField: "User-Agent")
-        request.extraHeaders.forEach { key, value in
+        for (key, value) in request.extraHeaders {
             urlRequest.setValue(value, forHTTPHeaderField: key)
         }
 
@@ -169,7 +169,7 @@ struct GameKeeClient {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw GameKeeError.invalidResponse(response.description)
         }
-        guard (200..<300).contains(httpResponse.statusCode) else {
+        guard (200 ..< 300).contains(httpResponse.statusCode) else {
             throw GameKeeError.httpStatus(httpResponse.statusCode)
         }
         guard data.isEmpty == false else {
@@ -296,8 +296,9 @@ struct GameKeeClient {
         if bytes.starts(with: [0x89, 0x50, 0x4E, 0x47]) { return true }
         if bytes.starts(with: [0x47, 0x49, 0x46]) { return true }
         if bytes.count >= 12,
-           bytes[0..<4].elementsEqual([0x52, 0x49, 0x46, 0x46]),
-           bytes[8..<12].elementsEqual([0x57, 0x45, 0x42, 0x50]) {
+           bytes[0 ..< 4].elementsEqual([0x52, 0x49, 0x46, 0x46]),
+           bytes[8 ..< 12].elementsEqual([0x57, 0x45, 0x42, 0x50])
+        {
             return true
         }
         if let head = String(data: data.prefix(128), encoding: .utf8) {
@@ -326,7 +327,7 @@ extension GameKeeClient {
     static var baHeaders: [String: String] {
         [
             "device-num": "1",
-            "game-alias": "ba"
+            "game-alias": "ba",
         ]
     }
 }

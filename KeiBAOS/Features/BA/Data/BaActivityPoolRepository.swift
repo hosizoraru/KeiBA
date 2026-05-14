@@ -52,7 +52,8 @@ struct BaActivityPoolRepository {
             guard let title = item.string("title"),
                   let beginAt = item.dateFromSeconds("begin_at"),
                   let endAt = item.dateFromSeconds("end_at"),
-                  endAt >= beginAt else {
+                  endAt >= beginAt
+            else {
                 return nil
             }
             return BaActivityEntry(
@@ -75,7 +76,8 @@ struct BaActivityPoolRepository {
             guard let name = item.string("name"),
                   let startAt = item.dateFromSeconds("start_at"),
                   let endAt = item.dateFromSeconds("end_at"),
-                  endAt >= startAt else {
+                  endAt >= startAt
+            else {
                 return nil
             }
             let status = poolStatus(startAt: startAt, endAt: endAt, now: now)
@@ -190,7 +192,7 @@ struct BaActivityPoolRepository {
 
     private func parsePoolTagIDs(_ raw: String) -> [Int] {
         guard let regex = try? NSRegularExpression(pattern: #"\d+"#) else { return [] }
-        let range = NSRange(raw.startIndex..<raw.endIndex, in: raw)
+        let range = NSRange(raw.startIndex ..< raw.endIndex, in: raw)
         return regex.matches(in: raw, range: range).compactMap { match in
             guard let range = Range(match.range, in: raw) else { return nil }
             return Int(raw[range])
@@ -210,7 +212,7 @@ struct BaActivityPoolRepository {
     private static let fallbackActivePoolTagID = 6
     private static let poolTagIDs = [5, 6, 7, 8, 9, 92]
     private static let legacyPoolTagLabels: Set<String> = [
-        "常驻", "限定", "FES限定", "FES 限定", "联动", "复刻", "回忆招募", "卡池", "其他"
+        "常驻", "限定", "FES限定", "FES 限定", "联动", "复刻", "回忆招募", "卡池", "其他",
     ]
 }
 

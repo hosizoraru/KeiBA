@@ -93,7 +93,7 @@ final class BaAppModel {
         }
     }
 
-    func refreshActivities(force: Bool) async {
+    func refreshActivities(force _: Bool) async {
         if activityState.isLoading { return }
         activityState.isLoading = true
         activityState.errorMessage = nil
@@ -119,7 +119,7 @@ final class BaAppModel {
         }
     }
 
-    func refreshPools(force: Bool) async {
+    func refreshPools(force _: Bool) async {
         if poolState.isLoading { return }
         poolState.isLoading = true
         poolState.errorMessage = nil
@@ -145,7 +145,7 @@ final class BaAppModel {
         }
     }
 
-    func refreshCatalog(force: Bool) async {
+    func refreshCatalog(force _: Bool) async {
         if catalogState.isLoading { return }
         catalogState.isLoading = true
         catalogState.errorMessage = nil
@@ -197,11 +197,16 @@ final class BaAppModel {
             studentDetailStates[entry.contentId] = BaLoadableState(
                 value: snapshot.value,
                 isLoading: false,
-                errorMessage: snapshot.sourceErrors.first,
+                errorMessage: BaDataErrorPresenter.studentDetailMessage(for: snapshot.sourceErrors.first),
                 lastSyncAt: snapshot.syncedAt,
                 isShowingCache: false
             )
-            await cacheStore.save(snapshot.value, for: .studentDetail(entry.contentId), schemaVersion: 2, syncedAt: snapshot.syncedAt)
+            await cacheStore.save(
+                snapshot.value,
+                for: .studentDetail(entry.contentId),
+                schemaVersion: 2,
+                syncedAt: snapshot.syncedAt
+            )
         } catch {
             var failed = studentDetailStates[entry.contentId] ?? BaLoadableState<BaStudentGuideInfo>()
             failed.isLoading = false

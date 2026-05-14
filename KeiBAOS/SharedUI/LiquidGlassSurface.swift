@@ -43,17 +43,14 @@ extension View {
 
         if #available(iOS 26.0, macOS 26.0, visionOS 26.0, *) {
             if isInteractive {
-                self
-                    .background(.clear, in: shape)
+                background(.clear, in: shape)
                     .glassEffect(.regular.tint(tint).interactive(), in: shape)
             } else {
-                self
-                    .background(.clear, in: shape)
+                background(.clear, in: shape)
                     .glassEffect(.regular.tint(tint), in: shape)
             }
         } else {
-            self
-                .background(.ultraThinMaterial, in: shape)
+            background(.ultraThinMaterial, in: shape)
                 .overlay {
                     shape.strokeBorder(.white.opacity(0.14), lineWidth: 1)
                 }

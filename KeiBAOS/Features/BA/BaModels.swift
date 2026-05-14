@@ -21,7 +21,9 @@ enum BaPresentedSheet: String, Identifiable {
     case editOffice
     case debugTools
 
-    var id: Self { self }
+    var id: Self {
+        self
+    }
 
     var title: String {
         switch self {

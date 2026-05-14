@@ -47,7 +47,7 @@ private struct BaNavigationRoot: View {
                 .sheet(item: $presentedSheet) { sheet in
                     BaActionSheetRoot(sheet: sheet)
                         .baActionSheetPresentation()
-            }
+                }
         }
     }
 

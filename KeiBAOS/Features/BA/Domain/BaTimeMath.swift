@@ -143,10 +143,10 @@ enum BaDisplayFormatters {
 
     static func compactDuration(_ interval: TimeInterval) -> String {
         var seconds = Int(ceil(max(interval, 0)))
-        let days = seconds / 86_400
-        seconds %= 86_400
-        let hours = seconds / 3_600
-        seconds %= 3_600
+        let days = seconds / 86400
+        seconds %= 86400
+        let hours = seconds / 3600
+        seconds %= 3600
         let minutes = seconds / 60
         seconds %= 60
 

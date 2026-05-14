@@ -7,9 +7,9 @@
 
 import SwiftUI
 #if canImport(UIKit)
-import UIKit
+    import UIKit
 #elseif canImport(AppKit)
-import AppKit
+    import AppKit
 #endif
 
 enum BaIconToken {
@@ -25,11 +25,7 @@ enum BaTextToken {
 }
 
 struct BaScreenScaffold<Content: View>: View {
-    let content: Content
-
-    init(@ViewBuilder content: () -> Content) {
-        self.content = content()
-    }
+    @ViewBuilder let content: Content
 
     var body: some View {
         ScrollView {
@@ -311,7 +307,7 @@ struct BaRemoteImageSurface: View {
 
     var body: some View {
         ZStack {
-            if case .success(let image) = phase {
+            if case let .success(image) = phase {
                 image
                     .resizable()
                     .aspectRatio(contentMode: contentMode)
@@ -343,7 +339,8 @@ struct BaRemoteImageSurface: View {
         }
         phase = .loading
         guard let data = try? await model.imageData(for: url),
-              let loaded = Self.image(from: data) else {
+              let loaded = Self.image(from: data)
+        else {
             phase = .failed
             return
         }
@@ -375,15 +372,15 @@ struct BaRemoteImageSurface: View {
     }
 
     fileprivate static func image(from data: Data) -> Image? {
-#if canImport(UIKit)
-        guard let uiImage = UIImage(data: data) else { return nil }
-        return Image(uiImage: uiImage)
-#elseif canImport(AppKit)
-        guard let nsImage = NSImage(data: data) else { return nil }
-        return Image(nsImage: nsImage)
-#else
-        return nil
-#endif
+        #if canImport(UIKit)
+            guard let uiImage = UIImage(data: data) else { return nil }
+            return Image(uiImage: uiImage)
+        #elseif canImport(AppKit)
+            guard let nsImage = NSImage(data: data) else { return nil }
+            return Image(nsImage: nsImage)
+        #else
+            return nil
+        #endif
     }
 }
 

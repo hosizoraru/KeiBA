@@ -33,7 +33,7 @@ struct BaCatalogReleaseDateHydrator {
         while start < missing.count {
             let end = min(start + max(batchSize, 1), missing.count)
             await withTaskGroup(of: (BaGuideCatalogEntry, BaStudentGuideInfo?).self) { group in
-                for entry in missing[start..<end] {
+                for entry in missing[start ..< end] {
                     group.addTask {
                         let snapshot = try? await studentRepository.fetchStudentDetail(entry: entry)
                         return (entry, snapshot?.value)
@@ -57,7 +57,8 @@ struct BaCatalogReleaseDateHydrator {
         var patches: [Int64: Date] = [:]
         for entry in bundle.entries where entry.releaseDate == nil {
             guard let cached = await cacheStore.load(BaStudentGuideInfo.self, for: .studentDetail(entry.contentId)),
-                  let date = releaseDate(from: cached.value) else {
+                  let date = releaseDate(from: cached.value)
+            else {
                 continue
             }
             patches[entry.contentId] = date

@@ -13,7 +13,9 @@ nonisolated enum BaServer: String, CaseIterable, Codable, Identifiable, Hashable
     case global
     case jp
 
-    var id: Self { self }
+    var id: Self {
+        self
+    }
 
     var title: String {
         switch self {
@@ -58,7 +60,9 @@ nonisolated enum BaRefreshInterval: Int, CaseIterable, Codable, Identifiable, Ha
     case twelveHours = 12
     case twentyFourHours = 24
 
-    var id: Self { self }
+    var id: Self {
+        self
+    }
 
     var title: String {
         switch self {
@@ -157,7 +161,9 @@ enum BaTimelineStatus: String, CaseIterable, Codable, Identifiable, Hashable {
     case upcoming
     case ended
 
-    var id: Self { self }
+    var id: Self {
+        self
+    }
 
     var title: String {
         switch self {
@@ -246,7 +252,9 @@ nonisolated enum BaCatalogCategory: String, CaseIterable, Codable, Identifiable,
     case studentBgm
     case favorites
 
-    var id: Self { self }
+    var id: Self {
+        self
+    }
 
     var title: String {
         switch self {
@@ -290,7 +298,9 @@ nonisolated struct BaGuideCatalogEntry: Identifiable, Codable, Hashable {
     let detailURL: URL?
     let category: BaCatalogCategory
 
-    var id: Int64 { contentId }
+    var id: Int64 {
+        contentId
+    }
 
     func matches(query: String) -> Bool {
         let keyword = query.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -354,7 +364,9 @@ nonisolated enum BaStudentDetailSection: String, CaseIterable, Codable, Identifi
     case gallery
     case simulate
 
-    var id: Self { self }
+    var id: Self {
+        self
+    }
 
     var title: String {
         switch self {
@@ -392,20 +404,22 @@ nonisolated enum BaStudentDetailSection: String, CaseIterable, Codable, Identifi
 }
 
 nonisolated enum BaStudentDetailPage: String, CaseIterable, Codable, Identifiable, Hashable {
-    case overviewSkills
-    case profile
+    case overviewProfile
+    case skills
     case voice
     case gallery
     case simulate
 
-    var id: Self { self }
+    var id: Self {
+        self
+    }
 
     var title: String {
         switch self {
-        case .overviewSkills:
-            String(localized: "ba.student.detail.page.overviewSkills")
-        case .profile:
-            String(localized: "ba.student.detail.page.profile")
+        case .overviewProfile:
+            String(localized: "ba.student.detail.page.overviewProfile")
+        case .skills:
+            String(localized: "ba.student.detail.page.skills")
         case .voice:
             String(localized: "ba.student.detail.page.voice")
         case .gallery:
@@ -417,10 +431,10 @@ nonisolated enum BaStudentDetailPage: String, CaseIterable, Codable, Identifiabl
 
     var systemImage: String {
         switch self {
-        case .overviewSkills:
-            "sparkles.rectangle.stack"
-        case .profile:
+        case .overviewProfile:
             "person.text.rectangle"
+        case .skills:
+            "sparkles"
         case .voice:
             "waveform"
         case .gallery:
@@ -517,7 +531,9 @@ nonisolated struct BaStudentGuideInfo: Identifiable, Codable, Hashable {
     let contentSource: String
     let syncedAt: Date
 
-    var id: Int64 { contentId }
+    var id: Int64 {
+        contentId
+    }
 }
 
 struct BaLoadableState<Value> {

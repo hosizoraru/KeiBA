@@ -15,7 +15,7 @@ struct AppBackground: View {
                 colors: [
                     Color.blue.opacity(0.035),
                     Color.clear,
-                    Color.cyan.opacity(0.025)
+                    Color.cyan.opacity(0.025),
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -25,12 +25,12 @@ struct AppBackground: View {
     }
 
     private var baseColor: Color {
-#if os(macOS)
-        Color(nsColor: .windowBackgroundColor)
-#elseif os(visionOS)
-        Color.clear
-#else
-        Color(uiColor: .systemGroupedBackground)
-#endif
+        #if os(macOS)
+            Color(nsColor: .windowBackgroundColor)
+        #elseif os(visionOS)
+            Color.clear
+        #else
+            Color(uiColor: .systemGroupedBackground)
+        #endif
     }
 }

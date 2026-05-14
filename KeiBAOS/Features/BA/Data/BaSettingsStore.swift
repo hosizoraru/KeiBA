@@ -17,7 +17,8 @@ struct BaSettingsStore {
 
     func load() -> BaAppSettings {
         guard let data = defaults.data(forKey: key),
-              let settings = try? JSONDecoder.ba.decode(BaAppSettings.self, from: data) else {
+              let settings = try? JSONDecoder.ba.decode(BaAppSettings.self, from: data)
+        else {
             return .defaults()
         }
         return settings

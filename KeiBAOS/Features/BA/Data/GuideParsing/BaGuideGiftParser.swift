@@ -132,7 +132,7 @@ struct BaGuideGiftParser {
         if let range = value.range(of: #"/w_(\d{1,4})/h_(\d{1,4})/"#, options: .regularExpression) {
             let matched = value[range]
             let numbers = matched.split(whereSeparator: { $0 < "0" || $0 > "9" }).compactMap { Int($0) }
-            if numbers.count >= 2, (24...120).contains(numbers[0]), (24...120).contains(numbers[1]) {
+            if numbers.count >= 2, (24 ... 120).contains(numbers[0]), (24 ... 120).contains(numbers[1]) {
                 return true
             }
         }

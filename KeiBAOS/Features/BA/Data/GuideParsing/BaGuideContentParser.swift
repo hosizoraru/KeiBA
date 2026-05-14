@@ -20,17 +20,31 @@ struct BaStructuredGuideParse {
 }
 
 struct BaGuideContentParser {
-    func parse(content: Any?, apiData: BaJSONObject, html: String?, entry: BaGuideCatalogEntry) -> BaStructuredGuideParse {
+    func parse(
+        content: Any?,
+        apiData: BaJSONObject,
+        html: String?,
+        entry: BaGuideCatalogEntry
+    ) -> BaStructuredGuideParse {
         let sourceURL = entry.detailURL ?? URL(string: "https://www.gamekee.com/ba/tj/\(entry.contentId).html")
         let baseData = Self.baseDataRows(from: content)
         let styleData = Self.styleDataRows(from: content)
 
         var parsed = BaGuideBaseDataParser().parse(baseData: baseData, sourceURL: sourceURL)
+        let portraitURL = Self.preferredPortraitURL(from: baseData, sourceURL: sourceURL)
         let giftRows = BaGuideGiftParser().parse(baseData: baseData, sourceURL: sourceURL)
         parsed.profileRows.append(contentsOf: giftRows)
         parsed.voiceRows = BaGuideVoiceParser().parse(baseData: baseData, content: content, sourceURL: sourceURL)
-        parsed.galleryItems = BaGuideMediaParser().parse(baseData: baseData, styleData: styleData, content: content, apiData: apiData, sourceURL: sourceURL)
-        parsed.imageURL = GameKeeJSON.normalizeImageURL(apiData.string("thumb") ?? "")
+        parsed.galleryItems = BaGuideMediaParser().parse(
+            baseData: baseData,
+            styleData: styleData,
+            content: content,
+            apiData: apiData,
+            sourceURL: sourceURL
+        )
+        parsed.imageURL = portraitURL
+            ?? parsed.imageURL
+            ?? GameKeeJSON.normalizeImageURL(apiData.string("thumb") ?? "")
             ?? GameKeeJSON.findImageURL(in: apiData)
             ?? parsed.galleryItems.first?.imageURL
             ?? html.flatMap { parseHTMLImage($0) }
@@ -56,9 +70,10 @@ struct BaGuideContentParser {
         for name in names {
             let pattern = #"<meta[^>]+(?:name|property)=["']\#(name)["'][^>]+content=["']([^"']+)["'][^>]*>"#
             guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { continue }
-            let range = NSRange(html.startIndex..<html.endIndex, in: html)
+            let range = NSRange(html.startIndex ..< html.endIndex, in: html)
             if let match = regex.firstMatch(in: html, range: range),
-               let contentRange = Range(match.range(at: 1), in: html) {
+               let contentRange = Range(match.range(at: 1), in: html)
+            {
                 return BaGuideTextNormalizer.clean(String(html[contentRange]))
             }
         }
@@ -81,7 +96,7 @@ struct BaGuideContentParser {
                 title: String(localized: "ba.student.detail.contentId.title"),
                 value: "\(fallback.contentId)",
                 imageURL: nil
-            )
+            ),
         ]
     }
 
@@ -95,6 +110,22 @@ struct BaGuideContentParser {
     static func styleDataRows(from content: Any?) -> [BaJSONObject] {
         guard let object = content as? BaJSONObject else { return [] }
         return (object["styleData"] as? [Any])?.compactMap { $0 as? BaJSONObject } ?? []
+    }
+
+    private static func preferredPortraitURL(from baseData: [[BaJSONObject]], sourceURL: URL?) -> URL? {
+        let preferredKeys = ["角色图片", "角色头像", "头像", "角色立绘", "立绘", "站绘"]
+        for row in baseData {
+            guard let keyCell = row.first else { continue }
+            let key = BaGuideTextNormalizer.clean(keyCell.string("value") ?? "")
+            guard preferredKeys.contains(where: { key.localizedCaseInsensitiveContains($0) }) else {
+                continue
+            }
+            let images = BaGuideTextNormalizer.imageURLs(in: row, sourceURL: sourceURL)
+            if let image = images.first {
+                return image
+            }
+        }
+        return nil
     }
 
     private static func rows(from any: Any?) -> [[BaJSONObject]] {

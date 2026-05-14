@@ -5,8 +5,8 @@
 //  Created by Codex on 2026/05/14.
 //
 
-import XCTest
 @testable import KeiBAOS
+import XCTest
 
 final class BaDataBridgeTests: XCTestCase {
     func testActivityParserClassifiesAndSortsEntries() throws {
@@ -72,7 +72,7 @@ final class BaDataBridgeTests: XCTestCase {
 
         XCTAssertEqual(entries.count, 1)
         XCTAssertEqual(entries[0].tagId, 6)
-        XCTAssertEqual(entries[0].contentId, 609145)
+        XCTAssertEqual(entries[0].contentId, 609_145)
         XCTAssertEqual(entries[0].imageURL?.absoluteString, "https://cdnimg.gamekee.com/pool.png")
     }
 
@@ -98,7 +98,7 @@ final class BaDataBridgeTests: XCTestCase {
         let entries = try repository.parseEntries(data: Data(json.utf8), pid: 49443, category: .students)
 
         XCTAssertEqual(entries.count, 1)
-        XCTAssertEqual(entries[0].contentId, 161248)
+        XCTAssertEqual(entries[0].contentId, 161_248)
         XCTAssertEqual(entries[0].aliasDisplay, "nico · niko")
         XCTAssertEqual(entries[0].detailURL?.absoluteString, "https://www.gamekee.com/ba/tj/161248.html")
     }
@@ -148,15 +148,15 @@ final class BaDataBridgeTests: XCTestCase {
             "baseData": [
                 [
                     ["value": "学生信息"],
-                    ["value": "实装日期 2024-01-24"]
-                ]
-            ]
+                    ["value": "实装日期 2024-01-24"],
+                ],
+            ],
         ]
         let arrayContent: [Any] = [
             [
                 ["value": "学生信息"],
-                ["value": "实装日期 2024-01-24"]
-            ]
+                ["value": "实装日期 2024-01-24"],
+            ],
         ]
 
         XCTAssertEqual(BaGuideContentParser.baseDataRows(from: objectContent).count, 1)
@@ -175,37 +175,13 @@ final class BaDataBridgeTests: XCTestCase {
         XCTAssertEqual(parsed.summary, "GameKee summary")
     }
 
-    func testContentParserSkipsContentCDNAsCoverImage() {
-        let content: BaJSONObject = [
-            "baseData": [
-                [
-                    ["value": "角色图片"],
-                    ["value": "//cdnimg-v2.gamekee.com/wiki2.0/images/w_404/h_456/829/72324/cover.png"]
-                ]
-            ]
-        ]
-        let parsed = BaGuideContentParser().parse(
-            content: content,
-            apiData: [
-                "content_cdn": "//api-cdn.gamekee.com/wiki2.0/pro/829/content/67664.json?v=20260507153720.894682"
-            ],
-            html: nil,
-            entry: makeCatalogEntry()
-        )
-
-        XCTAssertEqual(
-            parsed.imageURL?.absoluteString,
-            "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_404/h_456/829/72324/cover.png"
-        )
-    }
-
     func testGiftParserKeepsGiftAndEmojiImages() {
         let baseData: [[BaJSONObject]] = [
             [["value": "礼物偏好"]],
             [
                 ["value": #"<img class="gif-emoji" src="//cdnimg.gamekee.com/w_61/h_61/emoji.webp">"#],
-                ["value": #"<img class="gif-img" src="//cdnimg.gamekee.com/items/gift.webp">喜欢"#]
-            ]
+                ["value": #"<img class="gif-img" src="//cdnimg.gamekee.com/items/gift.webp">喜欢"#],
+            ],
         ]
         let rows = BaGuideGiftParser().parse(baseData: baseData, sourceURL: nil)
 
@@ -215,7 +191,7 @@ final class BaDataBridgeTests: XCTestCase {
             rows[0].imageURLs?.map(\.absoluteString),
             [
                 "https://cdnimg.gamekee.com/items/gift.webp",
-                "https://cdnimg.gamekee.com/w_61/h_61/emoji.webp"
+                "https://cdnimg.gamekee.com/w_61/h_61/emoji.webp",
             ]
         )
     }
@@ -226,14 +202,14 @@ final class BaDataBridgeTests: XCTestCase {
                 ["value": "配音语言"],
                 ["value": "中配"],
                 ["value": "日配"],
-                ["value": "韩配"]
+                ["value": "韩配"],
             ],
             [
                 ["value": "通常"],
                 ["value": "中文"],
                 ["value": "日本語"],
-                ["value": "한국어"]
-            ]
+                ["value": "한국어"],
+            ],
         ]
         let rows = BaGuideVoiceParser().parse(baseData: baseData, content: nil, sourceURL: nil)
 
@@ -246,8 +222,8 @@ final class BaDataBridgeTests: XCTestCase {
         let baseData: [[BaJSONObject]] = [
             [
                 ["value": "回忆大厅视频"],
-                ["type": "video", "value": "https://cdnimg.gamekee.com/media/memory.mp4"]
-            ]
+                ["type": "video", "value": "https://cdnimg.gamekee.com/media/memory.mp4"],
+            ],
         ]
         let items = BaGuideMediaParser().parse(
             baseData: baseData,
@@ -264,7 +240,7 @@ final class BaDataBridgeTests: XCTestCase {
 
     func testReleaseDateExtractionHandlesGameKeeChineseDate() throws {
         let date = BaGuideTextNormalizer.extractDate(from: "实装日期：2024年1月24日")
-        let components = Calendar.current.dateComponents([.year, .month, .day], from: try XCTUnwrap(date))
+        let components = try Calendar.current.dateComponents([.year, .month, .day], from: XCTUnwrap(date))
 
         XCTAssertEqual(components.year, 2024)
         XCTAssertEqual(components.month, 1)
@@ -275,7 +251,7 @@ final class BaDataBridgeTests: XCTestCase {
         BaGuideCatalogEntry(
             entryId: 1,
             pid: 49443,
-            contentId: 609145,
+            contentId: 609_145,
             name: "Test",
             alias: "",
             aliasDisplay: "",

@@ -16,13 +16,13 @@ actor BaCacheStore {
 
         var filename: String {
             switch self {
-            case .activities(let server):
+            case let .activities(server):
                 "activities-\(server.rawValue).json"
-            case .pools(let server):
+            case let .pools(server):
                 "pools-\(server.rawValue).json"
             case .catalog:
                 "catalog.json"
-            case .studentDetail(let contentId):
+            case let .studentDetail(contentId):
                 "student-\(contentId).json"
             }
         }
@@ -39,7 +39,7 @@ actor BaCacheStore {
         try? fileManager.createDirectory(at: rootDirectory, withIntermediateDirectories: true)
     }
 
-    func load<Value: Codable>(_ type: Value.Type, for key: CacheKey) -> BaCacheEnvelope<Value>? {
+    func load<Value: Codable>(_: Value.Type, for key: CacheKey) -> BaCacheEnvelope<Value>? {
         let url = rootDirectory.appendingPathComponent(key.filename)
         guard let data = try? Data(contentsOf: url) else { return nil }
         return try? JSONDecoder.ba.decode(BaCacheEnvelope<Value>.self, from: data)

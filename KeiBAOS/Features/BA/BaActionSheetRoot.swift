@@ -79,10 +79,10 @@ private struct BaEditOfficeSheet: View {
 
                 Section(String(localized: "ba.sheet.edit.resources.title")) {
                     TextField(String(localized: "ba.office.ap.limit.title"), value: $draft.apLimit, format: .number)
-#if os(iOS)
+                    #if os(iOS)
                         .keyboardType(.numberPad)
-#endif
-                    Stepper(value: $draft.cafeLevel, in: 1...10) {
+                    #endif
+                    Stepper(value: $draft.cafeLevel, in: 1 ... 10) {
                         LabeledContent(String(localized: "ba.cafe.level.title")) {
                             Text("Lv\(draft.cafeLevel)")
                         }
@@ -173,13 +173,11 @@ private struct BaDebugToolsSheet: View {
 extension View {
     @ViewBuilder
     func baActionSheetPresentation() -> some View {
-#if os(iOS)
-        self
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
-#else
-        self
-            .frame(minWidth: 420, minHeight: 360)
-#endif
+        #if os(iOS)
+            presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+        #else
+            frame(minWidth: 420, minHeight: 360)
+        #endif
     }
 }

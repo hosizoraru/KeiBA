@@ -91,6 +91,9 @@ enum BaGuideTextNormalizer {
             value.hasSuffix(".m4a") ||
             value.hasSuffix(".wav") ||
             value.hasSuffix(".aac") ||
+            value.hasSuffix(".ogg") ||
+            value.hasSuffix(".opus") ||
+            value.hasSuffix(".flac") ||
             value.contains("audio")
     }
 
@@ -115,22 +118,24 @@ enum BaGuideTextNormalizer {
         guard raw.isEmpty == false,
               let tagRegex = try? NSRegularExpression(pattern: #"<img\b[^>]*>"#, options: [.caseInsensitive, .dotMatchesLineSeparators]),
               let classRegex = try? NSRegularExpression(pattern: #"\bclass\s*=\s*["']([^"']+)["']"#, options: [.caseInsensitive]),
-              let srcRegex = try? NSRegularExpression(pattern: #"\bsrc\s*=\s*["']([^"']+)["']"#, options: [.caseInsensitive]) else {
+              let srcRegex = try? NSRegularExpression(pattern: #"\bsrc\s*=\s*["']([^"']+)["']"#, options: [.caseInsensitive])
+        else {
             return []
         }
-        let range = NSRange(raw.startIndex..<raw.endIndex, in: raw)
+        let range = NSRange(raw.startIndex ..< raw.endIndex, in: raw)
         var out: [URL] = []
         for match in tagRegex.matches(in: raw, range: range) {
             guard let tagRange = Range(match.range, in: raw) else { continue }
             let tag = String(raw[tagRange])
-            let tagNSRange = NSRange(tag.startIndex..<tag.endIndex, in: tag)
+            let tagNSRange = NSRange(tag.startIndex ..< tag.endIndex, in: tag)
             guard let classMatch = classRegex.firstMatch(in: tag, range: tagNSRange),
                   let classRange = Range(classMatch.range(at: 1), in: tag),
                   classKeywords.contains(where: { String(tag[classRange]).localizedCaseInsensitiveContains($0) }),
                   let srcMatch = srcRegex.firstMatch(in: tag, range: tagNSRange),
                   let srcRange = Range(srcMatch.range(at: 1), in: tag),
                   let url = normalizeMediaURL(String(tag[srcRange]), sourceURL: sourceURL),
-                  looksLikeImageURL(url) else {
+                  looksLikeImageURL(url)
+            else {
                 continue
             }
             out.append(url)
@@ -160,11 +165,11 @@ enum BaGuideTextNormalizer {
         return urls.filter { seen.insert($0.absoluteString).inserted }
     }
 
-    nonisolated private static func stripHTML(_ raw: String) -> String {
+    private nonisolated static func stripHTML(_ raw: String) -> String {
         raw.replacingOccurrences(of: #"<[^>]+>"#, with: " ", options: .regularExpression)
     }
 
-    nonisolated private static func urls(
+    private nonisolated static func urls(
         in any: Any?,
         sourceURL: URL?,
         depth: Int,
@@ -183,10 +188,10 @@ enum BaGuideTextNormalizer {
         return []
     }
 
-    nonisolated private static func extractURLs(_ raw: String, sourceURL: URL?) -> [URL] {
+    private nonisolated static func extractURLs(_ raw: String, sourceURL: URL?) -> [URL] {
         let pattern = #"((?:https?:)?//[^\s"'<>\\]+|/[A-Za-z0-9_\-./%]+(?:\?[^\s"'<>\\]+)?|[A-Za-z0-9_\-./%]+\.(?:png|jpe?g|webp|gif|mp3|m4a|wav|aac|mp4|mov|m3u8)(?:\?[^\s"'<>\\]+)?)"#
         guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return [] }
-        let range = NSRange(raw.startIndex..<raw.endIndex, in: raw)
+        let range = NSRange(raw.startIndex ..< raw.endIndex, in: raw)
         let urls = regex.matches(in: raw, range: range).compactMap { match -> URL? in
             guard let range = Range(match.range(at: 1), in: raw) else { return nil }
             return normalizeMediaURL(String(raw[range]), sourceURL: sourceURL)
@@ -194,11 +199,11 @@ enum BaGuideTextNormalizer {
         return dedupe(urls)
     }
 
-    nonisolated private static func extractAttributeURLs(_ raw: String, attribute: String, sourceURL: URL?) -> [URL] {
+    private nonisolated static func extractAttributeURLs(_ raw: String, attribute: String, sourceURL: URL?) -> [URL] {
         guard let regex = try? NSRegularExpression(pattern: #"\b\#(attribute)\s*=\s*["']([^"']+)["']"#, options: [.caseInsensitive]) else {
             return []
         }
-        let range = NSRange(raw.startIndex..<raw.endIndex, in: raw)
+        let range = NSRange(raw.startIndex ..< raw.endIndex, in: raw)
         let urls = regex.matches(in: raw, range: range).compactMap { match -> URL? in
             guard let range = Range(match.range(at: 1), in: raw) else { return nil }
             return normalizeMediaURL(String(raw[range]), sourceURL: sourceURL)
@@ -206,7 +211,7 @@ enum BaGuideTextNormalizer {
         return dedupe(urls)
     }
 
-    nonisolated private static func isPlaceholderMediaToken(_ raw: String) -> Bool {
+    private nonisolated static func isPlaceholderMediaToken(_ raw: String) -> Bool {
         let value = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         return value.isEmpty || value == "null" || value == "undefined" || value == "-" || value == "[]"
     }

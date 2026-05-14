@@ -66,34 +66,19 @@ struct BaGuideVoiceParser {
                 section = currentSection
             }
 
-            var title = key
-            var titleAssigned = false
-            var lines: [String] = []
-            var audioURLs: [URL] = []
-            for cell in row.dropFirst() {
-                let rawValue = cell.string("value") ?? ""
-                let type = (cell.string("type") ?? "").lowercased()
-                let cleaned = BaGuideTextNormalizer.clean(rawValue)
-                let directAudios = BaGuideTextNormalizer.audioURLs(in: cell["value"], sourceURL: sourceURL)
-                audioURLs.append(contentsOf: directAudios)
-                if type == "audio", let direct = BaGuideTextNormalizer.normalizeMediaURL(rawValue, sourceURL: sourceURL), BaGuideTextNormalizer.looksLikeAudioURL(direct) {
-                    audioURLs.append(direct)
-                }
-                guard cleaned.isEmpty == false else { continue }
-                if titleAssigned == false, isVoiceCategoryKey(key) == false {
-                    title = cleaned
-                    titleAssigned = true
-                } else {
-                    lines.append(cleaned)
-                }
-            }
-            audioURLs = BaGuideTextNormalizer.dedupe(audioURLs)
-            let linePairs = linePairs(lines: lines, headers: languageHeaders, audioCount: audioURLs.count)
+            let rowContent = parseVoiceRowCells(
+                row.dropFirst(),
+                defaultTitle: key,
+                canAssignTitle: languageHeaders.isEmpty && isVoiceCategoryKey(key) == false,
+                sourceURL: sourceURL
+            )
+            let audioURLs = BaGuideTextNormalizer.dedupe(rowContent.audioURLs)
+            let linePairs = linePairs(lines: rowContent.lines, headers: languageHeaders, audioCount: audioURLs.count)
             guard linePairs.isEmpty == false || audioURLs.isEmpty == false else { continue }
             entries.append(
                 BaGuideVoiceEntry(
-                    id: "voice-\(rowIndex)-\(abs("\(section)|\(title)".hashValue))",
-                    title: title,
+                    id: "voice-\(rowIndex)-\(abs("\(section)|\(rowContent.title)".hashValue))",
+                    title: rowContent.title,
                     subtitle: section,
                     transcript: linePairs.map(\.1).joined(separator: "\n"),
                     audioURL: audioURLs.first,
@@ -105,6 +90,52 @@ struct BaGuideVoiceParser {
             )
         }
         return entries
+    }
+
+    private func parseVoiceRowCells(
+        _ cells: ArraySlice<BaJSONObject>,
+        defaultTitle: String,
+        canAssignTitle: Bool,
+        sourceURL: URL?
+    ) -> ParsedVoiceRowContent {
+        var title = defaultTitle
+        var titleAssigned = false
+        var lines: [String] = []
+        var audioURLs: [URL] = []
+
+        for cell in cells {
+            let rawValue = cell.string("value") ?? ""
+            let cleaned = BaGuideTextNormalizer.clean(rawValue)
+            audioURLs.append(contentsOf: extractAudioURLs(in: cell, rawValue: rawValue, sourceURL: sourceURL))
+            guard cleaned.isEmpty == false, shouldDisplayVoiceText(cleaned) else { continue }
+            if canAssignTitle, titleAssigned == false {
+                title = cleaned
+                titleAssigned = true
+            } else {
+                lines.append(cleaned)
+            }
+        }
+
+        return ParsedVoiceRowContent(title: title, lines: lines, audioURLs: audioURLs)
+    }
+
+    private func extractAudioURLs(in cell: BaJSONObject, rawValue: String, sourceURL: URL?) -> [URL] {
+        var urls = BaGuideTextNormalizer.audioURLs(in: cell["value"], sourceURL: sourceURL)
+        let type = (cell.string("type") ?? "").lowercased()
+        if type == "audio",
+           let direct = BaGuideTextNormalizer.normalizeMediaURL(rawValue, sourceURL: sourceURL),
+           BaGuideTextNormalizer.looksLikeAudioURL(direct)
+        {
+            urls.append(direct)
+        }
+        return urls
+    }
+
+    private func shouldDisplayVoiceText(_ raw: String) -> Bool {
+        guard let url = BaGuideTextNormalizer.normalizeMediaURL(raw, sourceURL: nil) else {
+            return true
+        }
+        return BaGuideTextNormalizer.looksLikeAudioURL(url) == false
     }
 
     private func linePairs(lines: [String], headers: [String], audioCount: Int) -> [(String, String)] {
@@ -132,16 +163,33 @@ struct BaGuideVoiceParser {
     private func canonicalLanguageLabel(_ raw: String) -> String {
         let normalized = BaGuideTextNormalizer.normalizedKey(raw)
         if normalized.isEmpty { return "" }
-        if normalized.contains("官翻") || normalized.contains("官方翻译") || normalized.contains("官方中文") || normalized.contains("官中") {
+        if normalized.contains("官翻") ||
+            normalized.contains("官方翻译") ||
+            normalized.contains("官方中文") ||
+            normalized.contains("官中")
+        {
             return "官翻"
         }
-        if normalized.contains("韩") || normalized.contains("kr") || normalized.contains("kor") || normalized.contains("korean") {
+        if normalized.contains("韩") ||
+            normalized.contains("kr") ||
+            normalized.contains("kor") ||
+            normalized.contains("korean")
+        {
             return "韩配"
         }
-        if normalized.contains("中") || normalized.contains("cn") || normalized.contains("国语") || normalized.contains("国配") || normalized.contains("中文") {
+        if normalized.contains("中") ||
+            normalized.contains("cn") ||
+            normalized.contains("国语") ||
+            normalized.contains("国配") ||
+            normalized.contains("中文")
+        {
             return "中配"
         }
-        if normalized.contains("日") || normalized.contains("jp") || normalized.contains("jpn") || normalized.contains("日本") {
+        if normalized.contains("日") ||
+            normalized.contains("jp") ||
+            normalized.contains("jpn") ||
+            normalized.contains("日本")
+        {
             return "日配"
         }
         return BaGuideTextNormalizer.clean(raw)
@@ -186,6 +234,12 @@ struct BaGuideVoiceParser {
     private func unique(_ values: [String]) -> [String] {
         var seen = Set<String>()
         return values.filter { seen.insert($0).inserted }
+    }
+
+    private struct ParsedVoiceRowContent {
+        let title: String
+        let lines: [String]
+        let audioURLs: [URL]
     }
 }
 

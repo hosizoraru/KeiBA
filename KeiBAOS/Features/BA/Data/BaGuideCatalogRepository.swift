@@ -78,5 +78,5 @@ struct BaGuideCatalogRepository {
 
     private static let secondPageID = 23941
     private static let studentPID = 49443
-    private static let npcSatellitePID = 107619
+    private static let npcSatellitePID = 107_619
 }

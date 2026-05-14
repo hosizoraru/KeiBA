@@ -134,14 +134,14 @@ enum GameKeeJSON {
             .joined(separator: " ")
     }
 
-    nonisolated private static let imageDirectKeys = [
+    private nonisolated static let imageDirectKeys = [
         "image_url", "img_url", "cover_url", "cover", "cover_img", "cover_image",
         "topic_img", "topic_image", "title_img", "main_img", "list_img", "small_img",
         "image", "img", "picture", "big_picture", "pic_url", "pic", "thumb",
-        "thumb_image", "thumbnail", "avatar", "banner", "icon", "logo"
+        "thumb_image", "thumbnail", "avatar", "banner", "icon", "logo",
     ]
 
-    nonisolated private static func looksLikeImageURL(_ raw: String) -> Bool {
+    private nonisolated static func looksLikeImageURL(_ raw: String) -> Bool {
         guard let url = normalizeImageURL(raw) else { return false }
         let value = url.absoluteString.lowercased()
         let pathExtension = url.pathExtension.lowercased()
@@ -161,17 +161,17 @@ enum GameKeeJSON {
             value.contains("upload")
     }
 
-    nonisolated private static func extractURLs(from raw: String) -> [URL] {
+    private nonisolated static func extractURLs(from raw: String) -> [URL] {
         let pattern = #"((?:https?:)?//[^\s"'<>\\]+|/[A-Za-z0-9_\-./%]+(?:\?[^\s"'<>\\]+)?)"#
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
-        let range = NSRange(raw.startIndex..<raw.endIndex, in: raw)
+        let range = NSRange(raw.startIndex ..< raw.endIndex, in: raw)
         return regex.matches(in: raw, range: range).compactMap { match in
             guard let range = Range(match.range(at: 1), in: raw) else { return nil }
             return normalizeImageURL(String(raw[range]))
         }
     }
 
-    nonisolated private static func collectTextPairs(
+    private nonisolated static func collectTextPairs(
         in any: Any?,
         rows: inout [(String, String)],
         depth: Int,
@@ -181,7 +181,8 @@ enum GameKeeJSON {
         if let object = any as? BaJSONObject {
             if let key = object.preferredText(keys: ["key", "name", "title", "label", "header", "left"]),
                let value = object.preferredText(keys: ["value", "text", "content", "desc", "description", "right"]),
-               key != value {
+               key != value
+            {
                 rows.append((key, value))
             }
             for value in object.values {
