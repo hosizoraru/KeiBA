@@ -844,6 +844,7 @@ nonisolated enum BaStudentDetailSection: String, CaseIterable, Codable, Identifi
 nonisolated enum BaStudentDetailPage: String, CaseIterable, Codable, Identifiable, Hashable {
     case overviewProfile
     case skills
+    case profile
     case voice
     case gallery
     case simulate
@@ -858,6 +859,8 @@ nonisolated enum BaStudentDetailPage: String, CaseIterable, Codable, Identifiabl
             String(localized: "ba.student.detail.page.overviewProfile")
         case .skills:
             String(localized: "ba.student.detail.page.skills")
+        case .profile:
+            String(localized: "ba.student.detail.page.profile")
         case .voice:
             String(localized: "ba.student.detail.page.voice")
         case .gallery:

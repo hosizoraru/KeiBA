@@ -54,10 +54,10 @@ final class BaStudentDetailTests: XCTestCase {
         XCTAssertEqual(parsed.imageURL?.absoluteString, "https://cdnimg.gamekee.com/student/portrait.webp")
     }
 
-    func testStudentDetailPagesMergeArchiveAndProfileIntoFiveTabs() {
+    func testStudentDetailPagesUseSixTabsInBenchmarkOrder() {
         XCTAssertEqual(
             BaStudentDetailPage.allCases,
-            [.overviewProfile, .skills, .voice, .gallery, .simulate]
+            [.overviewProfile, .skills, .profile, .voice, .gallery, .simulate]
         )
     }
 
@@ -104,16 +104,16 @@ final class BaStudentDetailTests: XCTestCase {
         let info = BaStudentGuideInfo(
             contentId: 1,
             sourceURL: nil,
-            title: "日奈（礼服）",
+            title: "日奈(礼服)",
             subtitle: "GameKee",
             summary: "",
             imageURL: nil,
             stats: [],
             profileRows: [
-                BaGuideRow(id: "name", title: "角色名称", value: "日奈（礼服）", imageURL: nil),
+                BaGuideRow(id: "name", title: "角色名称", value: "日奈(礼服)", imageURL: nil),
                 BaGuideRow(id: "full-name", title: "全名", value: "空崎ヒナ（ドレス）", imageURL: nil),
                 BaGuideRow(id: "kana", title: "假名注音", value: "空崎 / そらさき", imageURL: nil),
-                BaGuideRow(id: "trad-cn", title: "简中译名", value: "日奈（礼服）", imageURL: nil),
+                BaGuideRow(id: "trad-cn", title: "简中译名", value: "日奈(礼服)", imageURL: nil),
                 BaGuideRow(id: "age", title: "年龄", value: "17岁", imageURL: nil),
                 BaGuideRow(id: "birthday", title: "生日", value: "2月19日", imageURL: nil),
                 BaGuideRow(id: "hobby", title: "兴趣爱好", value: "睡眠、休息", imageURL: nil),

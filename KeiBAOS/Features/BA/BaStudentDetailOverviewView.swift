@@ -33,7 +33,6 @@ struct BaStudentDetailOverviewSections: View {
                 .listRowBackground(Color.clear)
         }
 
-        BaStudentProfileCardsSection(info: info, tint: tint)
     }
 }
 

@@ -330,13 +330,13 @@ final class BaDataBridgeTests: XCTestCase {
                 [
                     ["value": "学生信息"],
                     ["value": "角色名称"],
-                    ["value": "日奈（礼服）"],
+                    ["value": "日奈(礼服)"],
                     ["value": "全名"],
                     ["value": "空崎ヒナ（ドレス）"],
                     ["value": "假名注音"],
                     ["value": "空崎 / そらさき"],
                     ["value": "简中译名"],
-                    ["value": "日奈（礼服）"],
+                    ["value": "日奈(礼服)"],
                 ],
                 [
                     ["value": "学生信息"],
@@ -419,7 +419,7 @@ final class BaDataBridgeTests: XCTestCase {
                 "thumb": "//cdnimg.gamekee.com/student/thumb.webp",
             ],
             html: nil,
-            entry: makeCatalogEntry(contentId: 170_295, name: "日奈（礼服）", alias: "日奈")
+            entry: makeCatalogEntry(contentId: 170_295, name: "日奈(礼服)", alias: "日奈")
         )
 
         XCTAssertEqual(parsed.summary, "为了参加派对上了礼服裙。")
