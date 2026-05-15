@@ -34,6 +34,10 @@ struct BaGuideContentParser {
         let portraitURL = Self.preferredPortraitURL(from: baseData, sourceURL: sourceURL)
         let giftRows = BaGuideGiftParser().parse(baseData: baseData, sourceURL: sourceURL)
         parsed.profileRows.append(contentsOf: giftRows)
+        let simulateRows = BaGuideSimulateParser().parse(baseData: baseData, sourceURL: sourceURL)
+        if simulateRows.isEmpty == false {
+            parsed.simulateRows = simulateRows
+        }
         parsed.voiceRows = BaGuideVoiceParser().parse(baseData: baseData, content: content, sourceURL: sourceURL)
         parsed.galleryItems = BaGuideMediaParser().parse(
             baseData: baseData,

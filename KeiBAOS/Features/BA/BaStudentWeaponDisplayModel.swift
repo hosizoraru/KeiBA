@@ -22,10 +22,14 @@ nonisolated struct BaStudentWeaponDisplayModel: Identifiable, Hashable {
     }
 
     static func card(from info: BaStudentGuideInfo) -> BaStudentWeaponDisplayModel? {
-        card(growthRows: info.growthDisplayRows, skillRows: info.skillDisplayRows)
+        card(growthRows: info.growthDisplayRows, skillRows: info.skillDisplayRows, simulateRows: info.simulateRows)
     }
 
-    static func card(growthRows: [BaGuideRow], skillRows: [BaGuideRow]) -> BaStudentWeaponDisplayModel? {
+    static func card(
+        growthRows: [BaGuideRow],
+        skillRows: [BaGuideRow],
+        simulateRows: [BaGuideRow] = []
+    ) -> BaStudentWeaponDisplayModel? {
         let mainRows = growthRows.contains { $0.trimmedTitle == "专武" }
             ? growthRows
             : growthRows + skillRows
@@ -34,8 +38,10 @@ nonisolated struct BaStudentWeaponDisplayModel: Identifiable, Hashable {
         }
 
         let glossaryIcons = BaStudentSkillDisplayModel.extractSkillGlossaryIcons(from: skillRows + growthRows)
-        let main = parseMainWeapon(rows: mainRows, start: start)
-        let starEffects = parseStarEffects(rows: growthRows + skillRows)
+        let simulateWeaponRows = weaponRows(from: simulateRows)
+        let mainWeaponRows = weaponSectionRows(from: mainRows, start: start)
+        let main = parseMainWeapon(rows: mainRows, start: start, supplementalRows: simulateWeaponRows)
+        let starEffects = parseStarEffects(rows: mainWeaponRows + skillRows + simulateWeaponRows)
         let hasContent = main.name.isEmpty == false ||
             main.imageURL != nil ||
             main.description.isEmpty == false ||
@@ -57,7 +63,8 @@ nonisolated struct BaStudentWeaponDisplayModel: Identifiable, Hashable {
 
     private static func parseMainWeapon(
         rows: [BaGuideRow],
-        start: Array<BaGuideRow>.Index
+        start: Array<BaGuideRow>.Index,
+        supplementalRows: [BaGuideRow]
     ) -> WeaponMainDraft {
         var draft = WeaponMainDraft()
         guard start + 1 < rows.endIndex else { return draft }
@@ -82,9 +89,16 @@ nonisolated struct BaStudentWeaponDisplayModel: Identifiable, Hashable {
                 draft.statHeaders = splitCompositeValues(value)
             default:
                 let values = splitCompositeValues(value)
-                if key.isEmpty == false, values.isEmpty == false, key.contains("技能") == false {
+                if key.isEmpty == false, values.isEmpty == false, isLikelyStatLabel(key) {
                     draft.statRows.append(BaStudentWeaponStatRow(title: key, values: values))
                 }
+            }
+        }
+        let supplementalStatRows = statRows(from: supplementalRows)
+        if draft.statRows.isEmpty, supplementalStatRows.isEmpty == false {
+            draft.statRows = supplementalStatRows
+            if draft.statRows.allSatisfy({ $0.values.count <= 1 }) {
+                draft.statHeaders = supplementalLevelHeaders(from: supplementalRows).ifEmpty(["Lv60"])
             }
         }
         return draft
@@ -109,18 +123,19 @@ nonisolated struct BaStudentWeaponDisplayModel: Identifiable, Hashable {
             let value = row.trimmedValue
             let iconCandidates = BaStudentSkillDisplayModel.rowDescriptionIcons(row)
 
-            if let starLabel = extractStarLabel(key) {
+            if let star = extractStarInfo(key: key, value: value) {
+                let starLabel = star.label
                 if current?.starLabel != starLabel {
                     commit()
                     current = WeaponStarDraft(starLabel: starLabel)
                 }
                 if current?.iconURL == nil {
-                    current?.iconURL = row.allImageURLs.first(where: BaStudentSkillDisplayModel.isLikelyDescriptionIcon)
+                    current?.iconURL = row.allImageURLs.first
                 }
-                if key.contains("技能名称"), value.isEmpty == false {
-                    current?.name = value
-                } else if value.isEmpty == false {
-                    current?.fallbackDescription = value
+                if key.contains("技能名称"), star.value.isEmpty == false {
+                    current?.name = star.value
+                } else if star.value.isEmpty == false {
+                    current?.fallbackDescription = star.value
                 }
                 continue
             }
@@ -199,6 +214,32 @@ nonisolated struct BaStudentWeaponDisplayModel: Identifiable, Hashable {
             .filter { $0.isEmpty == false && $0 != "-" && $0 != "—" }
     }
 
+    private static func extractStarInfo(key rawKey: String, value rawValue: String) -> (label: String, value: String)? {
+        if let label = extractStarLabel(rawKey) {
+            return (label, rawValue)
+        }
+        if let label = extractStarLabel(rawValue) {
+            let values = splitCompositeValues(rawValue)
+            let description = values.dropFirst().joined(separator: " ").ifBlank(
+                rawValue.replacingOccurrences(of: label, with: "")
+                    .trimmingCharacters(in: CharacterSet(charactersIn: " /／|｜：:　 \n\t"))
+            )
+            return (label, description)
+        }
+        let normalizedKey = rawKey.replacingOccurrences(of: " ", with: "")
+        guard let range = normalizedKey.range(of: #"^附加属性\d+$"#, options: .regularExpression),
+              range.lowerBound == normalizedKey.startIndex,
+              range.upperBound == normalizedKey.endIndex,
+              let numberRange = normalizedKey.range(of: #"\d+"#, options: .regularExpression)
+        else {
+            return nil
+        }
+        let label = "★\(normalizedKey[numberRange])"
+        let values = splitCompositeValues(rawValue)
+        let description = values.first == label ? values.dropFirst().joined(separator: " ") : rawValue
+        return (label, description)
+    }
+
     private static func extractStarLabel(_ rawKey: String) -> String? {
         guard let range = rawKey.range(of: #"^★\d+"#, options: .regularExpression) else {
             return nil
@@ -206,8 +247,114 @@ nonisolated struct BaStudentWeaponDisplayModel: Identifiable, Hashable {
         return String(rawKey[range]).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private static func weaponSectionRows(from rows: [BaGuideRow], start: Array<BaGuideRow>.Index) -> [BaGuideRow] {
+        var out: [BaGuideRow] = []
+        guard start < rows.endIndex else { return out }
+        for row in rows[start...] {
+            let key = row.trimmedTitle
+            if out.isEmpty == false, isWeaponSectionStop(key) {
+                break
+            }
+            out.append(row)
+        }
+        return out
+    }
+
+    private static func weaponRows(from simulateRows: [BaGuideRow]) -> [BaGuideRow] {
+        var out: [BaGuideRow] = []
+        var inWeaponSection = false
+        for row in simulateRows {
+            let key = row.trimmedTitle
+            if isSimulateSectionHeader(key) {
+                inWeaponSection = key == "专武"
+                if inWeaponSection {
+                    out.append(row)
+                }
+                continue
+            }
+            if inWeaponSection {
+                out.append(row)
+            }
+        }
+        return out.flatMap(expandedSimulateRows)
+    }
+
+    private static func expandedSimulateRows(_ row: BaGuideRow) -> [BaGuideRow] {
+        let key = row.trimmedTitle
+        let value = row.trimmedValue
+        if key == "专武" {
+            return [row]
+        }
+        let tokens = splitCompositeValues(value)
+        guard tokens.count >= 2 else {
+            return [row]
+        }
+        let firstLooksLikeStat = isLikelyStatLabel(tokens[0]) || extractStarLabel(tokens[0]) != nil
+        guard firstLooksLikeStat else {
+            return [row]
+        }
+        var out: [BaGuideRow] = []
+        var index = 0
+        while index + 1 < tokens.count {
+            let title = tokens[index]
+            let value = tokens[index + 1]
+            out.append(
+                BaGuideRow(
+                    id: "\(row.id)-expanded-\(index)",
+                    title: title,
+                    value: value,
+                    imageURL: row.imageURL,
+                    imageURLs: row.imageURLs
+                )
+            )
+            index += 2
+        }
+        return out.isEmpty ? [row] : out
+    }
+
+    private static func statRows(from rows: [BaGuideRow]) -> [BaStudentWeaponStatRow] {
+        rows.compactMap { row in
+            let key = row.trimmedTitle
+            let value = row.trimmedValue
+            guard isLikelyStatLabel(key), value.isEmpty == false, value.hasPrefix("*") == false else { return nil }
+            return BaStudentWeaponStatRow(title: key, values: splitCompositeValues(value).ifEmpty([value]))
+        }
+    }
+
+    private static func supplementalLevelHeaders(from rows: [BaGuideRow]) -> [String] {
+        rows.compactMap { row -> String? in
+            guard row.trimmedTitle == "专武" else { return nil }
+            let value = row.trimmedValue
+            if let range = value.range(of: #"Lv\.?\s*\d{1,3}"#, options: [.regularExpression, .caseInsensitive]) {
+                return String(value[range]).replacingOccurrences(of: " ", with: "")
+            }
+            return nil
+        }
+    }
+
+    private static func isLikelyStatLabel(_ raw: String) -> Bool {
+        let key = raw.replacingOccurrences(of: " ", with: "")
+        return [
+            "攻击力", "防御力", "生命值", "治愈力",
+            "命中值", "闪避值", "暴击值", "暴击伤害",
+            "稳定值", "射程", "群控强化力", "群控抵抗力",
+            "装弹数", "防御无视值", "受恢复率", "COST恢复力",
+        ].contains(key)
+    }
+
+    private static func isSimulateSectionHeader(_ key: String) -> Bool {
+        [
+            "初始数据", "顶级数据", "专武", "装备", "爱用品", "能力解放", "羁绊等级奖励",
+        ].contains(key)
+    }
+
     private static func isWeaponSectionStop(_ key: String) -> Bool {
-        key.contains("爱用品") || key.contains("专武考据") || key.contains("初始数据")
+        key.contains("爱用品") ||
+            key.contains("专武考据") ||
+            key.contains("能力解放") ||
+            key.contains("羁绊") ||
+            key.contains("礼物偏好") ||
+            key.contains("初始数据")
     }
 
     private static func isStarSectionStop(_ key: String) -> Bool {
@@ -311,5 +458,11 @@ private extension BaGuideRow {
 private extension String {
     nonisolated func ifBlank(_ fallback: String) -> String {
         trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? fallback : self
+    }
+}
+
+private extension Array {
+    nonisolated func ifEmpty(_ fallback: [Element]) -> [Element] {
+        isEmpty ? fallback : self
     }
 }

@@ -437,6 +437,24 @@ final class BaStudentDetailTests: XCTestCase {
         XCTAssertTrue(card.statRows.allSatisfy { $0.title != "能力解放所需材料" })
     }
 
+    func testWeaponCardDoesNotPullAbilityUnlockRowsIntoStarEffects() throws {
+        let growthRows = [
+            BaGuideRow(id: "weapon", title: "专武", value: "", imageURL: nil),
+            BaGuideRow(id: "weapon-name", title: "专武名称", value: "终幕：毁灭者", imageURL: nil),
+            BaGuideRow(id: "star3", title: "★3", value: "屋内战适应性强化至SS", imageURL: nil),
+            BaGuideRow(id: "star4", title: "★4", value: "爆炸克制率增加10%", imageURL: nil),
+            BaGuideRow(id: "ability", title: "能力解放", value: "*25级的数值*", imageURL: nil),
+            BaGuideRow(id: "ability-lv", title: "25级", value: "生命值 / 775 / 攻击力 / 158 / 治愈力 / 199", imageURL: nil),
+            BaGuideRow(id: "ability-extra1", title: "附加属性1", value: "生命值 / 775", imageURL: nil),
+            BaGuideRow(id: "ability-extra2", title: "附加属性2", value: "攻击力 / 158", imageURL: nil),
+            BaGuideRow(id: "ability-extra3", title: "附加属性3", value: "治愈力 / 199", imageURL: nil),
+        ]
+
+        let card = try XCTUnwrap(BaStudentWeaponDisplayModel.card(growthRows: growthRows, skillRows: []))
+
+        XCTAssertEqual(card.starEffects.map(\.name), ["屋内战适应性强化至SS", "爆炸克制率增加10%"])
+    }
+
     func testWeaponCardParsesHinaDressTwoStarPassiveUpgradeFromSkillRows() throws {
         let weaponIcon = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/weapon.png"))
         let effectIcon = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/wiki2.0/images/w_64/h_64/effect.png"))
@@ -471,6 +489,154 @@ final class BaStudentDetailTests: XCTestCase {
         XCTAssertEqual(effect.defaultLevel, "Lv.10")
         XCTAssertEqual(effect.description(for: "Lv.10"), "攻击力增加506，暴击值增加152")
         XCTAssertEqual(card.glossaryIcons["嘲讽"], termIcon)
+    }
+
+    func testContentParserKeepsWeaponStatsAndStarEffectsInGrowthRows() throws {
+        let weaponIcon = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/weapon.png"))
+        let indoorIcon = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/indoor.png"))
+        let content: BaJSONObject = [
+            "baseData": [
+                [
+                    ["type": "text", "value": "专武"],
+                ],
+                [
+                    ["type": "text", "value": "专武图标"],
+                    ["type": "image", "value": "//cdnimg.gamekee.com/weapon.png"],
+                ],
+                [
+                    ["type": "text", "value": "专武名称"],
+                    ["type": "text", "value": "终幕：毁灭者"],
+                ],
+                [
+                    ["type": "text", "value": "专武数值"],
+                    ["type": "text", "value": "Lv1 / Lv30 / Lv40 / Lv50 / Lv60"],
+                ],
+                [
+                    ["type": "text", "value": "攻击力"],
+                    ["type": "text", "value": "152 / 554 / 692 / 831 / 969"],
+                ],
+                [
+                    ["type": "text", "value": "生命值"],
+                    ["type": "text", "value": "492 / 1789 / 2237 / 2684 / 3132"],
+                ],
+                [
+                    ["type": "text", "value": "★3"],
+                    ["type": "text", "value": "屋内战适应性强化至SS"],
+                    ["type": "image", "value": "//cdnimg.gamekee.com/indoor.png"],
+                ],
+                [
+                    ["type": "text", "value": "★4"],
+                    ["type": "text", "value": "爆炸克制率增加10%"],
+                ],
+                [
+                    ["type": "text", "value": "学生信息"],
+                ],
+            ],
+        ]
+
+        let parsed = BaGuideContentParser().parse(
+            content: content,
+            apiData: [:],
+            html: nil,
+            entry: makeCatalogEntry()
+        )
+        let card = try XCTUnwrap(
+            BaStudentWeaponDisplayModel.card(
+                growthRows: parsed.growthRows,
+                skillRows: parsed.skillRows,
+                simulateRows: parsed.simulateRows
+            )
+        )
+
+        XCTAssertEqual(parsed.growthRows.map(\.title), [
+            "专武", "专武图标", "专武名称", "专武数值", "攻击力", "生命值", "★3", "★4",
+        ])
+        XCTAssertFalse(parsed.profileRows.contains { $0.title == "攻击力" && $0.value.contains("969") })
+        XCTAssertEqual(card.imageURL, weaponIcon)
+        XCTAssertEqual(card.statHeaders, ["Lv1", "Lv30", "Lv40", "Lv50", "Lv60"])
+        XCTAssertEqual(card.statRows, [
+            BaStudentWeaponStatRow(title: "攻击力", values: ["152", "554", "692", "831", "969"]),
+            BaStudentWeaponStatRow(title: "生命值", values: ["492", "1789", "2237", "2684", "3132"]),
+        ])
+        XCTAssertEqual(card.starEffects.map(\.name), ["屋内战适应性强化至SS", "爆炸克制率增加10%"])
+        XCTAssertEqual(card.starEffects.first?.iconURL, indoorIcon)
+    }
+
+    func testSimulateParserFeedsWeaponStatsAndExtraStarEffects() throws {
+        let weaponIcon = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/weapon.png"))
+        let indoorIcon = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/indoor.png"))
+        let content: BaJSONObject = [
+            "baseData": [
+                [
+                    ["type": "text", "value": "初始数据"],
+                ],
+                [
+                    ["type": "text", "value": "攻击力"],
+                    ["type": "text", "value": "100"],
+                ],
+                [
+                    ["type": "text", "value": "顶级数据"],
+                ],
+                [
+                    ["type": "text", "value": "专武"],
+                    ["type": "text", "value": "*【Lv60】的数值*"],
+                ],
+                [
+                    ["type": "text", "value": "攻击力"],
+                    ["type": "text", "value": "969"],
+                ],
+                [
+                    ["type": "text", "value": "生命值"],
+                    ["type": "text", "value": "3132"],
+                ],
+                [
+                    ["type": "text", "value": "★3"],
+                    ["type": "text", "value": "屋内战适应性强化至SS"],
+                    ["type": "image", "value": "//cdnimg.gamekee.com/indoor.png"],
+                ],
+                [
+                    ["type": "text", "value": "附加属性4"],
+                    ["type": "text", "value": "★4 / 爆炸克制率增加10%"],
+                ],
+                [
+                    ["type": "text", "value": "装备"],
+                ],
+            ],
+        ]
+        let parsed = BaGuideContentParser().parse(
+            content: content,
+            apiData: [:],
+            html: nil,
+            entry: makeCatalogEntry()
+        )
+        let growthRows = [
+            BaGuideRow(id: "weapon", title: "专武", value: "", imageURL: nil),
+            BaGuideRow(id: "weapon-icon", title: "专武图标", value: "", imageURL: weaponIcon),
+            BaGuideRow(id: "weapon-name", title: "专武名称", value: "终幕：毁灭者", imageURL: nil),
+            BaGuideRow(id: "weapon-levels", title: "专武数值", value: "Lv1 / Lv30 / Lv40 / Lv50 / Lv60", imageURL: nil),
+            BaGuideRow(id: "favorite", title: "爱用品", value: "", imageURL: nil),
+        ]
+
+        let card = try XCTUnwrap(
+            BaStudentWeaponDisplayModel.card(
+                growthRows: growthRows,
+                skillRows: [],
+                simulateRows: parsed.simulateRows
+            )
+        )
+
+        XCTAssertEqual(parsed.simulateRows.map(\.title), [
+            "初始数据", "攻击力", "顶级数据", "专武", "攻击力", "生命值", "★3", "附加属性4", "装备",
+        ])
+        XCTAssertEqual(card.statHeaders, ["Lv60"])
+        XCTAssertEqual(card.statRows, [
+            BaStudentWeaponStatRow(title: "攻击力", values: ["969"]),
+            BaStudentWeaponStatRow(title: "生命值", values: ["3132"]),
+        ])
+        XCTAssertEqual(card.starEffects.map(\.starLabel), ["★3", "★4"])
+        XCTAssertEqual(card.starEffects[0].name, "屋内战适应性强化至SS")
+        XCTAssertEqual(card.starEffects[0].iconURL, indoorIcon)
+        XCTAssertEqual(card.starEffects[1].name, "爆炸克制率增加10%")
     }
 
     func testStudentDetailSourceErrorUsesFriendlyMessage() {

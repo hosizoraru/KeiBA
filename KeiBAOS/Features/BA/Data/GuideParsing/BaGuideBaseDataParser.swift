@@ -11,6 +11,7 @@ struct BaGuideBaseDataParser {
     func parse(baseData: [[BaJSONObject]], sourceURL: URL?) -> BaStructuredGuideParse {
         var parsed = BaStructuredGuideParse()
         var seen = Set<String>()
+        var inGrowthBlock = false
         for (index, row) in baseData.enumerated() {
             guard let keyCell = row.first else { continue }
             let rawKey = keyCell.string("value") ?? ""
@@ -34,7 +35,20 @@ struct BaGuideBaseDataParser {
                 let dedupeKey = "\(guideRow.title)|\(guideRow.value)|\(guideRow.imageURLs?.map(\.absoluteString).joined(separator: ",") ?? "")"
                 guard seen.insert(dedupeKey).inserted else { continue }
 
-                route(guideRow, key: guideRow.title, value: guideRow.value, parsed: &parsed)
+                let normalizedKey = BaGuideTextNormalizer.normalizedKey(guideRow.title)
+                if isGrowthBlockStartKey(normalizedKey) {
+                    inGrowthBlock = true
+                } else if inGrowthBlock, isGrowthBlockStopKey(normalizedKey) {
+                    inGrowthBlock = false
+                }
+
+                route(
+                    guideRow,
+                    key: guideRow.title,
+                    value: guideRow.value,
+                    parsed: &parsed,
+                    forceGrowth: inGrowthBlock
+                )
                 if parsed.summary.isEmpty, isSummaryKey(guideRow.title), guideRow.value.isEmpty == false {
                     parsed.summary = guideRow.value
                 }
@@ -47,9 +61,17 @@ struct BaGuideBaseDataParser {
         return parsed
     }
 
-    private func route(_ row: BaGuideRow, key: String, value: String, parsed: inout BaStructuredGuideParse) {
+    private func route(
+        _ row: BaGuideRow,
+        key: String,
+        value: String,
+        parsed: inout BaStructuredGuideParse,
+        forceGrowth: Bool
+    ) {
         let merged = "\(key) \(value)"
-        if isVoiceKey(merged) {
+        if forceGrowth {
+            parsed.growthRows.append(row)
+        } else if isVoiceKey(merged) {
             return
         } else if isSkillKey(merged) {
             parsed.skillRows.append(row)
@@ -249,6 +271,41 @@ struct BaGuideBaseDataParser {
             value,
             tokens: ["成长", "装备", "专武", "固有", "礼物", "羁绊", "升星", "爱用品", "能力解放", "升级材料", "growth", "gift"]
         )
+    }
+
+    private func isGrowthBlockStartKey(_ normalizedKey: String) -> Bool {
+        normalizedKey == "专武" ||
+            normalizedKey == "装备" ||
+            normalizedKey == "爱用品" ||
+            normalizedKey == "能力解放" ||
+            normalizedKey.contains("羁绊等级奖励") ||
+            normalizedKey.contains("羁绊奖励")
+    }
+
+    private func isGrowthBlockStopKey(_ normalizedKey: String) -> Bool {
+        guard normalizedKey.isEmpty == false, isGrowthBlockStartKey(normalizedKey) == false else {
+            return false
+        }
+        return [
+            "礼物偏好",
+            "相关同名角色",
+            "同名角色名称",
+            "技能类型",
+            "技能名词",
+            "学生信息",
+            "介绍",
+            "配音语言",
+            "配音",
+            "配音大类",
+            "官方介绍",
+            "角色表情",
+            "立绘",
+            "本家画",
+            "设定集",
+            "TV动画设定图",
+            "初始数据",
+            "顶级数据",
+        ].contains(normalizedKey)
     }
 
     private func isVoiceKey(_ value: String) -> Bool {

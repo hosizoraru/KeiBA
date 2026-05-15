@@ -203,6 +203,10 @@ private struct BaStudentWeaponStarEffectCard: View {
         effect.description(for: displayLevel).ifBlank(String(localized: "ba.student.detail.weapon.effect.empty"))
     }
 
+    private var hasDescription: Bool {
+        effect.description(for: displayLevel).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .center, spacing: 8) {
@@ -227,54 +231,58 @@ private struct BaStudentWeaponStarEffectCard: View {
                 Spacer(minLength: 8)
             }
 
-            HStack(alignment: .top, spacing: 8) {
-                BaStudentSkillDescriptionView(
-                    description: description,
-                    glossaryIcons: glossaryIcons,
-                    descriptionIcons: effect.descriptionIcons(for: displayLevel),
-                    tint: tint
-                )
-
-                VStack(alignment: .trailing, spacing: 7) {
-                    if effect.roleTag.isEmpty == false {
-                        Text(effect.roleTag)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(tint)
-                            .lineLimit(1)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 5)
-                            .background(tint.opacity(0.09), in: Capsule())
-                            .overlay {
-                                Capsule().strokeBorder(tint.opacity(0.22), lineWidth: 1)
-                            }
+            if hasDescription || effect.roleTag.isEmpty == false || effect.levelOptions.isEmpty == false {
+                HStack(alignment: .top, spacing: 8) {
+                    if hasDescription {
+                        BaStudentSkillDescriptionView(
+                            description: description,
+                            glossaryIcons: glossaryIcons,
+                            descriptionIcons: effect.descriptionIcons(for: displayLevel),
+                            tint: tint
+                        )
                     }
 
-                    if effect.levelOptions.isEmpty == false {
-                        Menu {
-                            ForEach(effect.levelOptions, id: \.self) { level in
-                                Button {
-                                    selectedLevel = level
-                                } label: {
-                                    if level == displayLevel {
-                                        Label(level, systemImage: "checkmark")
-                                    } else {
-                                        Text(level)
+                    VStack(alignment: .trailing, spacing: 7) {
+                        if effect.roleTag.isEmpty == false {
+                            Text(effect.roleTag)
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(tint)
+                                .lineLimit(1)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 5)
+                                .background(tint.opacity(0.09), in: Capsule())
+                                .overlay {
+                                    Capsule().strokeBorder(tint.opacity(0.22), lineWidth: 1)
+                                }
+                        }
+
+                        if effect.levelOptions.isEmpty == false {
+                            Menu {
+                                ForEach(effect.levelOptions, id: \.self) { level in
+                                    Button {
+                                        selectedLevel = level
+                                    } label: {
+                                        if level == displayLevel {
+                                            Label(level, systemImage: "checkmark")
+                                        } else {
+                                            Text(level)
+                                        }
                                     }
                                 }
+                            } label: {
+                                HStack(spacing: 5) {
+                                    Text(displayLevel)
+                                        .font(.callout.monospacedDigit().weight(.semibold))
+                                    Image(systemName: "chevron.down")
+                                        .font(.caption.weight(.bold))
+                                }
+                                .foregroundStyle(tint)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 7)
+                                .liquidGlassSurface(cornerRadius: 16, tint: tint.opacity(0.10), isInteractive: true)
                             }
-                        } label: {
-                            HStack(spacing: 5) {
-                                Text(displayLevel)
-                                    .font(.callout.monospacedDigit().weight(.semibold))
-                                Image(systemName: "chevron.down")
-                                    .font(.caption.weight(.bold))
-                            }
-                            .foregroundStyle(tint)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 7)
-                            .liquidGlassSurface(cornerRadius: 16, tint: tint.opacity(0.10), isInteractive: true)
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
             }
