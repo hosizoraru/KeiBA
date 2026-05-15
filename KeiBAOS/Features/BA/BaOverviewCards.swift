@@ -36,7 +36,6 @@ enum BaOverviewMetricStyle {
 struct BaOverviewIdentityCard: View {
     let settings: BaAppSettings
     let onServerSelected: (BaServer) -> Void
-    let onIdentityIndependentChanged: (Bool) -> Void
 
     var body: some View {
         BaGlassCard(tint: BaDesign.blue) {
@@ -71,14 +70,6 @@ struct BaOverviewIdentityCard: View {
                     .labelsHidden()
                     .pickerStyle(.menu)
                 }
-
-                Toggle(isOn: identityIndependentBinding) {
-                    Label(
-                        String(localized: "ba.settings.identity.independent.title"),
-                        systemImage: "person.2.badge.gearshape"
-                    )
-                    .font(BaOverviewTextToken.rowTitle)
-                }
             }
         }
     }
@@ -87,13 +78,6 @@ struct BaOverviewIdentityCard: View {
         Binding(
             get: { settings.server },
             set: onServerSelected
-        )
-    }
-
-    private var identityIndependentBinding: Binding<Bool> {
-        Binding(
-            get: { settings.identityIndependentByServer },
-            set: onIdentityIndependentChanged
         )
     }
 }

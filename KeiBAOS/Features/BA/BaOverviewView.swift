@@ -21,8 +21,7 @@ struct BaOverviewView: View {
 
             BaOverviewIdentityCard(
                 settings: model.settings,
-                onServerSelected: selectServer,
-                onIdentityIndependentChanged: setIdentityIndependent
+                onServerSelected: selectServer
             )
             TimelineView(.periodic(from: .now, by: 1)) { context in
                 BaOverviewAPCard(
@@ -64,12 +63,6 @@ struct BaOverviewView: View {
         Task {
             await model.loadActivitiesIfNeeded()
             await model.loadPoolsIfNeeded()
-        }
-    }
-
-    private func setIdentityIndependent(_ isIndependent: Bool) {
-        model.updateGlobalSettings { settings in
-            settings.identityIndependentByServer = isIndependent
         }
     }
 
