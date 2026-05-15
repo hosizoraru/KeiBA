@@ -16,50 +16,16 @@ struct BaStudentVoiceSection: View {
     @State private var sectionFilter = BaVoiceSectionFilter.all
     @State private var playback = BaVoicePlaybackController()
 
-    private var rowIDs: [String] {
-        rows.map(\.id)
-    }
-
-    private var displayHeaders: [String] {
-        BaVoiceLanguageResolver.displayHeaders(for: rows, preferredHeaders: voiceLanguageHeaders)
-    }
-
-    private var playbackHeaders: [String] {
-        BaVoiceLanguageResolver.playableHeaders(for: rows, preferredHeaders: voiceLanguageHeaders)
-    }
-
-    private var languagePickerHeaders: [String] {
-        let headers = playbackHeaders.isEmpty ? displayHeaders : playbackHeaders
-        return headers.filter {
-            BaVoiceLanguageResolver.canonicalLanguageLabel($0) != "官翻"
-        }
-    }
-
-    private var sectionFilters: [BaVoiceSectionFilter] {
-        BaVoiceSectionFilter.filters(for: rows)
-    }
-
-    private var activeLanguage: String {
-        if languagePickerHeaders.contains(selectedLanguage) {
-            return selectedLanguage
-        }
-        return playbackHeaders.first ?? languagePickerHeaders.first ?? ""
-    }
-
-    private var filteredRows: [BaGuideVoiceEntry] {
-        BaVoiceDisplayModel.filteredEntries(
-            rows,
-            filter: sectionFilter,
-            query: searchText,
-            fallbackHeaders: displayHeaders
-        )
-    }
-
-    private var nowPlayingEntry: BaGuideVoiceEntry? {
-        BaVoiceDisplayModel.nowPlayingEntry(entries: rows, currentURL: playback.currentRemoteURL)
-    }
-
     var body: some View {
+        let snapshot = BaVoiceSectionSnapshot(
+            rows: rows,
+            voiceLanguageHeaders: voiceLanguageHeaders,
+            selectedLanguage: selectedLanguage,
+            sectionFilter: sectionFilter,
+            searchText: searchText,
+            currentURL: playback.currentRemoteURL
+        )
+
         Section {
             if rows.isEmpty {
                 BaStudentDetailEmptyRow(section: .voice)
@@ -67,17 +33,17 @@ struct BaStudentVoiceSection: View {
                 BaVoiceControlPanel(
                     selectedLanguage: $selectedLanguage,
                     sectionFilter: $sectionFilter,
-                    languages: languagePickerHeaders,
-                    filters: sectionFilters,
-                    visibleCount: filteredRows.count,
+                    languages: snapshot.languagePickerHeaders,
+                    filters: snapshot.sectionFilters,
+                    visibleCount: snapshot.filteredRows.count,
                     totalCount: rows.count
                 )
 
-                if let nowPlayingEntry {
+                if let nowPlayingEntry = snapshot.nowPlayingEntry {
                     BaVoiceNowPlayingRow(
                         entry: nowPlayingEntry,
-                        fallbackHeaders: displayHeaders,
-                        selectedLanguage: activeLanguage,
+                        fallbackHeaders: snapshot.displayHeaders,
+                        selectedLanguage: snapshot.activeLanguage,
                         playback: playback
                     )
                 }
@@ -86,15 +52,15 @@ struct BaStudentVoiceSection: View {
                     BaVoicePlaybackErrorRow(error: error)
                 }
 
-                if filteredRows.isEmpty {
+                if snapshot.filteredRows.isEmpty {
                     BaVoiceEmptyFilteredRow()
                 } else {
-                    ForEach(filteredRows) { row in
+                    ForEach(snapshot.filteredRows) { row in
                         BaStudentVoiceRow(
                             row: row,
-                            displayHeaders: displayHeaders,
-                            playbackHeaders: playbackHeaders,
-                            selectedLanguage: activeLanguage,
+                            displayHeaders: snapshot.displayHeaders,
+                            playbackHeaders: snapshot.playbackHeaders,
+                            selectedLanguage: snapshot.activeLanguage,
                             playback: playback
                         )
                     }
@@ -106,7 +72,7 @@ struct BaStudentVoiceSection: View {
             }
         }
         .onAppear(perform: refreshSelections)
-        .onChange(of: rowIDs) { _, _ in
+        .onChange(of: snapshot.rowIDs) { _, _ in
             refreshSelections()
         }
         .onDisappear {
@@ -115,11 +81,64 @@ struct BaStudentVoiceSection: View {
     }
 
     private func refreshSelections() {
+        let displayHeaders = BaVoiceLanguageResolver.displayHeaders(for: rows, preferredHeaders: voiceLanguageHeaders)
+        let playbackHeaders = BaVoiceLanguageResolver.playableHeaders(for: rows, preferredHeaders: voiceLanguageHeaders)
+        let languagePickerHeaders = BaVoiceSectionSnapshot.languagePickerHeaders(
+            displayHeaders: displayHeaders,
+            playbackHeaders: playbackHeaders
+        )
+        let sectionFilters = BaVoiceSectionFilter.filters(for: rows)
         if selectedLanguage.isEmpty || languagePickerHeaders.contains(selectedLanguage) == false {
             selectedLanguage = playbackHeaders.first ?? languagePickerHeaders.first ?? ""
         }
         if sectionFilters.contains(sectionFilter) == false {
             sectionFilter = .all
+        }
+    }
+}
+
+private struct BaVoiceSectionSnapshot {
+    let rowIDs: [String]
+    let displayHeaders: [String]
+    let playbackHeaders: [String]
+    let languagePickerHeaders: [String]
+    let sectionFilters: [BaVoiceSectionFilter]
+    let activeLanguage: String
+    let filteredRows: [BaGuideVoiceEntry]
+    let nowPlayingEntry: BaGuideVoiceEntry?
+
+    init(
+        rows: [BaGuideVoiceEntry],
+        voiceLanguageHeaders: [String],
+        selectedLanguage: String,
+        sectionFilter: BaVoiceSectionFilter,
+        searchText: String,
+        currentURL: URL?
+    ) {
+        rowIDs = rows.map(\.id)
+        displayHeaders = BaVoiceLanguageResolver.displayHeaders(for: rows, preferredHeaders: voiceLanguageHeaders)
+        playbackHeaders = BaVoiceLanguageResolver.playableHeaders(for: rows, preferredHeaders: voiceLanguageHeaders)
+        languagePickerHeaders = Self.languagePickerHeaders(
+            displayHeaders: displayHeaders,
+            playbackHeaders: playbackHeaders
+        )
+        sectionFilters = BaVoiceSectionFilter.filters(for: rows)
+        activeLanguage = languagePickerHeaders.contains(selectedLanguage)
+            ? selectedLanguage
+            : (playbackHeaders.first ?? languagePickerHeaders.first ?? "")
+        filteredRows = BaVoiceDisplayModel.filteredEntries(
+            rows,
+            filter: sectionFilter,
+            query: searchText,
+            fallbackHeaders: displayHeaders
+        )
+        nowPlayingEntry = BaVoiceDisplayModel.nowPlayingEntry(entries: rows, currentURL: currentURL)
+    }
+
+    static func languagePickerHeaders(displayHeaders: [String], playbackHeaders: [String]) -> [String] {
+        let headers = playbackHeaders.isEmpty ? displayHeaders : playbackHeaders
+        return headers.filter {
+            BaVoiceLanguageResolver.canonicalLanguageLabel($0) != "官翻"
         }
     }
 }

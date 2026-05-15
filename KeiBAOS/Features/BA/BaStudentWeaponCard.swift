@@ -8,11 +8,12 @@
 import SwiftUI
 
 struct BaStudentWeaponCardsSection: View {
-    let info: BaStudentGuideInfo?
     let tint: Color
+    private let card: BaStudentWeaponDisplayModel?
 
-    private var card: BaStudentWeaponDisplayModel? {
-        info.flatMap(BaStudentWeaponDisplayModel.card)
+    init(info: BaStudentGuideInfo?, tint: Color) {
+        self.tint = tint
+        self.card = info.flatMap(BaStudentWeaponDisplayModel.card)
     }
 
     var body: some View {
@@ -324,6 +325,7 @@ private struct BaWeaponStarBadgeRow: View {
 
 private struct BaPlainRemoteImage: View {
     @Environment(BaAppModel.self) private var model
+    @Environment(\.baShowPreviewImages) private var showPreviewImages
 
     let url: URL?
     let fallbackSystemImage: String
@@ -360,24 +362,30 @@ private struct BaPlainRemoteImage: View {
         .task(id: cacheTaskID) {
             await loadImage()
         }
-        .onChange(of: model.settings.showPreviewImages) { _, _ in
-            Task { await loadImage() }
-        }
     }
 
     private var cacheTaskID: String {
-        "\(url?.absoluteString ?? "nil")-\(model.settings.showPreviewImages)"
+        "\(url?.absoluteString ?? "nil")-\(showPreviewImages)"
     }
 
     private func loadImage() async {
-        guard model.settings.showPreviewImages, let url else {
-            phase = model.settings.showPreviewImages ? .placeholder : .hidden
+        guard showPreviewImages, let url else {
+            phase = showPreviewImages ? .placeholder : .hidden
             return
         }
         phase = .loading
-        guard let data = try? await model.imageData(for: url),
-              let image = BaRemoteImageSurface.image(from: data)
-        else {
+        guard let data = try? await model.imageData(for: url) else {
+            if Task.isCancelled == false {
+                phase = .failed
+            }
+            return
+        }
+        guard Task.isCancelled == false else { return }
+        let image = await Task.detached(priority: .utility) {
+            BaRemoteImageSurface.image(from: data, maxPixelDimension: 720)
+        }.value
+        guard Task.isCancelled == false else { return }
+        guard let image else {
             phase = .failed
             return
         }

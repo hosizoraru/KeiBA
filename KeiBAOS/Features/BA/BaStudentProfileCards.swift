@@ -12,10 +12,12 @@ struct BaStudentProfileCardsSection: View {
     let tint: Color
     let onOpenSameNameEntry: (BaGuideCatalogEntry) -> Void
     private let displaySections: [BaStudentProfileSection]
+    private let sameNameEntriesByItemID: [String: BaGuideCatalogEntry]
 
     init(
         info: BaStudentGuideInfo,
         tint: Color,
+        sameNameEntryResolver: (BaStudentProfileSameNameRoleItem) -> BaGuideCatalogEntry?,
         onOpenSameNameEntry: @escaping (BaGuideCatalogEntry) -> Void
     ) {
         self.tint = tint
@@ -23,6 +25,14 @@ struct BaStudentProfileCardsSection: View {
         let sections = info.profileSections
         let hasContent = sections.contains { $0.isEmpty == false }
         displaySections = hasContent ? sections : []
+        sameNameEntriesByItemID = Dictionary(
+            sections
+                .flatMap(\.sameNameRoleItems)
+                .compactMap { item in
+                    sameNameEntryResolver(item).map { (item.id, $0) }
+                },
+            uniquingKeysWith: { first, _ in first }
+        )
     }
 
     var body: some View {
@@ -38,6 +48,7 @@ struct BaStudentProfileCardsSection: View {
                         BaStudentProfileSectionCard(
                             section: section,
                             tint: tint,
+                            sameNameEntriesByItemID: sameNameEntriesByItemID,
                             onOpenSameNameEntry: onOpenSameNameEntry
                         )
                             .baStudentDetailListCardRow()
@@ -51,6 +62,7 @@ struct BaStudentProfileCardsSection: View {
 private struct BaStudentProfileSectionCard: View {
     let section: BaStudentProfileSection
     let tint: Color
+    let sameNameEntriesByItemID: [String: BaGuideCatalogEntry]
     let onOpenSameNameEntry: (BaGuideCatalogEntry) -> Void
 
     var body: some View {
@@ -71,6 +83,7 @@ private struct BaStudentProfileSectionCard: View {
             BaStudentSameNameRoleList(
                 section: section,
                 tint: tint,
+                sameNameEntriesByItemID: sameNameEntriesByItemID,
                 onOpen: onOpenSameNameEntry
             )
         case .chocolate:
@@ -289,10 +302,9 @@ private struct BaStudentProfileGiftCell: View {
 }
 
 private struct BaStudentSameNameRoleList: View {
-    @Environment(BaAppModel.self) private var model
-
     let section: BaStudentProfileSection
     let tint: Color
+    let sameNameEntriesByItemID: [String: BaGuideCatalogEntry]
     let onOpen: (BaGuideCatalogEntry) -> Void
 
     var body: some View {
@@ -312,7 +324,7 @@ private struct BaStudentSameNameRoleList: View {
                 ForEach(section.sameNameRoleItems.prefix(12)) { item in
                     BaStudentSameNameRoleRow(
                         item: item,
-                        entry: model.studentCatalogEntry(forSameNameRole: item),
+                        entry: sameNameEntriesByItemID[item.id] ?? item.catalogEntry,
                         tint: tint,
                         onOpen: onOpen
                     )

@@ -13,11 +13,17 @@ struct BaCatalogView: View {
     @State private var selectedCategory: BaCatalogCategory = .students
     @State private var searchText = ""
 
-    private var entries: [BaGuideCatalogEntry] {
-        model.entries(for: selectedCategory, query: searchText)
+    private var snapshot: BaCatalogViewSnapshot {
+        let favoriteIDs = model.settings.favoriteContentIDs
+        let rows = model.entries(for: selectedCategory, query: searchText).map { entry in
+            BaCatalogEntryRowDisplayModel(entry: entry, isFavorite: favoriteIDs.contains(entry.contentId))
+        }
+        return BaCatalogViewSnapshot(rows: rows)
     }
 
     var body: some View {
+        let snapshot = snapshot
+
         List {
             Section {
                 Picker(String(localized: "ba.catalog.category.picker"), selection: $selectedCategory) {
@@ -31,7 +37,7 @@ struct BaCatalogView: View {
             }
 
             Section {
-                catalogContent
+                catalogContent(snapshot: snapshot)
             } footer: {
                 Text(footerText)
             }
@@ -50,29 +56,30 @@ struct BaCatalogView: View {
     }
 
     @ViewBuilder
-    private var catalogContent: some View {
-        if model.catalogState.isLoading, entries.isEmpty {
+    private func catalogContent(snapshot: BaCatalogViewSnapshot) -> some View {
+        if model.catalogState.isLoading, snapshot.rows.isEmpty {
             ProgressView()
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.vertical, 24)
-        } else if entries.isEmpty {
+        } else if snapshot.rows.isEmpty {
             ContentUnavailableView(
                 String(localized: "ba.catalog.empty.title"),
                 systemImage: "magnifyingglass",
                 description: Text(emptyDetail)
             )
         } else {
-            ForEach(entries) { entry in
+            ForEach(snapshot.rows) { row in
                 NavigationLink {
-                    BaStudentDetailView(entry: entry)
+                    BaStudentDetailView(entry: row.entry)
                 } label: {
-                    BaCatalogEntryRow(entry: entry, isFavorite: model.isFavorite(entry))
+                    BaCatalogEntryRow(row: row)
+                        .equatable()
                 }
                 .swipeActions(edge: .trailing) {
                     Button {
-                        model.toggleFavorite(entry)
+                        model.toggleFavorite(row.entry)
                     } label: {
-                        Label(favoriteActionTitle(for: entry), systemImage: model.isFavorite(entry) ? "star.slash" : "star")
+                        Label(favoriteActionTitle(isFavorite: row.isFavorite), systemImage: row.isFavorite ? "star.slash" : "star")
                     }
                     .tint(.yellow)
                 }
@@ -111,11 +118,15 @@ struct BaCatalogView: View {
         return String(localized: "ba.catalog.empty.detail")
     }
 
-    private func favoriteActionTitle(for entry: BaGuideCatalogEntry) -> String {
-        model.isFavorite(entry)
+    private func favoriteActionTitle(isFavorite: Bool) -> String {
+        isFavorite
             ? String(localized: "ba.catalog.favorite.remove")
             : String(localized: "ba.catalog.favorite.add")
     }
+}
+
+private struct BaCatalogViewSnapshot {
+    let rows: [BaCatalogEntryRowDisplayModel]
 }
 
 private extension View {

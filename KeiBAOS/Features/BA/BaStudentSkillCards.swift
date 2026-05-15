@@ -213,14 +213,17 @@ private struct BaStudentSkillCostPill: View {
 }
 
 struct BaStudentSkillDescriptionView: View {
-    let description: String
-    let glossaryIcons: [String: URL]
     let descriptionIcons: [URL]
     let tint: Color
+    private let highlightedDescription: AttributedString
+    private let matchedGlossary: [(label: String, url: URL)]
 
-    private var matchedGlossary: [(label: String, url: URL)] {
+    init(description: String, glossaryIcons: [String: URL], descriptionIcons: [URL], tint: Color) {
+        self.descriptionIcons = descriptionIcons
+        self.tint = tint
+        self.highlightedDescription = BaStudentSkillTextNormalizer.highlightedAttributedString(in: description, tint: tint)
         let normalizedDescription = BaStudentSkillTextNormalizer.normalizeGlossaryToken(description)
-        return glossaryIcons
+        self.matchedGlossary = glossaryIcons
             .filter { label, _ in
                 description.contains(label) ||
                     normalizedDescription.contains(BaStudentSkillTextNormalizer.normalizeGlossaryToken(label))
@@ -247,7 +250,7 @@ struct BaStudentSkillDescriptionView: View {
                     )
                 }
 
-                Text(BaStudentSkillTextNormalizer.highlightedAttributedString(in: description, tint: tint))
+                Text(highlightedDescription)
                     .font(.body)
                     .foregroundStyle(.primary)
                     .lineSpacing(3)

@@ -11,9 +11,15 @@ struct BaStudentDetailOverviewSections: View {
     let info: BaStudentGuideInfo
     let entry: BaGuideCatalogEntry
     let tint: Color
+    private let portraitURL: URL?
+    private let combatItems: [BaGuideMetaItem]
 
-    private var portraitURL: URL? {
-        info.preferredPortraitURL(fallback: entry.iconURL)
+    init(info: BaStudentGuideInfo, entry: BaGuideCatalogEntry, tint: Color) {
+        self.info = info
+        self.entry = entry
+        self.tint = tint
+        portraitURL = info.preferredPortraitURL(fallback: entry.iconURL)
+        combatItems = Self.combatItems(from: info)
     }
 
     var body: some View {
@@ -32,7 +38,7 @@ struct BaStudentDetailOverviewSections: View {
             .listRowSeparator(.hidden)
     }
 
-    private var combatItems: [BaGuideMetaItem] {
+    private static func combatItems(from info: BaStudentGuideInfo) -> [BaGuideMetaItem] {
         let items = BaStudentGuideMeta.combatMetaItems(from: info)
         guard let tactical = items.first(where: { $0.isTacticalPositionItem }) else {
             return items
@@ -55,6 +61,14 @@ private struct BaStudentPortraitMetaCard: View {
     let info: BaStudentGuideInfo
     let portraitURL: URL?
     let tint: Color
+    private let profileItems: [BaGuideMetaItem]
+
+    init(info: BaStudentGuideInfo, portraitURL: URL?, tint: Color) {
+        self.info = info
+        self.portraitURL = portraitURL
+        self.tint = tint
+        profileItems = Self.profileItems(from: info)
+    }
 
     var body: some View {
         BaGlassCard(tint: BaDesign.blue) {
@@ -89,7 +103,7 @@ private struct BaStudentPortraitMetaCard: View {
         }
     }
 
-    private var profileItems: [BaGuideMetaItem] {
+    private static func profileItems(from info: BaStudentGuideInfo) -> [BaGuideMetaItem] {
         var items = BaStudentGuideMeta.profileMetaItems(from: info)
         if let tactical = BaStudentGuideMeta.combatMetaItems(from: info).first(where: { $0.isTacticalPositionItem }) {
             items.append(
@@ -246,6 +260,23 @@ private struct BaStudentMetaImages: View {
     let item: BaGuideMetaItem
     let tint: Color
     let size: CGFloat
+    private let iconURLs: [URL]
+    private let iconWidth: CGFloat
+
+    init(item: BaGuideMetaItem, tint: Color, size: CGFloat) {
+        self.item = item
+        self.tint = tint
+        self.size = size
+        var urls: [URL] = []
+        if let imageURL = item.imageURL {
+            urls.append(imageURL)
+        }
+        if let extraImageURL = item.extraImageURL {
+            urls.append(extraImageURL)
+        }
+        iconURLs = urls
+        iconWidth = Self.iconWidth(for: item, iconCount: urls.count, size: size)
+    }
 
     @ViewBuilder
     var body: some View {
@@ -266,19 +297,8 @@ private struct BaStudentMetaImages: View {
         }
     }
 
-    private var iconURLs: [URL] {
-        var urls: [URL] = []
-        if let imageURL = item.imageURL {
-            urls.append(imageURL)
-        }
-        if let extraImageURL = item.extraImageURL {
-            urls.append(extraImageURL)
-        }
-        return urls
-    }
-
-    private var iconWidth: CGFloat {
-        switch iconURLs.count {
+    private static func iconWidth(for item: BaGuideMetaItem, iconCount: Int, size: CGFloat) -> CGFloat {
+        switch iconCount {
         case 0:
             return 0
         case 1:

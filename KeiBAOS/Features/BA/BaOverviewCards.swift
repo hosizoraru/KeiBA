@@ -271,14 +271,16 @@ struct BaOverviewTimelineSummary: Equatable {
     let poolTime: String
 
     init(activities: [BaActivityEntry], pools: [BaPoolEntry], now: Date) {
-        let activity = activities
-            .filter { $0.status(at: now) != .ended }
-            .sorted { $0.beginAt < $1.beginAt }
-            .first
-        let pool = pools
-            .filter { $0.status(at: now) != .ended }
-            .sorted { $0.startAt < $1.startAt }
-            .first
+        let activity = activities.reduce(nil as BaActivityEntry?) { current, entry in
+            guard entry.status(at: now) != .ended else { return current }
+            guard let current else { return entry }
+            return entry.beginAt < current.beginAt ? entry : current
+        }
+        let pool = pools.reduce(nil as BaPoolEntry?) { current, entry in
+            guard entry.status(at: now) != .ended else { return current }
+            guard let current else { return entry }
+            return entry.startAt < current.startAt ? entry : current
+        }
 
         activityTitle = activity?.title ?? String(localized: "ba.overview.timeline.empty")
         activityTime = activity.map {

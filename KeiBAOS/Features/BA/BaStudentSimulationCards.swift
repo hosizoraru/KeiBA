@@ -8,16 +8,17 @@
 import SwiftUI
 
 struct BaStudentSimulationCardsSection: View {
-    let rows: [BaGuideRow]
     let tint: Color
+    private let data: BaStudentSimulationData
 
-    private var data: BaStudentSimulationData {
-        BaStudentSimulationDisplayModel.build(rows: rows)
+    init(rows: [BaGuideRow], tint: Color) {
+        self.tint = tint
+        self.data = BaStudentSimulationDisplayModel.build(rows: rows)
     }
 
     var body: some View {
         Section {
-            if rows.isEmpty || data.hasRenderableContent == false {
+            if data.hasRenderableContent == false {
                 BaStudentDetailEmptyRow(section: .simulate)
                     .baStudentDetailListCardRow()
             } else {
@@ -72,8 +73,15 @@ struct BaStudentSimulationCardsSection: View {
 private struct BaStudentSimulationAbilityCard: View {
     let data: BaStudentSimulationData
     let tint: Color
+    private let initialValueByKey: [String: String]
 
     @State private var mode: BaStudentSimulationAbilityMode = .maximum
+
+    init(data: BaStudentSimulationData, tint: Color) {
+        self.data = data
+        self.tint = tint
+        self.initialValueByKey = Self.initialValuesByKey(from: data.initialRows)
+    }
 
     private var selectedRows: [BaGuideRow] {
         switch mode {
@@ -93,9 +101,9 @@ private struct BaStudentSimulationAbilityCard: View {
         }
     }
 
-    private var initialValueByKey: [String: String] {
+    private static func initialValuesByKey(from rows: [BaGuideRow]) -> [String: String] {
         var values: [String: String] = [:]
-        for row in data.initialRows {
+        for row in rows {
             let key = BaGuideTextNormalizer.normalizedKey(row.title)
             let value = row.value.trimmingCharacters(in: .whitespacesAndNewlines)
             if key.isEmpty == false, value.isEmpty == false, values[key] == nil {

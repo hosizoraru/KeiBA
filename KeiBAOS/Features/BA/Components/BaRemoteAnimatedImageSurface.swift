@@ -16,6 +16,7 @@ import SwiftUI
 
 struct BaRemoteAnimatedImageSurface: View {
     @Environment(BaAppModel.self) private var model
+    @Environment(\.baShowPreviewImages) private var showPreviewImages
 
     let url: URL?
     var fallbackSystemImage: String
@@ -52,18 +53,15 @@ struct BaRemoteAnimatedImageSurface: View {
         .task(id: cacheTaskID) {
             await loadImage()
         }
-        .onChange(of: model.settings.showPreviewImages) { _, _ in
-            Task { await loadImage() }
-        }
     }
 
     private var cacheTaskID: String {
-        "\(url?.absoluteString ?? "nil")-\(model.settings.showPreviewImages)-\(maxPixelDimension)"
+        "\(url?.absoluteString ?? "nil")-\(showPreviewImages)-\(maxPixelDimension)"
     }
 
     private func loadImage() async {
-        guard model.settings.showPreviewImages, let url else {
-            phase = model.settings.showPreviewImages ? .placeholder : .hidden
+        guard showPreviewImages, let url else {
+            phase = showPreviewImages ? .placeholder : .hidden
             return
         }
         phase = .loading

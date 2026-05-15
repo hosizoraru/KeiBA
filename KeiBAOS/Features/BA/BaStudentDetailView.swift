@@ -126,6 +126,7 @@ struct BaStudentDetailView: View {
                 BaStudentProfileCardsSection(
                     info: info,
                     tint: headerTint,
+                    sameNameEntryResolver: { model.studentCatalogEntry(forSameNameRole: $0) },
                     onOpenSameNameEntry: { selectedSameNameEntry = $0 }
                 )
             } else if state.isLoading == false {

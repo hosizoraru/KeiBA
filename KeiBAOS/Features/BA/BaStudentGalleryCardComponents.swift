@@ -215,6 +215,7 @@ struct BaStudentGalleryPillRow: View {
 
 struct BaStudentGalleryMediaSurface: View {
     @Environment(BaAppModel.self) private var model
+    @Environment(\.baShowPreviewImages) private var showPreviewImages
 
     let url: URL?
     let kind: BaGuideMediaKind
@@ -283,30 +284,47 @@ struct BaStudentGalleryMediaSurface: View {
             .task(id: cacheTaskID) {
                 await loadImage()
             }
-            .onChange(of: model.settings.showPreviewImages) { _, _ in
-                Task { await loadImage() }
-            }
         }
     }
 
     private var cacheTaskID: String {
-        "\(url?.absoluteString ?? "nil")-\(model.settings.showPreviewImages)"
+        "\(url?.absoluteString ?? "nil")-\(showPreviewImages)-\(maxPixelDimension)"
     }
 
     @MainActor
     private func loadImage() async {
-        guard model.settings.showPreviewImages, let url else {
-            phase = model.settings.showPreviewImages ? .placeholder : .hidden
+        guard showPreviewImages, let url else {
+            phase = showPreviewImages ? .placeholder : .hidden
             return
         }
         phase = .loading
-        guard let data = try? await model.imageData(for: url),
-              let image = BaRemoteImageSurface.image(from: data)
-        else {
-            phase = .failed
-            return
+        do {
+            let data = try await model.imageData(for: url)
+            guard Task.isCancelled == false else { return }
+            guard let image = await BaStillGalleryImageDecodeWorker.decode(
+                data: data,
+                maxPixelDimension: maxPixelDimension
+            ) else {
+                if Task.isCancelled == false {
+                    phase = .failed
+                }
+                return
+            }
+            guard Task.isCancelled == false else { return }
+            phase = .success(image)
+        } catch {
+            if Task.isCancelled == false {
+                phase = .failed
+            }
         }
-        phase = .success(image)
+    }
+}
+
+private enum BaStillGalleryImageDecodeWorker {
+    nonisolated static func decode(data: Data, maxPixelDimension: Int) async -> Image? {
+        await Task.detached(priority: .utility) {
+            BaRemoteImageSurface.image(from: data, maxPixelDimension: max(maxPixelDimension, 1))
+        }.value
     }
 }
 

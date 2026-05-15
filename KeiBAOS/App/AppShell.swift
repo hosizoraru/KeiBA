@@ -57,14 +57,19 @@ private struct BaNavigationRoot: View {
         switch tab {
         case .overview:
             BaOverviewView(onOpenTab: onSelectTab)
+                .environment(\.baShowPreviewImages, model.settings.showPreviewImages)
         case .activity:
             BaActivityView(statusFilter: $activityFilter)
+                .environment(\.baShowPreviewImages, model.settings.showPreviewImages)
         case .pool:
             BaPoolView(statusFilter: $poolFilter)
+                .environment(\.baShowPreviewImages, model.settings.showPreviewImages)
         case .catalog:
             BaCatalogView()
+                .environment(\.baShowPreviewImages, model.settings.showPreviewImages)
         case .library:
             BaLibraryView()
+                .environment(\.baShowPreviewImages, model.settings.showPreviewImages)
         }
     }
 

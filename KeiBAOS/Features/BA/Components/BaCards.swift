@@ -5,6 +5,7 @@
 //  Created by Voyager on 2026/05/14.
 //
 
+import ImageIO
 import SwiftUI
 #if canImport(UIKit)
     import UIKit
@@ -22,6 +23,17 @@ enum BaTextToken {
     static let rowTitle = Font.body.weight(.semibold)
     static let rowSubtitle = Font.subheadline
     static let rowCaption = Font.caption
+}
+
+private struct BaShowPreviewImagesKey: EnvironmentKey {
+    static let defaultValue = true
+}
+
+extension EnvironmentValues {
+    var baShowPreviewImages: Bool {
+        get { self[BaShowPreviewImagesKey.self] }
+        set { self[BaShowPreviewImagesKey.self] = newValue }
+    }
 }
 
 struct BaScreenScaffold<Content: View>: View {
@@ -338,6 +350,7 @@ struct BaDivider: View {
 
 struct BaRemoteImageSurface: View {
     @Environment(BaAppModel.self) private var model
+    @Environment(\.baShowPreviewImages) private var showPreviewImages
 
     let url: URL?
     var fallbackSystemImage: String
@@ -348,6 +361,7 @@ struct BaRemoteImageSurface: View {
     var contentMode: ContentMode = .fill
     var usesImageBackdrop = false
     var fallbackFont: Font = .title3.weight(.semibold)
+    var maxPixelDimension = 900
 
     @State private var phase: BaRemoteImagePhase = .placeholder
 
@@ -378,28 +392,34 @@ struct BaRemoteImageSurface: View {
         .task(id: cacheTaskID) {
             await loadImage()
         }
-        .onChange(of: model.settings.showPreviewImages) { _, _ in
-            Task { await loadImage() }
-        }
     }
 
     private var cacheTaskID: String {
-        "\(url?.absoluteString ?? "nil")-\(model.settings.showPreviewImages)"
+        "\(url?.absoluteString ?? "nil")-\(showPreviewImages)-\(maxPixelDimension)"
     }
 
     private func loadImage() async {
-        guard model.settings.showPreviewImages, let url else {
-            phase = model.settings.showPreviewImages ? .placeholder : .hidden
+        guard showPreviewImages, let url else {
+            phase = showPreviewImages ? .placeholder : .hidden
             return
         }
         phase = .loading
-        guard let data = try? await model.imageData(for: url),
-              let loaded = Self.image(from: data)
-        else {
-            phase = .failed
-            return
+        do {
+            let data = try await model.imageData(for: url)
+            guard Task.isCancelled == false else { return }
+            guard let loaded = await BaStillImageDecodeWorker.decode(data: data, maxPixelDimension: maxPixelDimension) else {
+                if Task.isCancelled == false {
+                    phase = .failed
+                }
+                return
+            }
+            guard Task.isCancelled == false else { return }
+            phase = .success(loaded)
+        } catch {
+            if Task.isCancelled == false {
+                phase = .failed
+            }
         }
-        phase = .success(loaded)
     }
 
     @ViewBuilder
@@ -426,12 +446,12 @@ struct BaRemoteImageSurface: View {
             .foregroundStyle(tint)
     }
 
-    static func image(from data: Data) -> Image? {
+    nonisolated static func image(from data: Data, maxPixelDimension: Int = 900) -> Image? {
         #if canImport(UIKit)
-            guard let uiImage = UIImage(data: data) else { return nil }
+            guard let uiImage = BaStillImageDecoder.uiImage(from: data, maxPixelDimension: maxPixelDimension) else { return nil }
             return Image(uiImage: uiImage)
         #elseif canImport(AppKit)
-            guard let nsImage = NSImage(data: data) else { return nil }
+            guard let nsImage = BaStillImageDecoder.nsImage(from: data, maxPixelDimension: maxPixelDimension) else { return nil }
             return Image(nsImage: nsImage)
         #else
             return nil
@@ -441,6 +461,7 @@ struct BaRemoteImageSurface: View {
 
 struct BaRemoteIconSurface: View {
     @Environment(BaAppModel.self) private var model
+    @Environment(\.baShowPreviewImages) private var showPreviewImages
 
     let url: URL?
     var fallbackSystemImage: String
@@ -448,6 +469,7 @@ struct BaRemoteIconSurface: View {
     var size: CGFloat
     var width: CGFloat? = nil
     var fallbackFont: Font = .caption.weight(.semibold)
+    var maxPixelDimension = 256
 
     @State private var phase: BaRemoteIconPhase = .placeholder
 
@@ -476,28 +498,34 @@ struct BaRemoteIconSurface: View {
         .task(id: cacheTaskID) {
             await loadImage()
         }
-        .onChange(of: model.settings.showPreviewImages) { _, _ in
-            Task { await loadImage() }
-        }
     }
 
     private var cacheTaskID: String {
-        "\(url?.absoluteString ?? "nil")-\(model.settings.showPreviewImages)"
+        "\(url?.absoluteString ?? "nil")-\(showPreviewImages)-\(maxPixelDimension)"
     }
 
     private func loadImage() async {
-        guard model.settings.showPreviewImages, let url else {
-            phase = model.settings.showPreviewImages ? .placeholder : .hidden
+        guard showPreviewImages, let url else {
+            phase = showPreviewImages ? .placeholder : .hidden
             return
         }
         phase = .loading
-        guard let data = try? await model.imageData(for: url),
-              let loaded = BaRemoteImageSurface.image(from: data)
-        else {
-            phase = .failed
-            return
+        do {
+            let data = try await model.imageData(for: url)
+            guard Task.isCancelled == false else { return }
+            guard let loaded = await BaStillImageDecodeWorker.decode(data: data, maxPixelDimension: maxPixelDimension) else {
+                if Task.isCancelled == false {
+                    phase = .failed
+                }
+                return
+            }
+            guard Task.isCancelled == false else { return }
+            phase = .success(loaded)
+        } catch {
+            if Task.isCancelled == false {
+                phase = .failed
+            }
         }
-        phase = .success(loaded)
     }
 
     private func fallbackIcon(systemImage: String, tint: Color) -> some View {
@@ -557,4 +585,44 @@ private enum BaRemoteIconPhase {
     case loading
     case failed
     case success(Image)
+}
+
+private enum BaStillImageDecodeWorker {
+    nonisolated static func decode(data: Data, maxPixelDimension: Int) async -> Image? {
+        await Task.detached(priority: .utility) {
+            BaRemoteImageSurface.image(from: data, maxPixelDimension: max(maxPixelDimension, 1))
+        }.value
+    }
+}
+
+private enum BaStillImageDecoder {
+    #if canImport(UIKit)
+        nonisolated static func uiImage(from data: Data, maxPixelDimension: Int) -> UIImage? {
+            guard let cgImage = thumbnailImage(from: data, maxPixelDimension: maxPixelDimension) else {
+                return UIImage(data: data)
+            }
+            return UIImage(cgImage: cgImage)
+        }
+    #elseif canImport(AppKit)
+        nonisolated static func nsImage(from data: Data, maxPixelDimension: Int) -> NSImage? {
+            guard let cgImage = thumbnailImage(from: data, maxPixelDimension: maxPixelDimension) else {
+                return NSImage(data: data)
+            }
+            return NSImage(cgImage: cgImage, size: .zero)
+        }
+    #endif
+
+    nonisolated private static func thumbnailImage(from data: Data, maxPixelDimension: Int) -> CGImage? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else {
+            return nil
+        }
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixelDimension,
+            kCGImageSourceShouldCacheImmediately: true,
+        ]
+        return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+            ?? CGImageSourceCreateImageAtIndex(source, 0, nil)
+    }
 }
