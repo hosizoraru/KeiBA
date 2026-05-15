@@ -110,19 +110,26 @@ private struct BaStudentProfileFieldRowView: View {
         row.value.ifBlank(String(localized: "ba.common.none"))
     }
 
+    private var usesParagraphLayout: Bool {
+        displayValue.count >= 28 || displayValue.contains("\n")
+    }
+
+    private var labelColumnWidth: CGFloat {
+        usesParagraphLayout ? 88 : 132
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 7) {
-            HStack(alignment: .firstTextBaseline, spacing: 12) {
+            HStack(alignment: usesParagraphLayout ? .top : .firstTextBaseline, spacing: usesParagraphLayout ? 10 : 12) {
                 Text(row.title)
                     .font(.body.weight(.semibold))
                     .foregroundStyle(.secondary)
-                    .frame(maxWidth: 132, alignment: .leading)
+                    .frame(width: labelColumnWidth, alignment: .leading)
                     .lineLimit(1)
                     .minimumScaleFactor(0.78)
 
-                Spacer(minLength: 8)
-
                 valueView
+                    .frame(maxWidth: .infinity, alignment: usesParagraphLayout ? .leading : .trailing)
             }
 
             if let imageURL = row.imageURL {
@@ -141,10 +148,10 @@ private struct BaStudentProfileFieldRowView: View {
                     Image(systemName: "arrow.up.right")
                         .font(.caption.weight(.bold))
                 }
-                .font(.body.weight(.semibold))
-                .foregroundStyle(tint)
-                .multilineTextAlignment(.trailing)
-                .fixedSize(horizontal: false, vertical: true)
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(tint)
+                    .multilineTextAlignment(usesParagraphLayout ? .leading : .trailing)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         } else if row.prefersCapsule {
             BaStudentProfileValueChip(title: displayValue, tint: tint)
@@ -152,7 +159,7 @@ private struct BaStudentProfileFieldRowView: View {
             Text(displayValue)
                 .font(.body.weight(.semibold))
                 .foregroundStyle(.primary)
-                .multilineTextAlignment(.trailing)
+                .multilineTextAlignment(usesParagraphLayout ? .leading : .trailing)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
