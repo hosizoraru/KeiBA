@@ -5,7 +5,6 @@
 //  Created by Codex on 2026/05/16.
 //
 
-import AVKit
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -214,90 +213,6 @@ struct BaStudentGalleryPillRow: View {
     }
 }
 
-struct BaStudentGalleryVideoPlayerSurface: View {
-    let title: String
-    let previewURL: URL?
-    let mediaURL: URL?
-    let height: CGFloat
-
-    @State private var player: AVPlayer?
-    @State private var isLoading = false
-    @State private var errorMessage: String?
-
-    var body: some View {
-        ZStack {
-            if let player {
-                VideoPlayer(player: player)
-                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            } else {
-                Button {
-                    Task { await loadVideo() }
-                } label: {
-                    ZStack {
-                        BaStudentGalleryMediaSurface(
-                            url: previewURL,
-                            kind: .video,
-                            height: height,
-                            cornerRadius: 18,
-                            maxPixelDimension: 900
-                        )
-
-                        Circle()
-                            .fill(BaDesign.violet.opacity(0.88))
-                            .frame(width: 60, height: 60)
-                            .shadow(color: .black.opacity(0.10), radius: 12, y: 5)
-                            .overlay {
-                                if isLoading {
-                                    ProgressView()
-                                } else {
-                                    Image(systemName: "play.fill")
-                                        .font(.title3.weight(.bold))
-                                        .foregroundStyle(.white)
-                                        .offset(x: 2)
-                                }
-                            }
-                    }
-                }
-                .buttonStyle(.plain)
-                .disabled(mediaURL == nil || isLoading)
-                .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: height)
-        .alert(
-            String(localized: "ba.student.detail.gallery.video.loadFailed"),
-            isPresented: Binding(
-                get: { errorMessage != nil },
-                set: { if $0 == false { errorMessage = nil } }
-            )
-        ) {
-            Button(String(localized: "ba.common.done")) {
-                errorMessage = nil
-            }
-        } message: {
-            Text(errorMessage ?? "")
-        }
-        .onDisappear {
-            player?.pause()
-        }
-    }
-
-    @MainActor
-    private func loadVideo() async {
-        guard let mediaURL else { return }
-        isLoading = true
-        defer { isLoading = false }
-        do {
-            let localURL = try await BaGuideMediaCache.shared.localURL(for: mediaURL)
-            player = AVPlayer(url: localURL)
-            player?.play()
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
-}
-
 struct BaStudentGalleryMediaSurface: View {
     @Environment(BaAppModel.self) private var model
 
@@ -423,76 +338,6 @@ struct BaStudentGalleryAdaptiveMediaSurface: View {
     }
 }
 
-struct BaStudentGalleryAdaptiveVideoPlayerSurface: View {
-    let item: BaGuideGalleryItem
-    let presentation: BaStudentGalleryCardPresentation
-
-    #if os(macOS)
-        private var layoutContext: BaStudentGalleryLayoutContext { .desktop }
-    #else
-        @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-
-        private var layoutContext: BaStudentGalleryLayoutContext {
-            horizontalSizeClass == .regular ? .regular : .compact
-        }
-    #endif
-
-    var body: some View {
-        let resolvedLayout = presentation.layout.resolved(for: layoutContext)
-        BaStudentGalleryVideoPlayerSurface(
-            title: item.title,
-            previewURL: item.imageURL,
-            mediaURL: item.mediaURL,
-            height: resolvedLayout.height
-        )
-        .frame(maxWidth: resolvedLayout.maxContentWidth)
-        .frame(maxWidth: .infinity, alignment: .center)
-    }
-}
-
-struct BaStudentGalleryAdaptiveVideoPreviewSurface: View {
-    let item: BaGuideGalleryItem
-    let presentation: BaStudentGalleryCardPresentation
-
-    #if os(macOS)
-        private var layoutContext: BaStudentGalleryLayoutContext { .desktop }
-    #else
-        @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-
-        private var layoutContext: BaStudentGalleryLayoutContext {
-            horizontalSizeClass == .regular ? .regular : .compact
-        }
-    #endif
-
-    var body: some View {
-        let resolvedLayout = presentation.layout.resolved(for: layoutContext)
-        ZStack {
-            BaStudentGalleryMediaSurface(
-                url: item.imageURL,
-                kind: .video,
-                height: resolvedLayout.height,
-                cornerRadius: resolvedLayout.cornerRadius,
-                maxPixelDimension: resolvedLayout.maxPixelDimension,
-                contentPadding: resolvedLayout.contentPadding
-            )
-
-            Circle()
-                .fill(BaDesign.violet.opacity(0.88))
-                .frame(width: 58, height: 58)
-                .shadow(color: .black.opacity(0.14), radius: 12, y: 6)
-                .overlay {
-                    Image(systemName: "play.fill")
-                        .font(.title3.weight(.bold))
-                        .foregroundStyle(.white)
-                        .offset(x: 2)
-                }
-                .accessibilityHidden(true)
-        }
-        .frame(maxWidth: resolvedLayout.maxContentWidth)
-        .frame(maxWidth: .infinity, alignment: .center)
-    }
-}
-
 struct BaStudentGalleryPreviewMediaSurface: View {
     let presentation: BaStudentGalleryCardPresentation
 
@@ -505,23 +350,6 @@ struct BaStudentGalleryPreviewMediaSurface: View {
             cornerRadius: resolvedLayout.cornerRadius,
             maxPixelDimension: resolvedLayout.maxPixelDimension,
             contentPadding: resolvedLayout.contentPadding
-        )
-        .frame(maxWidth: resolvedLayout.maxContentWidth)
-        .frame(maxWidth: .infinity, alignment: .center)
-    }
-}
-
-struct BaStudentGalleryPreviewVideoSurface: View {
-    let item: BaGuideGalleryItem
-    let presentation: BaStudentGalleryCardPresentation
-
-    var body: some View {
-        let resolvedLayout = presentation.layout.resolved(for: .preview)
-        BaStudentGalleryVideoPlayerSurface(
-            title: item.title,
-            previewURL: item.imageURL,
-            mediaURL: item.mediaURL,
-            height: resolvedLayout.height
         )
         .frame(maxWidth: resolvedLayout.maxContentWidth)
         .frame(maxWidth: .infinity, alignment: .center)

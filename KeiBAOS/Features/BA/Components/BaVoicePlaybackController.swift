@@ -44,6 +44,7 @@ final class BaVoicePlaybackController {
     private let audioCache: any BaAudioCaching
     @ObservationIgnored private let oggPlayer = BaOggVoicePlayer()
     @ObservationIgnored private let logger = Logger(subsystem: "os.kei.KeiBAOS", category: "BaVoicePlayback")
+    @ObservationIgnored private var playbackObserver: NSObjectProtocol?
     private var player: AVAudioPlayer?
     private var playbackBackend: PlaybackBackend?
     private var loadToken = UUID()
@@ -53,6 +54,22 @@ final class BaVoicePlaybackController {
         self.audioCache = audioCache
         oggPlayer.onEvent = { [weak self] event in
             self?.handleOggEvent(event)
+        }
+        playbackObserver = NotificationCenter.default.addObserver(
+            forName: BaMediaPlaybackCoordinator.willStartPlaybackNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            Task { @MainActor [weak self] in
+                guard let self, notification.object as AnyObject? !== self else { return }
+                self.stop()
+            }
+        }
+    }
+
+    deinit {
+        if let playbackObserver {
+            NotificationCenter.default.removeObserver(playbackObserver)
         }
     }
 
@@ -117,6 +134,7 @@ final class BaVoicePlaybackController {
     }
 
     private func play(remoteURL: URL) {
+        BaMediaPlaybackCoordinator.notifyWillStartPlayback(sender: self)
         let token = UUID()
         loadToken = token
         tearDownPlayer()
@@ -141,6 +159,7 @@ final class BaVoicePlaybackController {
     }
 
     private func resume() {
+        BaMediaPlaybackCoordinator.notifyWillStartPlayback(sender: self)
         errorMessage = nil
         if playbackBackend == .vorbisEngine || playbackBackend == .audioStreaming {
             resumeOggPlayer()
@@ -288,11 +307,7 @@ final class BaVoicePlaybackController {
     }
 
     private func configureAudioSession() {
-        #if os(iOS) || os(tvOS) || os(watchOS)
-            let session = AVAudioSession.sharedInstance()
-            try? session.setCategory(.playback, mode: .default, options: [])
-            try? session.setActive(true)
-        #endif
+        BaMediaPlaybackCoordinator.configurePrimaryPlaybackSession()
     }
 }
 

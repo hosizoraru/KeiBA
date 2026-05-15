@@ -80,7 +80,14 @@ struct BaStudentGalleryPreviewSheet: View {
                         dismiss()
                     }
                 }
-                ToolbarItem(placement: .primaryAction) {
+                ToolbarItemGroup(placement: .primaryAction) {
+                    if let shareURL = item.mediaURL ?? item.previewURL {
+                        ShareLink(item: shareURL) {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+                        .accessibilityLabel(String(localized: "ba.action.share"))
+                    }
+
                     BaGalleryMediaSaveButton(url: item.mediaURL ?? item.previewURL, title: item.title)
                 }
             }

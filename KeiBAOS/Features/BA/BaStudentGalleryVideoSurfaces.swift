@@ -1,0 +1,242 @@
+//
+//  BaStudentGalleryVideoSurfaces.swift
+//  KeiBAOS
+//
+//  Created by Codex on 2026/05/16.
+//
+
+import AVKit
+import SwiftUI
+
+#if canImport(UIKit)
+    import UIKit
+#elseif canImport(AppKit)
+    import AppKit
+#endif
+
+struct BaStudentGalleryVideoPlayerSurface: View {
+    let title: String
+    let previewURL: URL?
+    let mediaURL: URL?
+    let height: CGFloat
+    let cornerRadius: CGFloat
+    let maxPixelDimension: Int
+    let contentPadding: CGFloat
+
+    @State private var player: AVPlayer?
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+
+    var body: some View {
+        ZStack {
+            if let player {
+                BaGallerySystemVideoPlayer(player: player)
+            } else {
+                BaStudentGalleryVideoPosterSurface(
+                    previewURL: previewURL,
+                    height: height,
+                    cornerRadius: cornerRadius,
+                    maxPixelDimension: maxPixelDimension,
+                    contentPadding: contentPadding,
+                    isLoading: isLoading
+                )
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: height)
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .strokeBorder(.white.opacity(0.16), lineWidth: 1)
+        }
+        .task(id: mediaURL) {
+            await loadVideo()
+        }
+        .alert(
+            String(localized: "ba.student.detail.gallery.video.loadFailed"),
+            isPresented: Binding(
+                get: { errorMessage != nil },
+                set: { if $0 == false { errorMessage = nil } }
+            )
+        ) {
+            Button(String(localized: "ba.common.done")) {
+                errorMessage = nil
+            }
+        } message: {
+            Text(errorMessage ?? "")
+        }
+        .onReceive(NotificationCenter.default.publisher(for: BaMediaPlaybackCoordinator.willStartPlaybackNotification)) { notification in
+            guard notification.object as AnyObject? !== player else { return }
+            player?.pause()
+        }
+        .onDisappear {
+            player?.pause()
+            player?.replaceCurrentItem(with: nil)
+            player = nil
+        }
+    }
+
+    @MainActor
+    private func loadVideo() async {
+        player?.pause()
+        player = nil
+        errorMessage = nil
+        guard let mediaURL else { return }
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            let localURL = try await BaGuideMediaCache.shared.localURL(for: mediaURL)
+            let nextPlayer = AVPlayer(url: localURL)
+            BaMediaPlaybackCoordinator.configurePrimaryPlaybackSession()
+            BaMediaPlaybackCoordinator.notifyWillStartPlayback(sender: nextPlayer)
+            player = nextPlayer
+            nextPlayer.play()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+}
+
+struct BaStudentGalleryAdaptiveVideoPreviewSurface: View {
+    let item: BaGuideGalleryItem
+    let presentation: BaStudentGalleryCardPresentation
+
+    #if os(macOS)
+        private var layoutContext: BaStudentGalleryLayoutContext { .desktop }
+    #else
+        @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+        private var layoutContext: BaStudentGalleryLayoutContext {
+            horizontalSizeClass == .regular ? .regular : .compact
+        }
+    #endif
+
+    var body: some View {
+        let resolvedLayout = presentation.layout.resolved(for: layoutContext)
+        BaStudentGalleryVideoPosterSurface(
+            previewURL: item.imageURL,
+            height: resolvedLayout.height,
+            cornerRadius: resolvedLayout.cornerRadius,
+            maxPixelDimension: resolvedLayout.maxPixelDimension,
+            contentPadding: resolvedLayout.contentPadding,
+            isLoading: false
+        )
+        .frame(maxWidth: resolvedLayout.maxContentWidth)
+        .frame(maxWidth: .infinity, alignment: .center)
+    }
+}
+
+struct BaStudentGalleryPreviewVideoSurface: View {
+    let item: BaGuideGalleryItem
+    let presentation: BaStudentGalleryCardPresentation
+
+    var body: some View {
+        let resolvedLayout = presentation.layout.resolved(for: .preview)
+        BaStudentGalleryVideoPlayerSurface(
+            title: item.title,
+            previewURL: item.imageURL,
+            mediaURL: item.mediaURL,
+            height: resolvedLayout.height,
+            cornerRadius: resolvedLayout.cornerRadius,
+            maxPixelDimension: resolvedLayout.maxPixelDimension,
+            contentPadding: resolvedLayout.contentPadding
+        )
+        .frame(maxWidth: resolvedLayout.maxContentWidth)
+        .frame(maxWidth: .infinity, alignment: .center)
+    }
+}
+
+private struct BaStudentGalleryVideoPosterSurface: View {
+    let previewURL: URL?
+    let height: CGFloat
+    let cornerRadius: CGFloat
+    let maxPixelDimension: Int
+    let contentPadding: CGFloat
+    let isLoading: Bool
+
+    var body: some View {
+        ZStack {
+            BaStudentGalleryMediaSurface(
+                url: previewURL,
+                kind: .video,
+                height: height,
+                cornerRadius: cornerRadius,
+                maxPixelDimension: maxPixelDimension,
+                contentPadding: contentPadding
+            )
+
+            BaGalleryVideoControlSurface(systemImage: "play.fill", isLoading: isLoading)
+                .accessibilityHidden(true)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: height)
+    }
+}
+
+private struct BaGalleryVideoControlSurface: View {
+    let systemImage: String
+    let isLoading: Bool
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(.black.opacity(0.72))
+                .overlay {
+                    Circle()
+                        .strokeBorder(.white.opacity(0.26), lineWidth: 1)
+                }
+                .shadow(color: .black.opacity(0.22), radius: 14, y: 6)
+
+            if isLoading {
+                ProgressView()
+                    .controlSize(.regular)
+                    .tint(.white)
+            } else {
+                Image(systemName: systemImage)
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(.white)
+                    .offset(x: systemImage == "play.fill" ? 2 : 0)
+            }
+        }
+        .frame(width: 58, height: 58)
+    }
+}
+
+#if canImport(UIKit)
+    private struct BaGallerySystemVideoPlayer: UIViewControllerRepresentable {
+        let player: AVPlayer
+
+        func makeUIViewController(context _: Context) -> AVPlayerViewController {
+            let controller = AVPlayerViewController()
+            controller.player = player
+            controller.showsPlaybackControls = true
+            controller.allowsPictureInPicturePlayback = true
+            controller.canStartPictureInPictureAutomaticallyFromInline = true
+            controller.entersFullScreenWhenPlaybackBegins = false
+            controller.exitsFullScreenWhenPlaybackEnds = false
+            controller.videoGravity = .resizeAspect
+            return controller
+        }
+
+        func updateUIViewController(_ controller: AVPlayerViewController, context _: Context) {
+            controller.player = player
+        }
+    }
+#elseif canImport(AppKit)
+    private struct BaGallerySystemVideoPlayer: NSViewRepresentable {
+        let player: AVPlayer
+
+        func makeNSView(context _: Context) -> AVPlayerView {
+            let view = AVPlayerView()
+            view.controlsStyle = .floating
+            view.videoGravity = .resizeAspect
+            view.player = player
+            return view
+        }
+
+        func updateNSView(_ nsView: AVPlayerView, context _: Context) {
+            nsView.player = player
+        }
+    }
+#endif
