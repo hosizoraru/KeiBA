@@ -595,7 +595,7 @@ private struct BaStudentProfileFurniturePreviewSheet: View {
                 .padding(18)
             }
             .navigationTitle(item.furnitureDisplayTitle)
-            .navigationBarTitleDisplayMode(.inline)
+            .platformInlineNavigationTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(String(localized: "ba.common.done")) {

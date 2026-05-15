@@ -18,6 +18,15 @@ extension View {
     }
 
     @ViewBuilder
+    func platformInlineNavigationTitle() -> some View {
+        #if os(iOS)
+            navigationBarTitleDisplayMode(.inline)
+        #else
+            self
+        #endif
+    }
+
+    @ViewBuilder
     func platformInsetGroupedListStyle() -> some View {
         #if os(iOS)
             listStyle(.insetGrouped)
