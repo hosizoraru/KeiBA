@@ -21,40 +21,57 @@ enum BaOggVoiceEvent {
 final class BaOggVoicePlayer: NSObject {
     var onEvent: ((BaOggVoiceEvent) -> Void)?
 
-    private let player = AudioPlayer()
+    private var player: AudioPlayer?
     private var progressTimer: Timer?
-
-    override init() {
-        super.init()
-        player.delegate = self
-    }
 
     deinit {
         progressTimer?.invalidate()
-        player.stop()
+        player?.delegate = nil
+        player?.stop()
     }
 
     func play(localURL: URL) {
+        play(url: localURL, headers: [:])
+    }
+
+    func play(remoteURL: URL, headers: [String: String]) {
+        play(url: remoteURL, headers: headers)
+    }
+
+    private func play(url: URL, headers: [String: String]) {
         stopProgressTimer()
-        onEvent?(.ready)
-        player.play(url: localURL)
+        stopCurrentPlayer()
+        let nextPlayer = AudioPlayer()
+        nextPlayer.volume = 1
+        nextPlayer.rate = 1
+        nextPlayer.delegate = self
+        player = nextPlayer
+        nextPlayer.play(url: url, headers: headers)
         startProgressTimer()
+        onEvent?(.playing)
     }
 
     func pause() {
-        player.pause()
+        player?.pause()
         stopProgressTimer()
         onEvent?(.paused)
     }
 
     func resume() {
-        player.resume()
+        player?.resume()
         startProgressTimer()
     }
 
     func stop() {
         stopProgressTimer()
-        player.stop()
+        stopCurrentPlayer()
+    }
+
+    private func stopCurrentPlayer() {
+        let oldPlayer = player
+        player = nil
+        oldPlayer?.delegate = nil
+        oldPlayer?.stop()
     }
 
     private func startProgressTimer() {
@@ -72,6 +89,10 @@ final class BaOggVoicePlayer: NSObject {
     }
 
     private func updateProgress() {
+        guard let player else {
+            onEvent?(.progress(0))
+            return
+        }
         let duration = player.duration
         guard duration > 0 else {
             onEvent?(.progress(0))
@@ -79,36 +100,57 @@ final class BaOggVoicePlayer: NSObject {
         }
         onEvent?(.progress(player.progress / duration))
     }
+
+    private func emitEnd(for callbackPlayer: AudioPlayer) {
+        guard let currentPlayer = player, callbackPlayer === currentPlayer else { return }
+        stopProgressTimer()
+        callbackPlayer.delegate = nil
+        player = nil
+        onEvent?(.ended)
+    }
+
+    private func emitFailure(_ message: String, for callbackPlayer: AudioPlayer) {
+        guard let currentPlayer = player, callbackPlayer === currentPlayer else { return }
+        stopProgressTimer()
+        callbackPlayer.delegate = nil
+        player = nil
+        onEvent?(.failed(message))
+    }
 }
 
 extension BaOggVoicePlayer: AudioPlayerDelegate {
-    nonisolated func audioPlayerDidStartPlaying(player _: AudioPlayer, with _: AudioEntryId) {
-        Task { @MainActor [weak self] in
-            self?.onEvent?(.playing)
+    nonisolated func audioPlayerDidStartPlaying(player callbackPlayer: AudioPlayer, with _: AudioEntryId) {
+        Task { @MainActor [weak self, weak callbackPlayer] in
+            guard let self, let callbackPlayer, let currentPlayer = self.player, callbackPlayer === currentPlayer else { return }
+            self.onEvent?(.playing)
         }
     }
 
-    nonisolated func audioPlayerDidFinishBuffering(player _: AudioPlayer, with _: AudioEntryId) {
-        Task { @MainActor [weak self] in
-            self?.onEvent?(.ready)
+    nonisolated func audioPlayerDidFinishBuffering(player callbackPlayer: AudioPlayer, with _: AudioEntryId) {
+        Task { @MainActor [weak self, weak callbackPlayer] in
+            guard let self, let callbackPlayer, let currentPlayer = self.player, callbackPlayer === currentPlayer else { return }
+            self.onEvent?(.ready)
         }
     }
 
     nonisolated func audioPlayerStateChanged(
-        player _: AudioPlayer,
+        player callbackPlayer: AudioPlayer,
         with newState: AudioPlayerState,
         previous _: AudioPlayerState
     ) {
-        Task { @MainActor [weak self] in
+        Task { @MainActor [weak self, weak callbackPlayer] in
+            guard let self, let callbackPlayer, let currentPlayer = self.player, callbackPlayer === currentPlayer else { return }
             switch newState {
             case .playing:
-                self?.onEvent?(.playing)
+                self.onEvent?(.playing)
             case .paused:
-                self?.onEvent?(.paused)
-            case .stopped, .disposed:
-                self?.onEvent?(.ended)
+                self.onEvent?(.paused)
+            case .stopped where callbackPlayer.stopReason == .eof:
+                self.emitEnd(for: callbackPlayer)
+            case .disposed:
+                self.emitEnd(for: callbackPlayer)
             case .error:
-                self?.onEvent?(.failed(String(localized: "ba.student.detail.voice.error.playback")))
+                self.emitFailure(String(localized: "ba.student.detail.voice.error.playback"), for: callbackPlayer)
             default:
                 break
             }
@@ -116,26 +158,29 @@ extension BaOggVoicePlayer: AudioPlayerDelegate {
     }
 
     nonisolated func audioPlayerDidFinishPlaying(
-        player _: AudioPlayer,
+        player callbackPlayer: AudioPlayer,
         entryId _: AudioEntryId,
         stopReason _: AudioPlayerStopReason,
         progress _: Double,
         duration _: Double
     ) {
-        Task { @MainActor [weak self] in
-            self?.onEvent?(.ended)
+        Task { @MainActor [weak self, weak callbackPlayer] in
+            guard let self, let callbackPlayer, let currentPlayer = self.player, callbackPlayer === currentPlayer else { return }
+            self.emitEnd(for: callbackPlayer)
         }
     }
 
-    nonisolated func audioPlayerUnexpectedError(player _: AudioPlayer, error: AudioPlayerError) {
-        Task { @MainActor [weak self] in
-            self?.onEvent?(.failed(error.localizedDescription))
+    nonisolated func audioPlayerUnexpectedError(player callbackPlayer: AudioPlayer, error: AudioPlayerError) {
+        Task { @MainActor [weak self, weak callbackPlayer] in
+            guard let self, let callbackPlayer, let currentPlayer = self.player, callbackPlayer === currentPlayer else { return }
+            self.emitFailure(error.localizedDescription, for: callbackPlayer)
         }
     }
 
-    nonisolated func audioPlayerDidCancel(player _: AudioPlayer, queuedItems _: [AudioEntryId]) {
-        Task { @MainActor [weak self] in
-            self?.onEvent?(.ended)
+    nonisolated func audioPlayerDidCancel(player callbackPlayer: AudioPlayer, queuedItems _: [AudioEntryId]) {
+        Task { @MainActor [weak self, weak callbackPlayer] in
+            guard let self, let callbackPlayer, let currentPlayer = self.player, callbackPlayer === currentPlayer else { return }
+            self.emitEnd(for: callbackPlayer)
         }
     }
 

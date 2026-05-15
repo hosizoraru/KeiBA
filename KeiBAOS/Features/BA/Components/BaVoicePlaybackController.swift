@@ -8,6 +8,7 @@
 import AVFoundation
 import Foundation
 import Observation
+import os
 
 @Observable
 @MainActor
@@ -28,6 +29,8 @@ final class BaVoicePlaybackController {
 
     private let audioCache: BaAudioCache
     @ObservationIgnored private let oggPlayer = BaOggVoicePlayer()
+    @ObservationIgnored private let client = GameKeeClient()
+    @ObservationIgnored private let logger = Logger(subsystem: "os.kei.KeiBAOS", category: "BaVoicePlayback")
     private var player: AVAudioPlayer?
     private var playbackBackend: PlaybackBackend?
     private var loadToken = UUID()
@@ -97,6 +100,11 @@ final class BaVoicePlaybackController {
         progress = 0
         playbackBackend = Self.preferredBackend(for: remoteURL)
 
+        if playbackBackend == .audioStreaming {
+            startOggPlayer(remoteURL: remoteURL)
+            return
+        }
+
         Task {
             do {
                 let localURL = try await audioCache.localURL(for: remoteURL)
@@ -143,7 +151,15 @@ final class BaVoicePlaybackController {
             configureAudioSession()
             let nextPlayer = try AVAudioPlayer(contentsOf: localURL)
             nextPlayer.prepareToPlay()
-            nextPlayer.play()
+            guard nextPlayer.play() else {
+                if isOggFile(localURL) {
+                    playbackBackend = .audioStreaming
+                    startOggPlayer(localURL: localURL)
+                } else {
+                    fail(message: String(localized: "ba.student.detail.voice.error.playback"))
+                }
+                return
+            }
             player = nextPlayer
             isLoading = false
             isPlaying = true
@@ -175,16 +191,21 @@ final class BaVoicePlaybackController {
 
     private func finishPlayback() {
         player?.currentTime = 0
+        currentRemoteURL = nil
         isPlaying = false
         progress = 0
+        playbackBackend = nil
         stopProgressTimer()
     }
 
     private func fail(message: String) {
         tearDownPlayer()
+        stopOggPlayer()
         isLoading = false
         isPlaying = false
         progress = 0
+        currentRemoteURL = nil
+        playbackBackend = nil
         errorMessage = message
     }
 
@@ -208,13 +229,17 @@ final class BaVoicePlaybackController {
         progressTimer = nil
     }
 
-    private enum PlaybackBackend {
+    private enum PlaybackBackend: String {
         case avFoundation
         case audioStreaming
     }
 
     private nonisolated static func preferredBackend(for url: URL) -> PlaybackBackend {
-        .avFoundation
+        supportsOggPlayback(url) ? .audioStreaming : .avFoundation
+    }
+
+    nonisolated static func preferredBackendNameForTesting(_ url: URL) -> String {
+        preferredBackend(for: url).rawValue
     }
 
     private nonisolated static func looksLikeAudioSource(_ url: URL) -> Bool {
@@ -239,15 +264,26 @@ final class BaVoicePlaybackController {
     private func configureAudioSession() {
         #if os(iOS) || os(tvOS) || os(watchOS)
             let session = AVAudioSession.sharedInstance()
-            try? session.setCategory(.playback, mode: .spokenAudio, options: [])
+            try? session.setCategory(.playback, mode: .default, options: [])
             try? session.setActive(true)
         #endif
     }
 }
 
 private extension BaVoicePlaybackController {
+    func startOggPlayer(remoteURL: URL) {
+        configureAudioSession()
+        let headers = GameKeeClient.mediaPlaybackHeaders(
+            for: remoteURL,
+            referer: client.resolvedReferer(pathOrURL: remoteURL.absoluteString, refererPath: "/ba")
+        )
+        logger.debug("voice ogg remote start \(remoteURL.host ?? "unknown", privacy: .public)")
+        oggPlayer.play(remoteURL: remoteURL, headers: headers)
+    }
+
     func startOggPlayer(localURL: URL) {
         configureAudioSession()
+        logger.debug("voice ogg local fallback start")
         oggPlayer.play(localURL: localURL)
     }
 
@@ -277,6 +313,8 @@ private extension BaVoicePlaybackController {
             isLoading = false
             isPlaying = false
             progress = 0
+            currentRemoteURL = nil
+            playbackBackend = nil
         case let .progress(value):
             progress = min(max(value, 0), 1)
         case let .failed(message):

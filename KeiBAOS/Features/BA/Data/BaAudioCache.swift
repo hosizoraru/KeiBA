@@ -31,8 +31,12 @@ actor BaAudioCache {
     func localURL(for url: URL, refererPath: String = "/ba") async throws -> URL {
         let fileURL = cachedFileURL(for: url)
         if let data = try? Data(contentsOf: fileURL), data.isEmpty == false {
-            logger.debug("audio cache hit \(url.host ?? "unknown", privacy: .public)")
-            return fileURL
+            if Self.looksLikeAudioData(data, expectedExtension: url.pathExtension) {
+                logger.debug("audio cache hit \(url.host ?? "unknown", privacy: .public)")
+                return fileURL
+            }
+            try? fileManager.removeItem(at: fileURL)
+            logger.debug("audio cache invalidated \(url.host ?? "unknown", privacy: .public)")
         }
         if let retryAt = deferredFailures[url], retryAt > Date() {
             throw GameKeeError.invalidResponse("Audio retry deferred")
@@ -46,10 +50,15 @@ actor BaAudioCache {
             throw error
         }
         do {
+            guard Self.looksLikeAudioData(data, expectedExtension: url.pathExtension) else {
+                recordFailure(for: url)
+                throw GameKeeError.invalidResponse(String(decoding: data.prefix(120), as: UTF8.self))
+            }
             try data.write(to: fileURL, options: [.atomic])
             logger.debug("audio cache stored \(url.host ?? "unknown", privacy: .public) bytes=\(data.count, privacy: .public)")
         } catch {
             logger.debug("audio cache write failed \(error.localizedDescription, privacy: .public)")
+            throw error
         }
         return fileURL
     }
@@ -65,5 +74,23 @@ actor BaAudioCache {
             .joined()
         let ext = url.pathExtension.isEmpty ? "audio" : url.pathExtension
         return rootDirectory.appendingPathComponent("\(hash).\(ext)")
+    }
+
+    private nonisolated static func looksLikeAudioData(_ data: Data, expectedExtension: String) -> Bool {
+        let ext = expectedExtension.lowercased()
+        let bytes = [UInt8](data.prefix(16))
+        let isOgg = bytes.starts(with: [0x4F, 0x67, 0x67, 0x53])
+        let isID3 = bytes.starts(with: [0x49, 0x44, 0x33])
+        let isMP3Frame = bytes.count >= 2 && bytes[0] == 0xFF && (bytes[1] & 0xE0) == 0xE0
+        let isFLAC = bytes.starts(with: [0x66, 0x4C, 0x61, 0x43])
+        let isWave = bytes.count >= 12 &&
+            bytes[0 ..< 4].elementsEqual([0x52, 0x49, 0x46, 0x46]) &&
+            bytes[8 ..< 12].elementsEqual([0x57, 0x41, 0x56, 0x45])
+        let isMP4Family = bytes.count >= 8 &&
+            bytes[4 ..< 8].elementsEqual([0x66, 0x74, 0x79, 0x70])
+        let recognized = isOgg || isID3 || isMP3Frame || isFLAC || isWave || isMP4Family
+        if recognized { return true }
+        if ["ogg", "oga", "opus"].contains(ext) { return false }
+        return ext.isEmpty || ext == "audio"
     }
 }

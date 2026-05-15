@@ -211,9 +211,13 @@ struct GameKeeClient {
         urlRequest.httpMethod = "GET"
         urlRequest.timeoutInterval = 18
         urlRequest.cachePolicy = .reloadRevalidatingCacheData
-        urlRequest.setValue("audio/*,application/octet-stream,*/*", forHTTPHeaderField: "Accept")
-        urlRequest.setValue("zh-CN", forHTTPHeaderField: "Accept-Language")
-        urlRequest.setValue(resolveReferer(pathOrURL: request.pathOrURL, refererPath: request.refererPath), forHTTPHeaderField: "Referer")
+        let mediaHeaders = Self.mediaPlaybackHeaders(
+            for: url,
+            referer: resolveReferer(pathOrURL: request.pathOrURL, refererPath: request.refererPath)
+        )
+        for (key, value) in mediaHeaders {
+            urlRequest.setValue(value, forHTTPHeaderField: key)
+        }
         urlRequest.setValue(userAgent, forHTTPHeaderField: "User-Agent")
         for (key, value) in request.extraHeaders {
             urlRequest.setValue(value, forHTTPHeaderField: key)
@@ -403,6 +407,21 @@ struct GameKeeClient {
 extension GameKeeClient {
     static var baHeaders: [String: String] {
         [
+            "device-num": "1",
+            "game-alias": "ba",
+        ]
+    }
+
+    nonisolated static func mediaPlaybackHeaders(
+        for _: URL,
+        referer: String = "https://www.gamekee.com/"
+    ) -> [String: String] {
+        [
+            "Accept": "*/*",
+            "Accept-Language": "zh-CN",
+            "Referer": referer,
+            "Origin": "https://www.gamekee.com",
+            "User-Agent": firefoxAndroidUserAgent,
             "device-num": "1",
             "game-alias": "ba",
         ]
