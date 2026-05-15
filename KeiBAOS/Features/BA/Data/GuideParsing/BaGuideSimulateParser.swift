@@ -74,7 +74,7 @@ struct BaGuideSimulateParser {
             out.append(row)
         }
 
-        return Array(out.prefix(260))
+        return Array(patchSupplementIcons(in: out, baseData: baseData, sourceURL: sourceURL).prefix(260))
     }
 
     private func simulateStartIndex(in baseData: [[BaJSONObject]]) -> Int? {
@@ -140,5 +140,166 @@ struct BaGuideSimulateParser {
     private func firstCellText(in row: [BaJSONObject]) -> String {
         guard let first = row.first else { return "" }
         return BaGuideTextNormalizer.clean(first.string("value") ?? "")
+    }
+
+    private func patchSupplementIcons(
+        in rows: [BaGuideRow],
+        baseData: [[BaJSONObject]],
+        sourceURL: URL?
+    ) -> [BaGuideRow] {
+        let icons = collectSupplementIcons(baseData: baseData, sourceURL: sourceURL)
+        var patchedRows: [BaGuideRow] = []
+        var currentSection = ""
+        var currentEquipmentSlot = ""
+        var appliedWeaponIcon = false
+        var appliedFavorIcon = false
+
+        for row in rows {
+            if let section = resolveSectionHeader(row.title) {
+                currentSection = section
+                currentEquipmentSlot = ""
+                patchedRows.append(row)
+                continue
+            }
+
+            var patched = row
+            switch currentSection {
+            case "专武":
+                if appliedWeaponIcon == false, patched.imageURL == nil, let icon = icons.weaponIcon {
+                    patched = patched.withImages([icon])
+                    appliedWeaponIcon = true
+                }
+            case "装备":
+                let normalizedKey = BaGuideTextNormalizer.normalizedKey(patched.title)
+                if let slot = firstRegexGroup(in: normalizedKey, pattern: #"^([123])号装备$"#) {
+                    currentEquipmentSlot = "\(slot)号装备"
+                }
+                if let icon = icons.equipmentSlotIcons[currentEquipmentSlot], patched.imageURL == nil {
+                    let keyURL = BaGuideTextNormalizer.normalizeMediaURL(patched.title, sourceURL: sourceURL)
+                    let keyLooksLikeMedia = keyURL.map {
+                        BaGuideTextNormalizer.looksLikeImageURL($0) || BaGuideTextNormalizer.looksLikeVideoURL($0)
+                    } ?? false
+                    let shouldAttachIcon = currentEquipmentSlot.isEmpty == false || isLikelyStatLabel(patched.title) == false
+                    if shouldAttachIcon, keyLooksLikeMedia == false {
+                        patched = patched.withImages([icon])
+                    }
+                }
+            case "爱用品":
+                if appliedFavorIcon == false, patched.imageURL == nil, let icon = icons.favorIcon {
+                    patched = patched.withImages([icon])
+                    appliedFavorIcon = true
+                }
+            case "能力解放":
+                let normalizedKey = BaGuideTextNormalizer.normalizedKey(patched.title)
+                if normalizedKey.range(of: #"^\d+级$"#, options: .regularExpression) != nil,
+                   patched.imageURL == nil,
+                   icons.unlockMaterialIcons.isEmpty == false
+                {
+                    patched = patched.withImages(icons.unlockMaterialIcons)
+                }
+            default:
+                break
+            }
+
+            patchedRows.append(patched)
+        }
+
+        return patchedRows.filter { row in
+            row.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false ||
+                row.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false ||
+                row.imageURL != nil ||
+                row.imageURLs?.isEmpty == false
+        }
+    }
+
+    private func collectSupplementIcons(baseData: [[BaJSONObject]], sourceURL: URL?) -> SupplementIcons {
+        var weaponIcon: URL?
+        var favorIcon: URL?
+        var equipmentSlotIcons: [String: URL] = [:]
+        var unlockMaterialIcons: [URL] = []
+
+        for row in baseData {
+            let key = firstCellText(in: row)
+            let normalizedKey = BaGuideTextNormalizer.normalizedKey(key)
+            let images = BaGuideTextNormalizer.dedupe(
+                row.dropFirst().flatMap { cell -> [URL] in
+                    let type = (cell.string("type") ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                    let rawValue = (cell.string("value") ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                    if rawValue.isEmpty { return [] }
+                    switch type {
+                    case "image":
+                        return BaGuideTextNormalizer.imageURLs(in: cell, sourceURL: sourceURL)
+                    case "imageset", "live2d":
+                        return BaGuideTextNormalizer.imageURLs(in: cell["value"], sourceURL: sourceURL)
+                    default:
+                        return BaGuideTextNormalizer.imageURLsFromHTML(rawValue, sourceURL: sourceURL) +
+                            BaGuideTextNormalizer.imageURLs(in: cell["value"], sourceURL: sourceURL)
+                    }
+                }
+            )
+            guard let firstImage = images.first else { continue }
+
+            switch normalizedKey {
+            case BaGuideTextNormalizer.normalizedKey("专武图标"):
+                weaponIcon = weaponIcon ?? firstImage
+            case BaGuideTextNormalizer.normalizedKey("爱用品图标"):
+                favorIcon = favorIcon ?? firstImage
+            case BaGuideTextNormalizer.normalizedKey("能力解放所需材料"):
+                unlockMaterialIcons = images
+            default:
+                if let slot = firstRegexGroup(in: normalizedKey, pattern: #"^装备([123])$"#) {
+                    equipmentSlotIcons["\(slot)号装备"] = firstImage
+                }
+            }
+        }
+
+        return SupplementIcons(
+            weaponIcon: weaponIcon,
+            favorIcon: favorIcon,
+            equipmentSlotIcons: equipmentSlotIcons,
+            unlockMaterialIcons: unlockMaterialIcons
+        )
+    }
+
+    private func firstRegexGroup(in value: String, pattern: String) -> String? {
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
+        let range = NSRange(value.startIndex ..< value.endIndex, in: value)
+        guard let match = regex.firstMatch(in: value, range: range),
+              match.numberOfRanges > 1,
+              let groupRange = Range(match.range(at: 1), in: value)
+        else {
+            return nil
+        }
+        return String(value[groupRange])
+    }
+
+    private func isLikelyStatLabel(_ raw: String) -> Bool {
+        let normalized = BaGuideTextNormalizer.normalizedKey(raw)
+        let keys = [
+            "攻击力", "防御力", "生命值", "治愈力", "命中值", "闪避值", "暴击值", "暴击伤害",
+            "稳定值", "射程", "群控强化力", "群控抵抗力", "装弹数", "防御无视值", "受恢复率",
+            "COST恢复力", "暴伤抵抗率", "暴击抵抗值", "暴伤抵抗值",
+        ].map(BaGuideTextNormalizer.normalizedKey)
+        return keys.contains(normalized) || normalized.hasSuffix("值") || normalized.hasSuffix("率")
+    }
+
+    private struct SupplementIcons {
+        var weaponIcon: URL?
+        var favorIcon: URL?
+        var equipmentSlotIcons: [String: URL]
+        var unlockMaterialIcons: [URL]
+    }
+}
+
+private extension BaGuideRow {
+    func withImages(_ urls: [URL]) -> BaGuideRow {
+        let images = BaGuideTextNormalizer.dedupe(urls)
+        return BaGuideRow(
+            id: id,
+            title: title,
+            value: value,
+            imageURL: images.first,
+            imageURLs: images.isEmpty ? nil : images
+        )
     }
 }

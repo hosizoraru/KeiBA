@@ -27,30 +27,6 @@ struct BaStudentDetailRowsCardsSection: View {
     }
 }
 
-struct BaStudentSimulationCardsSection: View {
-    let rows: [BaGuideRow]
-    let tint: Color
-
-    @State private var mode: BaStudentSimulationMode = .maximum
-
-    private var displayedRows: [BaGuideRow] {
-        let filtered = rows.filter { mode.matches($0) }
-        return filtered.isEmpty ? rows : filtered
-    }
-
-    var body: some View {
-        Section {
-            if rows.isEmpty {
-                BaStudentDetailEmptyRow(section: .simulate)
-                    .baStudentDetailListCardRow()
-            } else {
-                BaStudentSimulationAbilityCard(rows: Array(displayedRows.prefix(24)), mode: $mode, tint: tint)
-                    .baStudentDetailListCardRow()
-            }
-        }
-    }
-}
-
 private struct BaStudentGuideInfoCard: View {
     let row: BaGuideRow
     let section: BaStudentDetailSection
@@ -92,80 +68,6 @@ private struct BaStudentGuideInfoCard: View {
     }
 }
 
-private struct BaStudentSimulationAbilityCard: View {
-    let rows: [BaGuideRow]
-    @Binding var mode: BaStudentSimulationMode
-    let tint: Color
-
-    var body: some View {
-        BaGlassCard(tint: tint) {
-            VStack(alignment: .leading, spacing: 16) {
-                HStack(alignment: .top, spacing: 12) {
-                    Text(String(localized: "ba.student.detail.simulate.ability.title"))
-                        .font(.title3.weight(.semibold))
-                        .foregroundStyle(.primary)
-
-                    Spacer(minLength: 8)
-
-                    Picker(String(localized: "ba.student.detail.page.simulate"), selection: $mode) {
-                        ForEach(BaStudentSimulationMode.allCases) { option in
-                            Text(option.title).tag(option)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                    .frame(maxWidth: 240)
-                }
-
-                VStack(spacing: 13) {
-                    ForEach(rows) { row in
-                        BaStudentSimulationStatRow(row: row, tint: tint)
-                    }
-                }
-            }
-        }
-    }
-}
-
-private struct BaStudentSimulationStatRow: View {
-    let row: BaGuideRow
-    let tint: Color
-
-    private var valueParts: (base: String, bonus: String?) {
-        BaStudentDetailContentFormatter.splitStatValue(row.value.ifBlank(String(localized: "ba.common.none")))
-    }
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Image(systemName: BaStudentDetailContentFormatter.statSystemImage(for: row.title))
-                .font(.body.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .frame(width: 26)
-
-            Text(row.title)
-                .font(.body.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.78)
-
-            Spacer(minLength: 12)
-
-            HStack(spacing: 6) {
-                Text(valueParts.base)
-                    .font(.title3.monospacedDigit().weight(.semibold))
-                    .foregroundStyle(.primary)
-                if let bonus = valueParts.bonus {
-                    Text(bonus)
-                        .font(.title3.monospacedDigit().weight(.semibold))
-                        .foregroundStyle(BaDesign.amber)
-                }
-            }
-            .lineLimit(1)
-            .minimumScaleFactor(0.72)
-        }
-    }
-}
-
 private struct BaStudentDetailTextChip: View {
     let title: String
     let tint: Color
@@ -195,38 +97,6 @@ private struct BaStudentHighlightedText: View {
 
     var body: some View {
         Text(BaStudentDetailContentFormatter.highlightedAttributedString(in: text))
-    }
-}
-
-private enum BaStudentSimulationMode: String, CaseIterable, Identifiable {
-    case initial
-    case maximum
-
-    var id: Self {
-        self
-    }
-
-    var title: String {
-        switch self {
-        case .initial:
-            String(localized: "ba.student.detail.simulate.initial")
-        case .maximum:
-            String(localized: "ba.student.detail.simulate.maximum")
-        }
-    }
-
-    func matches(_ row: BaGuideRow) -> Bool {
-        let text = "\(row.title) \(row.value)"
-        switch self {
-        case .initial:
-            return Self.containsAny(text, tokens: ["初始", "基础", "Lv1", "1星", "默认"])
-        case .maximum:
-            return Self.containsAny(text, tokens: ["最大", "顶级", "满", "Lv90", "5星", "固有"])
-        }
-    }
-
-    private static func containsAny(_ value: String, tokens: [String]) -> Bool {
-        tokens.contains { value.localizedCaseInsensitiveContains($0) }
     }
 }
 

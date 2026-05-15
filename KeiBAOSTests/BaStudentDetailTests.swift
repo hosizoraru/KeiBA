@@ -1002,6 +1002,138 @@ final class BaStudentDetailTests: XCTestCase {
         XCTAssertEqual(card.starEffects[1].name, "爆炸克制率增加10%")
     }
 
+    func testSimulateParserBackfillsSupplementIcons() throws {
+        let content: BaJSONObject = [
+            "baseData": [
+                [
+                    ["type": "text", "value": "专武图标"],
+                    ["type": "image", "value": "//cdnimg.gamekee.com/weapon.png"],
+                ],
+                [
+                    ["type": "text", "value": "装备1"],
+                    ["type": "image", "value": "//cdnimg.gamekee.com/equipment1.png"],
+                ],
+                [
+                    ["type": "text", "value": "爱用品图标"],
+                    ["type": "image", "value": "//cdnimg.gamekee.com/favor.png"],
+                ],
+                [
+                    ["type": "text", "value": "能力解放所需材料"],
+                    ["type": "image", "value": "//cdnimg.gamekee.com/unlock-a.png"],
+                    ["type": "image", "value": "//cdnimg.gamekee.com/unlock-b.png"],
+                ],
+                [
+                    ["type": "text", "value": "初始数据"],
+                ],
+                [
+                    ["type": "text", "value": "攻击力"],
+                    ["type": "text", "value": "100"],
+                ],
+                [
+                    ["type": "text", "value": "顶级数据"],
+                ],
+                [
+                    ["type": "text", "value": "专武"],
+                ],
+                [
+                    ["type": "text", "value": "攻击力"],
+                    ["type": "text", "value": "969"],
+                ],
+                [
+                    ["type": "text", "value": "装备"],
+                ],
+                [
+                    ["type": "text", "value": "1号装备"],
+                ],
+                [
+                    ["type": "text", "value": "攻击力"],
+                    ["type": "text", "value": "12"],
+                ],
+                [
+                    ["type": "text", "value": "爱用品"],
+                ],
+                [
+                    ["type": "text", "value": "攻击力"],
+                    ["type": "text", "value": "20"],
+                ],
+                [
+                    ["type": "text", "value": "能力解放"],
+                ],
+                [
+                    ["type": "text", "value": "25级"],
+                ],
+                [
+                    ["type": "text", "value": "生命值"],
+                    ["type": "text", "value": "300"],
+                ],
+            ],
+        ]
+
+        let parsed = BaGuideContentParser().parse(
+            content: content,
+            apiData: [:],
+            html: nil,
+            entry: makeCatalogEntry()
+        )
+
+        let weaponRow = try XCTUnwrap(parsed.simulateRows.first { $0.title == "攻击力" && $0.value == "969" })
+        XCTAssertEqual(weaponRow.imageURL?.absoluteString, "https://cdnimg.gamekee.com/weapon.png")
+
+        let equipmentSlot = try XCTUnwrap(parsed.simulateRows.first { $0.title == "1号装备" })
+        XCTAssertEqual(equipmentSlot.imageURL?.absoluteString, "https://cdnimg.gamekee.com/equipment1.png")
+
+        let favoriteRow = try XCTUnwrap(parsed.simulateRows.first { $0.title == "攻击力" && $0.value == "20" })
+        XCTAssertEqual(favoriteRow.imageURL?.absoluteString, "https://cdnimg.gamekee.com/favor.png")
+
+        let unlockLevelRow = try XCTUnwrap(parsed.simulateRows.first { $0.title == "25级" })
+        XCTAssertEqual(unlockLevelRow.imageURLs?.map(\.absoluteString), [
+            "https://cdnimg.gamekee.com/unlock-a.png",
+            "https://cdnimg.gamekee.com/unlock-b.png",
+        ])
+    }
+
+    func testSimulationDisplayModelBuildsSectionsAndGroups() throws {
+        let equipmentIcon = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/equipment1.png"))
+        let weaponIcon = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/weapon.png"))
+        let rows = [
+            BaGuideRow(id: "initial", title: "初始数据", value: "", imageURL: nil),
+            BaGuideRow(id: "atk1", title: "攻击力", value: "100", imageURL: nil),
+            BaGuideRow(id: "hp1", title: "生命值", value: "1000", imageURL: nil),
+            BaGuideRow(id: "max", title: "顶级数据", value: "", imageURL: nil),
+            BaGuideRow(id: "atk2", title: "攻击力", value: "180", imageURL: nil),
+            BaGuideRow(id: "hp2", title: "生命值", value: "1400", imageURL: nil),
+            BaGuideRow(id: "weapon", title: "专武", value: "*【Lv60】的数值*", imageURL: nil),
+            BaGuideRow(id: "weapon-stat", title: "攻击力", value: "969", imageURL: weaponIcon),
+            BaGuideRow(id: "equipment", title: "装备", value: "", imageURL: nil),
+            BaGuideRow(id: "slot", title: "1号装备", value: "", imageURL: equipmentIcon),
+            BaGuideRow(id: "item", title: "帽子", value: "T9", imageURL: nil),
+            BaGuideRow(id: "equipment-stat", title: "攻击力", value: "45", imageURL: nil),
+            BaGuideRow(id: "bond", title: "羁绊等级奖励", value: "*25级*", imageURL: nil),
+            BaGuideRow(id: "role", title: "羁绊角色1", value: "", imageURL: weaponIcon),
+            BaGuideRow(id: "bond-stat", title: "攻击力", value: "12", imageURL: nil),
+        ]
+
+        let data = BaStudentSimulationDisplayModel.build(rows: rows)
+        XCTAssertEqual(data.initialRows.map(\.title), ["攻击力", "生命值"])
+        XCTAssertEqual(data.maximumRows.map(\.title), ["攻击力", "生命值"])
+        XCTAssertEqual(data.weaponHint, "【Lv60】的数值")
+        XCTAssertEqual(BaStudentSimulationDisplayModel.levelCapsule(from: data.weaponHint), "Lv60")
+        XCTAssertEqual(BaStudentSimulationDisplayModel.maxDeltaText(maxValue: "180", initialValue: "100"), "(+80)")
+
+        let equipmentGroups = BaStudentSimulationDisplayModel.equipmentGroups(from: data.equipmentRows)
+        XCTAssertEqual(equipmentGroups.first?.slotLabel, "1号装备")
+        XCTAssertEqual(equipmentGroups.first?.itemName, "帽子")
+        XCTAssertEqual(equipmentGroups.first?.iconURL, equipmentIcon)
+        XCTAssertEqual(equipmentGroups.first?.statRows.map(\.title), ["攻击力"])
+
+        let weaponData = BaStudentSimulationDisplayModel.weaponViewData(rows: data.weaponRows)
+        XCTAssertEqual(weaponData.imageURL, weaponIcon)
+
+        let bondGroups = BaStudentSimulationDisplayModel.bondGroups(from: data.bondRows)
+        XCTAssertEqual(bondGroups.first?.roleLabel, "羁绊角色1")
+        XCTAssertEqual(bondGroups.first?.statRows.first?.value, "12")
+    }
+
     func testStudentDetailSourceErrorUsesFriendlyMessage() {
         XCTAssertEqual(
             BaDataErrorPresenter.studentDetailMessage(for: "content_cdn-empty"),

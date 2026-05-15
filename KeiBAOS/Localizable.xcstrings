@@ -5884,6 +5884,22 @@
         }
       }
     },
+    "ba.student.detail.simulate.bond.role" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bond role"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "羁绊角色"
+          }
+        }
+      }
+    },
     "ba.student.detail.simulate.detail" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -5901,6 +5917,38 @@
         }
       }
     },
+    "ba.student.detail.simulate.equipment.slot" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Equipment"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "装备"
+          }
+        }
+      }
+    },
+    "ba.student.detail.simulate.info" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Info"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "信息"
+          }
+        }
+      }
+    },
     "ba.student.detail.simulate.initial" : {
       "localizations" : {
         "en" : {
@@ -5913,6 +5961,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "初始能力"
+          }
+        }
+      }
+    },
+    "ba.student.detail.simulate.level" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Level"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等级"
           }
         }
       }
