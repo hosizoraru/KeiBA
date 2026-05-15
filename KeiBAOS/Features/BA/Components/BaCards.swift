@@ -439,6 +439,74 @@ struct BaRemoteImageSurface: View {
     }
 }
 
+struct BaRemoteIconSurface: View {
+    @Environment(BaAppModel.self) private var model
+
+    let url: URL?
+    var fallbackSystemImage: String
+    var tint: Color
+    var size: CGFloat
+    var width: CGFloat? = nil
+    var fallbackFont: Font = .caption.weight(.semibold)
+
+    @State private var phase: BaRemoteIconPhase = .placeholder
+
+    var body: some View {
+        ZStack {
+            switch phase {
+            case let .success(image):
+                image
+                    .resizable()
+                    .scaledToFit()
+            case .loading:
+                ZStack {
+                    fallbackIcon(systemImage: fallbackSystemImage, tint: tint.opacity(0.55))
+                    ProgressView()
+                        .controlSize(.small)
+                }
+            case .failed:
+                fallbackIcon(systemImage: "photo.badge.exclamationmark", tint: .secondary)
+            case .hidden:
+                fallbackIcon(systemImage: fallbackSystemImage, tint: .secondary)
+            case .placeholder:
+                fallbackIcon(systemImage: fallbackSystemImage, tint: tint)
+            }
+        }
+        .frame(width: width ?? size, height: size)
+        .task(id: cacheTaskID) {
+            await loadImage()
+        }
+        .onChange(of: model.settings.showPreviewImages) { _, _ in
+            Task { await loadImage() }
+        }
+    }
+
+    private var cacheTaskID: String {
+        "\(url?.absoluteString ?? "nil")-\(model.settings.showPreviewImages)"
+    }
+
+    private func loadImage() async {
+        guard model.settings.showPreviewImages, let url else {
+            phase = model.settings.showPreviewImages ? .placeholder : .hidden
+            return
+        }
+        phase = .loading
+        guard let data = try? await model.imageData(for: url),
+              let loaded = BaRemoteImageSurface.image(from: data)
+        else {
+            phase = .failed
+            return
+        }
+        phase = .success(loaded)
+    }
+
+    private func fallbackIcon(systemImage: String, tint: Color) -> some View {
+        Image(systemName: systemImage)
+            .font(fallbackFont)
+            .foregroundStyle(tint)
+    }
+}
+
 struct BaRowThumbnail: View {
     let url: URL?
     var fallbackSystemImage: String
@@ -476,6 +544,14 @@ struct BaDetailRemoteImage: View {
 }
 
 private enum BaRemoteImagePhase {
+    case placeholder
+    case hidden
+    case loading
+    case failed
+    case success(Image)
+}
+
+private enum BaRemoteIconPhase {
     case placeholder
     case hidden
     case loading

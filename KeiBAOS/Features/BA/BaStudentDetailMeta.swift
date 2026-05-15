@@ -10,12 +10,12 @@ import Foundation
 struct BaGuideMetaItem: Identifiable, Hashable {
     let title: String
     let value: String
+    var extraValue: String? = nil
     let imageURL: URL?
-    var extraImageURL: URL?
-    var imageRepeatCount = 1
+    var extraImageURL: URL? = nil
 
     var id: String {
-        "\(title)|\(value)|\(imageURL?.absoluteString ?? "")|\(extraImageURL?.absoluteString ?? "")|\(imageRepeatCount)"
+        "\(title)|\(value)|\(extraValue ?? "")|\(imageURL?.absoluteString ?? "")|\(extraImageURL?.absoluteString ?? "")"
     }
 }
 
@@ -34,7 +34,8 @@ enum BaStudentGuideMeta {
                 role: .academy,
                 valueKeywords: ["所属学园", "所属学院", "学园", "学院", "school"],
                 rows: info.profileDisplayRows,
-                stats: info.stats
+                stats: info.stats,
+                valuePriority: academyValuePriority
             ),
             buildMetaItem(
                 title: String(localized: "ba.student.detail.meta.club"),
@@ -70,21 +71,24 @@ enum BaStudentGuideMeta {
                 role: .terrain,
                 valueKeywords: ["市街"],
                 rows: rows,
-                stats: info.stats
+                stats: info.stats,
+                valuePriority: terrainValuePriority
             ),
             combatFieldItem(
                 title: String(localized: "ba.student.detail.meta.outdoor"),
                 role: .terrain,
                 valueKeywords: ["屋外"],
                 rows: rows,
-                stats: info.stats
+                stats: info.stats,
+                valuePriority: terrainValuePriority
             ),
             combatFieldItem(
                 title: String(localized: "ba.student.detail.meta.indoor"),
                 role: .terrain,
                 valueKeywords: ["屋内", "室内"],
                 rows: rows,
-                stats: info.stats
+                stats: info.stats,
+                valuePriority: terrainValuePriority
             ),
         ]
     }
@@ -93,7 +97,7 @@ enum BaStudentGuideMeta {
         let key = row.title
         let movedKeywords = [
             "头像", "角色头像", "角色图片",
-            "稀有度", "星级", "学院", "学园", "所属学园", "所属学院", "所属社团",
+            "稀有度", "星级", "学院", "学园", "所属", "所属学园", "所属学院", "所属社团",
             "战术位置作用", "战术位置", "战术作用", "攻击类型", "防御类型", "位置", "武器类型",
             "市街", "屋外", "屋内", "室内",
         ]
@@ -108,29 +112,48 @@ enum BaStudentGuideMeta {
         rows: [BaGuideRow]
     ) -> BaGuideMetaItem {
         let iconRows = rows + info.stats
-        let tacticalRow = findFirstRowByTitleKeywords(
+        let tacticalRow = findBestRowByTitleKeywords(
             rows: iconRows,
-            keywords: ["战术作用", "战术位置作用"],
-            requireImage: true
+            keywords: ["战术位置作用", "战术作用"],
+            requireImage: true,
+            valuePriority: tacticalRoleValuePriority
         )
-        let combinedRow = findFirstRowByTitleKeywords(
+        let combinedRow = findBestRowByTitleKeywords(
             rows: iconRows,
-            keywords: ["战术位置作用"],
-            requireImage: true
+            keywords: ["战术位置作用", "战术作用", "作用"],
+            requireImage: true,
+            valuePriority: tacticalRoleValuePriority
         )
-        let positionRow = findFirstRowByExactTitleKeywords(rows: iconRows, keywords: ["位置"], requireImage: true)
+        let positionRow = findBestRowByTitleKeywords(
+            rows: iconRows,
+            keywords: ["位置"],
+            requireImage: true,
+            valuePriority: positionValuePriority
+        )
         let tacticalIcon = imageURL(in: tacticalRow, at: 0) ?? imageURL(in: combinedRow, at: 0)
         let positionIcon = imageURL(in: positionRow, at: 0) ?? imageURL(in: combinedRow, at: 1)
+        let tacticalValue = sanitizeMetaValue(
+            role: .tacticalPosition,
+            raw: findGuideFieldValue(
+                keywords: ["作用", "战术位置作用", "战术作用"],
+                rows: rows,
+                stats: info.stats,
+                valuePriority: tacticalRoleValuePriority
+            )
+        )
+        let positionValue = sanitizeMetaValue(
+            role: .position,
+            raw: findGuideFieldValue(
+                keywords: ["位置"],
+                rows: iconRows,
+                stats: info.stats,
+                valuePriority: positionValuePriority
+            )
+        )
         return BaGuideMetaItem(
             title: String(localized: "ba.student.detail.meta.tacticalPosition"),
-            value: sanitizeMetaValue(
-                role: .tacticalPosition,
-                raw: findGuideFieldValue(
-                    keywords: ["作用", "战术位置作用", "战术作用"],
-                    rows: info.profileDisplayRows,
-                    stats: info.stats
-                )
-            ),
+            value: tacticalValue,
+            extraValue: positionValue == String(localized: "ba.common.none") ? nil : positionValue,
             imageURL: tacticalIcon,
             extraImageURL: positionIcon
         )
@@ -157,14 +180,16 @@ enum BaStudentGuideMeta {
         role: MetaRole,
         valueKeywords: [String],
         rows: [BaGuideRow],
-        stats: [BaGuideRow]
+        stats: [BaGuideRow],
+        valuePriority: ((String) -> Int)? = nil
     ) -> BaGuideMetaItem {
         buildMetaItem(
             title: title,
             role: role,
             valueKeywords: valueKeywords,
             rows: rows,
-            stats: stats
+            stats: stats,
+            valuePriority: valuePriority
         )
     }
 
@@ -173,87 +198,113 @@ enum BaStudentGuideMeta {
         role: MetaRole,
         valueKeywords: [String],
         rows: [BaGuideRow],
-        stats: [BaGuideRow]
+        stats: [BaGuideRow],
+        valuePriority: ((String) -> Int)? = nil
     ) -> BaGuideMetaItem {
-        let iconRow = findFirstRowByTitleKeywords(rows: rows + stats, keywords: valueKeywords, requireImage: true)
+        let iconRow = findBestRowByTitleKeywords(
+            rows: rows + stats,
+            keywords: valueKeywords,
+            requireImage: true,
+            valuePriority: valuePriority
+        )
         let value = sanitizeMetaValue(
             role: role,
-            raw: findGuideFieldValue(keywords: valueKeywords, rows: rows, stats: stats)
+            raw: findGuideFieldValue(
+                keywords: valueKeywords,
+                rows: rows,
+                stats: stats,
+                valuePriority: valuePriority
+            )
         )
         return BaGuideMetaItem(
             title: title,
             value: value,
-            imageURL: iconRow?.imageURL,
-            imageRepeatCount: role == .rarity ? rarityImageRepeatCount(from: value) : 1
+            imageURL: iconRow?.imageURL
         )
     }
 
     private nonisolated static func findGuideFieldValue(
         keywords: [String],
         rows: [BaGuideRow],
-        stats: [BaGuideRow]
+        stats: [BaGuideRow],
+        valuePriority: ((String) -> Int)? = nil
     ) -> String {
         let normalizedKeywords = keywords
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { $0.isEmpty == false }
         guard normalizedKeywords.isEmpty == false else { return "-" }
-
         let allRows = rows + stats
-        func isUsableValue(_ value: String) -> Bool {
-            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-            return trimmed.isEmpty == false && isMediaFilenameValue(trimmed) == false
+        let exactCandidates = fieldCandidates(
+            rows: allRows,
+            keywords: normalizedKeywords,
+            requireImage: false,
+            requireUsableValue: true,
+            valuePriority: valuePriority,
+            exactMatchOnly: true,
+            allowsValueMatch: false
+        )
+        if let best = exactCandidates.max(by: { isWorseCandidate($0, than: $1) }) {
+            return best.value
         }
-        func normalized(_ key: String) -> String {
-            BaGuideTextNormalizer.normalizedKey(key)
+        let looseCandidates = fieldCandidates(
+            rows: allRows,
+            keywords: normalizedKeywords,
+            requireImage: false,
+            requireUsableValue: true,
+            valuePriority: valuePriority,
+            exactMatchOnly: false,
+            allowsValueMatch: false
+        )
+        if let best = looseCandidates.max(by: { isWorseCandidate($0, than: $1) }) {
+            return best.value
         }
-
-        for keyword in normalizedKeywords {
-            let normalizedKeyword = normalized(keyword)
-            if let row = allRows.first(where: {
-                normalized($0.title) == normalizedKeyword && isUsableValue($0.value)
-            }) {
-                return row.value
-            }
-        }
-        if let row = allRows.first(where: { row in
-            normalizedKeywords.contains { row.title.localizedCaseInsensitiveContains($0) } &&
-                isUsableValue(row.value)
-        }) {
-            return row.value
-        }
-        if let row = allRows.first(where: { row in
-            let merged = "\(row.title) \(row.value)"
-            return normalizedKeywords.contains { merged.localizedCaseInsensitiveContains($0) } &&
-                isUsableValue(row.value)
-        }) {
-            return row.value
+        let valueFallbackCandidates = fieldCandidates(
+            rows: allRows,
+            keywords: normalizedKeywords,
+            requireImage: false,
+            requireUsableValue: true,
+            valuePriority: valuePriority,
+            exactMatchOnly: false,
+            allowsValueMatch: true
+        )
+        if let best = valueFallbackCandidates.max(by: { isWorseCandidate($0, than: $1) }) {
+            return best.value
         }
         return "-"
     }
 
-    private nonisolated static func findFirstRowByTitleKeywords(
+    private nonisolated static func findBestRowByTitleKeywords(
         rows: [BaGuideRow],
         keywords: [String],
-        requireImage: Bool
+        requireImage: Bool,
+        valuePriority: ((String) -> Int)? = nil
     ) -> BaGuideRow? {
-        rows.first { row in
-            let hasKeyword = keywords.contains { row.title.localizedCaseInsensitiveContains($0) }
-            return hasKeyword && (requireImage == false || row.imageURL != nil)
+        let normalizedKeywords = keywords
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { $0.isEmpty == false }
+        guard normalizedKeywords.isEmpty == false else { return nil }
+        let exactCandidates = fieldCandidates(
+            rows: rows,
+            keywords: normalizedKeywords,
+            requireImage: requireImage,
+            requireUsableValue: false,
+            valuePriority: valuePriority,
+            exactMatchOnly: true,
+            allowsValueMatch: true
+        )
+        if let best = exactCandidates.max(by: { isWorseCandidate($0, than: $1) }) {
+            return best.row
         }
-    }
-
-    private nonisolated static func findFirstRowByExactTitleKeywords(
-        rows: [BaGuideRow],
-        keywords: [String],
-        requireImage: Bool
-    ) -> BaGuideRow? {
-        rows.first { row in
-            let normalizedTitle = BaGuideTextNormalizer.normalizedKey(row.title)
-            let hasKeyword = keywords.contains {
-                normalizedTitle == BaGuideTextNormalizer.normalizedKey($0)
-            }
-            return hasKeyword && (requireImage == false || row.imageURL != nil)
-        }
+        let looseCandidates = fieldCandidates(
+            rows: rows,
+            keywords: normalizedKeywords,
+            requireImage: requireImage,
+            requireUsableValue: false,
+            valuePriority: valuePriority,
+            exactMatchOnly: false,
+            allowsValueMatch: true
+        )
+        return looseCandidates.max(by: { isWorseCandidate($0, than: $1) })?.row
     }
 
     private nonisolated static func imageURL(in row: BaGuideRow?, at index: Int) -> URL? {
@@ -266,6 +317,9 @@ enum BaStudentGuideMeta {
     private nonisolated static func sanitizeMetaValue(role: MetaRole, raw: String) -> String {
         let cleaned = stripInlineNotes(raw)
         guard cleaned.isEmpty == false, cleaned != "-", isMediaFilenameValue(cleaned) == false else {
+            return String(localized: "ba.common.none")
+        }
+        if cleaned == "无", role == .academy || role == .tacticalPosition || role == .position || role == .terrain {
             return String(localized: "ba.common.none")
         }
         if role == .rarity || role == .academy || role == .tacticalPosition {
@@ -312,18 +366,152 @@ enum BaStudentGuideMeta {
         return value.range(of: #"\.(png|jpe?g|webp|gif|svg)$"#, options: .regularExpression) != nil
     }
 
-    private nonisolated static func rarityImageRepeatCount(from raw: String) -> Int {
-        let compact = raw.replacingOccurrences(of: " ", with: "")
-        let starCount = compact.filter { $0 == "★" || $0 == "⭐" }.count
-        if starCount > 0 {
-            return min(max(starCount, 1), 5)
+    private nonisolated static func fieldCandidates(
+        rows: [BaGuideRow],
+        keywords: [String],
+        requireImage: Bool,
+        requireUsableValue: Bool,
+        valuePriority: ((String) -> Int)?,
+        exactMatchOnly: Bool,
+        allowsValueMatch: Bool
+    ) -> [GuideFieldCandidate] {
+        rows.compactMap { row in
+            guard let titleScore = fieldMatchScore(
+                title: row.title,
+                value: row.value,
+                keywords: keywords,
+                exactMatchOnly: exactMatchOnly,
+                allowsValueMatch: allowsValueMatch
+            ) else {
+                return nil
+            }
+            if requireImage, row.imageURL == nil {
+                return nil
+            }
+            let cleanedValue = stripInlineNotes(row.value)
+            if requireUsableValue, cleanedValue.isEmpty || isMediaFilenameValue(cleanedValue) {
+                return nil
+            }
+            let score = titleScore + (valuePriority?(cleanedValue) ?? 0)
+            return GuideFieldCandidate(row: row, value: cleanedValue, score: score)
         }
-        if let range = compact.range(of: #"\d+"#, options: .regularExpression),
-           let count = Int(compact[range])
-        {
-            return min(max(count, 1), 5)
+    }
+
+    private nonisolated static func fieldMatchScore(
+        title: String,
+        value: String,
+        keywords: [String],
+        exactMatchOnly: Bool,
+        allowsValueMatch: Bool
+    ) -> Int? {
+        let normalizedTitle = BaGuideTextNormalizer.normalizedKey(title)
+        let normalizedValue = BaGuideTextNormalizer.normalizedKey(value)
+        var bestScore: Int?
+        for keyword in keywords {
+            let normalizedKeyword = BaGuideTextNormalizer.normalizedKey(keyword)
+            if normalizedTitle == normalizedKeyword {
+                return 1_000
+            }
+            if allowsValueMatch, normalizedValue == normalizedKeyword {
+                bestScore = max(bestScore ?? 0, 950)
+                continue
+            }
+            guard exactMatchOnly == false else { continue }
+            if normalizedTitle.localizedCaseInsensitiveContains(normalizedKeyword) ||
+                normalizedKeyword.localizedCaseInsensitiveContains(normalizedTitle)
+            {
+                bestScore = max(bestScore ?? 0, 500)
+            }
+            if allowsValueMatch,
+               normalizedValue.localizedCaseInsensitiveContains(normalizedKeyword) ||
+                normalizedKeyword.localizedCaseInsensitiveContains(normalizedValue)
+            {
+                bestScore = max(bestScore ?? 0, 450)
+            }
         }
-        return 1
+        return bestScore
+    }
+
+    private nonisolated static func isWorseCandidate(_ lhs: GuideFieldCandidate, than rhs: GuideFieldCandidate) -> Bool {
+        if lhs.score != rhs.score {
+            return lhs.score < rhs.score
+        }
+        if lhs.value.count != rhs.value.count {
+            return lhs.value.count > rhs.value.count
+        }
+        return lhs.row.id > rhs.row.id
+    }
+
+    private nonisolated static func academyValuePriority(_ value: String) -> Int {
+        let compact = value.replacingOccurrences(of: " ", with: "")
+        var score = 0
+        if compact.contains("学园") || compact.contains("学院") || compact.lowercased().contains("school") {
+            score += 200
+        }
+        if compact.count <= 12 {
+            score += 30
+        }
+        if compact.count > 18 {
+            score -= 120
+        }
+        if compact.contains("。") || compact.contains("，") || compact.contains("、") {
+            score -= 60
+        }
+        return score
+    }
+
+    private nonisolated static func tacticalRoleValuePriority(_ value: String) -> Int {
+        let compact = value.replacingOccurrences(of: " ", with: "")
+        var score = 0
+        if ["输出", "坦克", "防御", "辅助", "治疗", "支援", "前卫", "中卫", "后卫"].contains(compact) {
+            score += 200
+        }
+        if compact == "无" || compact == "-" {
+            score -= 300
+        }
+        if compact.count <= 4 {
+            score += 40
+        }
+        if compact.count > 8 {
+            score -= 80
+        }
+        if compact.contains("。") || compact.contains("，") || compact.contains("、") {
+            score -= 50
+        }
+        return score
+    }
+
+    private nonisolated static func positionValuePriority(_ value: String) -> Int {
+        let compact = value.replacingOccurrences(of: " ", with: "")
+        var score = 0
+        if ["前卫", "中卫", "后卫"].contains(compact) {
+            score += 200
+        }
+        if compact == "无" || compact == "-" {
+            score -= 200
+        }
+        if compact.count <= 3 {
+            score += 20
+        }
+        return score
+    }
+
+    private nonisolated static func terrainValuePriority(_ value: String) -> Int {
+        let compact = value.replacingOccurrences(of: " ", with: "")
+        var score = 0
+        if compact.range(of: #"^[SABCDE][+-]?$"#, options: .regularExpression) != nil {
+            score += 200
+        }
+        if compact == "无" || compact == "-" {
+            score -= 300
+        }
+        if compact.count <= 2 {
+            score += 30
+        }
+        if compact.count > 6 {
+            score -= 80
+        }
+        return score
     }
 
     private nonisolated static func normalizeWeaponTypeMetaValue(_ raw: String) -> String {
@@ -348,10 +536,17 @@ enum BaStudentGuideMeta {
         case academy
         case club
         case tacticalPosition
+        case position
         case attackType
         case defenseType
         case weaponType
         case terrain
+    }
+
+    private struct GuideFieldCandidate {
+        let row: BaGuideRow
+        let value: String
+        let score: Int
     }
 }
 

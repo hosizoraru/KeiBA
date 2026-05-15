@@ -275,8 +275,8 @@ final class BaDataBridgeTests: XCTestCase {
             "https://www.gamekee.com/"
         )
         XCTAssertEqual(client.imageRetryUserAgents.count, 2)
-        XCTAssertTrue(client.imageRetryUserAgents[0].contains("Safari"))
-        XCTAssertTrue(client.imageRetryUserAgents[1].contains("Firefox"))
+        XCTAssertTrue(client.imageRetryUserAgents[0].contains("Firefox"))
+        XCTAssertTrue(client.imageRetryUserAgents[1].contains("Safari"))
     }
 
     func testHTMLAttributeExtractionUsesSourceValue() {
@@ -557,7 +557,6 @@ final class BaDataBridgeTests: XCTestCase {
             "格黑娜学园",
             "风纪委员会",
         ])
-        XCTAssertEqual(profileMeta[0].imageRepeatCount, 3)
         let combatMetaValues = Dictionary(uniqueKeysWithValues: BaStudentGuideMeta.combatMetaItems(from: info).map {
             ($0.title, $0.value)
         })
@@ -585,6 +584,134 @@ final class BaDataBridgeTests: XCTestCase {
         XCTAssertEqual(parsed.galleryItems.first?.mediaKind, .image)
         XCTAssertFalse(parsed.simulateRows.isEmpty)
         XCTAssertEqual(parsed.imageURL?.absoluteString, "https://cdnimg.gamekee.com/student/portrait.webp")
+    }
+
+    func testContentParserMatchesBenchmarkOverviewFieldsFromLiveJSONShape() throws {
+        let content: BaJSONObject = [
+            "baseData": [
+                [
+                    ["type": "text", "value": "稀有度"],
+                    ["type": "text", "value": "3星"],
+                    ["type": "image", "value": "//cdnimg-v2.gamekee.com/wiki2.0/images/w_438/h_141/829/43637/2025/4/26/773868.png"],
+                ],
+                [
+                    ["type": "text", "value": "战术作用"],
+                    ["type": "text", "value": ""],
+                    ["type": "image", "value": "//cdnimg-v2.gamekee.com/wiki2.0/images/w_160/h_40/829/43637/2025/4/27/318534.png"],
+                ],
+                [
+                    ["type": "text", "value": "所属学园"],
+                    ["type": "text", "value": "格黑娜学园"],
+                    ["type": "image", "value": "//cdnimg-v2.gamekee.com/wiki2.0/images/w_43/h_32/829/191981/2025/6/17/982730.png"],
+                ],
+                [
+                    ["type": "text", "value": "所属社团"],
+                    ["type": "text", "value": "风纪委员会"],
+                ],
+                [
+                    ["type": "text", "value": "作用"],
+                    ["type": "text", "value": "输出"],
+                    ["type": "image", "value": "//cdnimg-v2.gamekee.com/wiki2.0/images/w_43/h_32/829/103682/2025/6/1/546791.png"],
+                ],
+                [
+                    ["type": "text", "value": "攻击类型"],
+                    ["type": "text", "value": "爆炸"],
+                    ["type": "image", "value": "//cdnimg-v2.gamekee.com/wiki2.0/images/w_43/h_32/829/191981/2025/6/17/262482.png"],
+                ],
+                [
+                    ["type": "text", "value": "防御类型"],
+                    ["type": "text", "value": "弹力装甲"],
+                    ["type": "image", "value": "//cdnimg-v2.gamekee.com/wiki2.0/images/w_43/h_32/829/103682/2025/6/1/60247.png"],
+                ],
+                [
+                    ["type": "text", "value": "位置"],
+                    ["type": "text", "value": ""],
+                    ["type": "image", "value": "//cdnimg-v2.gamekee.com/wiki2.0/images/w_210/h_55/829/43637/2025/4/26/219503.png"],
+                ],
+                [
+                    ["type": "text", "value": "市街"],
+                    ["type": "text", "value": "D"],
+                    ["type": "image", "value": "//cdnimg-v2.gamekee.com/wiki2.0/images/w_61/h_61/829/43637/2025/4/26/60850.png"],
+                ],
+                [
+                    ["type": "text", "value": "屋外"],
+                    ["type": "text", "value": "A"],
+                    ["type": "image", "value": "//cdnimg-v2.gamekee.com/wiki2.0/images/w_61/h_61/829/43637/2025/4/26/65737.png"],
+                ],
+                [
+                    ["type": "text", "value": "屋内"],
+                    ["type": "text", "value": "S"],
+                    ["type": "image", "value": "//cdnimg-v2.gamekee.com/wiki2.0/images/w_61/h_61/829/43637/2025/4/26/615650.png"],
+                ],
+                [
+                    ["type": "text", "value": "武器类型"],
+                    ["type": "text", "value": "MG"],
+                    ["type": "image", "value": "//cdnimg-v2.gamekee.com/wiki2.0/images/w_334/h_158/829/43637/2025/4/26/160682.png"],
+                ],
+                [
+                    ["type": "text", "value": "个人简介"],
+                    ["type": "text", "value": "为了参加派对换上了礼服裙，所属于格黑娜学园的风纪委员长。"],
+                ],
+            ],
+        ]
+
+        let parsed = BaGuideContentParser().parse(
+            content: content,
+            apiData: [:],
+            html: nil,
+            entry: makeCatalogEntry(contentId: 611_753, name: "日奈(礼服)", alias: "日奈")
+        )
+        let info = BaStudentGuideInfo(
+            contentId: 611_753,
+            sourceURL: URL(string: "https://www.gamekee.com/ba/tj/611753.html"),
+            title: "日奈(礼服)",
+            subtitle: "GameKee",
+            summary: parsed.summary,
+            imageURL: parsed.imageURL,
+            stats: parsed.stats,
+            profileRows: parsed.profileRows,
+            skillRows: parsed.skillRows,
+            voiceRows: parsed.voiceRows,
+            galleryItems: parsed.galleryItems,
+            growthRows: parsed.growthRows,
+            simulateRows: parsed.simulateRows,
+            contentSource: "content_cdn",
+            syncedAt: Date(timeIntervalSince1970: 0)
+        )
+
+        XCTAssertTrue(parsed.profileRows.contains { $0.title == "作用" && $0.value == "输出" })
+        XCTAssertTrue(parsed.profileRows.contains { $0.title == "所属学园" && $0.value == "格黑娜学园" })
+        XCTAssertTrue(parsed.profileRows.contains { $0.title == "屋内" && $0.value == "S" })
+
+        let profileMeta = BaStudentGuideMeta.profileMetaItems(from: info)
+        XCTAssertEqual(profileMeta.map(\.value), ["3星", "格黑娜学园", "风纪委员会"])
+        XCTAssertEqual(
+            profileMeta[1].imageURL?.absoluteString,
+            "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_43/h_32/829/191981/2025/6/17/982730.png"
+        )
+
+        let combatMeta = BaStudentGuideMeta.combatMetaItems(from: info)
+        let tactical = try XCTUnwrap(combatMeta.first {
+            $0.title == String(localized: "ba.student.detail.meta.tacticalPosition")
+        })
+        let indoor = try XCTUnwrap(combatMeta.first {
+            $0.title == String(localized: "ba.student.detail.meta.indoor")
+        })
+
+        XCTAssertEqual(tactical.value, "输出")
+        XCTAssertEqual(
+            tactical.imageURL?.absoluteString,
+            "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_160/h_40/829/43637/2025/4/27/318534.png"
+        )
+        XCTAssertEqual(
+            tactical.extraImageURL?.absoluteString,
+            "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_210/h_55/829/43637/2025/4/26/219503.png"
+        )
+        XCTAssertEqual(indoor.value, "S")
+        XCTAssertEqual(
+            indoor.imageURL?.absoluteString,
+            "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_61/h_61/829/43637/2025/4/26/615650.png"
+        )
     }
 
     func testGiftParserKeepsGiftAndEmojiImages() {

@@ -141,12 +141,40 @@ final class BaStudentDetailTests: XCTestCase {
         })
 
         XCTAssertEqual(profile.map(\.value), ["3星", "格黑娜学园", "风纪委员会"])
-        XCTAssertEqual(profile[0].imageRepeatCount, 3)
         XCTAssertEqual(profile[1].imageURL, academyURL)
         XCTAssertEqual(tactical.value, "输出")
         XCTAssertEqual(tactical.imageURL, tacticURL)
         XCTAssertEqual(tactical.extraImageURL, positionURL)
         XCTAssertEqual(indoor.value, "S")
+    }
+
+    func testGuideMetaFindsAcademyFromValueFallback() throws {
+        let academyURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/gehinna.png"))
+        let info = BaStudentGuideInfo(
+            contentId: 1,
+            sourceURL: nil,
+            title: "日奈(礼服)",
+            subtitle: "GameKee",
+            summary: "",
+            imageURL: nil,
+            stats: [],
+            profileRows: [
+                BaGuideRow(id: "academy", title: "阵营", value: "格黑娜学园", imageURL: academyURL),
+                BaGuideRow(id: "club", title: "所属社团", value: "风纪委员会", imageURL: nil),
+            ],
+            skillRows: [],
+            voiceRows: [],
+            galleryItems: [],
+            growthRows: [],
+            simulateRows: [],
+            contentSource: "content_json",
+            syncedAt: Date(timeIntervalSince1970: 0)
+        )
+
+        let profile = BaStudentGuideMeta.profileMetaItems(from: info)
+
+        XCTAssertEqual(profile[1].value, "格黑娜学园")
+        XCTAssertEqual(profile[1].imageURL, academyURL)
     }
 
     func testProfileSectionsKeepBenchmarkArchiveBuckets() {

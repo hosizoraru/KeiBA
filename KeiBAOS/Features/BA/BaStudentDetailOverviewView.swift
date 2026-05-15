@@ -23,12 +23,12 @@ struct BaStudentDetailOverviewSections: View {
                 portraitURL: portraitURL,
                 tint: tint
             )
-            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 4, trailing: 16))
+            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 1, trailing: 16))
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)
 
             BaStudentCombatMetaCard(items: BaStudentGuideMeta.combatMetaItems(from: info))
-                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 8, trailing: 16))
+                .listRowInsets(EdgeInsets(top: 1, leading: 16, bottom: 4, trailing: 16))
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
         }
@@ -42,7 +42,7 @@ private struct BaStudentPortraitMetaCard: View {
 
     var body: some View {
         BaGlassCard(tint: BaDesign.blue) {
-            HStack(alignment: .top, spacing: 14) {
+            HStack(alignment: .top, spacing: 12) {
                 BaRemoteImageSurface(
                     url: portraitURL,
                     fallbackSystemImage: "person.crop.square",
@@ -62,7 +62,7 @@ private struct BaStudentPortraitMetaCard: View {
                         .lineLimit(2)
                         .minimumScaleFactor(0.82)
 
-                    VStack(alignment: .leading, spacing: 9) {
+                    VStack(alignment: .leading, spacing: 8) {
                         ForEach(BaStudentGuideMeta.profileMetaItems(from: info)) { item in
                             BaStudentMetaLine(item: item, tint: tint)
                         }
@@ -79,7 +79,7 @@ private struct BaStudentCombatMetaCard: View {
 
     var body: some View {
         BaGlassCard(tint: BaDesign.blue) {
-            VStack(spacing: 6) {
+            VStack(spacing: 4) {
                 ForEach(items) { item in
                     BaStudentCombatMetaRow(item: item)
                 }
@@ -93,15 +93,15 @@ private struct BaStudentMetaLine: View {
     let tint: Color
 
     var body: some View {
-        HStack(spacing: 9) {
+        HStack(spacing: 8) {
             Text(item.title)
                 .font(.callout.weight(.semibold))
                 .foregroundStyle(.secondary)
-                .frame(width: 84, alignment: .leading)
+                .frame(width: 68, alignment: .leading)
                 .lineLimit(1)
                 .minimumScaleFactor(0.82)
 
-            BaStudentMetaImages(item: item, tint: tint, size: 18, width: 18)
+            BaStudentMetaImages(item: item, tint: tint, size: 16)
 
             Text(item.value)
                 .font(.body.weight(.semibold))
@@ -125,7 +125,7 @@ private struct BaStudentCombatMetaRow: View {
             }
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.vertical, 6)
         .background(.white.opacity(0.10), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
@@ -138,23 +138,23 @@ private struct BaStudentTacticalPositionLines: View {
     let item: BaGuideMetaItem
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 4) {
             BaStudentCombatMetaLine(
                 item: BaGuideMetaItem(
                     title: String(localized: "ba.student.detail.meta.tacticalRole"),
                     value: item.value,
                     imageURL: item.imageURL
                 ),
-                iconWidth: 34
+                iconSize: 18
             )
 
             BaStudentCombatMetaLine(
                 item: BaGuideMetaItem(
                     title: String(localized: "ba.student.detail.meta.position"),
-                    value: item.extraImageURL == nil ? String(localized: "ba.common.none") : "",
+                    value: item.extraValue ?? "",
                     imageURL: item.extraImageURL
                 ),
-                iconWidth: 34
+                iconSize: 18
             )
         }
     }
@@ -162,14 +162,14 @@ private struct BaStudentTacticalPositionLines: View {
 
 private struct BaStudentCombatMetaLine: View {
     let item: BaGuideMetaItem
-    var iconWidth: CGFloat = 28
+    var iconSize: CGFloat = 20
 
     var body: some View {
-        HStack(spacing: 9) {
+        HStack(spacing: 8) {
             Text(item.title)
                 .font(.callout.weight(.semibold))
                 .foregroundStyle(.secondary)
-                .frame(width: 82, alignment: .leading)
+                .frame(width: 70, alignment: .leading)
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
 
@@ -180,12 +180,13 @@ private struct BaStudentCombatMetaLine: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.82)
                     .layoutPriority(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            Spacer(minLength: 6)
-
-            BaStudentMetaImages(item: item, tint: BaDesign.blue, size: 22, width: iconWidth)
+            BaStudentMetaImages(item: item, tint: BaDesign.blue, size: iconSize)
+                .fixedSize(horizontal: true, vertical: false)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -193,31 +194,45 @@ private struct BaStudentMetaImages: View {
     let item: BaGuideMetaItem
     let tint: Color
     let size: CGFloat
-    var width: CGFloat? = nil
 
+    @ViewBuilder
     var body: some View {
-        HStack(spacing: 4) {
-            ForEach(Array(imageURLs.enumerated()), id: \.offset) { _, imageURL in
-                BaRemoteImageSurface(
-                    url: imageURL,
-                    fallbackSystemImage: "square.grid.2x2",
-                    tint: tint,
-                    width: width ?? size,
-                    height: size,
-                    cornerRadius: 6,
-                    contentMode: .fit,
-                    fallbackFont: .caption.weight(.semibold)
-                )
+        if iconURLs.isEmpty == false {
+            HStack(spacing: 4) {
+                ForEach(Array(iconURLs.enumerated()), id: \.offset) { _, imageURL in
+                    BaRemoteIconSurface(
+                        url: imageURL,
+                        fallbackSystemImage: "square.grid.2x2",
+                        tint: tint,
+                        size: size,
+                        width: iconWidth,
+                        fallbackFont: .caption.weight(.semibold)
+                    )
+                }
             }
+            .frame(minWidth: iconWidth, alignment: .leading)
         }
     }
 
-    private var imageURLs: [URL] {
-        guard let imageURL = item.imageURL else { return [] }
-        var urls = Array(repeating: imageURL, count: max(item.imageRepeatCount, 1))
+    private var iconURLs: [URL] {
+        var urls: [URL] = []
+        if let imageURL = item.imageURL {
+            urls.append(imageURL)
+        }
         if let extraImageURL = item.extraImageURL {
             urls.append(extraImageURL)
         }
         return urls
+    }
+
+    private var iconWidth: CGFloat {
+        switch iconURLs.count {
+        case 0:
+            return 0
+        case 1:
+            return size * 2.8
+        default:
+            return size * 1.8
+        }
     }
 }

@@ -152,9 +152,9 @@ struct BaStudentGuideRepository {
     private func stats(from profileRows: [BaGuideRow], fallback: BaGuideCatalogEntry) -> [BaGuideRow] {
         let priorities: [[String]] = [
             ["稀有度", "星级"],
-            ["学院", "学园", "school"],
+            ["所属", "学院", "学园", "school"],
             ["社团", "club"],
-            ["战术位置作用", "战术位置", "战术作用"],
+            ["战术位置作用", "战术位置", "战术作用", "作用"],
             ["攻击类型"],
             ["防御类型"],
             ["武器类型"],

@@ -40,6 +40,8 @@ struct GameKeeClient {
     static let baseURL = URL(string: "https://www.gamekee.com")!
     nonisolated static let safariUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1"
     nonisolated static let firefoxAndroidUserAgent = "Mozilla/5.0 (Android 15; Mobile; rv:140.0) Gecko/140.0 Firefox/140.0"
+    nonisolated static let requestUserAgents = [firefoxAndroidUserAgent, safariUserAgent]
+    nonisolated static let mediaRetryUserAgents = [firefoxAndroidUserAgent, safariUserAgent]
 
     private let session: URLSession
     private let retryAttempts: Int
@@ -72,7 +74,7 @@ struct GameKeeClient {
     func fetchImageData(url: URL, refererPath: String = "/ba") async throws -> Data {
         let request = GameKeeRequest(pathOrURL: url.absoluteString, refererPath: refererPath)
         var lastError: Error?
-        for userAgent in imageRetryUserAgents {
+        for userAgent in Self.mediaRetryUserAgents {
             do {
                 return try await executeImage(request, userAgent: userAgent)
             } catch {
@@ -85,7 +87,7 @@ struct GameKeeClient {
     func fetchAudioData(url: URL, refererPath: String = "/ba") async throws -> Data {
         let request = GameKeeRequest(pathOrURL: url.absoluteString, refererPath: refererPath)
         var lastError: Error?
-        for userAgent in imageRetryUserAgents {
+        for userAgent in Self.mediaRetryUserAgents {
             do {
                 return try await executeAudio(request, userAgent: userAgent)
             } catch {
@@ -96,7 +98,7 @@ struct GameKeeClient {
     }
 
     nonisolated var imageRetryUserAgents: [String] {
-        [Self.safariUserAgent, Self.firefoxAndroidUserAgent]
+        Self.mediaRetryUserAgents
     }
 
     nonisolated func resolvedReferer(pathOrURL: String, refererPath: String) -> String {
@@ -109,18 +111,22 @@ struct GameKeeClient {
         requireJSONBody: Bool
     ) async throws -> Data {
         var lastError: Error?
+        let userAgents = Self.requestUserAgents
         for attempt in 0 ..< retryAttempts {
-            do {
-                return try await execute(
-                    request,
-                    acceptHeader: acceptHeader,
-                    requireJSONBody: requireJSONBody
-                )
-            } catch {
-                lastError = error
-                if attempt < retryAttempts - 1 {
-                    try? await Task.sleep(for: .milliseconds(300))
+            for userAgent in userAgents {
+                do {
+                    return try await execute(
+                        request,
+                        acceptHeader: acceptHeader,
+                        requireJSONBody: requireJSONBody,
+                        userAgent: userAgent
+                    )
+                } catch {
+                    lastError = error
                 }
+            }
+            if attempt < retryAttempts - 1 {
+                try? await Task.sleep(for: .milliseconds(300))
             }
         }
         throw lastError ?? GameKeeError.emptyBody
@@ -129,7 +135,8 @@ struct GameKeeClient {
     private func execute(
         _ request: GameKeeRequest,
         acceptHeader: String,
-        requireJSONBody: Bool
+        requireJSONBody: Bool,
+        userAgent: String
     ) async throws -> Data {
         guard let url = normalizedURL(request.pathOrURL) else {
             throw GameKeeError.invalidURL(request.pathOrURL)
@@ -141,7 +148,7 @@ struct GameKeeClient {
         urlRequest.setValue(acceptHeader, forHTTPHeaderField: "Accept")
         urlRequest.setValue("zh-CN", forHTTPHeaderField: "Accept-Language")
         urlRequest.setValue(resolveReferer(pathOrURL: request.pathOrURL, refererPath: request.refererPath), forHTTPHeaderField: "Referer")
-        urlRequest.setValue(Self.safariUserAgent, forHTTPHeaderField: "User-Agent")
+        urlRequest.setValue(userAgent, forHTTPHeaderField: "User-Agent")
         for (key, value) in request.extraHeaders {
             urlRequest.setValue(value, forHTTPHeaderField: key)
         }
