@@ -27,24 +27,6 @@ struct BaStudentDetailRowsCardsSection: View {
     }
 }
 
-struct BaStudentGalleryCardsSection: View {
-    let items: [BaGuideGalleryItem]
-
-    var body: some View {
-        Section {
-            if items.isEmpty {
-                BaStudentDetailEmptyRow(section: .gallery)
-                    .baStudentDetailListCardRow()
-            } else {
-                ForEach(items.prefix(18)) { item in
-                    BaStudentGalleryCard(item: item)
-                        .baStudentDetailListCardRow()
-                }
-            }
-        }
-    }
-}
-
 struct BaStudentSimulationCardsSection: View {
     let rows: [BaGuideRow]
     let tint: Color
@@ -107,113 +89,6 @@ private struct BaStudentGuideInfoCard: View {
                 }
             }
         }
-    }
-}
-
-private struct BaStudentGalleryCard: View {
-    let item: BaGuideGalleryItem
-
-    private var kind: BaGuideMediaKind {
-        item.mediaKind ?? .image
-    }
-
-    var body: some View {
-        BaGlassCard(tint: BaDesign.pink) {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(alignment: .top, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 7) {
-                        Text(item.title)
-                            .font(.title3.weight(.semibold))
-                            .foregroundStyle(.primary)
-                            .lineLimit(2)
-
-                        Text(galleryDetail)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                            .lineLimit(2)
-                    }
-
-                    Spacer(minLength: 8)
-
-                    if let mediaURL = item.mediaURL {
-                        Menu {
-                            ShareLink(item: mediaURL) {
-                                Label(String(localized: "ba.action.share"), systemImage: "square.and.arrow.up")
-                            }
-                            Link(destination: mediaURL) {
-                                Label(
-                                    String(localized: "ba.student.detail.media.openSource"),
-                                    systemImage: "safari"
-                                )
-                            }
-                        } label: {
-                            Image(systemName: "ellipsis")
-                                .font(.headline.weight(.semibold))
-                                .frame(width: 44, height: 38)
-                                .liquidGlassSurface(
-                                    cornerRadius: 18,
-                                    tint: BaDesign.pink.opacity(0.10),
-                                    isInteractive: true
-                                )
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-
-                BaRemoteImageSurface(
-                    url: item.imageURL,
-                    fallbackSystemImage: kind.systemImage,
-                    tint: BaDesign.pink,
-                    width: nil,
-                    height: mediaHeight,
-                    cornerRadius: 22,
-                    contentMode: .fit,
-                    usesImageBackdrop: kind == .image || kind == .live2d,
-                    fallbackFont: .system(size: 50, weight: .semibold)
-                )
-
-                HStack(spacing: 8) {
-                    BaStudentDetailTextChip(title: kind.title, tint: BaDesign.pink)
-                    if let unlock = item.memoryUnlockLevel, unlock.isEmpty == false {
-                        BaStudentDetailTextChip(
-                            title: String(format: String(localized: "ba.student.detail.memory.unlock.format"), unlock),
-                            tint: BaDesign.blue
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    private var mediaHeight: CGFloat {
-        switch kind {
-        case .image, .live2d:
-            430
-        case .video:
-            220
-        case .audio, .unknown:
-            160
-        }
-    }
-
-    private var galleryDetail: String {
-        var parts = [kind.title]
-        if isMeaningfulDetail(item.detail) {
-            parts.append(item.detail)
-        }
-        if let note = item.note, isMeaningfulDetail(note), parts.contains(note) == false {
-            parts.append(note)
-        }
-        return parts.joined(separator: " · ")
-    }
-
-    private func isMeaningfulDetail(_ value: String) -> Bool {
-        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard trimmed.isEmpty == false, trimmed != kind.title else { return false }
-        if trimmed.localizedCaseInsensitiveContains("gamekee.com") {
-            return false
-        }
-        return true
     }
 }
 

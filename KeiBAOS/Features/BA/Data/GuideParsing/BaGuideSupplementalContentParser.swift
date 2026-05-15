@@ -249,6 +249,7 @@ struct BaGuideSupplementalContentParser {
     }
 
     private func galleryItems(title: String, raw: Any?, sourceURL: URL?) -> [BaGuideGalleryItem] {
+        let title = BaGuideGallerySupport.normalizeArrayTitle(title)
         let images = BaGuideTextNormalizer.dedupe(BaGuideTextNormalizer.imageURLs(in: raw, sourceURL: sourceURL))
         let videos = BaGuideTextNormalizer.dedupe(BaGuideTextNormalizer.videoURLs(in: raw, sourceURL: sourceURL))
         let audios = BaGuideTextNormalizer.dedupe(BaGuideTextNormalizer.audioURLs(in: raw, sourceURL: sourceURL))

@@ -97,6 +97,19 @@ struct GameKeeClient {
         throw lastError ?? GameKeeError.emptyBody
     }
 
+    func fetchMediaData(url: URL, refererPath: String = "/ba") async throws -> Data {
+        let request = GameKeeRequest(pathOrURL: url.absoluteString, refererPath: refererPath)
+        var lastError: Error?
+        for userAgent in Self.mediaRetryUserAgents {
+            do {
+                return try await executeMedia(request, userAgent: userAgent)
+            } catch {
+                lastError = error
+            }
+        }
+        throw lastError ?? GameKeeError.emptyBody
+    }
+
     nonisolated var imageRetryUserAgents: [String] {
         Self.mediaRetryUserAgents
     }
@@ -240,6 +253,39 @@ struct GameKeeClient {
         else {
             let preview = String(decoding: data.prefix(120), as: UTF8.self)
             throw GameKeeError.invalidResponse(preview)
+        }
+        return data
+    }
+
+    private func executeMedia(_ request: GameKeeRequest, userAgent: String) async throws -> Data {
+        guard let url = normalizedURL(request.pathOrURL) else {
+            throw GameKeeError.invalidURL(request.pathOrURL)
+        }
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "GET"
+        urlRequest.timeoutInterval = 24
+        urlRequest.cachePolicy = .reloadRevalidatingCacheData
+        let mediaHeaders = Self.mediaPlaybackHeaders(
+            for: url,
+            referer: resolveReferer(pathOrURL: request.pathOrURL, refererPath: request.refererPath)
+        )
+        for (key, value) in mediaHeaders {
+            urlRequest.setValue(value, forHTTPHeaderField: key)
+        }
+        urlRequest.setValue(userAgent, forHTTPHeaderField: "User-Agent")
+        for (key, value) in request.extraHeaders {
+            urlRequest.setValue(value, forHTTPHeaderField: key)
+        }
+
+        let (data, response) = try await session.data(for: urlRequest)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw GameKeeError.invalidResponse(response.description)
+        }
+        guard (200 ..< 300).contains(httpResponse.statusCode) else {
+            throw GameKeeError.httpStatus(httpResponse.statusCode)
+        }
+        guard data.isEmpty == false else {
+            throw GameKeeError.emptyBody
         }
         return data
     }

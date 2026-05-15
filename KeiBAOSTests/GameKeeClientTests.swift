@@ -94,6 +94,63 @@ final class GameKeeClientTests: XCTestCase {
         XCTAssertEqual(request.value(forHTTPHeaderField: "device-num"), "1")
         XCTAssertEqual(request.value(forHTTPHeaderField: "game-alias"), "ba")
     }
+
+    func testGenericMediaFetchRequestsUseGameKeeMediaHeaders() async throws {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [GameKeeClientURLProtocol.self]
+        let session = URLSession(configuration: configuration)
+        let client = GameKeeClient(session: session, retryAttempts: 1)
+        GameKeeClientURLProtocol.handler = { request in
+            GameKeeClientURLProtocol.requests.append(request)
+            let response = try XCTUnwrap(
+                HTTPURLResponse(
+                    url: try XCTUnwrap(request.url),
+                    statusCode: 200,
+                    httpVersion: nil,
+                    headerFields: ["Content-Type": "video/mp4"]
+                )
+            )
+            return (response, Data([0, 0, 0, 24, 0x66, 0x74, 0x79, 0x70]))
+        }
+
+        let url = try XCTUnwrap(URL(string: "https://cdnimg-v2.gamekee.com/wiki2.0/video/memory.mp4"))
+        _ = try await client.fetchMediaData(url: url, refererPath: "/ba/tj/611753.html")
+
+        let request = try XCTUnwrap(GameKeeClientURLProtocol.requests.first)
+        XCTAssertEqual(request.value(forHTTPHeaderField: "Accept"), "*/*")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "Referer"), "https://www.gamekee.com/")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "Origin"), "https://www.gamekee.com")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "device-num"), "1")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "game-alias"), "ba")
+    }
+
+    func testGuideMediaCacheHitsLocalFileAfterFirstDownload() async throws {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [GameKeeClientURLProtocol.self]
+        let session = URLSession(configuration: configuration)
+        let client = GameKeeClient(session: session, retryAttempts: 1)
+        let cache = BaGuideMediaCache(client: client)
+        GameKeeClientURLProtocol.handler = { request in
+            GameKeeClientURLProtocol.requests.append(request)
+            let response = try XCTUnwrap(
+                HTTPURLResponse(
+                    url: try XCTUnwrap(request.url),
+                    statusCode: 200,
+                    httpVersion: nil,
+                    headerFields: ["Content-Type": "image/gif"]
+                )
+            )
+            return (response, Data([0x47, 0x49, 0x46, 0x38]))
+        }
+
+        let url = try XCTUnwrap(URL(string: "https://cdnimg-v2.gamekee.com/wiki2.0/images/\(UUID().uuidString).gif"))
+        let first = try await cache.localURL(for: url)
+        let second = try await cache.localURL(for: url)
+
+        XCTAssertEqual(first, second)
+        XCTAssertEqual(GameKeeClientURLProtocol.requests.count, 1)
+        XCTAssertEqual(BaGuideMediaCache.cachedFileExtension(for: url), "gif")
+    }
 }
 
 private final class GameKeeClientURLProtocol: URLProtocol {

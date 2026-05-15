@@ -51,7 +51,7 @@ struct BaGuideContentParser {
             apiData: apiData,
             sourceURL: sourceURL
         )
-        parsed.galleryItems = Self.dedupeGalleryItems(supplemental.galleryItems + parsed.galleryItems)
+        parsed.galleryItems = BaGuideMediaParser.sortedDistinct(supplemental.galleryItems + parsed.galleryItems)
         parsed.imageURL = portraitURL
             ?? supplemental.imageURL
             ?? parsed.imageURL
@@ -115,15 +115,6 @@ struct BaGuideContentParser {
         var seen = Set<String>()
         return rows.filter { row in
             let key = "\(row.title.trimmingCharacters(in: .whitespacesAndNewlines))|\(row.value.trimmingCharacters(in: .whitespacesAndNewlines))|\(row.imageURL?.absoluteString ?? "")|\((row.imageURLs ?? []).map(\.absoluteString).joined(separator: "|"))"
-            return seen.insert(key).inserted
-        }
-    }
-
-    private static func dedupeGalleryItems(_ items: [BaGuideGalleryItem]) -> [BaGuideGalleryItem] {
-        var seen = Set<String>()
-        return items.filter { item in
-            let media = item.mediaURL ?? item.imageURL
-            let key = "\(item.mediaKind?.rawValue ?? "")|\(media?.absoluteString ?? item.id)"
             return seen.insert(key).inserted
         }
     }

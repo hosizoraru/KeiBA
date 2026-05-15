@@ -67,7 +67,10 @@ enum BaGuideTextNormalizer {
         if ["json", "mp4", "mov", "m3u8", "mp3", "m4a", "wav", "aac", "ogg", "oga", "opus", "flac"].contains(pathExtension) {
             return false
         }
-        if ["jpg", "jpeg", "png", "webp", "gif", "svg"].contains(pathExtension) {
+        if hasInvalidGameKeeMediaTail(url) {
+            return false
+        }
+        if ["jpg", "jpeg", "png", "webp", "gif", "bmp", "svg", "avif"].contains(pathExtension) {
             return true
         }
         let host = url.host?.lowercased() ?? ""
@@ -79,14 +82,25 @@ enum BaGuideTextNormalizer {
 
     nonisolated static func looksLikeVideoURL(_ url: URL) -> Bool {
         let value = url.absoluteString.lowercased()
+        if hasInvalidGameKeeMediaTail(url) {
+            return false
+        }
         return value.hasSuffix(".mp4") ||
+            value.hasSuffix(".webm") ||
             value.hasSuffix(".mov") ||
             value.hasSuffix(".m3u8") ||
+            value.contains(".mp4?") ||
+            value.contains(".webm?") ||
+            value.contains(".mov?") ||
+            value.contains(".m3u8?") ||
             value.contains("video")
     }
 
     nonisolated static func looksLikeAudioURL(_ url: URL) -> Bool {
         let value = url.absoluteString.lowercased()
+        if hasInvalidGameKeeMediaTail(url) {
+            return false
+        }
         return value.hasSuffix(".mp3") ||
             value.hasSuffix(".m4a") ||
             value.hasSuffix(".wav") ||
@@ -95,7 +109,27 @@ enum BaGuideTextNormalizer {
             value.hasSuffix(".oga") ||
             value.hasSuffix(".opus") ||
             value.hasSuffix(".flac") ||
+            value.contains(".mp3?") ||
+            value.contains(".m4a?") ||
+            value.contains(".wav?") ||
+            value.contains(".aac?") ||
+            value.contains(".ogg?") ||
+            value.contains(".oga?") ||
+            value.contains(".opus?") ||
+            value.contains(".flac?") ||
             value.contains("audio")
+    }
+
+    nonisolated static func isPlaceholderMediaToken(_ raw: String) -> Bool {
+        let value = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return value.isEmpty ||
+            value == "n" ||
+            value == "null" ||
+            value == "undefined" ||
+            value == "nan" ||
+            value == "-" ||
+            value == "[]" ||
+            value.range(of: #"^\d+$"#, options: .regularExpression) != nil
     }
 
     nonisolated static func imageURLs(in any: Any?, sourceURL: URL?, depth: Int = 0) -> [URL] {
@@ -212,8 +246,12 @@ enum BaGuideTextNormalizer {
         return dedupe(urls)
     }
 
-    private nonisolated static func isPlaceholderMediaToken(_ raw: String) -> Bool {
-        let value = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        return value.isEmpty || value == "null" || value == "undefined" || value == "-" || value == "[]"
+    private nonisolated static func hasInvalidGameKeeMediaTail(_ url: URL) -> Bool {
+        guard url.host?.lowercased().hasSuffix("gamekee.com") == true else {
+            return false
+        }
+        let segments = url.pathComponents.filter { $0 != "/" && $0.isEmpty == false }
+        guard segments.count == 1 else { return false }
+        return isPlaceholderMediaToken(segments[0])
     }
 }

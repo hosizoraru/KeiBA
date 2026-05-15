@@ -15,6 +15,7 @@ struct BaStudentDetailView: View {
     @State private var selectedPage: BaStudentDetailPage = .overviewProfile
     @State private var voiceSearchText = ""
     @State private var selectedSameNameEntry: BaGuideCatalogEntry?
+    @State private var selectedGalleryPreview: BaStudentGalleryPreviewItem?
 
     private var state: BaLoadableState<BaStudentGuideInfo> {
         model.studentDetailStates[entry.contentId] ?? BaLoadableState<BaStudentGuideInfo>()
@@ -28,6 +29,9 @@ struct BaStudentDetailView: View {
         detailList
             .navigationDestination(item: $selectedSameNameEntry) { entry in
                 BaStudentDetailView(entry: entry)
+            }
+            .sheet(item: $selectedGalleryPreview) { item in
+                BaStudentGalleryPreviewSheet(item: item)
             }
     }
 
@@ -123,7 +127,9 @@ struct BaStudentDetailView: View {
                 searchText: $voiceSearchText
             )
         case .gallery:
-            BaStudentGalleryCardsSection(items: info?.galleryItems ?? [])
+            BaStudentGalleryCardsSection(info: info) { item in
+                selectedGalleryPreview = item
+            }
         case .simulate:
             BaStudentSimulationCardsSection(rows: simulationRows, tint: BaDesign.violet)
         }

@@ -6,6 +6,7 @@
 //
 
 @testable import KeiBAOS
+import UniformTypeIdentifiers
 import XCTest
 
 final class BaStudentDetailTests: XCTestCase {
@@ -470,6 +471,64 @@ final class BaStudentDetailTests: XCTestCase {
         let metadata = BaGuideMediaExportBuilder.metadata(for: url, title: "互动家具 1")
 
         XCTAssertEqual(metadata.fileName, "互动家具 1.gif")
+    }
+
+    func testGuideMediaExportMetadataHandlesVideoAndAudioExtensions() throws {
+        let videoURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina/memory.mp4?token=1"))
+        let audioURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina/bgm.ogg"))
+
+        XCTAssertEqual(BaGuideMediaExportBuilder.metadata(for: videoURL, title: "回忆大厅视频").contentType.preferredFilenameExtension, "mp4")
+        XCTAssertEqual(BaGuideMediaExportBuilder.metadata(for: audioURL, title: "BGM").contentType.preferredFilenameExtension, "ogg")
+    }
+
+    func testGalleryDisplayStateGroupsExpressionsAndFiltersProfileOnlyMedia() throws {
+        let standing = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina/standing.png"))
+        let memory = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina/memory.png"))
+        let memoryVideo = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina/memory.mp4"))
+        let bgm = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina/bgm.ogg"))
+        let expression1 = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina/expression1.png"))
+        let expression2 = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina/expression2.png"))
+        let furniture = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina/furniture.gif"))
+        let chocolate = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina/chocolate.png"))
+        let info = BaStudentGuideInfo(
+            contentId: 611_753,
+            sourceURL: nil,
+            title: "日奈(礼服)",
+            subtitle: "GameKee",
+            summary: "",
+            imageURL: standing,
+            stats: [],
+            profileRows: [
+                BaGuideRow(id: "unlock", title: "回忆大厅解锁等级", value: "羁绊 5", imageURL: nil),
+                BaGuideRow(id: "link", title: "影画相关链接", value: "官方介绍 / https://bluearchive.jp", imageURL: nil),
+            ],
+            skillRows: [],
+            voiceRows: [],
+            galleryItems: [
+                BaGuideGalleryItem(id: "standing", title: "立绘", detail: "图片", imageURL: standing, mediaURL: standing, mediaKind: .image),
+                BaGuideGalleryItem(id: "memory", title: "回忆大厅", detail: "图片", imageURL: memory, mediaURL: memory, mediaKind: .image, memoryUnlockLevel: "5"),
+                BaGuideGalleryItem(id: "memory-video", title: "回忆大厅视频", detail: "视频", imageURL: nil, mediaURL: memoryVideo, mediaKind: .video),
+                BaGuideGalleryItem(id: "bgm", title: "BGM", detail: "音频", imageURL: nil, mediaURL: bgm, mediaKind: .audio),
+                BaGuideGalleryItem(id: "expression1", title: "角色表情 1", detail: "图片", imageURL: expression1, mediaURL: expression1, mediaKind: .image),
+                BaGuideGalleryItem(id: "expression2", title: "表情差分 2", detail: "图片", imageURL: expression2, mediaURL: expression2, mediaKind: .image),
+                BaGuideGalleryItem(id: "furniture", title: "互动家具 1 2", detail: "图片", imageURL: furniture, mediaURL: furniture, mediaKind: .image),
+                BaGuideGalleryItem(id: "chocolate", title: "巧克力图", detail: "图片", imageURL: chocolate, mediaURL: chocolate, mediaKind: .image),
+            ],
+            growthRows: [],
+            simulateRows: [],
+            contentSource: "content_json",
+            syncedAt: Date(timeIntervalSince1970: 0)
+        )
+
+        let state = BaStudentGalleryDisplayState(info: info)
+
+        XCTAssertEqual(state.memoryUnlockLevel, "5")
+        XCTAssertEqual(state.memoryHallVideoGroup?.items.first?.imageURL, memory)
+        XCTAssertEqual(state.expressionItems.map(\.id), ["expression1", "expression2"])
+        XCTAssertEqual(state.galleryRelatedLinkRows.map(\.id), ["link"])
+        XCTAssertTrue(state.displayGalleryItems.contains { $0.id == "bgm" })
+        XCTAssertFalse(state.displayGalleryItems.contains { $0.id == "furniture" })
+        XCTAssertFalse(state.displayGalleryItems.contains { $0.id == "chocolate" })
     }
 
     func testSkillCardsParseLevelsCostAndDescriptionIcons() throws {
