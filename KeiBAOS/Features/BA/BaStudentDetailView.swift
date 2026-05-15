@@ -14,6 +14,7 @@ struct BaStudentDetailView: View {
 
     @State private var selectedPage: BaStudentDetailPage = .overviewProfile
     @State private var voiceSearchText = ""
+    @State private var selectedSameNameEntry: BaGuideCatalogEntry?
 
     private var state: BaLoadableState<BaStudentGuideInfo> {
         model.studentDetailStates[entry.contentId] ?? BaLoadableState<BaStudentGuideInfo>()
@@ -24,6 +25,13 @@ struct BaStudentDetailView: View {
     }
 
     var body: some View {
+        detailList
+            .navigationDestination(item: $selectedSameNameEntry) { entry in
+                BaStudentDetailView(entry: entry)
+            }
+    }
+
+    private var detailList: some View {
         List {
             BaStudentDetailPageRailSection(selection: $selectedPage, tint: headerTint)
 
@@ -100,7 +108,11 @@ struct BaStudentDetailView: View {
             BaStudentWeaponCardsSection(info: info, tint: headerTint)
         case .profile:
             if let info {
-                BaStudentProfileCardsSection(info: info, tint: headerTint)
+                BaStudentProfileCardsSection(
+                    info: info,
+                    tint: headerTint,
+                    onOpenSameNameEntry: { selectedSameNameEntry = $0 }
+                )
             } else if state.isLoading == false {
                 emptyDetailSection
             }

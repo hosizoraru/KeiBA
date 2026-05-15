@@ -10,10 +10,16 @@ import UniformTypeIdentifiers
 
 struct BaStudentProfileCardsSection: View {
     let tint: Color
+    let onOpenSameNameEntry: (BaGuideCatalogEntry) -> Void
     private let displaySections: [BaStudentProfileSection]
 
-    init(info: BaStudentGuideInfo, tint: Color) {
+    init(
+        info: BaStudentGuideInfo,
+        tint: Color,
+        onOpenSameNameEntry: @escaping (BaGuideCatalogEntry) -> Void
+    ) {
         self.tint = tint
+        self.onOpenSameNameEntry = onOpenSameNameEntry
         let sections = info.profileSections
         let hasContent = sections.contains { $0.isEmpty == false }
         displaySections = hasContent ? sections : []
@@ -29,7 +35,11 @@ struct BaStudentProfileCardsSection: View {
                     if section.kind == .furniture {
                         BaStudentProfileFurnitureSectionRows(section: section, tint: tint)
                     } else {
-                        BaStudentProfileSectionCard(section: section, tint: tint)
+                        BaStudentProfileSectionCard(
+                            section: section,
+                            tint: tint,
+                            onOpenSameNameEntry: onOpenSameNameEntry
+                        )
                             .baStudentDetailListCardRow()
                     }
                 }
@@ -41,6 +51,7 @@ struct BaStudentProfileCardsSection: View {
 private struct BaStudentProfileSectionCard: View {
     let section: BaStudentProfileSection
     let tint: Color
+    let onOpenSameNameEntry: (BaGuideCatalogEntry) -> Void
 
     var body: some View {
         BaGlassCard(tint: tint) {
@@ -57,7 +68,11 @@ private struct BaStudentProfileSectionCard: View {
         case .gifts:
             BaStudentProfileGiftGrid(items: section.giftItems, tint: tint)
         case .sameName:
-            BaStudentSameNameRoleList(section: section, tint: tint)
+            BaStudentSameNameRoleList(
+                section: section,
+                tint: tint,
+                onOpen: onOpenSameNameEntry
+            )
         case .chocolate:
             BaStudentProfileRowsView(rows: section.rows, tint: tint)
             BaStudentProfileGalleryList(items: section.galleryItems, tint: tint)
@@ -278,8 +293,7 @@ private struct BaStudentSameNameRoleList: View {
 
     let section: BaStudentProfileSection
     let tint: Color
-
-    @State private var selectedEntry: BaGuideCatalogEntry?
+    let onOpen: (BaGuideCatalogEntry) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -300,13 +314,10 @@ private struct BaStudentSameNameRoleList: View {
                         item: item,
                         entry: model.studentCatalogEntry(forSameNameRole: item),
                         tint: tint,
-                        onOpen: { selectedEntry = $0 }
+                        onOpen: onOpen
                     )
                 }
             }
-        }
-        .navigationDestination(item: $selectedEntry) { entry in
-            BaStudentDetailView(entry: entry)
         }
     }
 }
