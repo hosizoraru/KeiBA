@@ -311,7 +311,7 @@ nonisolated struct BaStudentSkillDisplayModel: Identifiable, Hashable {
         return expanded.isEmpty ? [row] : expanded
     }
 
-    private static func extractSkillGlossaryIcons(from rows: [BaGuideRow]) -> [String: URL] {
+    static func extractSkillGlossaryIcons(from rows: [BaGuideRow]) -> [String: URL] {
         var glossary: [String: URL] = [:]
         var inGlossary = false
 
@@ -336,7 +336,7 @@ nonisolated struct BaStudentSkillDisplayModel: Identifiable, Hashable {
         return glossary
     }
 
-    private static func rowDescriptionIcons(_ row: BaGuideRow) -> [URL] {
+    static func rowDescriptionIcons(_ row: BaGuideRow) -> [URL] {
         let candidates = row.imageURLs ?? row.imageURL.map { [$0] } ?? []
         return Array(
             candidates
@@ -350,7 +350,7 @@ nonisolated struct BaStudentSkillDisplayModel: Identifiable, Hashable {
         )
     }
 
-    private static func isLikelyDescriptionIcon(_ url: URL) -> Bool {
+    static func isLikelyDescriptionIcon(_ url: URL) -> Bool {
         let value = url.absoluteString
         if value.localizedCaseInsensitiveContains("data:image") {
             return true
@@ -366,7 +366,7 @@ nonisolated struct BaStudentSkillDisplayModel: Identifiable, Hashable {
         return numbers[0] <= 96 && numbers[1] <= 96
     }
 
-    private static func toDisplayLevelLabel(_ rawKey: String) -> String? {
+    static func toDisplayLevelLabel(_ rawKey: String) -> String? {
         let key = rawKey.trimmingCharacters(in: .whitespacesAndNewlines)
             .replacingOccurrences(of: " ", with: "")
         guard let range = key.range(of: #"(?i)^LV\.?\d{1,2}$"#, options: .regularExpression),

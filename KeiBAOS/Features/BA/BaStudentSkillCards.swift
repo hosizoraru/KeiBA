@@ -230,7 +230,7 @@ private struct BaStudentSkillCostPill: View {
     }
 }
 
-private struct BaStudentSkillDescriptionView: View {
+struct BaStudentSkillDescriptionView: View {
     let description: String
     let glossaryIcons: [String: URL]
     let descriptionIcons: [URL]

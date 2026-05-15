@@ -96,9 +96,7 @@ struct BaStudentDetailView: View {
             }
         case .skills:
             BaStudentSkillCardsSection(rows: info?.skillDisplayRows ?? [], tint: headerTint)
-            if let growthRows = info?.growthDisplayRows, growthRows.isEmpty == false {
-                BaStudentDetailRowsCardsSection(section: .growth, rows: growthRows, tint: BaDesign.green)
-            }
+            BaStudentWeaponCardsSection(info: info, tint: headerTint)
         case .profile:
             if let info {
                 BaStudentProfileCardsSection(info: info, tint: headerTint)

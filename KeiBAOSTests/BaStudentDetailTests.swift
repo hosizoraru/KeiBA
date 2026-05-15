@@ -412,6 +412,67 @@ final class BaStudentDetailTests: XCTestCase {
         XCTAssertEqual(cards.map(\.name), ["终幕之旋律"])
     }
 
+    func testWeaponCardParsesMainWeaponAndStopsBeforeOtherGrowthBlocks() throws {
+        let weaponIcon = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/weapon.png"))
+        let abilityIcon = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/ability.png"))
+        let growthRows = [
+            BaGuideRow(id: "equip", title: "装备1", value: "帽子", imageURL: nil),
+            BaGuideRow(id: "weapon", title: "专武", value: "", imageURL: nil),
+            BaGuideRow(id: "weapon-icon", title: "专武图标", value: "", imageURL: weaponIcon),
+            BaGuideRow(id: "weapon-name", title: "专武名称", value: "终幕：毁灭者", imageURL: nil),
+            BaGuideRow(id: "weapon-desc", title: "专武描述", value: "像日奈手足一样被日常使用的机枪。", imageURL: nil),
+            BaGuideRow(id: "weapon-levels", title: "专武数值", value: "Lv1 / Lv30 / Lv50", imageURL: nil),
+            BaGuideRow(id: "attack", title: "攻击力", value: "10 / 20 / 30", imageURL: nil),
+            BaGuideRow(id: "favorite", title: "爱用品", value: "", imageURL: nil),
+            BaGuideRow(id: "ability", title: "能力解放所需材料", value: "素材", imageURL: abilityIcon),
+        ]
+
+        let card = try XCTUnwrap(BaStudentWeaponDisplayModel.card(growthRows: growthRows, skillRows: []))
+
+        XCTAssertEqual(card.name, "终幕：毁灭者")
+        XCTAssertEqual(card.imageURL, weaponIcon)
+        XCTAssertEqual(card.description, "像日奈手足一样被日常使用的机枪。")
+        XCTAssertEqual(card.statHeaders, ["Lv1", "Lv30", "Lv50"])
+        XCTAssertEqual(card.statRows, [BaStudentWeaponStatRow(title: "攻击力", values: ["10", "20", "30"])])
+        XCTAssertTrue(card.statRows.allSatisfy { $0.title != "能力解放所需材料" })
+    }
+
+    func testWeaponCardParsesHinaDressTwoStarPassiveUpgradeFromSkillRows() throws {
+        let weaponIcon = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/weapon.png"))
+        let effectIcon = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/wiki2.0/images/w_64/h_64/effect.png"))
+        let termIcon = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/wiki2.0/images/w_47/h_54/taunt.png"))
+        let growthRows = [
+            BaGuideRow(id: "weapon", title: "专武", value: "", imageURL: nil),
+            BaGuideRow(id: "weapon-icon", title: "专武图标", value: "", imageURL: weaponIcon),
+            BaGuideRow(id: "weapon-name", title: "专武名称", value: "终幕：毁灭者", imageURL: nil),
+            BaGuideRow(id: "favorite", title: "爱用品", value: "", imageURL: nil),
+        ]
+        let skillRows = [
+            BaGuideRow(id: "glossary-start", title: "技能名词", value: "名词图标 / 名词解释", imageURL: nil),
+            BaGuideRow(id: "glossary", title: "嘲讽", value: "持有者只会攻击施加嘲讽的目标", imageURL: termIcon),
+            BaGuideRow(id: "star", title: "★2 技能名称", value: "投入演奏的心情+", imageURL: nil),
+            BaGuideRow(id: "effect-icon", title: "技能图标", value: "", imageURL: effectIcon),
+            BaGuideRow(id: "lv1", title: "LV1", value: "攻击力增加266，暴击值增加80", imageURL: nil),
+            BaGuideRow(id: "lv10", title: "LV10", value: "攻击力增加506，暴击值增加152", imageURL: nil),
+            BaGuideRow(id: "t2", title: "T2技能图标", value: "", imageURL: nil),
+            BaGuideRow(id: "normal", title: "技能类型", value: "普通技能", imageURL: nil),
+        ]
+
+        let card = try XCTUnwrap(BaStudentWeaponDisplayModel.card(growthRows: growthRows, skillRows: skillRows))
+        let effect = try XCTUnwrap(card.starEffects.first)
+
+        XCTAssertEqual(card.name, "终幕：毁灭者")
+        XCTAssertEqual(card.starEffects.count, 1)
+        XCTAssertEqual(effect.starLabel, "★2")
+        XCTAssertEqual(effect.name, "投入演奏的心情+")
+        XCTAssertEqual(effect.iconURL, effectIcon)
+        XCTAssertEqual(effect.roleTag, String(localized: "ba.student.detail.skill.sub"))
+        XCTAssertEqual(effect.levelOptions, ["Lv.1", "Lv.10"])
+        XCTAssertEqual(effect.defaultLevel, "Lv.10")
+        XCTAssertEqual(effect.description(for: "Lv.10"), "攻击力增加506，暴击值增加152")
+        XCTAssertEqual(card.glossaryIcons["嘲讽"], termIcon)
+    }
+
     func testStudentDetailSourceErrorUsesFriendlyMessage() {
         XCTAssertEqual(
             BaDataErrorPresenter.studentDetailMessage(for: "content_cdn-empty"),

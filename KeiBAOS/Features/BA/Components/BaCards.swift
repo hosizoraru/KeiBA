@@ -426,7 +426,7 @@ struct BaRemoteImageSurface: View {
             .foregroundStyle(tint)
     }
 
-    fileprivate static func image(from data: Data) -> Image? {
+    static func image(from data: Data) -> Image? {
         #if canImport(UIKit)
             guard let uiImage = UIImage(data: data) else { return nil }
             return Image(uiImage: uiImage)
