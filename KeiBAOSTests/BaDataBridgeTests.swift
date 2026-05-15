@@ -777,6 +777,7 @@ final class BaDataBridgeTests: XCTestCase {
         XCTAssertEqual(entry.lineHeaders, ["日配", "中配"])
         XCTAssertEqual(entry.lines, ["日本語", "中文台词"])
         XCTAssertEqual(entry.audioURLs, [jpURL, cnURL])
+        XCTAssertEqual(entry.audioHeaders, ["日配", "中配"])
     }
 
     func testVoiceResolverChoosesAudioForSelectedLanguage() throws {
@@ -791,7 +792,8 @@ final class BaDataBridgeTests: XCTestCase {
             section: "通常",
             lineHeaders: ["日配", "中配", "官翻"],
             lines: ["JP", "CN", "官方翻译"],
-            audioURLs: [jpURL, cnURL]
+            audioURLs: [jpURL, cnURL],
+            audioHeaders: ["日配", "中配"]
         )
 
         let headers = BaVoiceLanguageResolver.playbackHeaders(for: [entry])
@@ -809,7 +811,8 @@ final class BaDataBridgeTests: XCTestCase {
             section: "通常",
             lineHeaders: ["日配", "中配"],
             lines: ["JP", "CN"],
-            audioURLs: [jpURL]
+            audioURLs: [jpURL],
+            audioHeaders: ["日配"]
         )
         XCTAssertEqual(
             BaVoiceLanguageResolver.playbackURL(for: jpOnlyEntry, headers: ["日配", "中配"], selectedHeader: "中配"),
@@ -819,6 +822,78 @@ final class BaDataBridgeTests: XCTestCase {
             BaVoiceLanguageResolver.linePairs(for: entry, fallbackHeaders: headers).map(\.language),
             ["日配", "中配", "官翻"]
         )
+    }
+
+    func testVoiceParserKeepsHinaDressTitleAudioIndependentFromTextOnlyTitleRows() throws {
+        let hinaJp = try XCTUnwrap(URL(string: "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_0/h_0/829/43637/2025/4/26/648025.ogg"))
+        let hinaCn = try XCTUnwrap(URL(string: "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_0/h_0/829/191981/2025/7/7/602581.ogg"))
+        let hinaKr = try XCTUnwrap(URL(string: "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_0/h_0/829/157597/2025/5/17/23446.ogg"))
+        let kurumiPool = try XCTUnwrap(URL(string: "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_0/h_0/829/492704/2026/3/22/64891.ogg"))
+        let headers: [BaJSONObject] = [
+            ["value": "配音语言"],
+            ["value": ""],
+            ["value": ""],
+            ["value": ""],
+            ["value": "日配"],
+            ["value": ""],
+            ["value": "中配"],
+            ["value": "韩配"],
+        ]
+        let hinaRows: [[BaJSONObject]] = [
+            headers,
+            [
+                ["value": "通常"],
+                ["value": "标题"],
+                ["value": "ブルーアーカイブ。"],
+                ["value": "碧蓝档案。"],
+                ["type": "audio", "value": hinaJp.absoluteString],
+                ["value": "Blue Archive"],
+                ["type": "audio", "value": hinaCn.absoluteString],
+                ["type": "audio", "value": hinaKr.absoluteString],
+            ],
+        ]
+        let kurumiRows: [[BaJSONObject]] = [
+            headers,
+            [
+                ["value": "通常"],
+                ["value": "标题"],
+                ["value": "ブルーアーカイブ。"],
+                ["value": "蔚蓝档案。"],
+                ["value": ""],
+                ["value": ""],
+                ["value": ""],
+                ["value": ""],
+            ],
+            [
+                ["value": "通常"],
+                ["value": "卡池抽取"],
+                ["value": "SRT 特殊学園、FOX 小隊のポイントマン、高倉クルミよ。"],
+                ["value": "我是 SRT 特殊学园，FOX 小队的尖兵，高仓胡桃。"],
+                ["type": "audio", "value": kurumiPool.absoluteString],
+                ["value": ""],
+                ["value": ""],
+                ["value": ""],
+            ],
+        ]
+
+        let hinaTitle = try XCTUnwrap(BaGuideVoiceParser().parse(baseData: hinaRows, content: nil, sourceURL: nil).first)
+        let kurumiEntries = BaGuideVoiceParser().parse(baseData: kurumiRows, content: nil, sourceURL: nil)
+        let kurumiTitle = try XCTUnwrap(kurumiEntries.first { $0.title == "标题" })
+        let kurumiPoolEntry = try XCTUnwrap(kurumiEntries.first { $0.title == "卡池抽取" })
+        let allEntries = [hinaTitle, kurumiTitle, kurumiPoolEntry]
+        let playbackHeaders = BaVoiceLanguageResolver.playbackHeaders(for: allEntries)
+
+        XCTAssertEqual(BaVoiceLanguageResolver.playbackHeaders(for: kurumiEntries), ["日配"])
+        XCTAssertEqual(hinaTitle.lineHeaders, ["日配", "中配", "官翻"])
+        XCTAssertEqual(hinaTitle.audioURLs, [hinaJp, hinaCn, hinaKr])
+        XCTAssertEqual(hinaTitle.audioHeaders, ["日配", "中配", "韩配"])
+        XCTAssertEqual(BaVoiceLanguageResolver.playbackURL(for: hinaTitle, headers: playbackHeaders, selectedHeader: "日配"), hinaJp)
+        XCTAssertEqual(BaVoiceLanguageResolver.playbackURL(for: hinaTitle, headers: playbackHeaders, selectedHeader: "韩配"), hinaKr)
+
+        XCTAssertNil(kurumiTitle.audioURL)
+        XCTAssertNil(BaVoiceLanguageResolver.playbackURL(for: kurumiTitle, headers: playbackHeaders, selectedHeader: "日配"))
+        XCTAssertEqual(kurumiPoolEntry.audioHeaders, ["日配"])
+        XCTAssertEqual(BaVoiceLanguageResolver.playbackURL(for: kurumiPoolEntry, headers: playbackHeaders, selectedHeader: "日配"), kurumiPool)
     }
 
     func testVoicePlaybackSupportsOggThroughStreamingPath() throws {

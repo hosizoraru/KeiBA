@@ -37,7 +37,6 @@ final class BaOggVoicePlayer: NSObject {
     func play(localURL: URL) {
         stopProgressTimer()
         onEvent?(.ready)
-        player.stop()
         player.play(url: localURL)
         startProgressTimer()
     }

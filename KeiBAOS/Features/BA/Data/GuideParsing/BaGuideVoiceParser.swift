@@ -25,7 +25,8 @@ struct BaGuideVoiceParser {
                     section: nil,
                     lineHeaders: nil,
                     lines: nil,
-                    audioURLs: [url]
+                    audioURLs: [url],
+                    audioHeaders: [defaultLanguageLabel(0)]
                 )
             }
     }
@@ -79,7 +80,11 @@ struct BaGuideVoiceParser {
                 headers: languageHeaders,
                 audioURLs: audioURLs
             )
-            let alignedAudioURLs = alignedAudioURLs(records: records, audioURLs: audioURLs)
+            let alignedAudio = alignedAudio(
+                records: records,
+                audioURLs: audioURLs,
+                headers: languageHeaders
+            )
             guard records.isEmpty == false || audioURLs.isEmpty == false else { continue }
             entries.append(
                 BaGuideVoiceEntry(
@@ -87,11 +92,12 @@ struct BaGuideVoiceParser {
                     title: rowContent.title,
                     subtitle: section,
                     transcript: records.map(\.text).joined(separator: "\n"),
-                    audioURL: alignedAudioURLs.first ?? audioURLs.first,
+                    audioURL: alignedAudio.urls.first ?? audioURLs.first,
                     section: section,
                     lineHeaders: records.map(\.label),
                     lines: records.map(\.text),
-                    audioURLs: alignedAudioURLs.isEmpty ? nil : alignedAudioURLs
+                    audioURLs: alignedAudio.urls.isEmpty ? nil : alignedAudio.urls,
+                    audioHeaders: alignedAudio.headers.isEmpty ? nil : alignedAudio.headers
                 )
             )
         }
@@ -224,8 +230,12 @@ struct BaGuideVoiceParser {
             .map(\.element)
     }
 
-    private func alignedAudioURLs(records: [VoiceLineRecord], audioURLs: [URL]) -> [URL] {
-        guard audioURLs.isEmpty == false else { return [] }
+    private func alignedAudio(
+        records: [VoiceLineRecord],
+        audioURLs: [URL],
+        headers: [String]
+    ) -> (urls: [URL], headers: [String]) {
+        guard audioURLs.isEmpty == false else { return ([], []) }
         var used = Set<Int>()
         var indexes: [Int] = records.compactMap { record in
             guard let index = record.audioIndex,
@@ -237,7 +247,11 @@ struct BaGuideVoiceParser {
             return index
         }
         indexes.append(contentsOf: audioURLs.indices.filter { used.contains($0) == false })
-        return indexes.map { audioURLs[$0] }
+        let labels = normalizedHeaders(headers: headers, count: audioURLs.count)
+        return (
+            indexes.map { audioURLs[$0] },
+            indexes.map { labels.indices.contains($0) ? labels[$0] : defaultLanguageLabel($0) }
+        )
     }
 
     private func normalizedHeaders(headers: [String], count: Int) -> [String] {

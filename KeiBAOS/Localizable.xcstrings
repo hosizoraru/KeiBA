@@ -4544,6 +4544,7 @@
       }
     },
     "ba.student.detail.archive.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

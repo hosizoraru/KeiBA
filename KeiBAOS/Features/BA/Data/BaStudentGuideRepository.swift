@@ -237,7 +237,9 @@ struct BaStudentGuideRepository {
                 title: row.title,
                 subtitle: String(localized: "ba.student.detail.voice.subtitle"),
                 transcript: row.value,
-                audioURL: audioURLs.indices.contains(index) ? audioURLs[index] : nil
+                audioURL: audioURLs.indices.contains(index) ? audioURLs[index] : nil,
+                audioURLs: audioURLs.indices.contains(index) ? [audioURLs[index]] : nil,
+                audioHeaders: audioURLs.indices.contains(index) ? ["日配"] : nil
             )
         }
         if textEntries.isEmpty == false {
@@ -249,7 +251,9 @@ struct BaStudentGuideRepository {
                 title: String(format: String(localized: "ba.student.detail.voice.item.format"), index + 1),
                 subtitle: url.lastPathComponent,
                 transcript: "",
-                audioURL: url
+                audioURL: url,
+                audioURLs: [url],
+                audioHeaders: ["日配"]
             )
         }
     }

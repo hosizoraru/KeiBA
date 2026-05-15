@@ -91,7 +91,7 @@ struct BaStudentVoiceSection: View {
                         BaStudentVoiceRow(
                             row: row,
                             displayHeaders: displayHeaders,
-                            playbackHeaders: displayHeaders,
+                            playbackHeaders: playbackHeaders,
                             selectedLanguage: activeLanguage,
                             playback: playback
                         )

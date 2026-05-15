@@ -150,6 +150,7 @@ final class BaVoicePlaybackController {
             startProgressTimer()
         } catch {
             if isOggFile(localURL) {
+                playbackBackend = .audioStreaming
                 startOggPlayer(localURL: localURL)
             } else {
                 fail(message: String(localized: "ba.student.detail.voice.error.unsupported"))
@@ -213,7 +214,7 @@ final class BaVoicePlaybackController {
     }
 
     private nonisolated static func preferredBackend(for url: URL) -> PlaybackBackend {
-        supportsOggPlayback(url) ? .audioStreaming : .avFoundation
+        .avFoundation
     }
 
     private nonisolated static func looksLikeAudioSource(_ url: URL) -> Bool {

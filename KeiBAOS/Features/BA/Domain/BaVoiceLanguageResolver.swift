@@ -23,6 +23,9 @@ nonisolated enum BaVoiceLanguageResolver {
             for header in entry.lineHeaders ?? [] {
                 appendHeader(header, to: &headers, includeOfficialTranslation: false)
             }
+            for header in entry.audioHeaders ?? [] {
+                appendHeader(header, to: &headers, includeOfficialTranslation: false)
+            }
         }
         let maxAudioCount = entries.map(audioCount).max() ?? 0
         while headers.count < maxAudioCount {
@@ -34,10 +37,46 @@ nonisolated enum BaVoiceLanguageResolver {
 
     static func playbackHeaders(for entries: [BaGuideVoiceEntry]) -> [String] {
         let headers = displayHeaders(for: entries)
-        return headers.enumerated()
-            .compactMap { index, header in
-                hasPlayableAudio(entries: entries, index: index) ? header : nil
-            }
+        return headers.compactMap { header in
+            entries.contains {
+                directPlaybackURL(for: $0, headers: headers, selectedHeader: header) != nil
+            } ? header : nil
+        }
+    }
+
+    static func directPlaybackURL(
+        for entry: BaGuideVoiceEntry,
+        headers: [String],
+        selectedHeader: String
+    ) -> URL? {
+        let selected = canonicalLanguageLabel(selectedHeader)
+        guard selected.isEmpty == false else { return nil }
+        if let audioHeaders = entry.audioHeaders,
+           let audioURLs = entry.audioURLs,
+           let index = audioHeaders.firstIndex(where: { canonicalLanguageLabel($0) == selected }),
+           audioURLs.indices.contains(index)
+        {
+            return audioURLs[index]
+        }
+        if let index = headers.firstIndex(where: { canonicalLanguageLabel($0) == selected }),
+           let url = entry.audioURLs?.indices.contains(index) == true ? entry.audioURLs?[index] : nil
+        {
+            return url
+        }
+        if selected == canonicalLanguageLabel(headers.first ?? ""),
+           entry.audioURLs?.isEmpty != false,
+           let url = entry.audioURL
+        {
+            return url
+        }
+        return nil
+    }
+
+    static func fallbackPlaybackURL(for entry: BaGuideVoiceEntry) -> URL? {
+        if let url = entry.audioURLs?.first(where: { $0.absoluteString.isEmpty == false }) {
+            return url
+        }
+        return entry.audioURL
     }
 
     static func playbackURL(
@@ -45,18 +84,8 @@ nonisolated enum BaVoiceLanguageResolver {
         headers: [String],
         selectedHeader: String
     ) -> URL? {
-        let selected = canonicalLanguageLabel(selectedHeader)
-        if selected.isEmpty == false,
-           let index = headers.firstIndex(where: { canonicalLanguageLabel($0) == selected })
-        {
-            if let url = entry.audioURLs?.indices.contains(index) == true ? entry.audioURLs?[index] : nil {
-                return url
-            }
-        }
-        if let url = entry.audioURLs?.first(where: { $0.absoluteString.isEmpty == false }) {
-            return url
-        }
-        return entry.audioURL
+        directPlaybackURL(for: entry, headers: headers, selectedHeader: selectedHeader)
+            ?? fallbackPlaybackURL(for: entry)
     }
 
     static func linePairs(
@@ -137,18 +166,6 @@ nonisolated enum BaVoiceLanguageResolver {
         guard includeOfficialTranslation || normalized != "官翻" else { return }
         if headers.contains(normalized) == false {
             headers.append(normalized)
-        }
-    }
-
-    private static func hasPlayableAudio(entries: [BaGuideVoiceEntry], index: Int) -> Bool {
-        entries.contains { entry in
-            if let urls = entry.audioURLs,
-               urls.indices.contains(index),
-               urls[index].absoluteString.isEmpty == false
-            {
-                return true
-            }
-            return index == 0 && entry.audioURL != nil
         }
     }
 

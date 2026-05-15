@@ -938,6 +938,7 @@ nonisolated struct BaGuideVoiceEntry: Identifiable, Codable, Hashable {
     var lineHeaders: [String]? = nil
     var lines: [String]? = nil
     var audioURLs: [URL]? = nil
+    var audioHeaders: [String]? = nil
 }
 
 nonisolated struct BaStudentGuideInfo: Identifiable, Codable, Hashable {
