@@ -488,6 +488,13 @@ final class BaAppModel {
         return fallbackStudentCatalogEntry(pool: resolvedPool, contentId: contentId, detailURL: guideURL)
     }
 
+    func studentCatalogEntry(forSameNameRole item: BaStudentProfileSameNameRoleItem) -> BaGuideCatalogEntry? {
+        let catalogEntries = catalogState.value?.entries.filter {
+            $0.category == .students || $0.category == .npcSatellite
+        } ?? []
+        return BaSameNameStudentCatalogResolver.catalogEntry(for: item, catalogEntries: catalogEntries)
+    }
+
     private func loadCachedActivities() async {
         guard let cached = await cacheStore.load([BaActivityEntry].self, for: .activities(settings.server)) else { return }
         activityState = BaLoadableState(

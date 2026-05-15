@@ -20,7 +20,7 @@ struct BaRemoteAnimatedImageSurface: View {
     let url: URL?
     var fallbackSystemImage: String
     var tint: Color
-    var width: CGFloat
+    var width: CGFloat?
     var height: CGFloat
     var cornerRadius: CGFloat
 
@@ -45,6 +45,7 @@ struct BaRemoteAnimatedImageSurface: View {
                 fallbackIcon(systemImage: fallbackSystemImage, tint: tint)
             }
         }
+        .frame(maxWidth: width == nil ? .infinity : nil)
         .frame(width: width, height: height)
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         .task(id: cacheTaskID) {
@@ -176,4 +177,3 @@ private enum BaAnimatedImageDecoder {
         }
     #endif
 }
-

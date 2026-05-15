@@ -361,6 +361,73 @@ final class BaStudentDetailTests: XCTestCase {
         XCTAssertEqual(furniture.galleryItems.map { $0.mediaURL?.pathExtension ?? "" }, ["gif", "gif"])
     }
 
+    func testRelationInfoParserAcceptsContentIDAndAlternativeImageKeys() throws {
+        let content: [Any] = [
+            [
+                "type": "relation-info",
+                "data": [
+                    "list": [
+                        [
+                            "title": "相关同名角色",
+                            "content": [
+                                [
+                                    "name": "日奈（泳装）",
+                                    "content_id": 83_729,
+                                    "imageUrl": "//cdnimg.gamekee.com/hina-swimsuit.webp",
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]
+
+        let parsed = BaGuideContentParser().parse(
+            content: content,
+            apiData: [:],
+            html: nil,
+            entry: makeCatalogEntry()
+        )
+        let row = try XCTUnwrap(parsed.profileRows.first { $0.title == "同名角色名称" })
+
+        XCTAssertEqual(row.value, "日奈（泳装） / https://www.gamekee.com/ba/tj/83729.html")
+        XCTAssertEqual(row.imageURL?.absoluteString, "https://cdnimg.gamekee.com/hina-swimsuit.webp")
+    }
+
+    func testSameNameRoleCatalogResolverMatchesExactStudentAndNpcNames() throws {
+        let entries = [
+            makeCatalogEntry(contentId: 59_934, name: "日奈", category: .students),
+            makeCatalogEntry(contentId: 83_729, name: "日奈(泳装)", category: .students),
+            makeCatalogEntry(contentId: 611_754, name: "日奈(睡衣)", category: .npcSatellite),
+        ]
+
+        let regular = BaStudentProfileSameNameRoleItem(id: "regular", name: "★3 日奈", guideURL: nil, imageURL: nil)
+        let swimsuit = BaStudentProfileSameNameRoleItem(id: "swimsuit", name: "★3 日奈（泳装）", guideURL: nil, imageURL: nil)
+        let pajama = BaStudentProfileSameNameRoleItem(id: "pajama", name: "NPC 日奈（睡衣）", guideURL: nil, imageURL: nil)
+
+        XCTAssertEqual(BaSameNameStudentCatalogResolver.catalogEntry(for: regular, catalogEntries: entries)?.contentId, 59_934)
+        XCTAssertEqual(BaSameNameStudentCatalogResolver.catalogEntry(for: swimsuit, catalogEntries: entries)?.contentId, 83_729)
+        XCTAssertEqual(BaSameNameStudentCatalogResolver.catalogEntry(for: pajama, catalogEntries: entries)?.contentId, 611_754)
+    }
+
+    func testSameNameRoleCatalogResolverPrefersExplicitGuideID() throws {
+        let guideURL = try XCTUnwrap(URL(string: "https://www.gamekee.com/ba/tj/83729.html"))
+        let entries = [
+            makeCatalogEntry(contentId: 59_934, name: "日奈", category: .students),
+            makeCatalogEntry(contentId: 83_729, name: "日奈(泳装)", category: .students),
+        ]
+        let item = BaStudentProfileSameNameRoleItem(id: "linked", name: "日奈", guideURL: guideURL, imageURL: nil)
+
+        XCTAssertEqual(BaSameNameStudentCatalogResolver.catalogEntry(for: item, catalogEntries: entries)?.contentId, 83_729)
+    }
+
+    func testGuideMediaExportMetadataKeepsGIFExtension() throws {
+        let url = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/furniture-1.gif?x=1"))
+        let metadata = BaGuideMediaExportBuilder.metadata(for: url, title: "互动家具 1")
+
+        XCTAssertEqual(metadata.fileName, "互动家具 1.gif")
+    }
+
     func testSkillCardsParseLevelsCostAndDescriptionIcons() throws {
         let skillIcon = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/wiki2.0/images/w_64/h_64/skill.png"))
         let burnIcon = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/wiki2.0/images/w_44/h_44/burn.png"))
@@ -839,11 +906,19 @@ final class BaStudentDetailTests: XCTestCase {
     }
 
     private func makeCatalogEntry() -> BaGuideCatalogEntry {
+        makeCatalogEntry(contentId: 609_145, name: "Test", category: .students)
+    }
+
+    private func makeCatalogEntry(
+        contentId: Int64,
+        name: String,
+        category: BaCatalogCategory
+    ) -> BaGuideCatalogEntry {
         BaGuideCatalogEntry(
-            entryId: 1,
+            entryId: Int(contentId),
             pid: 49443,
-            contentId: 609_145,
-            name: "Test",
+            contentId: contentId,
+            name: name,
             alias: "",
             aliasDisplay: "",
             iconURL: nil,
@@ -851,8 +926,8 @@ final class BaStudentDetailTests: XCTestCase {
             order: 0,
             createdAt: nil,
             releaseDate: nil,
-            detailURL: URL(string: "https://www.gamekee.com/ba/tj/609145.html"),
-            category: .students
+            detailURL: URL(string: "https://www.gamekee.com/ba/tj/\(contentId).html"),
+            category: category
         )
     }
 }

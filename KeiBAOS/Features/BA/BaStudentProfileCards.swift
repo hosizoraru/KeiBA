@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct BaStudentProfileCardsSection: View {
     let tint: Color
@@ -74,9 +75,12 @@ private struct BaStudentProfileSectionCard: View {
             BaStudentProfileGiftGrid(items: section.giftItems, tint: tint)
         case .sameName:
             BaStudentSameNameRoleList(section: section, tint: tint)
-        case .chocolate, .furniture:
+        case .chocolate:
             BaStudentProfileRowsView(rows: section.rows, tint: tint)
             BaStudentProfileGalleryList(items: section.galleryItems, tint: tint)
+        case .furniture:
+            BaStudentProfileRowsView(rows: section.rows, tint: tint)
+            BaStudentProfileFurnitureGalleryList(items: section.galleryItems, tint: tint)
         case .names, .info, .hobby:
             BaStudentProfileRowsView(rows: section.rows, tint: tint)
         }
@@ -307,11 +311,13 @@ private struct BaStudentSameNameRoleList: View {
 }
 
 private struct BaStudentSameNameRoleRow: View {
+    @Environment(BaAppModel.self) private var model
+
     let item: BaStudentProfileSameNameRoleItem
     let tint: Color
 
     var body: some View {
-        if let entry = item.catalogEntry {
+        if let entry = model.studentCatalogEntry(forSameNameRole: item) {
             NavigationLink {
                 BaStudentDetailView(entry: entry)
             } label: {
@@ -320,12 +326,6 @@ private struct BaStudentSameNameRoleRow: View {
             .buttonStyle(.plain)
             .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .accessibilityHint(String(localized: "ba.student.detail.profile.sameName.openDetail"))
-        } else if let guideURL = item.guideURL {
-            Link(destination: guideURL) {
-                rowContent(accessory: .external)
-            }
-            .buttonStyle(.plain)
-            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         } else {
             rowContent(accessory: .none)
         }
@@ -347,7 +347,7 @@ private struct BaStudentSameNameRoleRow: View {
                     .foregroundStyle(.primary)
                     .fixedSize(horizontal: false, vertical: true)
 
-                if item.guideURL == nil {
+                if accessory == .none {
                     Text(String(localized: "ba.student.detail.profile.sameName.linkUnavailable"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -365,17 +365,16 @@ private struct BaStudentSameNameRoleRow: View {
     private func accessoryView(_ accessory: BaStudentSameNameRoleAccessory) -> some View {
         switch accessory {
         case .detail:
-            Image(systemName: "chevron.right")
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(tint)
-                .frame(width: 36, height: 34)
-                .liquidGlassSurface(cornerRadius: 17, tint: tint.opacity(0.08), isInteractive: true)
-        case .external:
-            Image(systemName: "arrow.up.right")
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(tint)
-                .frame(width: 36, height: 34)
-                .liquidGlassSurface(cornerRadius: 17, tint: tint.opacity(0.08), isInteractive: true)
+            HStack(spacing: 5) {
+                Text(String(localized: "ba.activity.link.archive"))
+                    .font(.caption.weight(.semibold))
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.bold))
+            }
+            .foregroundStyle(tint)
+            .padding(.horizontal, 10)
+            .frame(height: 34)
+            .liquidGlassSurface(cornerRadius: 17, tint: tint.opacity(0.08), isInteractive: true)
         case .none:
             EmptyView()
         }
@@ -384,7 +383,6 @@ private struct BaStudentSameNameRoleRow: View {
 
 private enum BaStudentSameNameRoleAccessory {
     case detail
-    case external
     case none
 }
 
@@ -399,6 +397,235 @@ private struct BaStudentProfileGalleryList: View {
                     BaStudentProfileGalleryRow(item: item, tint: tint)
                 }
             }
+        }
+    }
+}
+
+private struct BaStudentProfileFurnitureGalleryList: View {
+    let items: [BaGuideGalleryItem]
+    let tint: Color
+
+    @State private var selectedItem: BaGuideGalleryItem?
+
+    var body: some View {
+        if items.isEmpty == false {
+            VStack(spacing: 12) {
+                ForEach(items.prefix(8)) { item in
+                    BaStudentProfileFurnitureMediaCard(
+                        item: item,
+                        tint: tint,
+                        onPreview: { selectedItem = item }
+                    )
+                }
+            }
+            .sheet(item: $selectedItem) { item in
+                BaStudentProfileFurniturePreviewSheet(item: item, tint: tint)
+            }
+        }
+    }
+}
+
+private struct BaStudentProfileFurnitureMediaCard: View {
+    let item: BaGuideGalleryItem
+    let tint: Color
+    let onPreview: () -> Void
+
+    private var kind: BaGuideMediaKind {
+        item.mediaKind ?? .image
+    }
+
+    private var previewURL: URL? {
+        item.furniturePreviewURL
+    }
+
+    private var saveURL: URL? {
+        item.furnitureSaveURL
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center, spacing: 10) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(item.title)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+
+                    if item.detail.isBlank == false, item.detail != kind.title {
+                        Text(item.detail)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                    }
+                }
+
+                Spacer(minLength: 8)
+
+                BaGuideMediaSaveButton(url: saveURL, title: item.title, tint: tint)
+            }
+
+            Button(action: onPreview) {
+                BaStudentProfileFurnitureMediaSurface(url: previewURL, kind: kind, tint: tint, height: 218)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(item.title)
+            .accessibilityHint(String(localized: "ba.student.detail.media.preview"))
+        }
+        .padding(10)
+        .background(tint.opacity(0.045), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+}
+
+private struct BaStudentProfileFurnitureMediaSurface: View {
+    let url: URL?
+    let kind: BaGuideMediaKind
+    let tint: Color
+    let height: CGFloat
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(.black.opacity(0.04))
+
+            BaRemoteAnimatedImageSurface(
+                url: url,
+                fallbackSystemImage: kind.systemImage,
+                tint: tint,
+                width: nil,
+                height: height,
+                cornerRadius: 14
+            )
+        }
+        .frame(maxWidth: .infinity)
+        .overlay {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(.white.opacity(0.08), lineWidth: 1)
+        }
+    }
+}
+
+private struct BaStudentProfileFurniturePreviewSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let item: BaGuideGalleryItem
+    let tint: Color
+
+    private var kind: BaGuideMediaKind {
+        item.mediaKind ?? .image
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    BaStudentProfileFurnitureMediaSurface(
+                        url: item.furniturePreviewURL,
+                        kind: kind,
+                        tint: tint,
+                        height: 420
+                    )
+
+                    if item.note?.isBlank == false {
+                        Text(item.note ?? "")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .padding(18)
+            }
+            .navigationTitle(item.title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(String(localized: "ba.common.done")) {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    BaGuideMediaSaveButton(url: item.furnitureSaveURL, title: item.title, tint: tint)
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+    }
+}
+
+private struct BaGuideMediaSaveButton: View {
+    @Environment(BaAppModel.self) private var model
+
+    let url: URL?
+    let title: String
+    let tint: Color
+
+    @State private var exportDocument = BaGuideMediaExportDocument()
+    @State private var exportType: UTType = .data
+    @State private var exportFilename = "BA_media.bin"
+    @State private var isExporterPresented = false
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+
+    var body: some View {
+        Button {
+            Task { await prepareExport() }
+        } label: {
+            Group {
+                if isLoading {
+                    ProgressView()
+                        .controlSize(.small)
+                } else {
+                    Image(systemName: "square.and.arrow.down")
+                        .font(.headline.weight(.semibold))
+                }
+            }
+            .foregroundStyle(tint)
+            .frame(width: 36, height: 34)
+            .liquidGlassSurface(cornerRadius: 17, tint: tint.opacity(0.08), isInteractive: true)
+        }
+        .buttonStyle(.plain)
+        .disabled(url == nil || isLoading)
+        .accessibilityLabel(String(localized: "ba.action.save"))
+        .fileExporter(
+            isPresented: $isExporterPresented,
+            document: exportDocument,
+            contentType: exportType,
+            defaultFilename: exportFilename
+        ) { result in
+            if case let .failure(error) = result {
+                errorMessage = error.localizedDescription
+            }
+        }
+        .alert(
+            String(localized: "ba.student.detail.media.saveFailed"),
+            isPresented: Binding(
+                get: { errorMessage != nil },
+                set: { if $0 == false { errorMessage = nil } }
+            )
+        ) {
+            Button(String(localized: "ba.common.done")) {
+                errorMessage = nil
+            }
+        } message: {
+            Text(errorMessage ?? "")
+        }
+    }
+
+    @MainActor
+    private func prepareExport() async {
+        guard let url else { return }
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            let data = try await model.imageData(for: url)
+            let metadata = BaGuideMediaExportBuilder.metadata(for: url, title: title)
+            exportDocument = BaGuideMediaExportDocument(data: data)
+            exportType = metadata.contentType
+            exportFilename = metadata.fileName
+            isExporterPresented = true
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 }
@@ -482,6 +709,22 @@ private struct BaStudentProfileGalleryRow: View {
             parts.append(note)
         }
         return parts.joined(separator: " · ")
+    }
+}
+
+private extension BaGuideGalleryItem {
+    var furniturePreviewURL: URL? {
+        if mediaURL?.baIsAnimatedImageURL == true {
+            return mediaURL
+        }
+        return imageURL ?? mediaURL
+    }
+
+    var furnitureSaveURL: URL? {
+        if mediaURL?.baIsAnimatedImageURL == true {
+            return mediaURL
+        }
+        return mediaURL ?? imageURL
     }
 }
 

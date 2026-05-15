@@ -426,7 +426,7 @@ nonisolated private func buildSameNameRoleItems(from rows: [BaGuideRow]) -> [BaS
                 isProfileValuePlaceholder(token) == false &&
                 extractProfileExternalURL(token) == nil &&
                 isSameNameRoleHintText(token) == false
-        } ?? ""
+        } ?? sameNameRoleNameCandidate(from: row.value)
         let imageURL = ((row.imageURLs ?? []) + (row.imageURL.map { [$0] } ?? []))
             .first { BaGuideTextNormalizer.looksLikeImageURL($0) }
         if normalizedKey == relatedSameNameRoleHeaderKey,
@@ -668,6 +668,27 @@ nonisolated private func splitRoleRowTokens(_ raw: String) -> [String] {
 
 nonisolated private func extractSameNameGuideURL(_ raw: String) -> URL? {
     BaSameNameStudentGuideLinkResolver.canonicalURL(from: raw)
+}
+
+nonisolated private func sameNameRoleNameCandidate(from raw: String) -> String {
+    let cleaned = raw
+        .replacingOccurrences(of: #"https?://[^\s/／|｜]+"#, with: "", options: [.regularExpression, .caseInsensitive])
+        .replacingOccurrences(of: #"https?://[^\s]+"#, with: "", options: [.regularExpression, .caseInsensitive])
+        .replacingOccurrences(
+            of: #"/(?:ba/tj/\d+(?:\.html)?|ba/\d+(?:\.html)?|v1/content/detail/\d+)"#,
+            with: "",
+            options: [.regularExpression, .caseInsensitive]
+        )
+        .replacingOccurrences(of: #"(?<![A-Za-z0-9])\d{4,}(?![A-Za-z0-9])"#, with: "", options: .regularExpression)
+        .trimmingCharacters(in: CharacterSet(charactersIn: " /／|｜,，;；"))
+        .trimmed
+    guard cleaned.isNotBlank,
+          isProfileValuePlaceholder(cleaned) == false,
+          isSameNameRoleHintText(cleaned) == false
+    else {
+        return ""
+    }
+    return cleaned
 }
 
 nonisolated private func sanitizeSameNameLinkToken(_ raw: String) -> String {

@@ -286,6 +286,22 @@
         }
       }
     },
+    "ba.action.save" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存"
+          }
+        }
+      }
+    },
     "ba.action.share" : {
       "localizations" : {
         "en" : {
@@ -451,7 +467,6 @@
       }
     },
     "ba.activity.link.archive" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4766,6 +4781,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "打开来源"
+          }
+        }
+      }
+    },
+    "ba.student.detail.media.preview" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preview media"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "预览媒体"
+          }
+        }
+      }
+    },
+    "ba.student.detail.media.saveFailed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save failed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存失败"
           }
         }
       }

@@ -102,8 +102,8 @@ struct BaGuideSupplementalContentParser {
 
             for item in objectArray(group["content"]) {
                 let name = text(from: item["name"])
-                let guideURL = canonicalGuideURL(from: item.string("jumpHref") ?? "")
-                let avatar = BaGuideTextNormalizer.normalizeMediaURL(item.string("avatar") ?? "", sourceURL: sourceURL)
+                let guideURL = relationGuideURL(from: item)
+                let avatar = relationAvatarURL(from: item, sourceURL: sourceURL)
                 let value = [name, guideURL?.absoluteString ?? ""]
                     .filter { $0.isEmpty == false }
                     .joined(separator: " / ")
@@ -118,6 +118,38 @@ struct BaGuideSupplementalContentParser {
                 )
             }
         }
+    }
+
+    private func relationGuideURL(from item: BaJSONObject) -> URL? {
+        for key in relationGuideURLKeys {
+            if let url = canonicalGuideURL(from: item.string(key) ?? "") {
+                return url
+            }
+        }
+        for key in relationGuideContentIDKeys {
+            if let contentID = item.int64(key), contentID > 0,
+               let url = URL(string: "https://www.gamekee.com/ba/tj/\(contentID).html")
+            {
+                return url
+            }
+        }
+        for candidate in relationLinkCandidates(in: item) {
+            if let url = canonicalGuideURL(from: candidate) {
+                return url
+            }
+        }
+        return nil
+    }
+
+    private func relationAvatarURL(from item: BaJSONObject, sourceURL: URL?) -> URL? {
+        for key in relationAvatarURLKeys {
+            if let url = BaGuideTextNormalizer.normalizeMediaURL(item.string(key) ?? "", sourceURL: sourceURL),
+               BaGuideTextNormalizer.looksLikeImageURL(url)
+            {
+                return url
+            }
+        }
+        return BaGuideTextNormalizer.imageURLs(in: item, sourceURL: sourceURL).first
     }
 
     private func processTabInfo(
@@ -247,6 +279,23 @@ struct BaGuideSupplementalContentParser {
         BaSameNameStudentGuideLinkResolver.canonicalURL(from: raw)
     }
 
+    private func relationLinkCandidates(in any: Any?, depth: Int = 0) -> [String] {
+        guard depth <= 5, let any else { return [] }
+        if let string = any as? String {
+            return [string]
+        }
+        if let number = any as? NSNumber {
+            return [number.stringValue]
+        }
+        if let object = any as? BaJSONObject {
+            return object.values.flatMap { relationLinkCandidates(in: $0, depth: depth + 1) }
+        }
+        if let array = any as? [Any] {
+            return array.flatMap { relationLinkCandidates(in: $0, depth: depth + 1) }
+        }
+        return []
+    }
+
     private func objectArray(_ any: Any?) -> [BaJSONObject] {
         if let objects = any as? [BaJSONObject] {
             return objects
@@ -332,6 +381,18 @@ struct BaGuideSupplementalContentParser {
         return BaGuideTextNormalizer.dedupe(urls)
     }
 }
+
+private let relationGuideURLKeys = [
+    "jumpHref", "jumpUrl", "jump_url", "href", "url", "link", "linkUrl", "link_url", "detailUrl", "detail_url",
+]
+
+private let relationGuideContentIDKeys = [
+    "contentId", "content_id", "cid", "id",
+]
+
+private let relationAvatarURLKeys = [
+    "avatar", "icon", "image", "imageUrl", "image_url", "thumb", "thumbnail", "headIcon", "head_icon",
+]
 
 private extension String {
     var trimmed: String {

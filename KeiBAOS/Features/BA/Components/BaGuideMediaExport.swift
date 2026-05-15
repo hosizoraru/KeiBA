@@ -1,0 +1,104 @@
+//
+//  BaGuideMediaExport.swift
+//  KeiBAOS
+//
+//  Created by Codex on 2026/05/15.
+//
+
+import SwiftUI
+import UniformTypeIdentifiers
+
+struct BaGuideMediaExportDocument: FileDocument {
+    static var readableContentTypes: [UTType] {
+        [.data]
+    }
+
+    var data: Data
+
+    init(data: Data = Data()) {
+        self.data = data
+    }
+
+    init(configuration: ReadConfiguration) throws {
+        data = configuration.file.regularFileContents ?? Data()
+    }
+
+    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
+        FileWrapper(regularFileWithContents: data)
+    }
+}
+
+nonisolated struct BaGuideMediaExportMetadata: Hashable {
+    let fileName: String
+    let contentType: UTType
+}
+
+nonisolated enum BaGuideMediaExportBuilder {
+    static func metadata(for url: URL, title: String, prefix: String = "") -> BaGuideMediaExportMetadata {
+        let ext = mediaExtension(for: url, title: title)
+        let baseTitle = sanitizeTitle(title).ifBlank("BA_media")
+        let cleanPrefix = sanitizeToken(prefix)
+        let combinedTitle: String
+        if cleanPrefix.isEmpty || cleanPrefix == "学生图鉴" {
+            combinedTitle = baseTitle
+        } else if baseTitle.hasPrefix(cleanPrefix) {
+            combinedTitle = baseTitle
+        } else {
+            combinedTitle = sanitizeTitle("\(cleanPrefix)_\(baseTitle)")
+        }
+        let fileName = combinedTitle.lowercased().hasSuffix(".\(ext)") ? combinedTitle : "\(combinedTitle).\(ext)"
+        return BaGuideMediaExportMetadata(
+            fileName: fileName,
+            contentType: UTType(filenameExtension: ext) ?? .data
+        )
+    }
+
+    private static func mediaExtension(for url: URL, title: String) -> String {
+        let ext = url.pathExtension.lowercased()
+        if knownMediaExtensions.contains(ext) {
+            return ext
+        }
+        let source = url.absoluteString.lowercased()
+        let title = title.lowercased()
+        if source.contains("image/gif") || source.contains("format=gif") {
+            return "gif"
+        }
+        if source.contains("audio") || title.contains("bgm") || title.contains("音频") {
+            return "ogg"
+        }
+        if source.contains("video") || title.contains("视频") {
+            return "mp4"
+        }
+        return "bin"
+    }
+
+    private static func sanitizeTitle(_ raw: String) -> String {
+        raw
+            .replacingOccurrences(of: #"[\\/:*?"<>|]"#, with: " ", options: .regularExpression)
+            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .prefix(96)
+            .description
+    }
+
+    private static func sanitizeToken(_ raw: String) -> String {
+        raw
+            .replacingOccurrences(of: #"[\\/:*?"<>|]"#, with: " ", options: .regularExpression)
+            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .prefix(48)
+            .description
+    }
+
+    private static let knownMediaExtensions = Set([
+        "jpg", "jpeg", "png", "webp", "gif", "bmp",
+        "mp4", "webm", "mkv", "mov", "m3u8",
+        "ogg", "mp3", "wav", "flac", "aac", "m4a",
+    ])
+}
+
+private extension String {
+    nonisolated func ifBlank(_ fallback: String) -> String {
+        trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? fallback : self
+    }
+}
