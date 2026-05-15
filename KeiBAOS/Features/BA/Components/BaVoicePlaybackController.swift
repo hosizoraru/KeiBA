@@ -162,6 +162,11 @@ final class BaVoicePlaybackController {
         progress = 0
         playbackBackend = Self.preferredBackend(for: remoteURL)
 
+        if playbackBackend == .avPlayer, BaMediaPlaybackSource.requiresRemotePlayback(remoteURL) {
+            startAVPlayer(remoteURL: remoteURL)
+            return
+        }
+
         Task {
             do {
                 let localURL = try await audioCache.localURL(for: remoteURL, refererPath: "/ba")
@@ -358,6 +363,17 @@ final class BaVoicePlaybackController {
         configureAudioSession()
         stopAVPlayer()
         let item = AVPlayerItem(url: localURL)
+        startAVPlayer(item: item)
+    }
+
+    private func startAVPlayer(remoteURL: URL) {
+        configureAudioSession()
+        stopAVPlayer()
+        let item = BaMediaPlaybackSource.remotePlayerItem(for: remoteURL)
+        startAVPlayer(item: item)
+    }
+
+    private func startAVPlayer(item: AVPlayerItem) {
         let nextPlayer = AVPlayer(playerItem: item)
         nextPlayer.isMuted = false
         nextPlayer.volume = 1

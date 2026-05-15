@@ -167,8 +167,13 @@ struct BaStudentGalleryVideoPlayerScreen: View {
         isLoading = true
         defer { isLoading = false }
         do {
-            let localURL = try await BaGuideMediaCache.shared.localURL(for: mediaURL)
-            let nextPlayer = AVPlayer(url: localURL)
+            let nextPlayer: AVPlayer
+            if BaMediaPlaybackSource.requiresRemotePlayback(mediaURL) {
+                nextPlayer = AVPlayer(playerItem: BaMediaPlaybackSource.remotePlayerItem(for: mediaURL))
+            } else {
+                let localURL = try await BaGuideMediaCache.shared.localURL(for: mediaURL)
+                nextPlayer = AVPlayer(url: localURL)
+            }
             nextPlayer.isMuted = false
             nextPlayer.volume = 1
             BaMediaPlaybackCoordinator.configureVideoPlaybackSession()
