@@ -167,8 +167,6 @@ private struct BaStudentGalleryExpressionCard: View {
                     .buttonStyle(.plain)
                     .contentShape(RoundedRectangle(cornerRadius: selectedPresentation.layout.cornerRadius, style: .continuous))
                     .accessibilityLabel(String(localized: "ba.student.detail.media.preview"))
-
-                    BaStudentGalleryPillRow(item: selectedItem)
                 }
             }
         }
@@ -204,11 +202,11 @@ private struct BaStudentGalleryVideoGroupCard: View {
                         if group.items.count > 1 {
                             BaGalleryMenuPicker(
                                 title: String(localized: "ba.student.detail.media.video"),
-                                selectionTitle: selectedItem?.galleryShortTitle ?? "",
+                                selectionTitle: selectedItem.map { videoVariantTitle(for: $0) } ?? "",
                                 tint: BaDesign.violet
                             ) {
                                 ForEach(group.items) { item in
-                                    Button(item.galleryShortTitle) {
+                                    Button(videoVariantTitle(for: item)) {
                                         selectedID = item.id
                                     }
                                 }
@@ -235,10 +233,17 @@ private struct BaStudentGalleryVideoGroupCard: View {
 
                 if let selectedItem {
                     let selectedPresentation = BaStudentGalleryCardPresentation(item: selectedItem)
-                    BaStudentGalleryAdaptiveVideoPlayerSurface(
-                        item: selectedItem,
-                        presentation: selectedPresentation
-                    )
+                    Button {
+                        onPreview(BaStudentGalleryPreviewItem(item: selectedItem))
+                    } label: {
+                        BaStudentGalleryAdaptiveVideoPreviewSurface(
+                            item: selectedItem,
+                            presentation: selectedPresentation
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .contentShape(RoundedRectangle(cornerRadius: selectedPresentation.layout.cornerRadius, style: .continuous))
+                    .accessibilityLabel(String(localized: "ba.student.detail.media.preview"))
                 }
             }
         }
@@ -246,15 +251,29 @@ private struct BaStudentGalleryVideoGroupCard: View {
             selectedID = selectedID ?? group.items.first?.id
         }
     }
+
+    private func videoVariantTitle(for item: BaGuideGalleryItem) -> String {
+        BaGalleryVariantTitleResolver.title(for: item, in: group.items)
+    }
 }
 
 struct BaStudentGalleryAudioCard: View {
     let item: BaGuideGalleryItem
 
     @State private var playback = BaGuideAudioPlaybackController()
+    @State private var scrubProgress = 0.0
+    @State private var isScrubbing = false
 
     private var isCurrentItem: Bool {
         playback.currentRemoteURL == item.mediaURL
+    }
+
+    private var sliderProgress: Binding<Double> {
+        Binding {
+            isScrubbing ? scrubProgress : (isCurrentItem ? playback.progress : 0)
+        } set: { newValue in
+            scrubProgress = min(max(newValue, 0), 1)
+        }
     }
 
     var body: some View {
@@ -271,7 +290,18 @@ struct BaStudentGalleryAudioCard: View {
 
                 audioControls
 
-                ProgressView(value: isCurrentItem ? playback.progress : 0)
+                Slider(value: sliderProgress, in: 0 ... 1) { editing in
+                    if editing {
+                        isScrubbing = true
+                        scrubProgress = isCurrentItem ? playback.progress : 0
+                    } else {
+                        if isCurrentItem {
+                            playback.seek(to: scrubProgress)
+                        }
+                        isScrubbing = false
+                    }
+                }
+                .disabled(isCurrentItem == false || playback.canSeek == false)
                     .tint(BaDesign.amber)
 
                 if let error = playback.errorMessage, error.isEmpty == false {
@@ -284,6 +314,14 @@ struct BaStudentGalleryAudioCard: View {
         }
         .onDisappear {
             playback.stop()
+        }
+        .onChange(of: playback.progress) { _, newValue in
+            guard isScrubbing == false else { return }
+            scrubProgress = isCurrentItem ? newValue : 0
+        }
+        .onChange(of: playback.currentRemoteURL) { _, _ in
+            isScrubbing = false
+            scrubProgress = isCurrentItem ? playback.progress : 0
         }
     }
 

@@ -29,6 +29,11 @@ final class BaOggVoicePlayer: NSObject {
     private var progressTimer: Timer?
     private var playbackToken = UUID()
 
+    var canSeek: Bool {
+        guard let duration = streamingPlayer?.duration else { return false }
+        return duration.isFinite && duration > 0
+    }
+
     deinit {
         progressTimer?.invalidate()
         playerNode?.stop()
@@ -80,6 +85,15 @@ final class BaOggVoicePlayer: NSObject {
         playbackToken = UUID()
         stopProgressTimer()
         stopCurrentPlayer()
+    }
+
+    func seek(to progressFraction: Double) {
+        guard let player = streamingPlayer, player.duration.isFinite, player.duration > 0 else {
+            return
+        }
+        let clampedProgress = min(max(progressFraction, 0), 1)
+        player.seek(to: player.duration * clampedProgress)
+        onEvent?(.progress(clampedProgress))
     }
 
     private func stopCurrentPlayer() {

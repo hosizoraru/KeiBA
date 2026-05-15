@@ -113,7 +113,7 @@ struct BaStudentGalleryMediaLayout: Hashable {
             return .init(minHeight: 310, maxHeight: 430, cornerRadius: 20, contentPadding: 8, maxPixelDimension: 1300, maxContentWidth: 620)
         }
         if BaGuideGallerySupport.isExpressionTitleForLayout(title) {
-            return .init(minHeight: 250, maxHeight: 292, cornerRadius: 18, contentPadding: 10, maxPixelDimension: 900, maxContentWidth: 420)
+            return .init(minHeight: 220, maxHeight: 252, cornerRadius: 18, contentPadding: 8, maxPixelDimension: 900, maxContentWidth: 360)
         }
         if title.hasPrefix("立绘") {
             return .init(minHeight: 360, maxHeight: 430, cornerRadius: 20, contentPadding: 8, maxPixelDimension: 1400, maxContentWidth: 520)

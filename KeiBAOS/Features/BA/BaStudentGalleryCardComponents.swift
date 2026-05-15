@@ -167,7 +167,11 @@ struct BaGalleryMenuPicker<Content: View>: View {
             .foregroundStyle(tint)
             .padding(.horizontal, 10)
             .frame(height: BaStudentGalleryMetrics.minimumActionHeight)
-            .liquidGlassSurface(cornerRadius: 21, tint: tint.opacity(0.09), isInteractive: true)
+            .background(tint.opacity(0.09), in: Capsule())
+            .overlay {
+                Capsule()
+                    .strokeBorder(tint.opacity(0.24), lineWidth: 1)
+            }
         }
         .accessibilityLabel(title)
     }
@@ -239,7 +243,7 @@ struct BaStudentGalleryVideoPlayerSurface: View {
                         )
 
                         Circle()
-                            .fill(.regularMaterial)
+                            .fill(BaDesign.violet.opacity(0.88))
                             .frame(width: 60, height: 60)
                             .shadow(color: .black.opacity(0.10), radius: 12, y: 5)
                             .overlay {
@@ -248,7 +252,7 @@ struct BaStudentGalleryVideoPlayerSurface: View {
                                 } else {
                                     Image(systemName: "play.fill")
                                         .font(.title3.weight(.bold))
-                                        .foregroundStyle(BaDesign.violet)
+                                        .foregroundStyle(.white)
                                         .offset(x: 2)
                                 }
                             }
@@ -446,6 +450,49 @@ struct BaStudentGalleryAdaptiveVideoPlayerSurface: View {
     }
 }
 
+struct BaStudentGalleryAdaptiveVideoPreviewSurface: View {
+    let item: BaGuideGalleryItem
+    let presentation: BaStudentGalleryCardPresentation
+
+    #if os(macOS)
+        private var layoutContext: BaStudentGalleryLayoutContext { .desktop }
+    #else
+        @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+        private var layoutContext: BaStudentGalleryLayoutContext {
+            horizontalSizeClass == .regular ? .regular : .compact
+        }
+    #endif
+
+    var body: some View {
+        let resolvedLayout = presentation.layout.resolved(for: layoutContext)
+        ZStack {
+            BaStudentGalleryMediaSurface(
+                url: item.imageURL,
+                kind: .video,
+                height: resolvedLayout.height,
+                cornerRadius: resolvedLayout.cornerRadius,
+                maxPixelDimension: resolvedLayout.maxPixelDimension,
+                contentPadding: resolvedLayout.contentPadding
+            )
+
+            Circle()
+                .fill(BaDesign.violet.opacity(0.88))
+                .frame(width: 58, height: 58)
+                .shadow(color: .black.opacity(0.14), radius: 12, y: 6)
+                .overlay {
+                    Image(systemName: "play.fill")
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(.white)
+                        .offset(x: 2)
+                }
+                .accessibilityHidden(true)
+        }
+        .frame(maxWidth: resolvedLayout.maxContentWidth)
+        .frame(maxWidth: .infinity, alignment: .center)
+    }
+}
+
 struct BaStudentGalleryPreviewMediaSurface: View {
     let presentation: BaStudentGalleryCardPresentation
 
@@ -624,11 +671,24 @@ struct BaGalleryIconActionSurface: View {
         }
         .foregroundStyle(isEnabled ? tint : .secondary)
         .frame(width: BaStudentGalleryMetrics.minimumActionHeight, height: BaStudentGalleryMetrics.minimumActionHeight)
-        .liquidGlassSurface(
-            cornerRadius: BaStudentGalleryMetrics.minimumActionHeight / 2,
-            tint: (isEnabled ? tint : Color.secondary).opacity(0.10),
-            isInteractive: isEnabled
-        )
+        .background((isEnabled ? tint : Color.secondary).opacity(0.09), in: Circle())
+        .overlay {
+            Circle()
+                .strokeBorder((isEnabled ? tint : Color.secondary).opacity(0.24), lineWidth: 1)
+        }
+    }
+}
+
+enum BaGalleryVariantTitleResolver {
+    static func title(for item: BaGuideGalleryItem, in items: [BaGuideGalleryItem]) -> String {
+        let baseTitle = item.galleryShortTitle
+        let matchingItems = items.filter { $0.galleryShortTitle == baseTitle }
+        guard matchingItems.count > 1,
+              let zeroBasedIndex = matchingItems.firstIndex(where: { $0.id == item.id })
+        else {
+            return baseTitle
+        }
+        return "\(baseTitle)\(zeroBasedIndex + 1)"
     }
 }
 

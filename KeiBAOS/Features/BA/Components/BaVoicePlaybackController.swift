@@ -29,6 +29,17 @@ final class BaVoicePlaybackController {
     var isPlaying = false
     var progress = 0.0
     var errorMessage: String?
+    var canSeek: Bool {
+        switch playbackBackend {
+        case .avFoundation:
+            guard let duration = player?.duration else { return false }
+            return duration.isFinite && duration > 0
+        case .audioStreaming:
+            return oggPlayer.canSeek
+        case .vorbisEngine, nil:
+            return false
+        }
+    }
 
     private let audioCache: any BaAudioCaching
     @ObservationIgnored private let oggPlayer = BaOggVoicePlayer()
@@ -88,6 +99,21 @@ final class BaVoicePlaybackController {
         isPlaying = false
         progress = 0
         playbackBackend = nil
+    }
+
+    func seek(to progressFraction: Double) {
+        let clampedProgress = min(max(progressFraction, 0), 1)
+        progress = clampedProgress
+        switch playbackBackend {
+        case .avFoundation:
+            guard let player, player.duration.isFinite, player.duration > 0 else { return }
+            player.currentTime = player.duration * clampedProgress
+            updateProgress()
+        case .audioStreaming:
+            oggPlayer.seek(to: clampedProgress)
+        case .vorbisEngine, nil:
+            break
+        }
     }
 
     private func play(remoteURL: URL) {

@@ -540,6 +540,17 @@ final class BaStudentDetailTests: XCTestCase {
         ])
     }
 
+    func testGalleryVariantTitleResolverNumbersDuplicatePVItems() throws {
+        let pv1 = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina/pv-1.mp4"))
+        let pv2 = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina/pv-2.mp4"))
+        let items = [
+            BaGuideGalleryItem(id: "pv1", title: "PV", detail: "视频", imageURL: nil, mediaURL: pv1, mediaKind: .video),
+            BaGuideGalleryItem(id: "pv2", title: "PV", detail: "视频", imageURL: nil, mediaURL: pv2, mediaKind: .video),
+        ]
+
+        XCTAssertEqual(items.map { BaGalleryVariantTitleResolver.title(for: $0, in: items) }, ["PV1", "PV2"])
+    }
+
     func testGalleryCardLayoutsFollowHinaDressSampleMediaRatios() throws {
         let portrait = try XCTUnwrap(URL(string: "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_968/h_1292/829/43637/2025/4/26/608184.png"))
         let memory = try XCTUnwrap(URL(string: "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1210/h_888/829/43637/2025/4/26/427347.png"))
@@ -558,7 +569,7 @@ final class BaStudentDetailTests: XCTestCase {
         XCTAssertEqual(portraitLayout.height, 430, accuracy: 0.5)
         XCTAssertEqual(memoryLayout.height, 261.4, accuracy: 1.0)
         XCTAssertEqual(introLayout.height, 406, accuracy: 0.5)
-        XCTAssertEqual(expressionLayout.height, 292, accuracy: 0.5)
+        XCTAssertEqual(expressionLayout.height, 252, accuracy: 0.5)
         XCTAssertEqual(videoLayout.height, 200.3, accuracy: 1.0)
 
         XCTAssertEqual(portraitLayout.resolved(for: .regular).height, 507.4, accuracy: 1.0)
