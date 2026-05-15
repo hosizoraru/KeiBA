@@ -23,8 +23,6 @@ struct BaStudentDetailRowsCardsSection: View {
                         .baStudentDetailListCardRow()
                 }
             }
-        } header: {
-            BaStudentDetailSectionHeader(title: section.title, systemImage: section.systemImage, tint: tint)
         }
     }
 }
@@ -43,12 +41,6 @@ struct BaStudentGalleryCardsSection: View {
                         .baStudentDetailListCardRow()
                 }
             }
-        } header: {
-            BaStudentDetailSectionHeader(
-                title: BaStudentDetailSection.gallery.title,
-                systemImage: BaStudentDetailSection.gallery.systemImage,
-                tint: BaDesign.pink
-            )
         }
     }
 }
@@ -73,31 +65,7 @@ struct BaStudentSimulationCardsSection: View {
                 BaStudentSimulationAbilityCard(rows: Array(displayedRows.prefix(24)), mode: $mode, tint: tint)
                     .baStudentDetailListCardRow()
             }
-        } header: {
-            BaStudentDetailSectionHeader(
-                title: BaStudentDetailSection.simulate.title,
-                systemImage: BaStudentDetailSection.simulate.systemImage,
-                tint: tint
-            )
         }
-    }
-}
-
-private struct BaStudentDetailSectionHeader: View {
-    let title: String
-    let systemImage: String
-    let tint: Color
-
-    var body: some View {
-        Label {
-            Text(title)
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(.primary)
-        } icon: {
-            Image(systemName: systemImage)
-                .foregroundStyle(tint)
-        }
-        .textCase(nil)
     }
 }
 

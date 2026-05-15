@@ -132,7 +132,11 @@ struct BaStudentVoiceRow: View {
                     if let format = BaVoiceDisplayModel.audioFormatTitle(for: playbackURL) {
                         BaVoiceBadge(title: format, tint: BaDesign.blue)
                     } else {
-                        BaVoiceBadge(title: String(localized: "ba.student.detail.voice.textOnly"), tint: .secondary)
+                        BaVoiceBadge(
+                            title: String(localized: "ba.student.detail.voice.textOnly"),
+                            tint: Color.secondary,
+                            isMuted: true
+                        )
                     }
                     if BaVoiceDisplayModel.audioCount(for: row) > 1 {
                         BaVoiceBadge(
@@ -312,15 +316,28 @@ private struct BaPrimaryVoiceLineSurface: ViewModifier {
 private struct BaVoiceBadge: View {
     let title: String
     let tint: Color
+    var isMuted = false
 
     var body: some View {
         Text(title)
             .font(.caption2.weight(.semibold))
-            .foregroundStyle(tint)
+            .foregroundStyle(isMuted ? Color.secondary : tint)
             .lineLimit(1)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 3)
-            .background(.quaternary, in: Capsule())
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3.5)
+            .background(badgeFill, in: Capsule())
+            .overlay {
+                Capsule()
+                    .strokeBorder(badgeStroke, lineWidth: 0.8)
+            }
+    }
+
+    private var badgeFill: Color {
+        tint.opacity(isMuted ? 0.04 : 0.09)
+    }
+
+    private var badgeStroke: Color {
+        tint.opacity(isMuted ? 0.10 : 0.18)
     }
 }
 

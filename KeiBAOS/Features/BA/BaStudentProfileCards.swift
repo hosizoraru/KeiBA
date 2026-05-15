@@ -34,25 +34,7 @@ struct BaStudentProfileCardsSection: View {
                     }
                 }
             }
-        } header: {
-            BaStudentProfileSectionHeader(tint: tint)
         }
-    }
-}
-
-private struct BaStudentProfileSectionHeader: View {
-    let tint: Color
-
-    var body: some View {
-        Label {
-            Text(String(localized: "ba.student.detail.archive.title"))
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(.primary)
-        } icon: {
-            Image(systemName: BaStudentDetailSection.profile.systemImage)
-                .foregroundStyle(tint)
-        }
-        .textCase(nil)
     }
 }
 

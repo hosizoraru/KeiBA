@@ -69,6 +69,7 @@ struct BaStudentDetailView: View {
             }
         }
         .platformInsetGroupedListStyle()
+        .baStudentDetailSectionSpacing()
         .scrollContentBackground(.hidden)
         .background(AppBackground())
         .modifier(BaStudentVoiceSearchModifier(isActive: selectedPage == .voice, text: $voiceSearchText))
@@ -160,6 +161,17 @@ struct BaStudentDetailView: View {
         model.isFavorite(entry)
             ? String(localized: "ba.catalog.favorite.remove")
             : String(localized: "ba.catalog.favorite.add")
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func baStudentDetailSectionSpacing() -> some View {
+        #if os(iOS)
+            listSectionSpacing(.compact)
+        #else
+            self
+        #endif
     }
 }
 

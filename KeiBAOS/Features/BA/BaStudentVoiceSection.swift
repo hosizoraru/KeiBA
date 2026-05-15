@@ -98,8 +98,6 @@ struct BaStudentVoiceSection: View {
                     }
                 }
             }
-        } header: {
-            Text(BaStudentDetailSection.voice.title)
         } footer: {
             if rows.isEmpty == false {
                 Text(String(format: String(localized: "ba.student.detail.voice.footer.format"), rows.count))
@@ -160,14 +158,7 @@ private struct BaVoiceControlPanel: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
-                Picker(String(localized: "ba.student.detail.voice.filter.category"), selection: $sectionFilter) {
-                    ForEach(filters) { filter in
-                        Text(filter.title)
-                            .tag(filter)
-                    }
-                }
-                .pickerStyle(.menu)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                BaVoiceFilterMenu(selection: $sectionFilter, filters: filters)
 
                 Text(visibleCountTitle)
                     .font(BaTextToken.rowCaption.monospacedDigit())
@@ -183,6 +174,48 @@ private struct BaVoiceControlPanel: View {
             visibleCount,
             totalCount
         )
+    }
+}
+
+private struct BaVoiceFilterMenu: View {
+    @Binding var selection: BaVoiceSectionFilter
+
+    let filters: [BaVoiceSectionFilter]
+
+    var body: some View {
+        Menu {
+            ForEach(filters) { filter in
+                Button {
+                    selection = filter
+                } label: {
+                    if filter == selection {
+                        Label(filter.title, systemImage: "checkmark")
+                    } else {
+                        Text(filter.title)
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 5) {
+                Text(selection.title)
+                    .lineLimit(1)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption2.weight(.bold))
+            }
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(BaDesign.blue)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(BaDesign.blue.opacity(0.08), in: Capsule())
+            .overlay {
+                Capsule()
+                    .strokeBorder(BaDesign.blue.opacity(0.16), lineWidth: 0.8)
+            }
+        }
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityLabel(String(localized: "ba.student.detail.voice.filter.category"))
+        .accessibilityValue(selection.title)
     }
 }
 

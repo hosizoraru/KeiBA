@@ -29,25 +29,7 @@ struct BaStudentSkillCardsSection: View {
                         .baStudentDetailListCardRow()
                 }
             }
-        } header: {
-            BaStudentSkillSectionHeader(tint: tint)
         }
-    }
-}
-
-private struct BaStudentSkillSectionHeader: View {
-    let tint: Color
-
-    var body: some View {
-        Label {
-            Text(BaStudentDetailSection.skills.title)
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(.primary)
-        } icon: {
-            Image(systemName: BaStudentDetailSection.skills.systemImage)
-                .foregroundStyle(tint)
-        }
-        .textCase(nil)
     }
 }
 
