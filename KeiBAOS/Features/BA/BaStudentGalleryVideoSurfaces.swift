@@ -57,16 +57,19 @@ struct BaStudentGalleryVideoPlayerScreen: View {
             Color.black
                 .ignoresSafeArea()
 
-            if let player {
-                BaGallerySystemVideoPlayer(player: player)
-                    .ignoresSafeArea()
-            } else {
-                poster
-                    .padding(20)
+            VStack(spacing: 0) {
+                toolbar
+
+                ZStack {
+                    if let player {
+                        BaGallerySystemVideoPlayer(player: player)
+                    } else {
+                        poster
+                            .padding(20)
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-        }
-        .safeAreaInset(edge: .top) {
-            toolbar
         }
         .task(id: item.mediaURL) {
             await loadVideo()
@@ -166,7 +169,9 @@ struct BaStudentGalleryVideoPlayerScreen: View {
         do {
             let localURL = try await BaGuideMediaCache.shared.localURL(for: mediaURL)
             let nextPlayer = AVPlayer(url: localURL)
-            BaMediaPlaybackCoordinator.configurePrimaryPlaybackSession()
+            nextPlayer.isMuted = false
+            nextPlayer.volume = 1
+            BaMediaPlaybackCoordinator.configureVideoPlaybackSession()
             BaMediaPlaybackCoordinator.notifyWillStartPlayback(sender: nextPlayer)
             player = nextPlayer
             nextPlayer.play()

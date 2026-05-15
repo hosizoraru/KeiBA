@@ -191,6 +191,7 @@ final class BaVoicePlaybackController {
         do {
             configureAudioSession()
             let nextPlayer = try AVAudioPlayer(contentsOf: localURL)
+            nextPlayer.volume = 1
             nextPlayer.prepareToPlay()
             guard nextPlayer.play() else {
                 if isOggFile(localURL) {
@@ -307,7 +308,7 @@ final class BaVoicePlaybackController {
     }
 
     private func configureAudioSession() {
-        BaMediaPlaybackCoordinator.configurePrimaryPlaybackSession()
+        BaMediaPlaybackCoordinator.configureAudioPlaybackSession()
     }
 }
 
