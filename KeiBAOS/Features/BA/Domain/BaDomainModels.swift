@@ -951,6 +951,7 @@ nonisolated struct BaStudentGuideInfo: Identifiable, Codable, Hashable {
     let stats: [BaGuideRow]
     let profileRows: [BaGuideRow]
     let skillRows: [BaGuideRow]
+    let voiceLanguageHeaders: [String]
     let voiceRows: [BaGuideVoiceEntry]
     let galleryItems: [BaGuideGalleryItem]
     let growthRows: [BaGuideRow]
@@ -960,6 +961,83 @@ nonisolated struct BaStudentGuideInfo: Identifiable, Codable, Hashable {
 
     var id: Int64 {
         contentId
+    }
+
+    init(
+        contentId: Int64,
+        sourceURL: URL?,
+        title: String,
+        subtitle: String,
+        summary: String,
+        imageURL: URL?,
+        stats: [BaGuideRow],
+        profileRows: [BaGuideRow],
+        skillRows: [BaGuideRow],
+        voiceLanguageHeaders: [String] = [],
+        voiceRows: [BaGuideVoiceEntry],
+        galleryItems: [BaGuideGalleryItem],
+        growthRows: [BaGuideRow],
+        simulateRows: [BaGuideRow],
+        contentSource: String,
+        syncedAt: Date
+    ) {
+        self.contentId = contentId
+        self.sourceURL = sourceURL
+        self.title = title
+        self.subtitle = subtitle
+        self.summary = summary
+        self.imageURL = imageURL
+        self.stats = stats
+        self.profileRows = profileRows
+        self.skillRows = skillRows
+        self.voiceLanguageHeaders = voiceLanguageHeaders
+        self.voiceRows = voiceRows
+        self.galleryItems = galleryItems
+        self.growthRows = growthRows
+        self.simulateRows = simulateRows
+        self.contentSource = contentSource
+        self.syncedAt = syncedAt
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case contentId
+        case sourceURL
+        case title
+        case subtitle
+        case summary
+        case imageURL
+        case stats
+        case profileRows
+        case skillRows
+        case voiceLanguageHeaders
+        case voiceRows
+        case galleryItems
+        case growthRows
+        case simulateRows
+        case contentSource
+        case syncedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            contentId: try container.decode(Int64.self, forKey: .contentId),
+            sourceURL: try container.decodeIfPresent(URL.self, forKey: .sourceURL),
+            title: try container.decode(String.self, forKey: .title),
+            subtitle: try container.decode(String.self, forKey: .subtitle),
+            summary: try container.decode(String.self, forKey: .summary),
+            imageURL: try container.decodeIfPresent(URL.self, forKey: .imageURL),
+            stats: try container.decode([BaGuideRow].self, forKey: .stats),
+            profileRows: try container.decode([BaGuideRow].self, forKey: .profileRows),
+            skillRows: try container.decode([BaGuideRow].self, forKey: .skillRows),
+            voiceLanguageHeaders: try container.decodeIfPresent([String].self, forKey: .voiceLanguageHeaders) ?? [],
+            voiceRows: try container.decode([BaGuideVoiceEntry].self, forKey: .voiceRows),
+            galleryItems: try container.decode([BaGuideGalleryItem].self, forKey: .galleryItems),
+            growthRows: try container.decode([BaGuideRow].self, forKey: .growthRows),
+            simulateRows: try container.decode([BaGuideRow].self, forKey: .simulateRows),
+            contentSource: try container.decode(String.self, forKey: .contentSource),
+            syncedAt: try container.decode(Date.self, forKey: .syncedAt)
+        )
     }
 }
 

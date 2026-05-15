@@ -6402,6 +6402,7 @@
       }
     },
     "ba.student.detail.voice.subtitle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

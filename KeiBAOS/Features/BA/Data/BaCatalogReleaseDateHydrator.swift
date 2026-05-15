@@ -41,7 +41,7 @@ struct BaCatalogReleaseDateHydrator {
                 }
                 for await (entry, info) in group {
                     guard let info else { continue }
-                    await cacheStore.save(info, for: .studentDetail(entry.contentId), schemaVersion: 2, syncedAt: info.syncedAt)
+                    await cacheStore.save(info, for: .studentDetail(entry.contentId), schemaVersion: 3, syncedAt: info.syncedAt)
                     if let date = releaseDate(from: info) {
                         patches[entry.contentId] = date
                     }

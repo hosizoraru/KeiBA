@@ -9,8 +9,12 @@ import CryptoKit
 import Foundation
 import os
 
-actor BaAudioCache {
-    static let shared = BaAudioCache(client: GameKeeClient())
+nonisolated protocol BaAudioCaching: Sendable {
+    func localURL(for url: URL, refererPath: String) async throws -> URL
+}
+
+actor BaAudioCache: BaAudioCaching {
+    nonisolated static let shared = BaAudioCache(client: GameKeeClient())
 
     private let fileManager: FileManager
     private let client: GameKeeClient
@@ -92,5 +96,9 @@ actor BaAudioCache {
         if recognized { return true }
         if ["ogg", "oga", "opus"].contains(ext) { return false }
         return ext.isEmpty || ext == "audio"
+    }
+
+    nonisolated static func recognizesAudioDataForTesting(_ data: Data, expectedExtension: String) -> Bool {
+        looksLikeAudioData(data, expectedExtension: expectedExtension)
     }
 }

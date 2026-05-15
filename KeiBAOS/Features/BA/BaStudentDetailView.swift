@@ -105,7 +105,11 @@ struct BaStudentDetailView: View {
                 emptyDetailSection
             }
         case .voice:
-            BaStudentVoiceSection(rows: info?.voiceRows ?? [], searchText: $voiceSearchText)
+            BaStudentVoiceSection(
+                rows: info?.voiceRows ?? [],
+                voiceLanguageHeaders: info?.voiceLanguageHeaders ?? [],
+                searchText: $voiceSearchText
+            )
         case .gallery:
             BaStudentGalleryCardsSection(items: info?.galleryItems ?? [])
         case .simulate:

@@ -17,8 +17,14 @@ nonisolated struct BaVoiceLinePair: Identifiable, Hashable {
 }
 
 nonisolated enum BaVoiceLanguageResolver {
-    static func displayHeaders(for entries: [BaGuideVoiceEntry]) -> [String] {
+    static func displayHeaders(
+        for entries: [BaGuideVoiceEntry],
+        preferredHeaders: [String] = []
+    ) -> [String] {
         var headers: [String] = []
+        for header in preferredHeaders {
+            appendHeader(header, to: &headers, includeOfficialTranslation: false)
+        }
         for entry in entries {
             for header in entry.lineHeaders ?? [] {
                 appendHeader(header, to: &headers, includeOfficialTranslation: false)
@@ -35,13 +41,20 @@ nonisolated enum BaVoiceLanguageResolver {
         return headers
     }
 
-    static func playbackHeaders(for entries: [BaGuideVoiceEntry]) -> [String] {
-        let headers = displayHeaders(for: entries)
-        return headers.compactMap { header in
+    static func playableHeaders(
+        for entries: [BaGuideVoiceEntry],
+        preferredHeaders: [String] = []
+    ) -> [String] {
+        let headers = displayHeaders(for: entries, preferredHeaders: preferredHeaders)
+        return headers.filter { header in
             entries.contains {
                 directPlaybackURL(for: $0, headers: headers, selectedHeader: header) != nil
-            } ? header : nil
+            }
         }
+    }
+
+    static func playbackHeaders(for entries: [BaGuideVoiceEntry]) -> [String] {
+        playableHeaders(for: entries)
     }
 
     static func directPlaybackURL(
@@ -58,13 +71,15 @@ nonisolated enum BaVoiceLanguageResolver {
         {
             return audioURLs[index]
         }
-        if let index = headers.firstIndex(where: { canonicalLanguageLabel($0) == selected }),
+        if entry.audioHeaders == nil,
+           let index = headers.firstIndex(where: { canonicalLanguageLabel($0) == selected }),
            let url = entry.audioURLs?.indices.contains(index) == true ? entry.audioURLs?[index] : nil
         {
             return url
         }
-        if selected == canonicalLanguageLabel(headers.first ?? ""),
+        if entry.audioHeaders == nil,
            entry.audioURLs?.isEmpty != false,
+           selected == canonicalLanguageLabel(headers.first ?? ""),
            let url = entry.audioURL
         {
             return url
@@ -85,7 +100,6 @@ nonisolated enum BaVoiceLanguageResolver {
         selectedHeader: String
     ) -> URL? {
         directPlaybackURL(for: entry, headers: headers, selectedHeader: selectedHeader)
-            ?? fallbackPlaybackURL(for: entry)
     }
 
     static func linePairs(

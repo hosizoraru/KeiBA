@@ -920,7 +920,7 @@ final class BaStudentDetailTests: XCTestCase {
             ],
         ]
 
-        let entry = try XCTUnwrap(BaGuideVoiceParser().parse(baseData: baseData, content: nil, sourceURL: nil).first)
+        let entry = try XCTUnwrap(BaGuideVoiceParser().parse(baseData: baseData, content: nil, sourceURL: nil).entries.first)
 
         XCTAssertEqual(entry.audioURLs?.first?.absoluteString, "https://cdnimg.gamekee.com/voice/nico.ogg")
         XCTAssertEqual(entry.lines, ["ブルーアーカイブ。", "蔚蓝档案。"])
@@ -941,7 +941,7 @@ final class BaStudentDetailTests: XCTestCase {
             ],
         ]
 
-        let entry = try XCTUnwrap(BaGuideVoiceParser().parse(baseData: baseData, content: nil, sourceURL: nil).first)
+        let entry = try XCTUnwrap(BaGuideVoiceParser().parse(baseData: baseData, content: nil, sourceURL: nil).entries.first)
 
         XCTAssertEqual(entry.title, "标题")
         XCTAssertNil(entry.audioURL)

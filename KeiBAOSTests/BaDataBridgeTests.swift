@@ -481,6 +481,7 @@ final class BaDataBridgeTests: XCTestCase {
             stats: parsed.stats,
             profileRows: parsed.profileRows,
             skillRows: parsed.skillRows,
+            voiceLanguageHeaders: parsed.voiceLanguageHeaders,
             voiceRows: parsed.voiceRows,
             galleryItems: parsed.galleryItems,
             growthRows: parsed.growthRows,
@@ -666,6 +667,7 @@ final class BaDataBridgeTests: XCTestCase {
             stats: parsed.stats,
             profileRows: parsed.profileRows,
             skillRows: parsed.skillRows,
+            voiceLanguageHeaders: parsed.voiceLanguageHeaders,
             voiceRows: parsed.voiceRows,
             galleryItems: parsed.galleryItems,
             growthRows: parsed.growthRows,
@@ -746,7 +748,7 @@ final class BaDataBridgeTests: XCTestCase {
                 ["value": "한국어"],
             ],
         ]
-        let rows = BaGuideVoiceParser().parse(baseData: baseData, content: nil, sourceURL: nil)
+        let rows = BaGuideVoiceParser().parse(baseData: baseData, content: nil, sourceURL: nil).entries
 
         XCTAssertEqual(rows.count, 1)
         XCTAssertEqual(rows[0].lineHeaders, ["日配", "中配", "韩配"])
@@ -771,7 +773,7 @@ final class BaDataBridgeTests: XCTestCase {
                 ["type": "audio", "value": jpURL.absoluteString],
             ],
         ]
-        let entry = try XCTUnwrap(BaGuideVoiceParser().parse(baseData: baseData, content: nil, sourceURL: nil).first)
+        let entry = try XCTUnwrap(BaGuideVoiceParser().parse(baseData: baseData, content: nil, sourceURL: nil).entries.first)
 
         XCTAssertEqual(entry.title, "大厅1")
         XCTAssertEqual(entry.lineHeaders, ["日配", "中配"])
@@ -816,7 +818,7 @@ final class BaDataBridgeTests: XCTestCase {
         )
         XCTAssertEqual(
             BaVoiceLanguageResolver.playbackURL(for: jpOnlyEntry, headers: ["日配", "中配"], selectedHeader: "中配"),
-            jpURL
+            nil
         )
         XCTAssertEqual(
             BaVoiceLanguageResolver.linePairs(for: entry, fallbackHeaders: headers).map(\.language),
@@ -876,13 +878,17 @@ final class BaDataBridgeTests: XCTestCase {
             ],
         ]
 
-        let hinaTitle = try XCTUnwrap(BaGuideVoiceParser().parse(baseData: hinaRows, content: nil, sourceURL: nil).first)
-        let kurumiEntries = BaGuideVoiceParser().parse(baseData: kurumiRows, content: nil, sourceURL: nil)
+        let hinaParse = BaGuideVoiceParser().parse(baseData: hinaRows, content: nil, sourceURL: nil)
+        let kurumiParse = BaGuideVoiceParser().parse(baseData: kurumiRows, content: nil, sourceURL: nil)
+        let hinaTitle = try XCTUnwrap(hinaParse.entries.first)
+        let kurumiEntries = kurumiParse.entries
         let kurumiTitle = try XCTUnwrap(kurumiEntries.first { $0.title == "标题" })
         let kurumiPoolEntry = try XCTUnwrap(kurumiEntries.first { $0.title == "卡池抽取" })
         let allEntries = [hinaTitle, kurumiTitle, kurumiPoolEntry]
         let playbackHeaders = BaVoiceLanguageResolver.playbackHeaders(for: allEntries)
 
+        XCTAssertEqual(hinaParse.languageHeaders, ["日配", "中配", "韩配"])
+        XCTAssertEqual(kurumiParse.languageHeaders, ["日配", "中配", "韩配"])
         XCTAssertEqual(BaVoiceLanguageResolver.playbackHeaders(for: kurumiEntries), ["日配"])
         XCTAssertEqual(hinaTitle.lineHeaders, ["日配", "中配", "官翻"])
         XCTAssertEqual(hinaTitle.audioURLs, [hinaJp, hinaCn, hinaKr])
@@ -919,6 +925,12 @@ final class BaDataBridgeTests: XCTestCase {
         XCTAssertTrue(BaVoicePlaybackController.supportsPlayback(flacURL))
         XCTAssertTrue(BaVoicePlaybackController.supportsPlayback(unknownVoiceURL))
         XCTAssertFalse(BaVoicePlaybackController.supportsPlayback(pageURL))
+    }
+
+    func testSmallOggVoiceDataIsAcceptedByAudioCache() {
+        let smallOggHeader = Data([0x4F, 0x67, 0x67, 0x53, 0x00, 0x02, 0x00, 0x00])
+
+        XCTAssertTrue(BaAudioCache.recognizesAudioDataForTesting(smallOggHeader, expectedExtension: "ogg"))
     }
 
     func testGalleryParserClassifiesVideoMedia() {

@@ -13,6 +13,7 @@ struct BaStructuredGuideParse {
     var stats: [BaGuideRow] = []
     var profileRows: [BaGuideRow] = []
     var skillRows: [BaGuideRow] = []
+    var voiceLanguageHeaders: [String] = []
     var voiceRows: [BaGuideVoiceEntry] = []
     var galleryItems: [BaGuideGalleryItem] = []
     var growthRows: [BaGuideRow] = []
@@ -40,7 +41,9 @@ struct BaGuideContentParser {
         if simulateRows.isEmpty == false {
             parsed.simulateRows = simulateRows
         }
-        parsed.voiceRows = BaGuideVoiceParser().parse(baseData: baseData, content: content, sourceURL: sourceURL)
+        let voiceParse = BaGuideVoiceParser().parse(baseData: baseData, content: content, sourceURL: sourceURL)
+        parsed.voiceLanguageHeaders = voiceParse.languageHeaders
+        parsed.voiceRows = voiceParse.entries
         parsed.galleryItems = BaGuideMediaParser().parse(
             baseData: baseData,
             styleData: styleData,

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct BaStudentVoiceSection: View {
     let rows: [BaGuideVoiceEntry]
+    let voiceLanguageHeaders: [String]
     @Binding var searchText: String
 
     @State private var selectedLanguage = ""
@@ -20,15 +21,16 @@ struct BaStudentVoiceSection: View {
     }
 
     private var displayHeaders: [String] {
-        BaVoiceLanguageResolver.displayHeaders(for: rows)
+        BaVoiceLanguageResolver.displayHeaders(for: rows, preferredHeaders: voiceLanguageHeaders)
     }
 
     private var playbackHeaders: [String] {
-        BaVoiceLanguageResolver.playbackHeaders(for: rows)
+        BaVoiceLanguageResolver.playableHeaders(for: rows, preferredHeaders: voiceLanguageHeaders)
     }
 
     private var languagePickerHeaders: [String] {
-        displayHeaders.filter {
+        let headers = playbackHeaders.isEmpty ? displayHeaders : playbackHeaders
+        return headers.filter {
             BaVoiceLanguageResolver.canonicalLanguageLabel($0) != "官翻"
         }
     }

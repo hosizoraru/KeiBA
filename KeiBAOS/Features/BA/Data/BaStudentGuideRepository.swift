@@ -128,6 +128,7 @@ struct BaStudentGuideRepository {
             stats: parsed.stats.isEmpty ? stats(from: profileRows, fallback: entry) : parsed.stats,
             profileRows: profileRows.isEmpty ? fallbackProfileRows(entry: entry, summary: apiSummary) : profileRows,
             skillRows: skillRows,
+            voiceLanguageHeaders: parsed.voiceLanguageHeaders,
             voiceRows: voiceRows,
             galleryItems: galleryItems,
             growthRows: growthRows,
@@ -213,49 +214,6 @@ struct BaStudentGuideRepository {
                 imageURL: nil
             ),
         ]
-    }
-
-    private func voiceRows(from rows: [BaGuideRow], content: Any?) -> [BaGuideVoiceEntry] {
-        let audioURLs = GameKeeJSON.findURLs(in: content) { raw in
-            let lower = raw.lowercased()
-            return lower.hasSuffix(".mp3") ||
-                lower.hasSuffix(".m4a") ||
-                lower.hasSuffix(".wav") ||
-                lower.hasSuffix(".aac") ||
-                lower.hasSuffix(".ogg") ||
-                lower.hasSuffix(".oga") ||
-                lower.hasSuffix(".opus") ||
-                lower.hasSuffix(".flac") ||
-                lower.contains("audio")
-        }
-        let voiceTextRows = rows.filter { row in
-            isVoiceKey(row.title) || isVoiceKey(row.value)
-        }
-        let textEntries = voiceTextRows.enumerated().map { index, row in
-            BaGuideVoiceEntry(
-                id: "voice-\(index)-\(abs(row.id.hashValue))",
-                title: row.title,
-                subtitle: String(localized: "ba.student.detail.voice.subtitle"),
-                transcript: row.value,
-                audioURL: audioURLs.indices.contains(index) ? audioURLs[index] : nil,
-                audioURLs: audioURLs.indices.contains(index) ? [audioURLs[index]] : nil,
-                audioHeaders: audioURLs.indices.contains(index) ? ["日配"] : nil
-            )
-        }
-        if textEntries.isEmpty == false {
-            return textEntries
-        }
-        return audioURLs.enumerated().map { index, url in
-            BaGuideVoiceEntry(
-                id: "voice-url-\(index)",
-                title: String(format: String(localized: "ba.student.detail.voice.item.format"), index + 1),
-                subtitle: url.lastPathComponent,
-                transcript: "",
-                audioURL: url,
-                audioURLs: [url],
-                audioHeaders: ["日配"]
-            )
-        }
     }
 
     private func galleryItems(from content: Any?, apiData: BaJSONObject) -> [BaGuideGalleryItem] {

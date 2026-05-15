@@ -403,7 +403,7 @@ final class BaAppModel {
             await cacheStore.save(
                 snapshot.value,
                 for: .studentDetail(entry.contentId),
-                schemaVersion: 2,
+                schemaVersion: 3,
                 syncedAt: snapshot.syncedAt
             )
         } catch {

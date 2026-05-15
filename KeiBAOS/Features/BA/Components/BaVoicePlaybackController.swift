@@ -27,16 +27,15 @@ final class BaVoicePlaybackController {
     var progress = 0.0
     var errorMessage: String?
 
-    private let audioCache: BaAudioCache
+    private let audioCache: any BaAudioCaching
     @ObservationIgnored private let oggPlayer = BaOggVoicePlayer()
-    @ObservationIgnored private let client = GameKeeClient()
     @ObservationIgnored private let logger = Logger(subsystem: "os.kei.KeiBAOS", category: "BaVoicePlayback")
     private var player: AVAudioPlayer?
     private var playbackBackend: PlaybackBackend?
     private var loadToken = UUID()
     private var progressTimer: Timer?
 
-    init(audioCache: BaAudioCache = .shared) {
+    init(audioCache: any BaAudioCaching = BaAudioCache.shared) {
         self.audioCache = audioCache
         oggPlayer.onEvent = { [weak self] event in
             self?.handleOggEvent(event)
@@ -100,14 +99,9 @@ final class BaVoicePlaybackController {
         progress = 0
         playbackBackend = Self.preferredBackend(for: remoteURL)
 
-        if playbackBackend == .audioStreaming {
-            startOggPlayer(remoteURL: remoteURL)
-            return
-        }
-
         Task {
             do {
-                let localURL = try await audioCache.localURL(for: remoteURL)
+                let localURL = try await audioCache.localURL(for: remoteURL, refererPath: "/ba")
                 guard loadToken == token, currentRemoteURL == remoteURL else { return }
                 startPlayer(localURL: localURL, backend: playbackBackend)
             } catch {
@@ -121,7 +115,6 @@ final class BaVoicePlaybackController {
         errorMessage = nil
         if playbackBackend == .audioStreaming {
             resumeOggPlayer()
-            isPlaying = true
             return
         }
         guard let player else { return }
@@ -271,16 +264,6 @@ final class BaVoicePlaybackController {
 }
 
 private extension BaVoicePlaybackController {
-    func startOggPlayer(remoteURL: URL) {
-        configureAudioSession()
-        let headers = GameKeeClient.mediaPlaybackHeaders(
-            for: remoteURL,
-            referer: client.resolvedReferer(pathOrURL: remoteURL.absoluteString, refererPath: "/ba")
-        )
-        logger.debug("voice ogg remote start \(remoteURL.host ?? "unknown", privacy: .public)")
-        oggPlayer.play(remoteURL: remoteURL, headers: headers)
-    }
-
     func startOggPlayer(localURL: URL) {
         configureAudioSession()
         logger.debug("voice ogg local fallback start")

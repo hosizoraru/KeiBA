@@ -7,32 +7,38 @@
 
 import Foundation
 
+nonisolated struct BaGuideVoiceParseResult: Hashable {
+    let languageHeaders: [String]
+    let entries: [BaGuideVoiceEntry]
+}
+
 struct BaGuideVoiceParser {
-    func parse(baseData: [[BaJSONObject]], content: Any?, sourceURL: URL?) -> [BaGuideVoiceEntry] {
+    func parse(baseData: [[BaJSONObject]], content: Any?, sourceURL: URL?) -> BaGuideVoiceParseResult {
         let structured = parseBaseData(baseData, sourceURL: sourceURL)
-        if structured.isEmpty == false {
+        if structured.entries.isEmpty == false {
             return structured
         }
-        return BaGuideTextNormalizer.audioURLs(in: content, sourceURL: sourceURL)
-            .enumerated()
-            .map { index, url in
-                BaGuideVoiceEntry(
-                    id: "voice-url-\(index)",
-                    title: String(format: String(localized: "ba.student.detail.voice.item.format"), index + 1),
-                    subtitle: url.lastPathComponent,
-                    transcript: "",
-                    audioURL: url,
-                    section: nil,
-                    lineHeaders: nil,
-                    lines: nil,
-                    audioURLs: [url],
-                    audioHeaders: [defaultLanguageLabel(0)]
-                )
-            }
+        let audioURLs = BaGuideTextNormalizer.audioURLs(in: content, sourceURL: sourceURL)
+        let headers = languageHeaders(rawHeaders: [], entriesAudioCounts: audioURLs.isEmpty ? [] : [audioURLs.count])
+        let entries = audioURLs.enumerated().map { index, url in
+            BaGuideVoiceEntry(
+                id: "voice-url-\(index)",
+                title: String(format: String(localized: "ba.student.detail.voice.item.format"), index + 1),
+                subtitle: url.lastPathComponent,
+                transcript: "",
+                audioURL: url,
+                section: nil,
+                lineHeaders: nil,
+                lines: nil,
+                audioURLs: [url],
+                audioHeaders: [defaultLanguageLabel(index)]
+            )
+        }
+        return BaGuideVoiceParseResult(languageHeaders: headers, entries: entries)
     }
 
-    private func parseBaseData(_ baseData: [[BaJSONObject]], sourceURL: URL?) -> [BaGuideVoiceEntry] {
-        var languageHeaders: [String] = []
+    private func parseBaseData(_ baseData: [[BaJSONObject]], sourceURL: URL?) -> BaGuideVoiceParseResult {
+        var rawLanguageHeaders: [String] = []
         var entries: [BaGuideVoiceEntry] = []
         var inVoiceBlock = false
         var currentSection = ""
@@ -43,47 +49,46 @@ struct BaGuideVoiceParser {
             if key == "配音语言" {
                 inVoiceBlock = true
                 currentSection = ""
-                languageHeaders = row.dropFirst()
+                rawLanguageHeaders = row.dropFirst()
                     .compactMap { $0.string("value") }
                     .map(canonicalLanguageLabel)
                     .filter { $0.isEmpty == false && $0 != "官翻" }
-                languageHeaders = unique(languageHeaders)
+                rawLanguageHeaders = unique(rawLanguageHeaders)
                 continue
             }
             guard inVoiceBlock else { continue }
             if key.isEmpty || key == "配音" || key == "配音大类" {
                 continue
             }
-            if entries.isEmpty == false, isVoiceBlockTailKey(key) {
-                break
-            }
 
             let isVoiceCategory = isVoiceCategoryKey(key)
-            let section: String
             if isVoiceCategory {
                 currentSection = key
-                section = key
             } else {
+                if entries.isEmpty == false, isVoiceBlockTailKey(key) {
+                    break
+                }
                 guard currentSection.isEmpty == false else { continue }
-                section = currentSection
             }
+            let section = isVoiceCategory ? key : currentSection
+            guard section.isEmpty == false else { continue }
 
             let rowContent = parseVoiceRowCells(
                 row.dropFirst(),
                 defaultTitle: key,
-                canAssignTitle: isVoiceCategory,
+                assignFirstTextAsTitle: isVoiceCategory,
                 sourceURL: sourceURL
             )
             let audioURLs = BaGuideTextNormalizer.dedupe(rowContent.audioURLs)
             let records = voiceLineRecords(
                 textByAudioSegment: rowContent.textByAudioSegment,
-                headers: languageHeaders,
+                headers: rawLanguageHeaders,
                 audioURLs: audioURLs
             )
             let alignedAudio = alignedAudio(
                 records: records,
                 audioURLs: audioURLs,
-                headers: languageHeaders
+                headers: rawLanguageHeaders
             )
             guard records.isEmpty == false || audioURLs.isEmpty == false else { continue }
             entries.append(
@@ -92,7 +97,7 @@ struct BaGuideVoiceParser {
                     title: rowContent.title,
                     subtitle: section,
                     transcript: records.map(\.text).joined(separator: "\n"),
-                    audioURL: alignedAudio.urls.first ?? audioURLs.first,
+                    audioURL: alignedAudio.urls.first,
                     section: section,
                     lineHeaders: records.map(\.label),
                     lines: records.map(\.text),
@@ -101,17 +106,22 @@ struct BaGuideVoiceParser {
                 )
             )
         }
-        return entries
+
+        let headers = languageHeaders(
+            rawHeaders: rawLanguageHeaders,
+            entriesAudioCounts: entries.map { $0.audioURLs?.count ?? ($0.audioURL == nil ? 0 : 1) }
+        )
+        return BaGuideVoiceParseResult(languageHeaders: headers, entries: entries)
     }
 
     private func parseVoiceRowCells(
         _ cells: ArraySlice<BaJSONObject>,
         defaultTitle: String,
-        canAssignTitle: Bool,
+        assignFirstTextAsTitle: Bool,
         sourceURL: URL?
     ) -> ParsedVoiceRowContent {
         var title = defaultTitle
-        var titleAssigned = false
+        var titleAssigned = assignFirstTextAsTitle == false
         var textByAudioSegment: [Int: [String]] = [:]
         var audioURLs: [URL] = []
 
@@ -131,8 +141,12 @@ struct BaGuideVoiceParser {
                 appendAudio(from: cell, rawValue: rawValue)
                 continue
             }
-            guard cleaned.isEmpty == false, shouldDisplayVoiceText(cleaned) else { continue }
-            if canAssignTitle, titleAssigned == false {
+            guard cleaned.isEmpty == false else { continue }
+            if shouldDisplayVoiceText(cleaned) == false {
+                appendAudio(from: cell, rawValue: rawValue)
+                continue
+            }
+            if titleAssigned == false {
                 title = cleaned
                 titleAssigned = true
             } else {
@@ -168,8 +182,7 @@ struct BaGuideVoiceParser {
         headers: [String],
         audioURLs: [URL]
     ) -> [VoiceLineRecord] {
-        let maxTextCount = textByAudioSegment.values.map(\.count).max() ?? 0
-        let dubbingCount = max(headers.count, audioURLs.count, maxTextCount)
+        let dubbingCount = max(headers.count, audioURLs.count)
         guard dubbingCount > 0 else {
             return []
         }
@@ -254,6 +267,16 @@ struct BaGuideVoiceParser {
         )
     }
 
+    private func languageHeaders(rawHeaders: [String], entriesAudioCounts: [Int]) -> [String] {
+        var out = rawHeaders
+        let headerCount = max(out.count, entriesAudioCounts.max() ?? 0)
+        while out.count < headerCount {
+            let fallback = defaultLanguageLabel(out.count)
+            out.append(out.contains(fallback) ? localizedLanguageLabel(out.count) : fallback)
+        }
+        return out
+    }
+
     private func normalizedHeaders(headers: [String], count: Int) -> [String] {
         var out = headers
         while out.count < count {
@@ -306,8 +329,12 @@ struct BaGuideVoiceParser {
         case 2:
             "韩配"
         default:
-            String(format: String(localized: "ba.student.detail.voice.language.format"), index + 1)
+            localizedLanguageLabel(index)
         }
+    }
+
+    private func localizedLanguageLabel(_ index: Int) -> String {
+        String(format: String(localized: "ba.student.detail.voice.language.format"), index + 1)
     }
 
     private func voicePriority(_ label: String) -> Int {

@@ -34,10 +34,6 @@ final class BaOggVoicePlayer: NSObject {
         play(url: localURL, headers: [:])
     }
 
-    func play(remoteURL: URL, headers: [String: String]) {
-        play(url: remoteURL, headers: headers)
-    }
-
     private func play(url: URL, headers: [String: String]) {
         stopProgressTimer()
         stopCurrentPlayer()
@@ -47,8 +43,6 @@ final class BaOggVoicePlayer: NSObject {
         nextPlayer.delegate = self
         player = nextPlayer
         nextPlayer.play(url: url, headers: headers)
-        startProgressTimer()
-        onEvent?(.playing)
     }
 
     func pause() {
@@ -59,7 +53,6 @@ final class BaOggVoicePlayer: NSObject {
 
     func resume() {
         player?.resume()
-        startProgressTimer()
     }
 
     func stop() {
@@ -122,6 +115,7 @@ extension BaOggVoicePlayer: AudioPlayerDelegate {
     nonisolated func audioPlayerDidStartPlaying(player callbackPlayer: AudioPlayer, with _: AudioEntryId) {
         Task { @MainActor [weak self, weak callbackPlayer] in
             guard let self, let callbackPlayer, let currentPlayer = self.player, callbackPlayer === currentPlayer else { return }
+            self.startProgressTimer()
             self.onEvent?(.playing)
         }
     }
@@ -142,8 +136,10 @@ extension BaOggVoicePlayer: AudioPlayerDelegate {
             guard let self, let callbackPlayer, let currentPlayer = self.player, callbackPlayer === currentPlayer else { return }
             switch newState {
             case .playing:
+                self.startProgressTimer()
                 self.onEvent?(.playing)
             case .paused:
+                self.stopProgressTimer()
                 self.onEvent?(.paused)
             case .stopped where callbackPlayer.stopReason == .eof:
                 self.emitEnd(for: callbackPlayer)
