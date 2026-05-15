@@ -23,6 +23,7 @@ struct BaRemoteAnimatedImageSurface: View {
     var width: CGFloat?
     var height: CGFloat
     var cornerRadius: CGFloat
+    var maxPixelDimension = 900
 
     @State private var phase: BaRemoteAnimatedImagePhase = .placeholder
 
@@ -57,7 +58,7 @@ struct BaRemoteAnimatedImageSurface: View {
     }
 
     private var cacheTaskID: String {
-        "\(url?.absoluteString ?? "nil")-\(model.settings.showPreviewImages)"
+        "\(url?.absoluteString ?? "nil")-\(model.settings.showPreviewImages)-\(maxPixelDimension)"
     }
 
     private func loadImage() async {
@@ -66,13 +67,25 @@ struct BaRemoteAnimatedImageSurface: View {
             return
         }
         phase = .loading
-        guard let data = try? await model.imageData(for: url),
-              let image = BaAnimatedImageDecoder.platformImage(from: data)
-        else {
-            phase = .failed
-            return
+        do {
+            let data = try await model.imageData(for: url)
+            guard Task.isCancelled == false else { return }
+            guard let image = await BaAnimatedImageDecodeWorker.decode(
+                data: data,
+                maxPixelDimension: maxPixelDimension
+            ) else {
+                if Task.isCancelled == false {
+                    phase = .failed
+                }
+                return
+            }
+            guard Task.isCancelled == false else { return }
+            phase = .success(image)
+        } catch {
+            if Task.isCancelled == false {
+                phase = .failed
+            }
         }
-        phase = .success(image)
     }
 
     private func fallbackIcon(systemImage: String, tint: Color) -> some View {
@@ -98,6 +111,7 @@ struct BaRemoteAnimatedImageSurface: View {
             let view = BaFittingAnimatedImageView()
             view.contentMode = .scaleAspectFit
             view.clipsToBounds = true
+            view.isUserInteractionEnabled = false
             view.setContentHuggingPriority(.defaultLow, for: .horizontal)
             view.setContentHuggingPriority(.defaultLow, for: .vertical)
             view.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
@@ -106,10 +120,21 @@ struct BaRemoteAnimatedImageSurface: View {
         }
 
         func updateUIView(_ uiView: UIImageView, context: Context) {
-            uiView.image = image
-            if image.images?.isEmpty == false {
-                uiView.startAnimating()
+            if uiView.image !== image {
+                uiView.image = image
             }
+            if image.images?.isEmpty == false {
+                if uiView.isAnimating == false {
+                    uiView.startAnimating()
+                }
+            } else {
+                uiView.stopAnimating()
+            }
+        }
+
+        static func dismantleUIView(_ uiView: UIImageView, coordinator: ()) {
+            uiView.stopAnimating()
+            uiView.image = nil
         }
     }
 #elseif canImport(AppKit)
@@ -118,6 +143,10 @@ struct BaRemoteAnimatedImageSurface: View {
     private final class BaFittingAnimatedImageView: NSImageView {
         override var intrinsicContentSize: NSSize {
             .zero
+        }
+
+        override func hitTest(_ point: NSPoint) -> NSView? {
+            nil
         }
     }
 
@@ -132,7 +161,14 @@ struct BaRemoteAnimatedImageSurface: View {
         }
 
         func updateNSView(_ nsView: NSImageView, context: Context) {
-            nsView.image = image
+            if nsView.image !== image {
+                nsView.image = image
+            }
+        }
+
+        static func dismantleNSView(_ nsView: NSImageView, coordinator: ()) {
+            nsView.animates = false
+            nsView.image = nil
         }
     }
 #endif
@@ -145,22 +181,33 @@ private enum BaRemoteAnimatedImagePhase {
     case success(BaPlatformAnimatedImage)
 }
 
+private enum BaAnimatedImageDecodeWorker {
+    nonisolated static func decode(data: Data, maxPixelDimension: Int) async -> BaPlatformAnimatedImage? {
+        await Task.detached(priority: .utility) {
+            BaAnimatedImageDecoder.platformImage(
+                from: data,
+                maxPixelDimension: max(maxPixelDimension, 1)
+            )
+        }.value
+    }
+}
+
 private enum BaAnimatedImageDecoder {
-    static func platformImage(from data: Data) -> BaPlatformAnimatedImage? {
+    nonisolated static func platformImage(from data: Data, maxPixelDimension: Int) -> BaPlatformAnimatedImage? {
         #if canImport(UIKit)
-            if let animated = animatedUIImage(from: data) {
+            if let animated = animatedUIImage(from: data, maxPixelDimension: maxPixelDimension) {
                 return animated
             }
-            return UIImage(data: data)
+            return staticUIImage(from: data, maxPixelDimension: maxPixelDimension)
         #elseif canImport(AppKit)
-            return NSImage(data: data)
+            return staticNSImage(from: data, maxPixelDimension: maxPixelDimension)
         #else
             return nil
         #endif
     }
 
     #if canImport(UIKit)
-        private static func animatedUIImage(from data: Data) -> UIImage? {
+        nonisolated private static func animatedUIImage(from data: Data, maxPixelDimension: Int) -> UIImage? {
             guard let source = CGImageSourceCreateWithData(data as CFData, nil) else {
                 return nil
             }
@@ -170,7 +217,11 @@ private enum BaAnimatedImageDecoder {
             var frames: [UIImage] = []
             var duration: TimeInterval = 0
             for index in 0 ..< count {
-                guard let cgImage = CGImageSourceCreateImageAtIndex(source, index, nil) else {
+                guard let cgImage = thumbnailImage(
+                    at: index,
+                    source: source,
+                    maxPixelDimension: maxPixelDimension
+                ) else {
                     continue
                 }
                 frames.append(UIImage(cgImage: cgImage))
@@ -180,7 +231,16 @@ private enum BaAnimatedImageDecoder {
             return UIImage.animatedImage(with: frames, duration: max(duration, 0.1))
         }
 
-        private static func frameDuration(at index: Int, source: CGImageSource) -> TimeInterval {
+        nonisolated private static func staticUIImage(from data: Data, maxPixelDimension: Int) -> UIImage? {
+            guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+                  let cgImage = thumbnailImage(at: 0, source: source, maxPixelDimension: maxPixelDimension)
+            else {
+                return UIImage(data: data)
+            }
+            return UIImage(cgImage: cgImage)
+        }
+
+        nonisolated private static func frameDuration(at index: Int, source: CGImageSource) -> TimeInterval {
             guard let properties = CGImageSourceCopyPropertiesAtIndex(source, index, nil) as? [CFString: Any],
                   let gifProperties = properties[kCGImagePropertyGIFDictionary] as? [CFString: Any]
             else {
@@ -191,5 +251,29 @@ private enum BaAnimatedImageDecoder {
             let delay = unclamped?.doubleValue ?? clamped?.doubleValue ?? 0.1
             return delay < 0.02 ? 0.1 : delay
         }
+    #elseif canImport(AppKit)
+        nonisolated private static func staticNSImage(from data: Data, maxPixelDimension: Int) -> NSImage? {
+            guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+                  let cgImage = thumbnailImage(at: 0, source: source, maxPixelDimension: maxPixelDimension)
+            else {
+                return NSImage(data: data)
+            }
+            return NSImage(cgImage: cgImage, size: .zero)
+        }
     #endif
+
+    nonisolated private static func thumbnailImage(
+        at index: Int,
+        source: CGImageSource,
+        maxPixelDimension: Int
+    ) -> CGImage? {
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixelDimension,
+            kCGImageSourceShouldCacheImmediately: true,
+        ]
+        return CGImageSourceCreateThumbnailAtIndex(source, index, options as CFDictionary)
+            ?? CGImageSourceCreateImageAtIndex(source, index, nil)
+    }
 }

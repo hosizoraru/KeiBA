@@ -10,16 +10,13 @@ import UniformTypeIdentifiers
 
 struct BaStudentProfileCardsSection: View {
     let tint: Color
-    private let sections: [BaStudentProfileSection]
+    private let displaySections: [BaStudentProfileSection]
 
     init(info: BaStudentGuideInfo, tint: Color) {
         self.tint = tint
-        sections = info.profileSections
-    }
-
-    private var displaySections: [BaStudentProfileSection] {
+        let sections = info.profileSections
         let hasContent = sections.contains { $0.isEmpty == false }
-        return hasContent ? sections : []
+        displaySections = hasContent ? sections : []
     }
 
     var body: some View {
@@ -29,8 +26,12 @@ struct BaStudentProfileCardsSection: View {
                     .baStudentDetailListCardRow()
             } else {
                 ForEach(displaySections) { section in
-                    BaStudentProfileSectionCard(section: section, tint: tint)
-                        .baStudentDetailListCardRow()
+                    if section.kind == .furniture {
+                        BaStudentProfileFurnitureSectionRows(section: section, tint: tint)
+                    } else {
+                        BaStudentProfileSectionCard(section: section, tint: tint)
+                            .baStudentDetailListCardRow()
+                    }
                 }
             }
         } header: {
@@ -80,7 +81,6 @@ private struct BaStudentProfileSectionCard: View {
             BaStudentProfileGalleryList(items: section.galleryItems, tint: tint)
         case .furniture:
             BaStudentProfileRowsView(rows: section.rows, tint: tint)
-            BaStudentProfileFurnitureGalleryList(items: section.galleryItems, tint: tint)
         case .names, .info, .hobby:
             BaStudentProfileRowsView(rows: section.rows, tint: tint)
         }
@@ -397,31 +397,76 @@ private struct BaStudentProfileGalleryList: View {
     }
 }
 
-private struct BaStudentProfileFurnitureGalleryList: View {
-    let items: [BaGuideGalleryItem]
+private struct BaStudentProfileFurnitureSectionRows: View {
+    let section: BaStudentProfileSection
     let tint: Color
+
+    private var furnitureItems: [BaGuideGalleryItem] {
+        Array(section.galleryItems.prefix(8))
+    }
+
+    var body: some View {
+        if section.rows.isEmpty == false {
+            BaStudentProfileFurnitureInfoCard(section: section, tint: tint)
+                .baStudentDetailListCardRow()
+        }
+
+        ForEach(Array(furnitureItems.enumerated()), id: \.element.id) { index, item in
+            BaStudentProfileFurnitureRowCard(
+                item: item,
+                tint: tint,
+                showsSectionTitle: index == 0 && section.rows.isEmpty
+            )
+            .equatable()
+            .baStudentDetailListCardRow()
+        }
+    }
+}
+
+private struct BaStudentProfileFurnitureInfoCard: View {
+    let section: BaStudentProfileSection
+    let tint: Color
+
+    var body: some View {
+        BaGlassCard(tint: tint) {
+            VStack(alignment: .leading, spacing: 14) {
+                BaStudentProfileCardTitle(section: section, tint: tint)
+                BaStudentProfileRowsView(rows: section.rows, tint: tint)
+            }
+        }
+    }
+}
+
+private struct BaStudentProfileFurnitureRowCard: View, Equatable {
+    let item: BaGuideGalleryItem
+    let tint: Color
+    let showsSectionTitle: Bool
 
     @State private var selectedItem: BaGuideGalleryItem?
 
-    var body: some View {
-        if items.isEmpty == false {
-            VStack(spacing: 12) {
-                ForEach(Array(items.prefix(8).enumerated()), id: \.element.id) { index, item in
-                    if index > 0 {
-                        Divider()
-                            .padding(.vertical, 2)
-                    }
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.item == rhs.item && lhs.showsSectionTitle == rhs.showsSectionTitle
+    }
 
-                    BaStudentProfileFurnitureMediaCard(
-                        item: item,
-                        tint: tint,
-                        onPreview: { selectedItem = item }
+    var body: some View {
+        BaGlassCard(tint: tint) {
+            VStack(alignment: .leading, spacing: 14) {
+                if showsSectionTitle {
+                    BaStudentProfileCardTitle(
+                        section: BaStudentProfileSection(kind: .furniture),
+                        tint: tint
                     )
                 }
+
+                BaStudentProfileFurnitureMediaCard(
+                    item: item,
+                    tint: tint,
+                    onPreview: { selectedItem = item }
+                )
             }
-            .sheet(item: $selectedItem) { item in
-                BaStudentProfileFurniturePreviewSheet(item: item, tint: tint)
-            }
+        }
+        .sheet(item: $selectedItem) { item in
+            BaStudentProfileFurniturePreviewSheet(item: item, tint: tint)
         }
     }
 }
@@ -448,10 +493,13 @@ private struct BaStudentProfileFurnitureMediaCard: View {
                     url: previewURL,
                     kind: kind,
                     tint: tint,
-                    height: item.furniturePreviewHeight
+                    height: item.furniturePreviewHeight,
+                    showsBackdrop: item.isAnimatedFurniturePreview == false,
+                    maxPixelDimension: item.furnitureInlineMaxPixelDimension
                 )
             }
             .buttonStyle(.plain)
+            .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .accessibilityLabel(item.furnitureDisplayTitle)
             .accessibilityHint(String(localized: "ba.student.detail.media.preview"))
         }
@@ -497,11 +545,18 @@ private struct BaStudentProfileFurnitureMediaSurface: View {
     let kind: BaGuideMediaKind
     let tint: Color
     let height: CGFloat
+    var showsBackdrop = true
+    var maxPixelDimension = 900
 
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.black.opacity(0.04))
+                .fill(Color.primary.opacity(0.001))
+
+            if showsBackdrop {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(.black.opacity(0.04))
+            }
 
             BaRemoteAnimatedImageSurface(
                 url: url,
@@ -509,14 +564,19 @@ private struct BaStudentProfileFurnitureMediaSurface: View {
                 tint: tint,
                 width: nil,
                 height: height,
-                cornerRadius: 14
+                cornerRadius: 14,
+                maxPixelDimension: maxPixelDimension
             )
+            .allowsHitTesting(false)
         }
         .frame(maxWidth: .infinity)
         .overlay {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(.white.opacity(0.08), lineWidth: 1)
+            if showsBackdrop {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(.white.opacity(0.08), lineWidth: 1)
+            }
         }
+        .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 
@@ -538,7 +598,9 @@ private struct BaStudentProfileFurniturePreviewSheet: View {
                         url: item.furniturePreviewURL,
                         kind: kind,
                         tint: tint,
-                        height: 420
+                        height: 420,
+                        showsBackdrop: item.isAnimatedFurniturePreview == false,
+                        maxPixelDimension: item.furniturePreviewMaxPixelDimension
                     )
 
                     if item.note?.isBlank == false {
@@ -728,6 +790,14 @@ private extension BaGuideGalleryItem {
 
     var furniturePreviewHeight: CGFloat {
         isAnimatedFurniturePreview ? 206 : 156
+    }
+
+    var furnitureInlineMaxPixelDimension: Int {
+        isAnimatedFurniturePreview ? 960 : 720
+    }
+
+    var furniturePreviewMaxPixelDimension: Int {
+        isAnimatedFurniturePreview ? 1400 : 1100
     }
 
     var furniturePreviewURL: URL? {
