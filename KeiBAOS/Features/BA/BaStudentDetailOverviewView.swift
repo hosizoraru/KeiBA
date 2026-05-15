@@ -17,21 +17,37 @@ struct BaStudentDetailOverviewSections: View {
     }
 
     var body: some View {
-        Section {
-            BaStudentPortraitMetaCard(
-                info: info,
-                portraitURL: portraitURL,
-                tint: tint
-            )
-            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 1, trailing: 16))
+        BaStudentPortraitMetaCard(
+            info: info,
+            portraitURL: portraitURL,
+            tint: tint
+        )
+        .listRowInsets(EdgeInsets(top: 5, leading: 16, bottom: 4, trailing: 16))
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+
+        BaStudentCombatMetaCard(items: combatItems)
+            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 8, trailing: 16))
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)
+    }
 
-            BaStudentCombatMetaCard(items: BaStudentGuideMeta.combatMetaItems(from: info))
-                .listRowInsets(EdgeInsets(top: 1, leading: 16, bottom: 4, trailing: 16))
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
+    private var combatItems: [BaGuideMetaItem] {
+        let items = BaStudentGuideMeta.combatMetaItems(from: info)
+        guard let tactical = items.first(where: { $0.isTacticalPositionItem }) else {
+            return items
         }
+        let tactic = BaGuideMetaItem(
+            title: String(localized: "ba.student.detail.meta.tactic"),
+            value: "",
+            imageURL: tactical.imageURL
+        )
+        let position = BaGuideMetaItem(
+            title: String(localized: "ba.student.detail.meta.position"),
+            value: tactical.extraValue ?? "",
+            imageURL: tactical.extraImageURL
+        )
+        return [tactic, position] + items.filter { $0.isTacticalPositionItem == false }
     }
 }
 
@@ -62,8 +78,8 @@ private struct BaStudentPortraitMetaCard: View {
                         .lineLimit(2)
                         .minimumScaleFactor(0.82)
 
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(BaStudentGuideMeta.profileMetaItems(from: info)) { item in
+                    VStack(alignment: .leading, spacing: 7) {
+                        ForEach(profileItems) { item in
                             BaStudentMetaLine(item: item, tint: tint)
                         }
                     }
@@ -71,6 +87,20 @@ private struct BaStudentPortraitMetaCard: View {
                 .frame(maxWidth: .infinity, minHeight: 144, alignment: .topLeading)
             }
         }
+    }
+
+    private var profileItems: [BaGuideMetaItem] {
+        var items = BaStudentGuideMeta.profileMetaItems(from: info)
+        if let tactical = BaStudentGuideMeta.combatMetaItems(from: info).first(where: { $0.isTacticalPositionItem }) {
+            items.append(
+                BaGuideMetaItem(
+                    title: String(localized: "ba.student.detail.meta.role"),
+                    value: tactical.value,
+                    imageURL: nil
+                )
+            )
+        }
+        return items
     }
 }
 
@@ -94,22 +124,42 @@ private struct BaStudentMetaLine: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Text(item.title)
-                .font(.callout.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .frame(width: 68, alignment: .leading)
-                .lineLimit(1)
-                .minimumScaleFactor(0.82)
+            BaStudentMetaTitle(item: item, tint: tint)
+                .frame(width: 92, alignment: .leading)
 
-            BaStudentMetaImages(item: item, tint: tint, size: 16)
+            if item.isAcademyItem == false {
+                BaStudentMetaImages(item: item, tint: tint, size: 16)
+            }
 
             Text(item.value)
                 .font(.body.weight(.semibold))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
-                .minimumScaleFactor(0.82)
+                .minimumScaleFactor(0.72)
+                .multilineTextAlignment(.trailing)
+                .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct BaStudentMetaTitle: View {
+    let item: BaGuideMetaItem
+    let tint: Color
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Text(item.title)
+                .font(.callout.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.82)
+
+            if item.isAcademyItem {
+                BaStudentMetaImages(item: item, tint: tint, size: 16)
+                    .fixedSize(horizontal: true, vertical: false)
+            }
+        }
     }
 }
 
@@ -181,6 +231,8 @@ private struct BaStudentCombatMetaLine: View {
                     .minimumScaleFactor(0.82)
                     .layoutPriority(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                Spacer(minLength: 8)
             }
 
             BaStudentMetaImages(item: item, tint: BaDesign.blue, size: iconSize)
@@ -230,9 +282,19 @@ private struct BaStudentMetaImages: View {
         case 0:
             return 0
         case 1:
-            return size * 2.8
+            return item.isAcademyItem ? size * 1.35 : size * 2.8
         default:
             return size * 1.8
         }
+    }
+}
+
+private extension BaGuideMetaItem {
+    var isAcademyItem: Bool {
+        title == String(localized: "ba.student.detail.meta.academy")
+    }
+
+    var isTacticalPositionItem: Bool {
+        title == String(localized: "ba.student.detail.meta.tacticalPosition")
     }
 }

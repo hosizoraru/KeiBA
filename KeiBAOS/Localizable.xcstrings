@@ -4962,6 +4962,22 @@
         }
       }
     },
+    "ba.student.detail.meta.role" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Role"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作用"
+          }
+        }
+      }
+    },
     "ba.student.detail.meta.street" : {
       "localizations" : {
         "en" : {
@@ -4974,6 +4990,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "市街"
+          }
+        }
+      }
+    },
+    "ba.student.detail.meta.tactic" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tactic"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "战术"
           }
         }
       }

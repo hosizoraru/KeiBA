@@ -170,12 +170,10 @@ private struct BaStudentDetailPageRailSection: View {
     let tint: Color
 
     var body: some View {
-        Section {
-            BaStudentDetailPageRail(selection: $selection, tint: tint)
-                .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 4, trailing: 16))
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-        }
+        BaStudentDetailPageRail(selection: $selection, tint: tint)
+            .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 5, trailing: 16))
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
     }
 }
 
