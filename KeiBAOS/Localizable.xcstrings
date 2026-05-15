@@ -5382,22 +5382,6 @@
         }
       }
     },
-    "ba.student.detail.profile.other.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "More details"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "其他档案"
-          }
-        }
-      }
-    },
     "ba.student.detail.profile.sameName.empty" : {
       "localizations" : {
         "en" : {
@@ -5442,6 +5426,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "暂无图鉴链接"
+          }
+        }
+      }
+    },
+    "ba.student.detail.profile.sameName.openDetail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open related student guide"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开相关学生图鉴"
           }
         }
       }

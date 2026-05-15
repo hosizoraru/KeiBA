@@ -77,7 +77,7 @@ private struct BaStudentProfileSectionCard: View {
         case .chocolate, .furniture:
             BaStudentProfileRowsView(rows: section.rows, tint: tint)
             BaStudentProfileGalleryList(items: section.galleryItems, tint: tint)
-        case .names, .info, .hobby, .other:
+        case .names, .info, .hobby:
             BaStudentProfileRowsView(rows: section.rows, tint: tint)
         }
     }
@@ -311,6 +311,27 @@ private struct BaStudentSameNameRoleRow: View {
     let tint: Color
 
     var body: some View {
+        if let entry = item.catalogEntry {
+            NavigationLink {
+                BaStudentDetailView(entry: entry)
+            } label: {
+                rowContent(accessory: .detail)
+            }
+            .buttonStyle(.plain)
+            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .accessibilityHint(String(localized: "ba.student.detail.profile.sameName.openDetail"))
+        } else if let guideURL = item.guideURL {
+            Link(destination: guideURL) {
+                rowContent(accessory: .external)
+            }
+            .buttonStyle(.plain)
+            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        } else {
+            rowContent(accessory: .none)
+        }
+    }
+
+    private func rowContent(accessory: BaStudentSameNameRoleAccessory) -> some View {
         HStack(spacing: 10) {
             BaRemoteIconSurface(
                 url: item.imageURL,
@@ -335,54 +356,36 @@ private struct BaStudentSameNameRoleRow: View {
 
             Spacer(minLength: 8)
 
-            action
+            accessoryView(accessory)
         }
         .padding(.vertical, 2)
     }
 
     @ViewBuilder
-    private var action: some View {
-        if let guideURL = item.guideURL,
-           let contentId = BaPoolStudentGuideResolver.contentID(from: guideURL)
-        {
-            NavigationLink {
-                BaStudentDetailView(entry: entry(contentId: contentId, guideURL: guideURL))
-            } label: {
-                Image(systemName: "chevron.right")
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(tint)
-                    .frame(width: 36, height: 34)
-                    .liquidGlassSurface(cornerRadius: 17, tint: tint.opacity(0.08), isInteractive: true)
-            }
-            .buttonStyle(.plain)
-        } else if let guideURL = item.guideURL {
-            Link(destination: guideURL) {
-                Image(systemName: "arrow.up.right")
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(tint)
-                    .frame(width: 36, height: 34)
-                    .liquidGlassSurface(cornerRadius: 17, tint: tint.opacity(0.08), isInteractive: true)
-            }
+    private func accessoryView(_ accessory: BaStudentSameNameRoleAccessory) -> some View {
+        switch accessory {
+        case .detail:
+            Image(systemName: "chevron.right")
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(tint)
+                .frame(width: 36, height: 34)
+                .liquidGlassSurface(cornerRadius: 17, tint: tint.opacity(0.08), isInteractive: true)
+        case .external:
+            Image(systemName: "arrow.up.right")
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(tint)
+                .frame(width: 36, height: 34)
+                .liquidGlassSurface(cornerRadius: 17, tint: tint.opacity(0.08), isInteractive: true)
+        case .none:
+            EmptyView()
         }
     }
+}
 
-    private func entry(contentId: Int64, guideURL: URL) -> BaGuideCatalogEntry {
-        BaGuideCatalogEntry(
-            entryId: Int(contentId),
-            pid: 0,
-            contentId: contentId,
-            name: item.name,
-            alias: "",
-            aliasDisplay: "",
-            iconURL: item.imageURL,
-            type: 3,
-            order: 0,
-            createdAt: nil,
-            releaseDate: nil,
-            detailURL: guideURL,
-            category: .students
-        )
-    }
+private enum BaStudentSameNameRoleAccessory {
+    case detail
+    case external
+    case none
 }
 
 private struct BaStudentProfileGalleryList: View {
@@ -408,16 +411,13 @@ private struct BaStudentProfileGalleryRow: View {
         item.mediaKind ?? .image
     }
 
+    private var previewURL: URL? {
+        item.imageURL ?? item.mediaURL
+    }
+
     var body: some View {
         HStack(alignment: .center, spacing: 10) {
-            BaRemoteIconSurface(
-                url: item.imageURL ?? item.mediaURL,
-                fallbackSystemImage: kind.systemImage,
-                tint: tint,
-                size: 58,
-                width: 72,
-                fallbackFont: .title3.weight(.semibold)
-            )
+            preview
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.title)
@@ -447,6 +447,29 @@ private struct BaStudentProfileGalleryRow: View {
         .background(tint.opacity(0.045), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
+    @ViewBuilder
+    private var preview: some View {
+        if previewURL?.baIsAnimatedImageURL == true {
+            BaRemoteAnimatedImageSurface(
+                url: previewURL,
+                fallbackSystemImage: kind.systemImage,
+                tint: tint,
+                width: 72,
+                height: 58,
+                cornerRadius: 10
+            )
+        } else {
+            BaRemoteIconSurface(
+                url: previewURL,
+                fallbackSystemImage: kind.systemImage,
+                tint: tint,
+                size: 58,
+                width: 72,
+                fallbackFont: .title3.weight(.semibold)
+            )
+        }
+    }
+
     private var galleryDetail: String {
         var parts = [kind.title]
         if item.detail.isBlank == false, item.detail != kind.title {
@@ -459,6 +482,15 @@ private struct BaStudentProfileGalleryRow: View {
             parts.append(note)
         }
         return parts.joined(separator: " · ")
+    }
+}
+
+private extension URL {
+    var baIsAnimatedImageURL: Bool {
+        let lower = absoluteString.lowercased()
+        return lower.range(of: #"\.gif(?:[?#].*)?$"#, options: .regularExpression) != nil ||
+            lower.contains("format=gif") ||
+            lower.contains("image/gif")
     }
 }
 

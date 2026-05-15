@@ -13,7 +13,6 @@ nonisolated enum BaStudentProfileSectionKind: String, CaseIterable, Codable, Ide
     case hobby
     case gifts
     case sameName
-    case other
     case chocolate
     case furniture
 
@@ -33,8 +32,6 @@ nonisolated enum BaStudentProfileSectionKind: String, CaseIterable, Codable, Ide
             String(localized: "ba.student.detail.profile.gifts.title")
         case .sameName:
             String(localized: "ba.student.detail.profile.sameName.title")
-        case .other:
-            String(localized: "ba.student.detail.profile.other.title")
         case .chocolate:
             String(localized: "ba.student.detail.profile.chocolate.title")
         case .furniture:
@@ -54,8 +51,6 @@ nonisolated enum BaStudentProfileSectionKind: String, CaseIterable, Codable, Ide
             "gift"
         case .sameName:
             "person.2"
-        case .other:
-            "text.alignleft"
         case .chocolate:
             "heart.square"
         case .furniture:
@@ -86,6 +81,29 @@ nonisolated struct BaStudentProfileSameNameRoleItem: Identifiable, Hashable {
     let name: String
     let guideURL: URL?
     let imageURL: URL?
+
+    var catalogEntry: BaGuideCatalogEntry? {
+        guard let guideURL,
+              let contentId = BaSameNameStudentGuideLinkResolver.contentID(from: guideURL)
+        else {
+            return nil
+        }
+        return BaGuideCatalogEntry(
+            entryId: Int(contentId),
+            pid: 0,
+            contentId: contentId,
+            name: name,
+            alias: "",
+            aliasDisplay: "",
+            iconURL: imageURL,
+            type: 3,
+            order: 0,
+            createdAt: nil,
+            releaseDate: nil,
+            detailURL: guideURL,
+            category: .students
+        )
+    }
 }
 
 nonisolated struct BaStudentProfileSection: Identifiable, Hashable {
@@ -164,12 +182,6 @@ nonisolated struct BaStudentProfileDisplayModel: Hashable {
             .filter { $0.title.localizedCaseInsensitiveContains("互动家具") }
             .sortedByKeyNumbers()
             .compactMap { visibleProfileRow($0, section: .furniture, prefersCapsule: false) }
-        let normalProfileRows = allProfileRows.filter { row in
-            row.title.localizedCaseInsensitiveContains("巧克力") == false &&
-                row.title.localizedCaseInsensitiveContains("互动家具") == false &&
-                isGiftPreferenceProfileRow(row) == false &&
-                isStructuredProfileCardRow(row) == false
-        }.compactMap { visibleProfileRow($0, section: .other, prefersCapsule: false) }
 
         let chocolateGalleryItems = info.galleryItems
             .filter(isChocolateGalleryItem)
@@ -196,7 +208,6 @@ nonisolated struct BaStudentProfileDisplayModel: Hashable {
                 sameNameRoleHint: sameNameRoleHint
             )
         )
-        appendSection(.other, rows: normalProfileRows, to: &sections)
         if chocolateInfoRows.isEmpty == false || chocolateGalleryItems.isEmpty == false {
             sections.append(
                 BaStudentProfileSection(
@@ -271,10 +282,6 @@ nonisolated private let hobbyFieldSpecs = [
     BaStudentProfileFieldSpec("MomoTalk状态消息", aliases: ["MomoTalk状态消息", "Momotalk状态消息"]),
     BaStudentProfileFieldSpec("MomoTalk解锁等级", aliases: ["MomoTalk解锁等级", "Momotalk解锁等级"], hideWhenEmpty: true),
 ]
-
-nonisolated private var structuredFieldSpecs: [BaStudentProfileFieldSpec] {
-    nicknameFieldSpecs + studentInfoFieldSpecs + hobbyFieldSpecs
-}
 
 nonisolated private let profileInlineNoteStripFieldKeys = Set([
     "角色考据",
@@ -422,6 +429,12 @@ nonisolated private func buildSameNameRoleItems(from rows: [BaGuideRow]) -> [BaS
         } ?? ""
         let imageURL = ((row.imageURLs ?? []) + (row.imageURL.map { [$0] } ?? []))
             .first { BaGuideTextNormalizer.looksLikeImageURL($0) }
+        if normalizedKey == relatedSameNameRoleHeaderKey,
+           guideURL == nil,
+           imageURL == nil
+        {
+            return nil
+        }
         guard name.isBlank == false || guideURL != nil || imageURL != nil else { return nil }
         if name.isBlank, guideURL == nil, isSameNameRoleHintText(row.value) {
             return nil
@@ -443,12 +456,6 @@ nonisolated private func isProfileRowAliasMatch(_ row: BaGuideRow, aliases: [Str
     let key = normalizeProfileFieldKey(row.title)
     guard key.isEmpty == false else { return false }
     return aliases.contains { key == normalizeProfileFieldKey($0) }
-}
-
-nonisolated private func isStructuredProfileCardRow(_ row: BaGuideRow) -> Bool {
-    structuredFieldSpecs.contains { spec in
-        isProfileRowAliasMatch(row, aliases: spec.aliases)
-    }
 }
 
 nonisolated private func isGiftPreferenceProfileRow(_ row: BaGuideRow) -> Bool {
@@ -660,32 +667,7 @@ nonisolated private func splitRoleRowTokens(_ raw: String) -> [String] {
 }
 
 nonisolated private func extractSameNameGuideURL(_ raw: String) -> URL? {
-    let source = sanitizeSameNameLinkToken(raw)
-    guard source.isBlank == false else { return nil }
-    let candidates = sameNameGuideCandidateLinks(from: source)
-    for candidate in candidates {
-        if let canonicalURL = BaPoolStudentGuideResolver.canonicalStudentGuideURL(from: candidate) {
-            return canonicalURL
-        }
-    }
-    return nil
-}
-
-nonisolated private func sameNameGuideCandidateLinks(from source: String) -> [String] {
-    var candidates: [String] = []
-    let cleaned = sanitizeSameNameLinkToken(source)
-    if cleaned.hasPrefix("http://") || cleaned.hasPrefix("https://") {
-        candidates.append(cleaned)
-    } else if cleaned.hasPrefix("www.") {
-        candidates.append("https://\(cleaned)")
-    } else if cleaned.range(of: #"^\d{4,}$"#, options: .regularExpression) != nil {
-        candidates.append("https://www.gamekee.com/ba/tj/\(cleaned).html")
-    } else if cleaned.hasPrefix("/") {
-        candidates.append(GameKeeJSON.normalizeGameKeeLink(cleaned, fallback: "")?.absoluteString ?? cleaned)
-    }
-    let embedded = regexMatches(in: source, pattern: #"https?://[^\s]+"#)
-        .map(sanitizeSameNameLinkToken)
-    return (candidates + embedded).deduped()
+    BaSameNameStudentGuideLinkResolver.canonicalURL(from: raw)
 }
 
 nonisolated private func sanitizeSameNameLinkToken(_ raw: String) -> String {

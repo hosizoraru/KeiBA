@@ -261,6 +261,106 @@ final class BaStudentDetailTests: XCTestCase {
         XCTAssertTrue(parsed.profileRows.contains { $0.title == "MomoTalk解锁等级" && $0.value == "3级" })
     }
 
+    func testSameNameRolesBuildStudentGuideEntryFromLegacyBAPath() throws {
+        let avatarURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina.webp"))
+        let info = BaStudentGuideInfo(
+            contentId: 170_295,
+            sourceURL: nil,
+            title: "日奈(礼服)",
+            subtitle: "GameKee",
+            summary: "",
+            imageURL: nil,
+            stats: [],
+            profileRows: [
+                BaGuideRow(id: "same-name", title: "同名角色名称", value: "日奈 / /ba/123456.html", imageURL: avatarURL),
+                BaGuideRow(id: "unknown", title: "未分组字段", value: "不应该形成其他档案卡", imageURL: nil),
+            ],
+            skillRows: [],
+            voiceRows: [],
+            galleryItems: [],
+            growthRows: [],
+            simulateRows: [],
+            contentSource: "content_json",
+            syncedAt: Date(timeIntervalSince1970: 0)
+        )
+
+        let sections = info.profileSections
+        XCTAssertEqual(sections.map(\.kind), [.sameName])
+        let item = try XCTUnwrap(sections.first?.sameNameRoleItems.first)
+        XCTAssertEqual(item.name, "日奈")
+        XCTAssertEqual(item.guideURL?.absoluteString, "https://www.gamekee.com/ba/tj/123456.html")
+        XCTAssertEqual(item.catalogEntry?.contentId, 123_456)
+        XCTAssertEqual(item.catalogEntry?.detailURL?.absoluteString, "https://www.gamekee.com/ba/tj/123456.html")
+    }
+
+    func testArrayContentParserKeepsRelationInfoAndInteractiveFurnitureGIFs() throws {
+        let content: [Any] = [
+            [
+                "type": "relation-info",
+                "data": [
+                    "list": [
+                        [
+                            "title": "相关同名角色",
+                            "content": [
+                                [
+                                    "name": "日奈",
+                                    "jumpHref": "/ba/123456.html",
+                                    "avatar": "//cdnimg.gamekee.com/hina.webp",
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            [
+                "type": "tab-info",
+                "data": [
+                    "tabList": [
+                        [
+                            "title": "互动家具",
+                            "content": [
+                                ["value": "//cdnimg.gamekee.com/furniture-1.gif"],
+                                ["value": "//cdnimg.gamekee.com/furniture-2.gif"],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]
+
+        let parsed = BaGuideContentParser().parse(
+            content: content,
+            apiData: [:],
+            html: nil,
+            entry: makeCatalogEntry()
+        )
+        let info = BaStudentGuideInfo(
+            contentId: 170_295,
+            sourceURL: URL(string: "https://www.gamekee.com/ba/tj/170295.html"),
+            title: "日奈(礼服)",
+            subtitle: "GameKee",
+            summary: parsed.summary,
+            imageURL: parsed.imageURL,
+            stats: parsed.stats,
+            profileRows: parsed.profileRows,
+            skillRows: parsed.skillRows,
+            voiceRows: parsed.voiceRows,
+            galleryItems: parsed.galleryItems,
+            growthRows: parsed.growthRows,
+            simulateRows: parsed.simulateRows,
+            contentSource: "content_json",
+            syncedAt: Date(timeIntervalSince1970: 0)
+        )
+
+        let sameName = try XCTUnwrap(info.profileSections.first { $0.kind == .sameName }?.sameNameRoleItems.first)
+        XCTAssertEqual(sameName.name, "日奈")
+        XCTAssertEqual(sameName.catalogEntry?.contentId, 123_456)
+
+        let furniture = try XCTUnwrap(info.profileSections.first { $0.kind == .furniture })
+        XCTAssertEqual(furniture.galleryItems.map(\.title), ["互动家具 1", "互动家具 2"])
+        XCTAssertEqual(furniture.galleryItems.map { $0.mediaURL?.pathExtension ?? "" }, ["gif", "gif"])
+    }
+
     func testSkillCardsParseLevelsCostAndDescriptionIcons() throws {
         let skillIcon = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/wiki2.0/images/w_64/h_64/skill.png"))
         let burnIcon = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/wiki2.0/images/w_44/h_44/burn.png"))

@@ -31,9 +31,11 @@ struct BaGuideContentParser {
         let styleData = Self.styleDataRows(from: content)
 
         var parsed = BaGuideBaseDataParser().parse(baseData: baseData, sourceURL: sourceURL)
+        let supplemental = BaGuideSupplementalContentParser().parse(content: content, sourceURL: sourceURL)
         let portraitURL = Self.preferredPortraitURL(from: baseData, sourceURL: sourceURL)
         let giftRows = BaGuideGiftParser().parse(baseData: baseData, sourceURL: sourceURL)
         parsed.profileRows.append(contentsOf: giftRows)
+        parsed.profileRows = Self.dedupeRows(parsed.profileRows + supplemental.profileRows)
         let simulateRows = BaGuideSimulateParser().parse(baseData: baseData, sourceURL: sourceURL)
         if simulateRows.isEmpty == false {
             parsed.simulateRows = simulateRows
@@ -46,7 +48,9 @@ struct BaGuideContentParser {
             apiData: apiData,
             sourceURL: sourceURL
         )
+        parsed.galleryItems = Self.dedupeGalleryItems(supplemental.galleryItems + parsed.galleryItems)
         parsed.imageURL = portraitURL
+            ?? supplemental.imageURL
             ?? parsed.imageURL
             ?? GameKeeJSON.normalizeImageURL(apiData.string("thumb") ?? "")
             ?? GameKeeJSON.findImageURL(in: apiData)
@@ -54,7 +58,7 @@ struct BaGuideContentParser {
             ?? html.flatMap { parseHTMLImage($0) }
             ?? entry.iconURL
         if parsed.summary.isEmpty {
-            parsed.summary = apiData.string("summary") ?? html.flatMap { parseHTMLSummary($0) } ?? ""
+            parsed.summary = supplemental.summary.ifBlank(apiData.string("summary") ?? html.flatMap { parseHTMLSummary($0) } ?? "")
         }
         if parsed.stats.isEmpty {
             parsed.stats = makeStats(from: parsed.profileRows, fallback: entry)
@@ -104,6 +108,23 @@ struct BaGuideContentParser {
         ]
     }
 
+    private static func dedupeRows(_ rows: [BaGuideRow]) -> [BaGuideRow] {
+        var seen = Set<String>()
+        return rows.filter { row in
+            let key = "\(row.title.trimmingCharacters(in: .whitespacesAndNewlines))|\(row.value.trimmingCharacters(in: .whitespacesAndNewlines))|\(row.imageURL?.absoluteString ?? "")|\((row.imageURLs ?? []).map(\.absoluteString).joined(separator: "|"))"
+            return seen.insert(key).inserted
+        }
+    }
+
+    private static func dedupeGalleryItems(_ items: [BaGuideGalleryItem]) -> [BaGuideGalleryItem] {
+        var seen = Set<String>()
+        return items.filter { item in
+            let media = item.mediaURL ?? item.imageURL
+            let key = "\(item.mediaKind?.rawValue ?? "")|\(media?.absoluteString ?? item.id)"
+            return seen.insert(key).inserted
+        }
+    }
+
     static func baseDataRows(from content: Any?) -> [[BaJSONObject]] {
         if let object = content as? BaJSONObject {
             return rows(from: object["baseData"])
@@ -143,5 +164,11 @@ struct BaGuideContentParser {
             }
             return nil
         }.filter { $0.isEmpty == false }
+    }
+}
+
+private extension String {
+    func ifBlank(_ fallback: String) -> String {
+        trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? fallback : self
     }
 }
