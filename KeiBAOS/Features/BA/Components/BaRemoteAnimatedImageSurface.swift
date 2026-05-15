@@ -85,13 +85,23 @@ struct BaRemoteAnimatedImageSurface: View {
 #if canImport(UIKit)
     private typealias BaPlatformAnimatedImage = UIImage
 
+    private final class BaFittingAnimatedImageView: UIImageView {
+        override var intrinsicContentSize: CGSize {
+            .zero
+        }
+    }
+
     private struct BaPlatformAnimatedImageView: UIViewRepresentable {
         let image: UIImage
 
         func makeUIView(context: Context) -> UIImageView {
-            let view = UIImageView()
+            let view = BaFittingAnimatedImageView()
             view.contentMode = .scaleAspectFit
             view.clipsToBounds = true
+            view.setContentHuggingPriority(.defaultLow, for: .horizontal)
+            view.setContentHuggingPriority(.defaultLow, for: .vertical)
+            view.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+            view.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
             return view
         }
 
@@ -105,11 +115,17 @@ struct BaRemoteAnimatedImageSurface: View {
 #elseif canImport(AppKit)
     private typealias BaPlatformAnimatedImage = NSImage
 
+    private final class BaFittingAnimatedImageView: NSImageView {
+        override var intrinsicContentSize: NSSize {
+            .zero
+        }
+    }
+
     private struct BaPlatformAnimatedImageView: NSViewRepresentable {
         let image: NSImage
 
         func makeNSView(context: Context) -> NSImageView {
-            let view = NSImageView()
+            let view = BaFittingAnimatedImageView()
             view.imageScaling = .scaleProportionallyUpOrDown
             view.animates = true
             return view

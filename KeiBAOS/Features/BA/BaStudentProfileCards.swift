@@ -285,8 +285,12 @@ private struct BaStudentProfileGiftCell: View {
 }
 
 private struct BaStudentSameNameRoleList: View {
+    @Environment(BaAppModel.self) private var model
+
     let section: BaStudentProfileSection
     let tint: Color
+
+    @State private var selectedEntry: BaGuideCatalogEntry?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -303,35 +307,45 @@ private struct BaStudentSameNameRoleList: View {
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(section.sameNameRoleItems.prefix(12)) { item in
-                    BaStudentSameNameRoleRow(item: item, tint: tint)
+                    BaStudentSameNameRoleRow(
+                        item: item,
+                        entry: model.studentCatalogEntry(forSameNameRole: item),
+                        tint: tint,
+                        onOpen: { selectedEntry = $0 }
+                    )
                 }
             }
+        }
+        .navigationDestination(item: $selectedEntry) { entry in
+            BaStudentDetailView(entry: entry)
         }
     }
 }
 
 private struct BaStudentSameNameRoleRow: View {
-    @Environment(BaAppModel.self) private var model
-
     let item: BaStudentProfileSameNameRoleItem
+    let entry: BaGuideCatalogEntry?
     let tint: Color
+    let onOpen: (BaGuideCatalogEntry) -> Void
 
     var body: some View {
-        if let entry = model.studentCatalogEntry(forSameNameRole: item) {
-            NavigationLink {
-                BaStudentDetailView(entry: entry)
-            } label: {
-                rowContent(accessory: .detail)
+        Group {
+            if let entry {
+                Button {
+                    onOpen(entry)
+                } label: {
+                    rowContent(isLinked: true)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint(String(localized: "ba.student.detail.profile.sameName.openDetail"))
+            } else {
+                rowContent(isLinked: false)
             }
-            .buttonStyle(.plain)
-            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .accessibilityHint(String(localized: "ba.student.detail.profile.sameName.openDetail"))
-        } else {
-            rowContent(accessory: .none)
         }
+            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
-    private func rowContent(accessory: BaStudentSameNameRoleAccessory) -> some View {
+    private func rowContent(isLinked: Bool) -> some View {
         HStack(spacing: 10) {
             BaRemoteIconSurface(
                 url: item.imageURL,
@@ -347,7 +361,7 @@ private struct BaStudentSameNameRoleRow: View {
                     .foregroundStyle(.primary)
                     .fixedSize(horizontal: false, vertical: true)
 
-                if accessory == .none {
+                if isLinked == false {
                     Text(String(localized: "ba.student.detail.profile.sameName.linkUnavailable"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -356,34 +370,16 @@ private struct BaStudentSameNameRoleRow: View {
 
             Spacer(minLength: 8)
 
-            accessoryView(accessory)
-        }
-        .padding(.vertical, 2)
-    }
-
-    @ViewBuilder
-    private func accessoryView(_ accessory: BaStudentSameNameRoleAccessory) -> some View {
-        switch accessory {
-        case .detail:
-            HStack(spacing: 5) {
-                Text(String(localized: "ba.activity.link.archive"))
-                    .font(.caption.weight(.semibold))
+            if isLinked {
                 Image(systemName: "chevron.right")
                     .font(.caption.weight(.bold))
+                    .foregroundStyle(.tertiary)
+                    .frame(width: 24, height: 24)
+                    .accessibilityHidden(true)
             }
-            .foregroundStyle(tint)
-            .padding(.horizontal, 10)
-            .frame(height: 34)
-            .liquidGlassSurface(cornerRadius: 17, tint: tint.opacity(0.08), isInteractive: true)
-        case .none:
-            EmptyView()
         }
+        .padding(.vertical, 3)
     }
-}
-
-private enum BaStudentSameNameRoleAccessory {
-    case detail
-    case none
 }
 
 private struct BaStudentProfileGalleryList: View {
@@ -410,7 +406,12 @@ private struct BaStudentProfileFurnitureGalleryList: View {
     var body: some View {
         if items.isEmpty == false {
             VStack(spacing: 12) {
-                ForEach(items.prefix(8)) { item in
+                ForEach(Array(items.prefix(8).enumerated()), id: \.element.id) { index, item in
+                    if index > 0 {
+                        Divider()
+                            .padding(.vertical, 2)
+                    }
+
                     BaStudentProfileFurnitureMediaCard(
                         item: item,
                         tint: tint,
@@ -438,41 +439,56 @@ private struct BaStudentProfileFurnitureMediaCard: View {
         item.furniturePreviewURL
     }
 
-    private var saveURL: URL? {
-        item.furnitureSaveURL
-    }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .center, spacing: 10) {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(item.title)
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(.primary)
-                        .lineLimit(2)
-
-                    if item.detail.isBlank == false, item.detail != kind.title {
-                        Text(item.detail)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(2)
-                    }
-                }
-
-                Spacer(minLength: 8)
-
-                BaGuideMediaSaveButton(url: saveURL, title: item.title, tint: tint)
-            }
+            BaStudentProfileFurnitureTitleRow(item: item, kind: kind, tint: tint)
 
             Button(action: onPreview) {
-                BaStudentProfileFurnitureMediaSurface(url: previewURL, kind: kind, tint: tint, height: 218)
+                BaStudentProfileFurnitureMediaSurface(
+                    url: previewURL,
+                    kind: kind,
+                    tint: tint,
+                    height: item.furniturePreviewHeight
+                )
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(item.title)
+            .accessibilityLabel(item.furnitureDisplayTitle)
             .accessibilityHint(String(localized: "ba.student.detail.media.preview"))
         }
-        .padding(10)
-        .background(tint.opacity(0.045), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+}
+
+private struct BaStudentProfileFurnitureTitleRow: View {
+    let item: BaGuideGalleryItem
+    let kind: BaGuideMediaKind
+    let tint: Color
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Label(String(localized: "ba.student.detail.profile.furniture.badge"), systemImage: "chair.lounge")
+                .font(.caption.weight(.semibold))
+                .labelStyle(.titleAndIcon)
+                .foregroundStyle(tint)
+                .padding(.horizontal, 9)
+                .padding(.vertical, 4)
+                .background(tint.opacity(0.08), in: Capsule())
+
+            Text(item.furnitureDisplayTitle)
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(.primary)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Spacer(minLength: 8)
+        }
+
+        let detailLine = item.furnitureDetailLine(kind: kind)
+        if detailLine.isBlank == false {
+            Text(detailLine)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+        }
     }
 }
 
@@ -534,7 +550,7 @@ private struct BaStudentProfileFurniturePreviewSheet: View {
                 }
                 .padding(18)
             }
-            .navigationTitle(item.title)
+            .navigationTitle(item.furnitureDisplayTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -543,7 +559,7 @@ private struct BaStudentProfileFurniturePreviewSheet: View {
                     }
                 }
                 ToolbarItem(placement: .primaryAction) {
-                    BaGuideMediaSaveButton(url: item.furnitureSaveURL, title: item.title, tint: tint)
+                    BaGuideMediaSaveButton(url: item.furnitureSaveURL, title: item.furnitureDisplayTitle)
                 }
             }
         }
@@ -557,7 +573,6 @@ private struct BaGuideMediaSaveButton: View {
 
     let url: URL?
     let title: String
-    let tint: Color
 
     @State private var exportDocument = BaGuideMediaExportDocument()
     @State private var exportType: UTType = .data
@@ -570,20 +585,14 @@ private struct BaGuideMediaSaveButton: View {
         Button {
             Task { await prepareExport() }
         } label: {
-            Group {
-                if isLoading {
-                    ProgressView()
-                        .controlSize(.small)
-                } else {
-                    Image(systemName: "square.and.arrow.down")
-                        .font(.headline.weight(.semibold))
-                }
+            if isLoading {
+                ProgressView()
+                    .controlSize(.small)
+            } else {
+                Label(String(localized: "ba.action.save"), systemImage: "square.and.arrow.down")
+                    .labelStyle(.iconOnly)
             }
-            .foregroundStyle(tint)
-            .frame(width: 36, height: 34)
-            .liquidGlassSurface(cornerRadius: 17, tint: tint.opacity(0.08), isInteractive: true)
         }
-        .buttonStyle(.plain)
         .disabled(url == nil || isLoading)
         .accessibilityLabel(String(localized: "ba.action.save"))
         .fileExporter(
@@ -713,8 +722,16 @@ private struct BaStudentProfileGalleryRow: View {
 }
 
 private extension BaGuideGalleryItem {
+    var furnitureDisplayTitle: String {
+        Self.furnitureDisplayTitle(from: title)
+    }
+
+    var furniturePreviewHeight: CGFloat {
+        isAnimatedFurniturePreview ? 206 : 156
+    }
+
     var furniturePreviewURL: URL? {
-        if mediaURL?.baIsAnimatedImageURL == true {
+        if isAnimatedFurniturePreview, let mediaURL {
             return mediaURL
         }
         return imageURL ?? mediaURL
@@ -725,6 +742,48 @@ private extension BaGuideGalleryItem {
             return mediaURL
         }
         return mediaURL ?? imageURL
+    }
+
+    var isAnimatedFurniturePreview: Bool {
+        if furnitureSaveURL?.baIsAnimatedImageURL == true {
+            return true
+        }
+        let tokens = title.regexNumberTokens
+        if tokens.count >= 2 {
+            return tokens.last == "2"
+        }
+        if tokens.count == 1, let token = tokens.first, token.count >= 2 {
+            return token.hasSuffix("2")
+        }
+        return false
+    }
+
+    func furnitureDetailLine(kind: BaGuideMediaKind) -> String {
+        let value = detail.trimmed
+        guard value.isBlank == false else { return "" }
+        if value == kind.title || value == title || value == furnitureDisplayTitle {
+            return ""
+        }
+        return value
+    }
+
+    private static func furnitureDisplayTitle(from raw: String) -> String {
+        let value = raw.trimmed
+        if let match = value.firstRegexCaptureGroups(pattern: #"^互动家具\s*(\d)(\d)$"#),
+           match.count == 2
+        {
+            return localizedFurnitureTitle(number: "\(match[0])-\(match[1])")
+        }
+        if let match = value.firstRegexCaptureGroups(pattern: #"^互动家具\s*(\d+)$"#),
+           let number = match.first
+        {
+            return localizedFurnitureTitle(number: number)
+        }
+        return value.ifBlank(String(localized: "ba.student.detail.profile.furniture.title"))
+    }
+
+    private static func localizedFurnitureTitle(number: String) -> String {
+        String(format: String(localized: "ba.student.detail.profile.furniture.item.format"), number)
     }
 }
 
@@ -746,11 +805,34 @@ private extension View {
 }
 
 private extension String {
+    var trimmed: String {
+        trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     var isBlank: Bool {
-        trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        trimmed.isEmpty
     }
 
     func ifBlank(_ fallback: String) -> String {
         isBlank ? fallback : self
+    }
+
+    var regexNumberTokens: [String] {
+        guard let regex = try? NSRegularExpression(pattern: #"\d+"#) else { return [] }
+        let range = NSRange(startIndex ..< endIndex, in: self)
+        return regex.matches(in: self, range: range).compactMap { match in
+            guard let range = Range(match.range, in: self) else { return nil }
+            return String(self[range])
+        }
+    }
+
+    func firstRegexCaptureGroups(pattern: String) -> [String]? {
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return nil }
+        let range = NSRange(startIndex ..< endIndex, in: self)
+        guard let match = regex.firstMatch(in: self, range: range), match.numberOfRanges > 1 else { return nil }
+        return (1 ..< match.numberOfRanges).compactMap { index in
+            guard let range = Range(match.range(at: index), in: self) else { return nil }
+            return String(self[range])
+        }
     }
 }

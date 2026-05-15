@@ -5333,6 +5333,38 @@
         }
       }
     },
+    "ba.student.detail.profile.furniture.badge" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Furniture"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "家具"
+          }
+        }
+      }
+    },
+    "ba.student.detail.profile.furniture.item.format" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interactive Furniture %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "互动家具 %@"
+          }
+        }
+      }
+    },
     "ba.student.detail.profile.gifts.empty" : {
       "localizations" : {
         "en" : {

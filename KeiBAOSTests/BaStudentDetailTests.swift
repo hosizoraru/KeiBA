@@ -421,6 +421,50 @@ final class BaStudentDetailTests: XCTestCase {
         XCTAssertEqual(BaSameNameStudentCatalogResolver.catalogEntry(for: item, catalogEntries: entries)?.contentId, 83_729)
     }
 
+    func testSameNameRoleRowsSplitMultipleLinkedRoles() throws {
+        let regularIcon = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina.webp"))
+        let swimsuitIcon = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina-swimsuit.webp"))
+        let info = BaStudentGuideInfo(
+            contentId: 611_753,
+            sourceURL: nil,
+            title: "日奈(礼服)",
+            subtitle: "GameKee",
+            summary: "",
+            imageURL: nil,
+            stats: [],
+            profileRows: [
+                BaGuideRow(
+                    id: "same-name-many",
+                    title: "同名角色名称",
+                    value: "日奈 / https://www.gamekee.com/ba/tj/59934.html / 日奈(泳装) / /ba/83729.html",
+                    imageURL: regularIcon,
+                    imageURLs: [regularIcon, swimsuitIcon]
+                ),
+            ],
+            skillRows: [],
+            voiceRows: [],
+            galleryItems: [],
+            growthRows: [],
+            simulateRows: [],
+            contentSource: "content_json",
+            syncedAt: Date(timeIntervalSince1970: 0)
+        )
+
+        let items = try XCTUnwrap(info.profileSections.first { $0.kind == .sameName }?.sameNameRoleItems)
+        let entries = [
+            makeCatalogEntry(contentId: 59_934, name: "日奈", category: .students),
+            makeCatalogEntry(contentId: 83_729, name: "日奈(泳装)", category: .students),
+        ]
+
+        XCTAssertEqual(items.map(\.name), ["日奈", "日奈(泳装)"])
+        XCTAssertEqual(items.map { $0.guideURL?.absoluteString }, [
+            "https://www.gamekee.com/ba/tj/59934.html",
+            "https://www.gamekee.com/ba/tj/83729.html",
+        ])
+        XCTAssertEqual(items.map(\.imageURL), [regularIcon, swimsuitIcon])
+        XCTAssertEqual(items.map { BaSameNameStudentCatalogResolver.catalogEntry(for: $0, catalogEntries: entries)?.contentId }, [59_934, 83_729])
+    }
+
     func testGuideMediaExportMetadataKeepsGIFExtension() throws {
         let url = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/furniture-1.gif?x=1"))
         let metadata = BaGuideMediaExportBuilder.metadata(for: url, title: "互动家具 1")

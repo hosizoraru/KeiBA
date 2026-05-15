@@ -411,42 +411,95 @@ nonisolated private func buildGiftPreferenceItems(from rows: [BaGuideRow]) -> [B
 
 nonisolated private func buildSameNameRoleItems(from rows: [BaGuideRow]) -> [BaStudentProfileSameNameRoleItem] {
     var seen = Set<String>()
-    return rows.compactMap { row in
+    return rows.flatMap { row -> [BaStudentProfileSameNameRoleItem] in
         let normalizedKey = normalizeProfileFieldKey(row.title)
         guard normalizedKey == sameNameRoleNameRowKey || normalizedKey == relatedSameNameRoleHeaderKey else {
-            return nil
+            return []
         }
-        let tokens = splitRoleRowTokens(row.value)
-        let guideURL = (tokens + [row.value])
-            .lazy
-            .compactMap(extractSameNameGuideURL)
-            .first
-        let name = tokens.first { token in
-            token.isBlank == false &&
-                isProfileValuePlaceholder(token) == false &&
-                extractProfileExternalURL(token) == nil &&
-                isSameNameRoleHintText(token) == false
-        } ?? sameNameRoleNameCandidate(from: row.value)
-        let imageURL = ((row.imageURLs ?? []) + (row.imageURL.map { [$0] } ?? []))
-            .first { BaGuideTextNormalizer.looksLikeImageURL($0) }
+        let imageURLs = ((row.imageURLs ?? []) + (row.imageURL.map { [$0] } ?? []))
+            .filter { BaGuideTextNormalizer.looksLikeImageURL($0) }
+            .dedupedByAbsoluteString()
+        let items = sameNameRoleItems(
+            from: row.value,
+            imageURLs: imageURLs,
+            fallbackIDSeed: row.id,
+            headerKey: normalizedKey
+        )
         if normalizedKey == relatedSameNameRoleHeaderKey,
-           guideURL == nil,
-           imageURL == nil
+           items.isEmpty,
+           imageURLs.isEmpty
         {
+            return []
+        }
+        return items
+    }.filter { item in
+        let key = "\(item.name)|\(item.guideURL?.absoluteString ?? "")|\(item.imageURL?.absoluteString ?? "")"
+        return seen.insert(key).inserted
+    }
+}
+
+nonisolated private func sameNameRoleItems(
+    from raw: String,
+    imageURLs: [URL],
+    fallbackIDSeed: String,
+    headerKey: String
+) -> [BaStudentProfileSameNameRoleItem] {
+    var seeds: [(name: String, guideURL: URL?, imageURL: URL?)] = []
+    var pendingName = ""
+    let tokens = splitRoleRowTokens(raw)
+    let scanTokens = tokens.isEmpty ? [raw] : tokens
+
+    for token in scanTokens {
+        let guideURL = extractSameNameGuideURL(token)
+        let name = sameNameRoleNameCandidate(from: token)
+        if let guideURL {
+            let resolvedName = name.ifBlank(pendingName)
+            seeds.append((resolvedName, guideURL, nil))
+            pendingName = ""
+        } else if name.isBlank == false,
+                  isProfileValuePlaceholder(name) == false,
+                  extractProfileExternalURL(name) == nil,
+                  isSameNameRoleHintText(name) == false
+        {
+            if pendingName.isBlank == false {
+                seeds.append((pendingName, nil, nil))
+            }
+            pendingName = name
+        }
+    }
+
+    if pendingName.isBlank == false {
+        seeds.append((pendingName, nil, nil))
+    }
+
+    if seeds.isEmpty {
+        let guideURL = extractSameNameGuideURL(raw)
+        let name = sameNameRoleNameCandidate(from: raw)
+        if name.isBlank == false || guideURL != nil || imageURLs.isEmpty == false {
+            seeds.append((name, guideURL, nil))
+        }
+    }
+
+    if seeds.isEmpty || (seeds.count == 1 && seeds[0].name.isBlank && seeds[0].guideURL == nil && isSameNameRoleHintText(raw)) {
+        return []
+    }
+
+    return seeds.enumerated().compactMap { index, seed in
+        let imageURL = imageURLs.indices.contains(index) ? imageURLs[index] : imageURLs.first
+        guard seed.name.isBlank == false || seed.guideURL != nil || imageURL != nil else { return nil }
+        if seed.name.isBlank, seed.guideURL == nil, isSameNameRoleHintText(raw) {
             return nil
         }
-        guard name.isBlank == false || guideURL != nil || imageURL != nil else { return nil }
-        if name.isBlank, guideURL == nil, isSameNameRoleHintText(row.value) {
+        if headerKey == relatedSameNameRoleHeaderKey, seed.guideURL == nil, imageURL == nil {
             return nil
         }
-        let fallbackName = guideURL.map { fallbackProfileLinkTitle($0) } ?? String(localized: "ba.student.detail.profile.sameName.item")
-        let resolvedName = name.ifBlank(fallbackName)
-        let key = "\(resolvedName)|\(guideURL?.absoluteString ?? "")|\(imageURL?.absoluteString ?? "")"
-        guard seen.insert(key).inserted else { return nil }
+        let fallbackName = seed.guideURL.map { fallbackProfileLinkTitle($0) } ?? String(localized: "ba.student.detail.profile.sameName.item")
+        let resolvedName = seed.name.ifBlank(fallbackName)
+        let key = "\(fallbackIDSeed)|\(index)|\(resolvedName)|\(seed.guideURL?.absoluteString ?? "")|\(imageURL?.absoluteString ?? "")"
         return BaStudentProfileSameNameRoleItem(
             id: "same-name-\(abs(key.hashValue))",
             name: resolvedName,
-            guideURL: guideURL,
+            guideURL: seed.guideURL,
             imageURL: imageURL
         )
     }
@@ -660,9 +713,29 @@ nonisolated private func isLikelySimulateStatLabel(_ raw: String) -> Bool {
 }
 
 nonisolated private func splitRoleRowTokens(_ raw: String) -> [String] {
-    raw
+    let linkPattern = #"https?://[^\s|｜]+|/(?:ba/tj/\d+(?:\.html)?|ba/\d+(?:\.html)?|v1/content/detail/\d+)|(?<![A-Za-z0-9])\d{4,}(?![A-Za-z0-9])"#
+    guard let regex = try? NSRegularExpression(pattern: linkPattern, options: [.caseInsensitive]) else {
+        return raw
+            .components(separatedBy: CharacterSet(charactersIn: "/／|｜\n"))
+            .map(\.trimmed)
+            .filter(\.isNotBlank)
+    }
+
+    var protected = raw
+    var replacements: [String: String] = [:]
+    let range = NSRange(raw.startIndex ..< raw.endIndex, in: raw)
+    let matches = regex.matches(in: raw, range: range)
+    for (index, match) in matches.enumerated().reversed() {
+        guard let matchRange = Range(match.range, in: protected) else { continue }
+        let token = String(protected[matchRange])
+        let placeholder = "__BA_SAME_NAME_LINK_\(index)__"
+        replacements[placeholder] = token
+        protected.replaceSubrange(matchRange, with: placeholder)
+    }
+
+    return protected
         .components(separatedBy: CharacterSet(charactersIn: "/／|｜\n"))
-        .map(\.trimmed)
+        .map { replacements[$0.trimmed] ?? $0.trimmed }
         .filter(\.isNotBlank)
 }
 
