@@ -25,8 +25,6 @@ private struct RGBA {
 private struct IconTheme {
     let backgroundTop: RGBA
     let backgroundBottom: RGBA
-    let glassTop: RGBA
-    let glassBottom: RGBA
     let glowPrimary: RGBA
     let glowSecondary: RGBA
     let logoTop: RGBA
@@ -47,8 +45,6 @@ private enum Appearance {
             return IconTheme(
                 backgroundTop: RGBA(0xfff7fb),
                 backgroundBottom: RGBA(0xffb6d1),
-                glassTop: RGBA(0xffffff, alpha: 0.58),
-                glassBottom: RGBA(0xffc5dd, alpha: 0.22),
                 glowPrimary: RGBA(0xff4f92, alpha: 0.26),
                 glowSecondary: RGBA(0x8ff2df, alpha: 0.34),
                 logoTop: RGBA(0xffdeeb),
@@ -61,8 +57,6 @@ private enum Appearance {
             return IconTheme(
                 backgroundTop: RGBA(0x191322),
                 backgroundBottom: RGBA(0x2e1232),
-                glassTop: RGBA(0xffffff, alpha: 0.16),
-                glassBottom: RGBA(0xff7aaf, alpha: 0.12),
                 glowPrimary: RGBA(0xff5b9a, alpha: 0.32),
                 glowSecondary: RGBA(0x80eadb, alpha: 0.24),
                 logoTop: RGBA(0xffd8e7),
@@ -75,8 +69,6 @@ private enum Appearance {
             return IconTheme(
                 backgroundTop: RGBA(0xf8f8fb),
                 backgroundBottom: RGBA(0xbfc4cf),
-                glassTop: RGBA(0xffffff, alpha: 0.48),
-                glassBottom: RGBA(0xd9dce4, alpha: 0.18),
                 glowPrimary: RGBA(0x303440, alpha: 0.10),
                 glowSecondary: RGBA(0xffffff, alpha: 0.24),
                 logoTop: RGBA(0x4b505c),
@@ -196,30 +188,18 @@ private func drawGlassBackground(_ context: CGContext, size: CGFloat, theme: Ico
         radius: size * 0.58,
         color: theme.glowPrimary
     )
-    context.restoreGState()
-
-    let plate = CGRect(
-        x: size * 0.094,
-        y: size * 0.082,
-        width: size * 0.812,
-        height: size * 0.836
-    )
-    context.saveGState()
-    context.addPath(roundedRectPath(plate, radius: size * 0.22))
-    context.clip()
-    drawLinearGradient(
+    drawRadialGlow(
         context,
-        colors: [theme.glassTop, theme.glassBottom],
-        from: CGPoint(x: plate.minX, y: plate.minY),
-        to: CGPoint(x: plate.maxX, y: plate.maxY)
+        center: CGPoint(x: size * 0.86, y: size * 0.10),
+        radius: size * 0.62,
+        color: RGBA(0xffffff, alpha: 0.20)
     )
-    context.restoreGState()
-
-    context.saveGState()
-    context.addPath(roundedRectPath(plate.insetBy(dx: size * 0.012, dy: size * 0.012), radius: size * 0.20))
-    context.setStrokeColor(RGBA(0xffffff, alpha: 0.36).cgColor)
-    context.setLineWidth(size * 0.010)
-    context.strokePath()
+    drawRadialGlow(
+        context,
+        center: CGPoint(x: size * 0.18, y: size * 0.92),
+        radius: size * 0.50,
+        color: RGBA(0xffffff, alpha: 0.18)
+    )
     context.restoreGState()
 }
 
