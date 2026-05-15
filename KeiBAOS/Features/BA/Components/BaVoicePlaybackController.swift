@@ -20,6 +20,9 @@ final class BaVoicePlaybackController {
     private nonisolated static let oggPlaybackExtensions = Set(
         "oga ogg opus".split(separator: " ").map(String.init)
     )
+    private nonisolated static let vorbisEngineExtensions = Set(
+        "oga ogg".split(separator: " ").map(String.init)
+    )
 
     var currentRemoteURL: URL?
     var isLoading = false
@@ -113,7 +116,7 @@ final class BaVoicePlaybackController {
 
     private func resume() {
         errorMessage = nil
-        if playbackBackend == .audioStreaming {
+        if playbackBackend == .vorbisEngine || playbackBackend == .audioStreaming {
             resumeOggPlayer()
             return
         }
@@ -125,7 +128,7 @@ final class BaVoicePlaybackController {
     }
 
     private func pause() {
-        if playbackBackend == .audioStreaming {
+        if playbackBackend == .vorbisEngine || playbackBackend == .audioStreaming {
             pauseOggPlayer()
             isPlaying = false
             return
@@ -136,7 +139,7 @@ final class BaVoicePlaybackController {
     }
 
     private func startPlayer(localURL: URL, backend: PlaybackBackend?) {
-        if backend == .audioStreaming {
+        if backend == .vorbisEngine || backend == .audioStreaming {
             startOggPlayer(localURL: localURL)
             return
         }
@@ -224,11 +227,15 @@ final class BaVoicePlaybackController {
 
     private enum PlaybackBackend: String {
         case avFoundation
+        case vorbisEngine
         case audioStreaming
     }
 
     private nonisolated static func preferredBackend(for url: URL) -> PlaybackBackend {
-        supportsOggPlayback(url) ? .audioStreaming : .avFoundation
+        if vorbisEngineExtensions.contains(url.pathExtension.lowercased()) {
+            return .vorbisEngine
+        }
+        return supportsOggPlayback(url) ? .audioStreaming : .avFoundation
     }
 
     nonisolated static func preferredBackendNameForTesting(_ url: URL) -> String {
@@ -266,7 +273,7 @@ final class BaVoicePlaybackController {
 private extension BaVoicePlaybackController {
     func startOggPlayer(localURL: URL) {
         configureAudioSession()
-        logger.debug("voice ogg local fallback start")
+        logger.debug("voice ogg local playback start")
         oggPlayer.play(localURL: localURL)
     }
 

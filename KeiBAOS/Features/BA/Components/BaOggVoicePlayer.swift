@@ -6,6 +6,7 @@
 //
 
 import AudioStreaming
+import AVFoundation
 import Foundation
 
 enum BaOggVoiceEvent {
@@ -21,50 +22,124 @@ enum BaOggVoiceEvent {
 final class BaOggVoicePlayer: NSObject {
     var onEvent: ((BaOggVoiceEvent) -> Void)?
 
-    private var player: AudioPlayer?
+    private var engine: AVAudioEngine?
+    private var playerNode: AVAudioPlayerNode?
+    private var decodedAudio: BaDecodedOggAudio?
+    private var streamingPlayer: AudioPlayer?
     private var progressTimer: Timer?
+    private var playbackToken = UUID()
 
     deinit {
         progressTimer?.invalidate()
-        player?.delegate = nil
-        player?.stop()
+        playerNode?.stop()
+        engine?.stop()
+        streamingPlayer?.delegate = nil
+        streamingPlayer?.stop()
     }
 
     func play(localURL: URL) {
-        play(url: localURL, headers: [:])
-    }
-
-    private func play(url: URL, headers: [String: String]) {
-        stopProgressTimer()
-        stopCurrentPlayer()
-        let nextPlayer = AudioPlayer()
-        nextPlayer.volume = 1
-        nextPlayer.rate = 1
-        nextPlayer.delegate = self
-        player = nextPlayer
-        nextPlayer.play(url: url, headers: headers)
+        stop()
+        let token = UUID()
+        playbackToken = token
+        Task.detached(priority: .userInitiated) { [localURL] in
+            do {
+                let decoded = try BaOggVorbisDecoder().decode(localURL: localURL)
+                await MainActor.run { [weak self] in
+                    self?.startDecodedPlayback(decoded, localURL: localURL, token: token)
+                }
+            } catch {
+                await MainActor.run { [weak self] in
+                    self?.startStreamingFallback(localURL: localURL, token: token)
+                }
+            }
+        }
     }
 
     func pause() {
-        player?.pause()
+        if let playerNode {
+            playerNode.pause()
+        } else {
+            streamingPlayer?.pause()
+        }
         stopProgressTimer()
         onEvent?(.paused)
     }
 
     func resume() {
-        player?.resume()
+        if let playerNode {
+            try? engine?.start()
+            playerNode.play()
+            startProgressTimer()
+            onEvent?(.playing)
+        } else {
+            streamingPlayer?.resume()
+        }
     }
 
     func stop() {
+        playbackToken = UUID()
         stopProgressTimer()
         stopCurrentPlayer()
     }
 
     private func stopCurrentPlayer() {
-        let oldPlayer = player
-        player = nil
-        oldPlayer?.delegate = nil
-        oldPlayer?.stop()
+        playerNode?.stop()
+        engine?.stop()
+        engine?.reset()
+        playerNode = nil
+        engine = nil
+        decodedAudio = nil
+
+        let oldStreamingPlayer = streamingPlayer
+        streamingPlayer = nil
+        oldStreamingPlayer?.delegate = nil
+        oldStreamingPlayer?.stop()
+    }
+
+    private func startDecodedPlayback(_ decoded: BaDecodedOggAudio, localURL: URL, token: UUID) {
+        guard token == playbackToken else { return }
+        stopCurrentPlayer()
+
+        let nextEngine = AVAudioEngine()
+        let nextNode = AVAudioPlayerNode()
+        nextEngine.attach(nextNode)
+        nextEngine.connect(nextNode, to: nextEngine.mainMixerNode, format: decoded.buffer.format)
+        nextEngine.prepare()
+
+        do {
+            try nextEngine.start()
+        } catch {
+            startStreamingFallback(localURL: localURL, token: token)
+            return
+        }
+
+        engine = nextEngine
+        playerNode = nextNode
+        decodedAudio = decoded
+        onEvent?(.ready)
+
+        nextNode.scheduleBuffer(
+            decoded.buffer,
+            completionCallbackType: .dataPlayedBack
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.finishDecodedPlayback(token: token)
+            }
+        }
+        nextNode.play()
+        startProgressTimer()
+        onEvent?(.playing)
+    }
+
+    private func startStreamingFallback(localURL: URL, token: UUID) {
+        guard token == playbackToken else { return }
+        stopCurrentPlayer()
+        let nextPlayer = AudioPlayer()
+        nextPlayer.volume = 1
+        nextPlayer.rate = 1
+        nextPlayer.delegate = self
+        streamingPlayer = nextPlayer
+        nextPlayer.play(url: localURL, headers: [:])
     }
 
     private func startProgressTimer() {
@@ -82,7 +157,17 @@ final class BaOggVoicePlayer: NSObject {
     }
 
     private func updateProgress() {
-        guard let player else {
+        if let decodedAudio, let playerNode {
+            guard decodedAudio.duration > 0 else {
+                onEvent?(.progress(0))
+                return
+            }
+            let elapsed = decodedElapsedTime(playerNode: playerNode)
+            onEvent?(.progress(elapsed / decodedAudio.duration))
+            return
+        }
+
+        guard let player = streamingPlayer else {
             onEvent?(.progress(0))
             return
         }
@@ -94,19 +179,41 @@ final class BaOggVoicePlayer: NSObject {
         onEvent?(.progress(player.progress / duration))
     }
 
+    private func decodedElapsedTime(playerNode: AVAudioPlayerNode) -> TimeInterval {
+        guard let nodeTime = playerNode.lastRenderTime,
+              let playerTime = playerNode.playerTime(forNodeTime: nodeTime),
+              playerTime.sampleRate > 0
+        else {
+            return 0
+        }
+        return Double(playerTime.sampleTime) / playerTime.sampleRate
+    }
+
+    private func finishDecodedPlayback(token: UUID) {
+        guard token == playbackToken else { return }
+        stopProgressTimer()
+        playerNode?.stop()
+        engine?.stop()
+        engine?.reset()
+        playerNode = nil
+        engine = nil
+        decodedAudio = nil
+        onEvent?(.ended)
+    }
+
     private func emitEnd(for callbackPlayer: AudioPlayer) {
-        guard let currentPlayer = player, callbackPlayer === currentPlayer else { return }
+        guard let currentPlayer = streamingPlayer, callbackPlayer === currentPlayer else { return }
         stopProgressTimer()
         callbackPlayer.delegate = nil
-        player = nil
+        streamingPlayer = nil
         onEvent?(.ended)
     }
 
     private func emitFailure(_ message: String, for callbackPlayer: AudioPlayer) {
-        guard let currentPlayer = player, callbackPlayer === currentPlayer else { return }
+        guard let currentPlayer = streamingPlayer, callbackPlayer === currentPlayer else { return }
         stopProgressTimer()
         callbackPlayer.delegate = nil
-        player = nil
+        streamingPlayer = nil
         onEvent?(.failed(message))
     }
 }
@@ -114,7 +221,7 @@ final class BaOggVoicePlayer: NSObject {
 extension BaOggVoicePlayer: AudioPlayerDelegate {
     nonisolated func audioPlayerDidStartPlaying(player callbackPlayer: AudioPlayer, with _: AudioEntryId) {
         Task { @MainActor [weak self, weak callbackPlayer] in
-            guard let self, let callbackPlayer, let currentPlayer = self.player, callbackPlayer === currentPlayer else { return }
+            guard let self, let callbackPlayer, let currentPlayer = self.streamingPlayer, callbackPlayer === currentPlayer else { return }
             self.startProgressTimer()
             self.onEvent?(.playing)
         }
@@ -122,7 +229,7 @@ extension BaOggVoicePlayer: AudioPlayerDelegate {
 
     nonisolated func audioPlayerDidFinishBuffering(player callbackPlayer: AudioPlayer, with _: AudioEntryId) {
         Task { @MainActor [weak self, weak callbackPlayer] in
-            guard let self, let callbackPlayer, let currentPlayer = self.player, callbackPlayer === currentPlayer else { return }
+            guard let self, let callbackPlayer, let currentPlayer = self.streamingPlayer, callbackPlayer === currentPlayer else { return }
             self.onEvent?(.ready)
         }
     }
@@ -133,7 +240,7 @@ extension BaOggVoicePlayer: AudioPlayerDelegate {
         previous _: AudioPlayerState
     ) {
         Task { @MainActor [weak self, weak callbackPlayer] in
-            guard let self, let callbackPlayer, let currentPlayer = self.player, callbackPlayer === currentPlayer else { return }
+            guard let self, let callbackPlayer, let currentPlayer = self.streamingPlayer, callbackPlayer === currentPlayer else { return }
             switch newState {
             case .playing:
                 self.startProgressTimer()
@@ -161,21 +268,21 @@ extension BaOggVoicePlayer: AudioPlayerDelegate {
         duration _: Double
     ) {
         Task { @MainActor [weak self, weak callbackPlayer] in
-            guard let self, let callbackPlayer, let currentPlayer = self.player, callbackPlayer === currentPlayer else { return }
+            guard let self, let callbackPlayer, let currentPlayer = self.streamingPlayer, callbackPlayer === currentPlayer else { return }
             self.emitEnd(for: callbackPlayer)
         }
     }
 
     nonisolated func audioPlayerUnexpectedError(player callbackPlayer: AudioPlayer, error: AudioPlayerError) {
         Task { @MainActor [weak self, weak callbackPlayer] in
-            guard let self, let callbackPlayer, let currentPlayer = self.player, callbackPlayer === currentPlayer else { return }
+            guard let self, let callbackPlayer, let currentPlayer = self.streamingPlayer, callbackPlayer === currentPlayer else { return }
             self.emitFailure(error.localizedDescription, for: callbackPlayer)
         }
     }
 
     nonisolated func audioPlayerDidCancel(player callbackPlayer: AudioPlayer, queuedItems _: [AudioEntryId]) {
         Task { @MainActor [weak self, weak callbackPlayer] in
-            guard let self, let callbackPlayer, let currentPlayer = self.player, callbackPlayer === currentPlayer else { return }
+            guard let self, let callbackPlayer, let currentPlayer = self.streamingPlayer, callbackPlayer === currentPlayer else { return }
             self.emitEnd(for: callbackPlayer)
         }
     }

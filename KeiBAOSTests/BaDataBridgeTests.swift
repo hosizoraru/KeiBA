@@ -6,6 +6,8 @@
 //
 
 @testable import KeiBAOS
+import AVFAudio
+import Foundation
 import XCTest
 
 final class BaDataBridgeTests: XCTestCase {
@@ -902,7 +904,7 @@ final class BaDataBridgeTests: XCTestCase {
         XCTAssertEqual(BaVoiceLanguageResolver.playbackURL(for: kurumiPoolEntry, headers: playbackHeaders, selectedHeader: "日配"), kurumiPool)
     }
 
-    func testVoicePlaybackSupportsOggThroughStreamingPath() throws {
+    func testVoicePlaybackSupportsOggPlaybackBackends() throws {
         let mp3URL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/voice/jp.mp3"))
         let oggURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/voice/jp.ogg"))
         let opusURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/voice/jp.opus"))
@@ -915,7 +917,7 @@ final class BaDataBridgeTests: XCTestCase {
         XCTAssertTrue(BaVoicePlaybackController.supportsPlayback(mp3URL))
         XCTAssertFalse(BaVoicePlaybackController.supportsNativePlayback(oggURL))
         XCTAssertTrue(BaVoicePlaybackController.supportsOggPlayback(oggURL))
-        XCTAssertEqual(BaVoicePlaybackController.preferredBackendNameForTesting(oggURL), "audioStreaming")
+        XCTAssertEqual(BaVoicePlaybackController.preferredBackendNameForTesting(oggURL), "vorbisEngine")
         XCTAssertTrue(BaVoicePlaybackController.supportsPlayback(oggURL))
         XCTAssertTrue(BaVoicePlaybackController.supportsOggPlayback(opusURL))
         XCTAssertEqual(BaVoicePlaybackController.preferredBackendNameForTesting(opusURL), "audioStreaming")
@@ -925,6 +927,52 @@ final class BaDataBridgeTests: XCTestCase {
         XCTAssertTrue(BaVoicePlaybackController.supportsPlayback(flacURL))
         XCTAssertTrue(BaVoicePlaybackController.supportsPlayback(unknownVoiceURL))
         XCTAssertFalse(BaVoicePlaybackController.supportsPlayback(pageURL))
+    }
+
+    func testShortGameKeeOggDecoderBuildsPlayablePCMBuffer() async throws {
+        let data = try await fetchHinaDressTitleOggFixtureData()
+
+        let decoded = try BaOggVorbisDecoder().decode(data: data)
+
+        XCTAssertGreaterThan(decoded.duration, 0.5)
+        XCTAssertGreaterThan(decoded.buffer.frameLength, 1_000)
+        XCTAssertGreaterThan(decoded.buffer.format.channelCount, 0)
+    }
+
+    @MainActor
+    func testShortGameKeeOggPlayerKeepsStateUntilDecodedBufferFinishes() async throws {
+        let data = try await fetchHinaDressTitleOggFixtureData()
+        let localURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("hina-title-\(UUID().uuidString).ogg")
+        try data.write(to: localURL)
+        defer {
+            try? FileManager.default.removeItem(at: localURL)
+        }
+
+        let player = BaOggVoicePlayer()
+        let playingExpectation = expectation(description: "short ogg reaches playing")
+        let endedExpectation = expectation(description: "short ogg ends after playback")
+        var playingAt: Date?
+        var endedAt: Date?
+        player.onEvent = { event in
+            switch event {
+            case .playing where playingAt == nil:
+                playingAt = Date()
+                playingExpectation.fulfill()
+            case .ended:
+                endedAt = Date()
+                endedExpectation.fulfill()
+            default:
+                break
+            }
+        }
+
+        player.play(localURL: localURL)
+        await fulfillment(of: [playingExpectation, endedExpectation], timeout: 5, enforceOrder: true)
+        player.stop()
+
+        let elapsed = try XCTUnwrap(endedAt?.timeIntervalSince(try XCTUnwrap(playingAt)))
+        XCTAssertGreaterThan(elapsed, 0.5)
     }
 
     func testSmallOggVoiceDataIsAcceptedByAudioCache() {
@@ -1003,6 +1051,25 @@ final class BaDataBridgeTests: XCTestCase {
             contentId: nil,
             studentGuideURL: studentGuideURL
         )
+    }
+
+    private func fetchHinaDressTitleOggFixtureData() async throws -> Data {
+        let url = try XCTUnwrap(URL(string: "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_0/h_0/829/43637/2025/4/26/648025.ogg"))
+        var request = URLRequest(url: url)
+        request.setValue("https://www.gamekee.com/", forHTTPHeaderField: "Referer")
+        request.setValue("bytes=0-", forHTTPHeaderField: "Range")
+        do {
+            let result = try await URLSession.shared.data(for: request)
+            let statusCode = (result.1 as? HTTPURLResponse)?.statusCode ?? 0
+            guard (200 ..< 300).contains(statusCode) else {
+                throw XCTSkip("GameKee title OGG fixture unavailable: HTTP \(statusCode)")
+            }
+            return result.0
+        } catch let error as XCTSkip {
+            throw error
+        } catch {
+            throw XCTSkip("GameKee title OGG fixture unavailable: \(error.localizedDescription)")
+        }
     }
 }
 
