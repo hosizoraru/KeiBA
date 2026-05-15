@@ -319,7 +319,6 @@ final class BaStudentDetailTests: XCTestCase {
             BaGuideRow(id: "name2", title: "技能名称", value: "旋律第二音节", imageURL: nil),
             BaGuideRow(id: "name3", title: "技能名称", value: "终幕之旋律", imageURL: nil),
             BaGuideRow(id: "lv3", title: "LV5", value: "造成攻击力1288%的伤害。", imageURL: nil),
-            BaGuideRow(id: "cost3", title: "技能COST", value: "0", imageURL: nil),
             BaGuideRow(id: "upgrade", title: "EX技能升级材料", value: "", imageURL: nil),
             BaGuideRow(id: "normal-type", title: "技能类型", value: "普通技能", imageURL: nil),
             BaGuideRow(id: "normal-name", title: "技能名称", value: "周密准备", imageURL: nil),
@@ -340,6 +339,7 @@ final class BaStudentDetailTests: XCTestCase {
         XCTAssertEqual(cards[2].description(for: "Lv.5"), "造成攻击力618%的伤害。")
         XCTAssertEqual(cards[2].cost(for: "Lv.5"), "0")
         XCTAssertEqual(cards[3].description(for: "Lv.5"), "造成攻击力1288%的伤害。")
+        XCTAssertEqual(cards[3].cost(for: "Lv.5"), "0")
     }
 
     func testSkillCardsMatchHinaDressVariantPayloadShape() throws {
@@ -393,6 +393,7 @@ final class BaStudentDetailTests: XCTestCase {
         XCTAssertEqual(cards[2].description(for: "Lv.5"), "造成攻击力618%的伤害。")
         XCTAssertEqual(cards[2].cost(for: "Lv.5"), "0")
         XCTAssertEqual(cards[3].iconURL, icon3)
+        XCTAssertEqual(cards[3].cost(for: "Lv.5"), "0")
         XCTAssertEqual(cards[4].type, "被动技能")
         XCTAssertEqual(cards[4].description(for: "Lv.10"), "攻击力增加16.2%，暴击值增加16.2%")
     }
