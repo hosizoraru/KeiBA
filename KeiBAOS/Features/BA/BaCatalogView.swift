@@ -32,13 +32,12 @@ struct BaCatalogView: View {
 
             Section {
                 catalogContent
-            } header: {
-                Text(selectedCategory.title)
             } footer: {
                 Text(footerText)
             }
         }
         .platformInsetGroupedListStyle()
+        .baCatalogSectionSpacing()
         .scrollContentBackground(.hidden)
         .background(AppBackground())
         .searchable(text: $searchText, prompt: Text(selectedCategory.searchPrompt))
@@ -116,6 +115,17 @@ struct BaCatalogView: View {
         model.isFavorite(entry)
             ? String(localized: "ba.catalog.favorite.remove")
             : String(localized: "ba.catalog.favorite.add")
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func baCatalogSectionSpacing() -> some View {
+        #if os(iOS)
+            listSectionSpacing(.compact)
+        #else
+            self
+        #endif
     }
 }
 
