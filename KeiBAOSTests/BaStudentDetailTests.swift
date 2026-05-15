@@ -217,6 +217,79 @@ final class BaStudentDetailTests: XCTestCase {
         XCTAssertEqual(sections[2].rows.map(\.title), ["兴趣爱好", "介绍"])
     }
 
+    func testSkillCardsParseLevelsCostAndDescriptionIcons() throws {
+        let skillIcon = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/wiki2.0/images/w_64/h_64/skill.png"))
+        let burnIcon = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/wiki2.0/images/w_44/h_44/burn.png"))
+        let glossaryIcon = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/wiki2.0/images/w_44/h_44/focus.png"))
+        let rows = [
+            BaGuideRow(id: "type", title: "技能类型", value: "EX技能", imageURL: nil),
+            BaGuideRow(id: "name", title: "技能名称", value: "开幕演出", imageURL: nil),
+            BaGuideRow(id: "icon", title: "技能图标", value: "", imageURL: skillIcon),
+            BaGuideRow(
+                id: "lv1",
+                title: "LV.1",
+                value: "对1名敌人造成攻击力300%的伤害，并赋予集中射击。",
+                imageURL: burnIcon,
+                imageURLs: [burnIcon]
+            ),
+            BaGuideRow(id: "cost1", title: "技能COST", value: "COST: 6", imageURL: nil),
+            BaGuideRow(
+                id: "lv5",
+                title: "LV.5",
+                value: "对1名敌人造成攻击力650%的伤害，并赋予集中射击。",
+                imageURL: burnIcon,
+                imageURLs: [burnIcon]
+            ),
+            BaGuideRow(id: "cost5", title: "技能COST", value: "5", imageURL: nil),
+            BaGuideRow(id: "glossary-start", title: "技能名词", value: "", imageURL: nil),
+            BaGuideRow(id: "glossary", title: "集中射击", value: "", imageURL: glossaryIcon),
+        ]
+
+        let card = try XCTUnwrap(BaStudentSkillDisplayModel.cards(from: rows).first)
+
+        XCTAssertEqual(card.type, "EX技能")
+        XCTAssertEqual(card.name, "开幕演出")
+        XCTAssertEqual(card.iconURL, skillIcon)
+        XCTAssertEqual(card.levelOptions, ["Lv.1", "Lv.5"])
+        XCTAssertEqual(card.defaultLevel, "Lv.5")
+        XCTAssertEqual(card.description(for: "Lv.1"), "对1名敌人造成攻击力300%的伤害，并赋予集中射击。")
+        XCTAssertEqual(card.description(for: "Lv.5"), "对1名敌人造成攻击力650%的伤害，并赋予集中射击。")
+        XCTAssertEqual(card.cost(for: "Lv.1"), "6")
+        XCTAssertEqual(card.cost(for: "Lv.5"), "5")
+        XCTAssertEqual(card.descriptionIcons(for: "Lv.5"), [burnIcon])
+        XCTAssertEqual(card.glossaryIcons["集中射击"], glossaryIcon)
+    }
+
+    func testContentParserSplitsRoleSkillPairsForSkillCards() throws {
+        let parsed = BaGuideContentParser().parse(
+            content: [
+                "baseData": [
+                    [
+                        ["value": "角色技能"],
+                        ["value": "技能名称"],
+                        ["value": "开幕演出"],
+                        ["value": "技能类型"],
+                        ["value": "EX技能"],
+                        ["value": "LV.1"],
+                        ["value": "造成300%的伤害。"],
+                        ["value": "技能COST"],
+                        ["value": "COST: 6"],
+                    ],
+                ],
+            ],
+            apiData: [:],
+            html: nil,
+            entry: makeCatalogEntry()
+        )
+        let card = try XCTUnwrap(BaStudentSkillDisplayModel.cards(from: parsed.skillRows).first)
+
+        XCTAssertEqual(parsed.skillRows.map(\.title), ["技能名称", "技能类型", "LV.1", "技能COST"])
+        XCTAssertEqual(card.name, "开幕演出")
+        XCTAssertEqual(card.type, "EX技能")
+        XCTAssertEqual(card.description(for: "Lv.1"), "造成300%的伤害。")
+        XCTAssertEqual(card.cost(for: "Lv.1"), "6")
+    }
+
     func testStudentDetailSourceErrorUsesFriendlyMessage() {
         XCTAssertEqual(
             BaDataErrorPresenter.studentDetailMessage(for: "content_cdn-empty"),

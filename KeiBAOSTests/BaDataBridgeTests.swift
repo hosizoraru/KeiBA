@@ -579,7 +579,7 @@ final class BaDataBridgeTests: XCTestCase {
         XCTAssertEqual(combatMetaValues[String(localized: "ba.student.detail.meta.street")], "D")
         XCTAssertEqual(combatMetaValues[String(localized: "ba.student.detail.meta.outdoor")], "A")
         XCTAssertEqual(combatMetaValues[String(localized: "ba.student.detail.meta.indoor")], "S")
-        XCTAssertEqual(parsed.skillRows.first?.title, "角色技能")
+        XCTAssertEqual(parsed.skillRows.first?.title, "技能名称")
         XCTAssertEqual(parsed.voiceRows.first?.lineHeaders, ["日配", "中配", "韩配"])
         XCTAssertEqual(parsed.galleryItems.first?.mediaKind, .image)
         XCTAssertFalse(parsed.simulateRows.isEmpty)

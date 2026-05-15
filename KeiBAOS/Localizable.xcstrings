@@ -5611,6 +5611,22 @@
         }
       }
     },
+    "ba.student.detail.skill.unnamed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unnamed Skill"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未命名技能"
+          }
+        }
+      }
+    },
     "ba.student.detail.skills.detail" : {
       "extractionState" : "stale",
       "localizations" : {

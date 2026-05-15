@@ -146,6 +146,7 @@ struct BaGuideBaseDataParser {
             "学生信息",
             "学生资料",
             "学生档案",
+            "角色技能",
             "基础信息",
             "基础资料",
             "个人信息",
@@ -233,7 +234,11 @@ struct BaGuideBaseDataParser {
     }
 
     private func isSkillKey(_ value: String) -> Bool {
-        BaGuideTextNormalizer.containsAny(
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.range(of: #"(?i)^LV\.?\d{1,2}\b"#, options: .regularExpression) != nil {
+            return true
+        }
+        return BaGuideTextNormalizer.containsAny(
             value,
             tokens: ["技能", "EX", "普通技能", "被动技能", "辅助技能", "技能COST", "技能图标", "技能描述", "技能名称", "skill"]
         )
