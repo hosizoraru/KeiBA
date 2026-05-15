@@ -31,8 +31,12 @@ actor BaGuideMediaCache {
     func localURL(for url: URL, refererPath: String = "/ba") async throws -> URL {
         let fileURL = cachedFileURL(for: url)
         if let data = try? Data(contentsOf: fileURL), data.isEmpty == false {
-            logger.debug("guide media cache hit \(url.host ?? "unknown", privacy: .public)")
-            return fileURL
+            if Self.looksLikeRenderableMediaData(data) {
+                logger.debug("guide media cache hit \(url.host ?? "unknown", privacy: .public)")
+                return fileURL
+            }
+            try? fileManager.removeItem(at: fileURL)
+            logger.debug("guide media cache invalidated \(url.host ?? "unknown", privacy: .public)")
         }
         if let retryAt = deferredFailures[url], retryAt > Date() {
             throw GameKeeError.invalidResponse("Media retry deferred")
@@ -58,6 +62,34 @@ actor BaGuideMediaCache {
         let hash = Self.cacheKey(for: url)
         let ext = Self.cachedFileExtension(for: url)
         return rootDirectory.appendingPathComponent("\(hash).\(ext)")
+    }
+
+    private nonisolated static func looksLikeRenderableMediaData(_ data: Data) -> Bool {
+        let bytes = [UInt8](data.prefix(16))
+        if bytes.starts(with: [0xFF, 0xD8, 0xFF]) { return true }
+        if bytes.starts(with: [0x89, 0x50, 0x4E, 0x47]) { return true }
+        if bytes.starts(with: [0x47, 0x49, 0x46]) { return true }
+        if bytes.starts(with: [0x49, 0x44, 0x33]) { return true }
+        if bytes.count >= 2, bytes[0] == 0xFF, (bytes[1] & 0xE0) == 0xE0 { return true }
+        if bytes.starts(with: [0x4F, 0x67, 0x67, 0x53]) { return true }
+        if bytes.starts(with: [0x66, 0x4C, 0x61, 0x43]) { return true }
+        if bytes.count >= 8,
+           bytes[4 ..< 8].elementsEqual([0x66, 0x74, 0x79, 0x70])
+        {
+            return true
+        }
+        if bytes.count >= 12,
+           bytes[0 ..< 4].elementsEqual([0x52, 0x49, 0x46, 0x46])
+        {
+            return bytes[8 ..< 12].elementsEqual([0x57, 0x45, 0x42, 0x50]) ||
+                bytes[8 ..< 12].elementsEqual([0x57, 0x41, 0x56, 0x45])
+        }
+        if bytes.starts(with: [0x1A, 0x45, 0xDF, 0xA3]) { return true }
+        guard let head = String(data: data.prefix(128), encoding: .utf8) else {
+            return false
+        }
+        let trimmed = head.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return trimmed.hasPrefix("<svg") || trimmed.hasPrefix("#extm3u")
     }
 
     nonisolated static func cacheKey(for url: URL) -> String {

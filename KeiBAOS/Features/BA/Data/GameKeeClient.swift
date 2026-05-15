@@ -287,6 +287,11 @@ struct GameKeeClient {
         guard data.isEmpty == false else {
             throw GameKeeError.emptyBody
         }
+        let contentType = httpResponse.value(forHTTPHeaderField: "Content-Type")?.lowercased() ?? ""
+        guard Self.isRenderableMediaContentType(contentType) || Self.looksLikeRenderableMediaData(data) else {
+            let preview = String(decoding: data.prefix(120), as: UTF8.self)
+            throw GameKeeError.invalidResponse(preview)
+        }
         return data
     }
 
@@ -432,6 +437,43 @@ struct GameKeeClient {
             return true
         }
         return false
+    }
+
+    private nonisolated static func isRenderableMediaContentType(_ contentType: String) -> Bool {
+        contentType.contains("image") ||
+            contentType.contains("audio") ||
+            contentType.contains("video") ||
+            contentType.contains("application/octet-stream") ||
+            contentType.contains("application/vnd.apple.mpegurl") ||
+            contentType.contains("application/x-mpegurl")
+    }
+
+    private nonisolated static func looksLikeRenderableMediaData(_ data: Data) -> Bool {
+        let bytes = [UInt8](data.prefix(16))
+        if bytes.starts(with: [0xFF, 0xD8, 0xFF]) { return true }
+        if bytes.starts(with: [0x89, 0x50, 0x4E, 0x47]) { return true }
+        if bytes.starts(with: [0x47, 0x49, 0x46]) { return true }
+        if bytes.starts(with: [0x49, 0x44, 0x33]) { return true }
+        if bytes.count >= 2, bytes[0] == 0xFF, (bytes[1] & 0xE0) == 0xE0 { return true }
+        if bytes.starts(with: [0x4F, 0x67, 0x67, 0x53]) { return true }
+        if bytes.starts(with: [0x66, 0x4C, 0x61, 0x43]) { return true }
+        if bytes.count >= 8,
+           bytes[4 ..< 8].elementsEqual([0x66, 0x74, 0x79, 0x70])
+        {
+            return true
+        }
+        if bytes.count >= 12,
+           bytes[0 ..< 4].elementsEqual([0x52, 0x49, 0x46, 0x46])
+        {
+            return bytes[8 ..< 12].elementsEqual([0x57, 0x45, 0x42, 0x50]) ||
+                bytes[8 ..< 12].elementsEqual([0x57, 0x41, 0x56, 0x45])
+        }
+        if bytes.starts(with: [0x1A, 0x45, 0xDF, 0xA3]) { return true }
+        guard let head = String(data: data.prefix(128), encoding: .utf8) else {
+            return false
+        }
+        let trimmed = head.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return trimmed.hasPrefix("<svg") || trimmed.hasPrefix("#extm3u")
     }
 
     private nonisolated static func makeSession() -> URLSession {

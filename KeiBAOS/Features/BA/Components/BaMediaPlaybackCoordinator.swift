@@ -46,7 +46,7 @@ enum BaMediaPlaybackCoordinator {
                 .moviePlayback
             }
             do {
-                try session.setCategory(.playback, mode: sessionMode, options: [.allowAirPlay])
+                try session.setCategory(.playback, mode: sessionMode, options: [])
                 try session.setActive(true)
             } catch {
                 logger.error("audio session activation failed: \(error.localizedDescription, privacy: .public)")

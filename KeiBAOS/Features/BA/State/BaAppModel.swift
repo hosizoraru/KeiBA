@@ -287,10 +287,12 @@ final class BaAppModel {
 
     func refreshActivities(force _: Bool) async {
         if activityState.isLoading { return }
+        let server = settings.server
         activityState.isLoading = true
         activityState.errorMessage = nil
         do {
-            let snapshot = try await activityPoolRepository.fetchActivities(server: settings.server)
+            let snapshot = try await activityPoolRepository.fetchActivities(server: server)
+            guard settings.server == server else { return }
             activityState = BaLoadableState(
                 value: snapshot.value,
                 isLoading: false,
@@ -298,8 +300,13 @@ final class BaAppModel {
                 lastSyncAt: snapshot.syncedAt,
                 isShowingCache: false
             )
-            await cacheStore.save(snapshot.value, for: .activities(settings.server), schemaVersion: 3, syncedAt: snapshot.syncedAt)
+            await cacheStore.save(snapshot.value, for: .activities(server), schemaVersion: 3, syncedAt: snapshot.syncedAt)
         } catch {
+            guard settings.server == server else { return }
+            guard Self.isCancellation(error) == false else {
+                activityState.isLoading = false
+                return
+            }
             await applyActivityFailure(error)
         }
     }
@@ -333,6 +340,11 @@ final class BaAppModel {
             )
             await cacheStore.save(entries, for: .pools(server), schemaVersion: Self.poolCacheSchemaVersion, syncedAt: snapshot.syncedAt)
         } catch {
+            guard settings.server == server else { return }
+            guard Self.isCancellation(error) == false else {
+                poolState.isLoading = false
+                return
+            }
             await applyPoolFailure(error)
         }
     }
@@ -370,6 +382,10 @@ final class BaAppModel {
                 await cacheStore.save(hydrated, for: .catalog, schemaVersion: 2, syncedAt: snapshot.syncedAt)
             }
         } catch {
+            guard Self.isCancellation(error) == false else {
+                catalogState.isLoading = false
+                return
+            }
             await applyCatalogFailure(error)
         }
     }
@@ -407,6 +423,12 @@ final class BaAppModel {
                 syncedAt: snapshot.syncedAt
             )
         } catch {
+            guard Self.isCancellation(error) == false else {
+                var cancelled = studentDetailStates[entry.contentId] ?? BaLoadableState<BaStudentGuideInfo>()
+                cancelled.isLoading = false
+                studentDetailStates[entry.contentId] = cancelled
+                return
+            }
             var failed = studentDetailStates[entry.contentId] ?? BaLoadableState<BaStudentGuideInfo>()
             failed.isLoading = false
             failed.errorMessage = error.localizedDescription
@@ -604,6 +626,14 @@ final class BaAppModel {
 
     private func needsStudentCatalogResolution(_ entries: [BaPoolEntry]) -> Bool {
         entries.contains { $0.studentGuideOpenURL == nil }
+    }
+
+    private nonisolated static func isCancellation(_ error: Error) -> Bool {
+        if error is CancellationError {
+            return true
+        }
+        let nsError = error as NSError
+        return nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled
     }
 
     private func fallbackStudentCatalogEntry(

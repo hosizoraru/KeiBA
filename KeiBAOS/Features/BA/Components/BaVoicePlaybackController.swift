@@ -23,6 +23,9 @@ final class BaVoicePlaybackController {
     private nonisolated static let vorbisEngineExtensions = Set(
         "oga ogg".split(separator: " ").map(String.init)
     )
+    private nonisolated static let avPlayerPlaybackExtensions = Set(
+        "m3u8 m4v mov mp4".split(separator: " ").map(String.init)
+    )
 
     var currentRemoteURL: URL?
     var isLoading = false
@@ -34,6 +37,8 @@ final class BaVoicePlaybackController {
         case .avFoundation:
             guard let duration = player?.duration else { return false }
             return duration.isFinite && duration > 0
+        case .avPlayer:
+            return avPlayerDuration?.isFinite == true && (avPlayerDuration ?? 0) > 0
         case .audioStreaming:
             return oggPlayer.canSeek
         case .vorbisEngine, nil:
@@ -45,10 +50,13 @@ final class BaVoicePlaybackController {
     @ObservationIgnored private let oggPlayer = BaOggVoicePlayer()
     @ObservationIgnored private let logger = Logger(subsystem: "os.kei.KeiBAOS", category: "BaVoicePlayback")
     @ObservationIgnored private var playbackObserver: NSObjectProtocol?
+    @ObservationIgnored private var avPlayerEndObserver: NSObjectProtocol?
     private var player: AVAudioPlayer?
+    private var avPlayer: AVPlayer?
     private var playbackBackend: PlaybackBackend?
     private var loadToken = UUID()
     private var progressTimer: Timer?
+    private var avPlayerDuration: TimeInterval?
 
     init(audioCache: any BaAudioCaching = BaAudioCache.shared) {
         self.audioCache = audioCache
@@ -60,8 +68,9 @@ final class BaVoicePlaybackController {
             object: nil,
             queue: .main
         ) { [weak self] notification in
-            Task { @MainActor [weak self] in
-                guard let self, notification.object as AnyObject? !== self else { return }
+            let senderID = (notification.object as AnyObject?).map(ObjectIdentifier.init)
+            Task { @MainActor [weak self, senderID] in
+                guard let self, senderID != ObjectIdentifier(self) else { return }
                 self.stop()
             }
         }
@@ -70,6 +79,9 @@ final class BaVoicePlaybackController {
     deinit {
         if let playbackObserver {
             NotificationCenter.default.removeObserver(playbackObserver)
+        }
+        if let avPlayerEndObserver {
+            NotificationCenter.default.removeObserver(avPlayerEndObserver)
         }
     }
 
@@ -126,6 +138,10 @@ final class BaVoicePlaybackController {
             guard let player, player.duration.isFinite, player.duration > 0 else { return }
             player.currentTime = player.duration * clampedProgress
             updateProgress()
+        case .avPlayer:
+            guard let duration = avPlayerDuration, duration.isFinite, duration > 0 else { return }
+            avPlayer?.seek(to: CMTime(seconds: duration * clampedProgress, preferredTimescale: 600))
+            updateProgress()
         case .audioStreaming:
             oggPlayer.seek(to: clampedProgress)
         case .vorbisEngine, nil:
@@ -165,6 +181,13 @@ final class BaVoicePlaybackController {
             resumeOggPlayer()
             return
         }
+        if playbackBackend == .avPlayer {
+            configureAudioSession()
+            avPlayer?.play()
+            isPlaying = true
+            startProgressTimer()
+            return
+        }
         guard let player else { return }
         configureAudioSession()
         player.play()
@@ -178,6 +201,12 @@ final class BaVoicePlaybackController {
             isPlaying = false
             return
         }
+        if playbackBackend == .avPlayer {
+            avPlayer?.pause()
+            isPlaying = false
+            stopProgressTimer()
+            return
+        }
         player?.pause()
         isPlaying = false
         stopProgressTimer()
@@ -186,6 +215,10 @@ final class BaVoicePlaybackController {
     private func startPlayer(localURL: URL, backend: PlaybackBackend?) {
         if backend == .vorbisEngine || backend == .audioStreaming {
             startOggPlayer(localURL: localURL)
+            return
+        }
+        if backend == .avPlayer {
+            startAVPlayer(localURL: localURL)
             return
         }
         do {
@@ -217,6 +250,10 @@ final class BaVoicePlaybackController {
     }
 
     private func updateProgress() {
+        if playbackBackend == .avPlayer {
+            updateAVPlayerProgress()
+            return
+        }
         guard let player else {
             progress = 0
             return
@@ -255,6 +292,7 @@ final class BaVoicePlaybackController {
         stopProgressTimer()
         player?.stop()
         player = nil
+        stopAVPlayer()
     }
 
     private func startProgressTimer() {
@@ -273,13 +311,18 @@ final class BaVoicePlaybackController {
 
     private enum PlaybackBackend: String {
         case avFoundation
+        case avPlayer
         case vorbisEngine
         case audioStreaming
     }
 
     private nonisolated static func preferredBackend(for url: URL) -> PlaybackBackend {
-        if vorbisEngineExtensions.contains(url.pathExtension.lowercased()) {
+        let ext = url.pathExtension.lowercased()
+        if vorbisEngineExtensions.contains(ext) {
             return .vorbisEngine
+        }
+        if avPlayerPlaybackExtensions.contains(ext) {
+            return .avPlayer
         }
         return supportsOggPlayback(url) ? .audioStreaming : .avFoundation
     }
@@ -309,6 +352,65 @@ final class BaVoicePlaybackController {
 
     private func configureAudioSession() {
         BaMediaPlaybackCoordinator.configureAudioPlaybackSession()
+    }
+
+    private func startAVPlayer(localURL: URL) {
+        configureAudioSession()
+        stopAVPlayer()
+        let item = AVPlayerItem(url: localURL)
+        let nextPlayer = AVPlayer(playerItem: item)
+        nextPlayer.isMuted = false
+        nextPlayer.volume = 1
+        avPlayer = nextPlayer
+        avPlayerDuration = nil
+        avPlayerEndObserver = NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemDidPlayToEndTime,
+            object: item,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.finishAVPlayerPlayback()
+            }
+        }
+        nextPlayer.play()
+        isLoading = false
+        isPlaying = true
+        startProgressTimer()
+    }
+
+    private func stopAVPlayer() {
+        if let avPlayerEndObserver {
+            NotificationCenter.default.removeObserver(avPlayerEndObserver)
+            self.avPlayerEndObserver = nil
+        }
+        avPlayer?.pause()
+        avPlayer?.replaceCurrentItem(with: nil)
+        avPlayer = nil
+        avPlayerDuration = nil
+    }
+
+    private func updateAVPlayerProgress() {
+        guard let avPlayer else {
+            progress = 0
+            return
+        }
+        let duration = avPlayer.currentItem?.duration.seconds ?? 0
+        avPlayerDuration = duration.isFinite && duration > 0 ? duration : avPlayerDuration
+        guard let avPlayerDuration, avPlayerDuration > 0 else {
+            progress = 0
+            return
+        }
+        let currentTime = avPlayer.currentTime().seconds
+        progress = min(max(currentTime / avPlayerDuration, 0), 1)
+    }
+
+    private func finishAVPlayerPlayback() {
+        avPlayer?.seek(to: .zero)
+        currentRemoteURL = nil
+        isPlaying = false
+        progress = 0
+        playbackBackend = nil
+        stopProgressTimer()
     }
 }
 

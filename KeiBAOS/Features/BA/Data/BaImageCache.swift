@@ -32,9 +32,13 @@ actor BaImageCache {
     func data(for url: URL, refererPath: String = "/ba") async throws -> Data {
         let fileURL = cachedFileURL(for: url)
         if let data = try? Data(contentsOf: fileURL), data.isEmpty == false {
-            hitCount += 1
-            logger.debug("image cache hit \(url.host ?? "unknown", privacy: .public)")
-            return data
+            if Self.looksLikeImageData(data) {
+                hitCount += 1
+                logger.debug("image cache hit \(url.host ?? "unknown", privacy: .public)")
+                return data
+            }
+            try? fileManager.removeItem(at: fileURL)
+            logger.debug("image cache invalidated \(url.host ?? "unknown", privacy: .public)")
         }
         if let retryAt = deferredFailures[url], retryAt > Date() {
             throw GameKeeError.invalidResponse("Image retry deferred")
@@ -83,5 +87,22 @@ actor BaImageCache {
             .joined()
         let ext = url.pathExtension.isEmpty ? "img" : url.pathExtension
         return rootDirectory.appendingPathComponent("\(hash).\(ext)")
+    }
+
+    private nonisolated static func looksLikeImageData(_ data: Data) -> Bool {
+        let bytes = [UInt8](data.prefix(16))
+        if bytes.starts(with: [0xFF, 0xD8, 0xFF]) { return true }
+        if bytes.starts(with: [0x89, 0x50, 0x4E, 0x47]) { return true }
+        if bytes.starts(with: [0x47, 0x49, 0x46]) { return true }
+        if bytes.count >= 12,
+           bytes[0 ..< 4].elementsEqual([0x52, 0x49, 0x46, 0x46]),
+           bytes[8 ..< 12].elementsEqual([0x57, 0x45, 0x42, 0x50])
+        {
+            return true
+        }
+        guard let head = String(data: data.prefix(128), encoding: .utf8) else {
+            return false
+        }
+        return head.trimmingCharacters(in: .whitespacesAndNewlines).lowercased().hasPrefix("<svg")
     }
 }

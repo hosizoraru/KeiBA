@@ -243,6 +243,8 @@ private struct BaGalleryVideoControlSurface: View {
 
         func makeUIViewController(context _: Context) -> AVPlayerViewController {
             let controller = AVPlayerViewController()
+            player.isMuted = false
+            player.volume = 1
             controller.player = player
             controller.showsPlaybackControls = true
             controller.allowsPictureInPicturePlayback = true
@@ -254,6 +256,8 @@ private struct BaGalleryVideoControlSurface: View {
         }
 
         func updateUIViewController(_ controller: AVPlayerViewController, context _: Context) {
+            player.isMuted = false
+            player.volume = 1
             controller.player = player
         }
     }
@@ -265,11 +269,15 @@ private struct BaGalleryVideoControlSurface: View {
             let view = AVPlayerView()
             view.controlsStyle = .floating
             view.videoGravity = .resizeAspect
+            player.isMuted = false
+            player.volume = 1
             view.player = player
             return view
         }
 
         func updateNSView(_ nsView: AVPlayerView, context _: Context) {
+            player.isMuted = false
+            player.volume = 1
             nsView.player = player
         }
     }
