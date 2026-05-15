@@ -169,9 +169,8 @@ struct BaStudentGuideRepository {
         var preferred: [BaGuideRow] = []
         for keywords in priorities {
             guard let row = profileRows.first(where: { row in
-                let merged = "\(row.title) \(row.value)"
                 return keywords.contains { keyword in
-                    merged.localizedCaseInsensitiveContains(keyword)
+                    row.title.localizedCaseInsensitiveContains(keyword)
                 }
             }) else {
                 continue
@@ -181,7 +180,7 @@ struct BaStudentGuideRepository {
             }
         }
         if preferred.isEmpty == false {
-            return Array(preferred.prefix(8))
+            return preferred
         }
         return [
             BaGuideRow(

@@ -100,6 +100,55 @@ final class BaStudentDetailTests: XCTestCase {
         XCTAssertEqual(info.overviewProfileRows.map(\.title), ["生日"])
     }
 
+    func testGuideMetaKeepsOverviewFieldsDistinctWhenImageRowsLead() throws {
+        let starURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/star.png"))
+        let academyURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/gehinna.png"))
+        let tacticURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/striker-wide.png"))
+        let positionURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/back-wide.png"))
+        let info = BaStudentGuideInfo(
+            contentId: 1,
+            sourceURL: nil,
+            title: "日奈(礼服)",
+            subtitle: "GameKee",
+            summary: "",
+            imageURL: nil,
+            stats: [],
+            profileRows: [
+                BaGuideRow(id: "club", title: "所属社团", value: "风纪委员会", imageURL: nil),
+                BaGuideRow(id: "rarity", title: "稀有度", value: "3星", imageURL: starURL),
+                BaGuideRow(id: "academy", title: "所属学院", value: "格黑娜学园", imageURL: academyURL),
+                BaGuideRow(id: "tactic-image", title: "战术作用", value: "318534.png", imageURL: tacticURL),
+                BaGuideRow(id: "role", title: "作用", value: "输出", imageURL: nil),
+                BaGuideRow(id: "position", title: "位置", value: "", imageURL: positionURL),
+                BaGuideRow(id: "indoor", title: "屋内", value: "S", imageURL: nil),
+            ],
+            skillRows: [],
+            voiceRows: [],
+            galleryItems: [],
+            growthRows: [],
+            simulateRows: [],
+            contentSource: "content_json",
+            syncedAt: Date(timeIntervalSince1970: 0)
+        )
+
+        let profile = BaStudentGuideMeta.profileMetaItems(from: info)
+        let combat = BaStudentGuideMeta.combatMetaItems(from: info)
+        let tactical = try XCTUnwrap(combat.first {
+            $0.title == String(localized: "ba.student.detail.meta.tacticalPosition")
+        })
+        let indoor = try XCTUnwrap(combat.first {
+            $0.title == String(localized: "ba.student.detail.meta.indoor")
+        })
+
+        XCTAssertEqual(profile.map(\.value), ["3星", "格黑娜学园", "风纪委员会"])
+        XCTAssertEqual(profile[0].imageRepeatCount, 3)
+        XCTAssertEqual(profile[1].imageURL, academyURL)
+        XCTAssertEqual(tactical.value, "输出")
+        XCTAssertEqual(tactical.imageURL, tacticURL)
+        XCTAssertEqual(tactical.extraImageURL, positionURL)
+        XCTAssertEqual(indoor.value, "S")
+    }
+
     func testProfileSectionsKeepBenchmarkArchiveBuckets() {
         let info = BaStudentGuideInfo(
             contentId: 1,

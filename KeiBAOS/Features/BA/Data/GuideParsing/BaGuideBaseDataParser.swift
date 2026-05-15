@@ -91,7 +91,7 @@ struct BaGuideBaseDataParser {
             }
         }
         let title = key.isEmpty ? String(format: String(localized: "ba.student.detail.row.format"), index + 1) : key
-        let rowValue = value.isEmpty ? imageURLs.first?.lastPathComponent ?? "" : value
+        let rowValue = value
         let signature = "\(title)|\(rowValue)|\(imageURLs.map(\.absoluteString).joined(separator: ","))"
         return [
             BaGuideRow(
@@ -121,7 +121,7 @@ struct BaGuideBaseDataParser {
             let imageURLs = BaGuideTextNormalizer.dedupe(
                 BaGuideTextNormalizer.imageURLs(in: [titleCell, valueCell], sourceURL: sourceURL)
             )
-            let rowValue = value.isEmpty ? imageURLs.first?.lastPathComponent ?? "" : value
+            let rowValue = value
             guard title.isEmpty == false || rowValue.isEmpty == false || imageURLs.isEmpty == false else { continue }
             let fallbackTitle = String(format: String(localized: "ba.student.detail.row.format"), pairIndex / 2 + 1)
             let resolvedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? fallbackTitle : title
@@ -175,9 +175,8 @@ struct BaGuideBaseDataParser {
         var result: [BaGuideRow] = []
         for keywords in priorities {
             guard let row = rows.first(where: { row in
-                let merged = "\(row.title) \(row.value)"
                 return keywords.contains { keyword in
-                    merged.localizedCaseInsensitiveContains(keyword)
+                    row.title.localizedCaseInsensitiveContains(keyword)
                 }
             }) else {
                 continue
@@ -186,7 +185,7 @@ struct BaGuideBaseDataParser {
                 result.append(row)
             }
         }
-        return result.prefix(8).map { $0 }
+        return result
     }
 
     private func isProfileKey(_ value: String) -> Bool {

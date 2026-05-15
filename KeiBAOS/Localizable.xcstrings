@@ -4560,6 +4560,7 @@
       }
     },
     "ba.student.detail.combat.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4592,6 +4593,7 @@
       }
     },
     "ba.student.detail.dataSource.gamekee" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4748,6 +4750,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Live2D"
+          }
+        }
+      }
+    },
+    "ba.student.detail.media.openSource" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open source"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开来源"
           }
         }
       }
@@ -4912,6 +4930,22 @@
         }
       }
     },
+    "ba.student.detail.meta.position" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Position"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置"
+          }
+        }
+      }
+    },
     "ba.student.detail.meta.rarity" : {
       "localizations" : {
         "en" : {
@@ -4956,6 +4990,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "战术位置作用"
+          }
+        }
+      }
+    },
+    "ba.student.detail.meta.tacticalRole" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tactic"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "战术作用"
           }
         }
       }
@@ -5059,6 +5109,7 @@
       }
     },
     "ba.student.detail.page.picker" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5075,7 +5126,6 @@
       }
     },
     "ba.student.detail.page.profile" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5168,6 +5218,71 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "展示从 GameKee 解析到的基础档案、学院、生日、武器和礼物偏好。"
+          }
+        }
+      }
+    },
+    "ba.student.detail.profile.hobby.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hobbies"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "学生爱好"
+          }
+        }
+      }
+    },
+    "ba.student.detail.profile.info.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profile details"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "学生信息"
+          }
+        }
+      }
+    },
+    "ba.student.detail.profile.names.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Names"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "学生昵称"
+          }
+        }
+      }
+    },
+    "ba.student.detail.profile.other.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More details"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "其他档案"
           }
         }
       }
@@ -5351,66 +5466,18 @@
         }
       }
     },
-    "ba.student.detail.profile.names.title" : {
+    "ba.student.detail.simulate.ability.title" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Names"
+            "value" : "Battle stats"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "学生昵称"
-          }
-        }
-      }
-    },
-    "ba.student.detail.profile.info.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Profile details"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "学生信息"
-          }
-        }
-      }
-    },
-    "ba.student.detail.profile.hobby.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hobbies"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "学生爱好"
-          }
-        }
-      }
-    },
-    "ba.student.detail.profile.other.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "More details"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "其他档案"
+            "value" : "角色能力"
           }
         }
       }
@@ -5428,22 +5495,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "可用时展示从 GameKee 解析到的伤害与编成模拟条目。"
-          }
-        }
-      }
-    },
-    "ba.student.detail.simulate.ability.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Battle stats"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "角色能力"
           }
         }
       }
@@ -5476,23 +5527,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "最大培养"
-          }
-        }
-      }
-    },
-    "ba.student.detail.skills.detail" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "EX, normal, passive, and sub skill rows parsed from GameKee."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "展示从 GameKee 解析到的 EX、普通、被动和辅助技能条目。"
           }
         }
       }
@@ -5545,7 +5579,25 @@
         }
       }
     },
+    "ba.student.detail.skills.detail" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EX, normal, passive, and sub skill rows parsed from GameKee."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展示从 GameKee 解析到的 EX、普通、被动和辅助技能条目。"
+          }
+        }
+      }
+    },
     "ba.student.detail.source.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5594,6 +5646,7 @@
       }
     },
     "ba.student.detail.syncedAt.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5621,22 +5674,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "音频"
-          }
-        }
-      }
-    },
-    "ba.student.detail.media.openSource" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open source"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "打开来源"
           }
         }
       }

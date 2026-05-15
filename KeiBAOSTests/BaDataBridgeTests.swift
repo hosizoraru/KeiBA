@@ -523,6 +523,10 @@ final class BaDataBridgeTests: XCTestCase {
             "防御类型",
             "武器类型",
             "市街",
+            "屋外",
+            "室内",
+            "生日",
+            "实装日期",
         ])
         XCTAssertEqual(info.profileSections.map(\.title), [
             String(localized: "ba.student.detail.profile.names.title"),
@@ -553,6 +557,7 @@ final class BaDataBridgeTests: XCTestCase {
             "格黑娜学园",
             "风纪委员会",
         ])
+        XCTAssertEqual(profileMeta[0].imageRepeatCount, 3)
         let combatMetaValues = Dictionary(uniqueKeysWithValues: BaStudentGuideMeta.combatMetaItems(from: info).map {
             ($0.title, $0.value)
         })

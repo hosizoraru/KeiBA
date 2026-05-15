@@ -12,9 +12,10 @@ struct BaGuideMetaItem: Identifiable, Hashable {
     let value: String
     let imageURL: URL?
     var extraImageURL: URL?
+    var imageRepeatCount = 1
 
     var id: String {
-        "\(title)|\(value)|\(imageURL?.absoluteString ?? "")|\(extraImageURL?.absoluteString ?? "")"
+        "\(title)|\(value)|\(imageURL?.absoluteString ?? "")|\(extraImageURL?.absoluteString ?? "")|\(imageRepeatCount)"
     }
 }
 
@@ -31,7 +32,7 @@ enum BaStudentGuideMeta {
             buildMetaItem(
                 title: String(localized: "ba.student.detail.meta.academy"),
                 role: .academy,
-                valueKeywords: ["所属学园", "所属学院", "学园", "所属", "学院"],
+                valueKeywords: ["所属学园", "所属学院", "学园", "学院", "school"],
                 rows: info.profileDisplayRows,
                 stats: info.stats
             ),
@@ -107,18 +108,25 @@ enum BaStudentGuideMeta {
         rows: [BaGuideRow]
     ) -> BaGuideMetaItem {
         let iconRows = rows + info.stats
-        let tacticalIcon = findFirstRowByKeywords(
+        let tacticalRow = findFirstRowByTitleKeywords(
             rows: iconRows,
-            keywords: ["战术作用", "作用"],
+            keywords: ["战术作用", "战术位置作用"],
             requireImage: true
-        )?.imageURL
-        let positionIcon = findFirstRowByKeywords(rows: iconRows, keywords: ["位置"], requireImage: true)?.imageURL
+        )
+        let combinedRow = findFirstRowByTitleKeywords(
+            rows: iconRows,
+            keywords: ["战术位置作用"],
+            requireImage: true
+        )
+        let positionRow = findFirstRowByExactTitleKeywords(rows: iconRows, keywords: ["位置"], requireImage: true)
+        let tacticalIcon = imageURL(in: tacticalRow, at: 0) ?? imageURL(in: combinedRow, at: 0)
+        let positionIcon = imageURL(in: positionRow, at: 0) ?? imageURL(in: combinedRow, at: 1)
         return BaGuideMetaItem(
             title: String(localized: "ba.student.detail.meta.tacticalPosition"),
             value: sanitizeMetaValue(
                 role: .tacticalPosition,
                 raw: findGuideFieldValue(
-                    keywords: ["战术作用", "作用"],
+                    keywords: ["作用", "战术位置作用", "战术作用"],
                     rows: info.profileDisplayRows,
                     stats: info.stats
                 )
@@ -167,14 +175,16 @@ enum BaStudentGuideMeta {
         rows: [BaGuideRow],
         stats: [BaGuideRow]
     ) -> BaGuideMetaItem {
-        let iconRow = findFirstRowByKeywords(rows: rows + stats, keywords: valueKeywords, requireImage: true)
+        let iconRow = findFirstRowByTitleKeywords(rows: rows + stats, keywords: valueKeywords, requireImage: true)
+        let value = sanitizeMetaValue(
+            role: role,
+            raw: findGuideFieldValue(keywords: valueKeywords, rows: rows, stats: stats)
+        )
         return BaGuideMetaItem(
             title: title,
-            value: sanitizeMetaValue(
-                role: role,
-                raw: findGuideFieldValue(keywords: valueKeywords, rows: rows, stats: stats)
-            ),
-            imageURL: iconRow?.imageURL
+            value: value,
+            imageURL: iconRow?.imageURL,
+            imageRepeatCount: role == .rarity ? rarityImageRepeatCount(from: value) : 1
         )
     }
 
@@ -188,34 +198,76 @@ enum BaStudentGuideMeta {
             .filter { $0.isEmpty == false }
         guard normalizedKeywords.isEmpty == false else { return "-" }
 
-        func keyMatches(_ key: String) -> Bool {
-            normalizedKeywords.contains { key.localizedCaseInsensitiveContains($0) }
+        let allRows = rows + stats
+        func isUsableValue(_ value: String) -> Bool {
+            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty == false && isMediaFilenameValue(trimmed) == false
+        }
+        func normalized(_ key: String) -> String {
+            BaGuideTextNormalizer.normalizedKey(key)
         }
 
-        if let row = rows.first(where: { keyMatches($0.title) && $0.value.isEmpty == false }) {
+        for keyword in normalizedKeywords {
+            let normalizedKeyword = normalized(keyword)
+            if let row = allRows.first(where: {
+                normalized($0.title) == normalizedKeyword && isUsableValue($0.value)
+            }) {
+                return row.value
+            }
+        }
+        if let row = allRows.first(where: { row in
+            normalizedKeywords.contains { row.title.localizedCaseInsensitiveContains($0) } &&
+                isUsableValue(row.value)
+        }) {
             return row.value
         }
-        if let row = stats.first(where: { keyMatches($0.title) && $0.value.isEmpty == false }) {
+        if let row = allRows.first(where: { row in
+            let merged = "\(row.title) \(row.value)"
+            return normalizedKeywords.contains { merged.localizedCaseInsensitiveContains($0) } &&
+                isUsableValue(row.value)
+        }) {
             return row.value
         }
         return "-"
     }
 
-    private nonisolated static func findFirstRowByKeywords(
+    private nonisolated static func findFirstRowByTitleKeywords(
         rows: [BaGuideRow],
         keywords: [String],
         requireImage: Bool
     ) -> BaGuideRow? {
         rows.first { row in
-            let merged = "\(row.title) \(row.value)"
-            let hasKeyword = keywords.contains { merged.localizedCaseInsensitiveContains($0) }
+            let hasKeyword = keywords.contains { row.title.localizedCaseInsensitiveContains($0) }
             return hasKeyword && (requireImage == false || row.imageURL != nil)
         }
     }
 
+    private nonisolated static func findFirstRowByExactTitleKeywords(
+        rows: [BaGuideRow],
+        keywords: [String],
+        requireImage: Bool
+    ) -> BaGuideRow? {
+        rows.first { row in
+            let normalizedTitle = BaGuideTextNormalizer.normalizedKey(row.title)
+            let hasKeyword = keywords.contains {
+                normalizedTitle == BaGuideTextNormalizer.normalizedKey($0)
+            }
+            return hasKeyword && (requireImage == false || row.imageURL != nil)
+        }
+    }
+
+    private nonisolated static func imageURL(in row: BaGuideRow?, at index: Int) -> URL? {
+        guard let row else { return nil }
+        let urls = row.imageURLs ?? row.imageURL.map { [$0] } ?? []
+        guard urls.indices.contains(index) else { return nil }
+        return urls[index]
+    }
+
     private nonisolated static func sanitizeMetaValue(role: MetaRole, raw: String) -> String {
         let cleaned = stripInlineNotes(raw)
-        guard cleaned.isEmpty == false, cleaned != "-" else { return String(localized: "ba.common.none") }
+        guard cleaned.isEmpty == false, cleaned != "-", isMediaFilenameValue(cleaned) == false else {
+            return String(localized: "ba.common.none")
+        }
         if role == .rarity || role == .academy || role == .tacticalPosition {
             let segments = splitSlashSegments(cleaned)
             if let first = segments.first, segments.dropFirst().contains(where: isLikelyGuideNoteSegment) {
@@ -248,6 +300,30 @@ enum BaStudentGuideMeta {
         if ["-", "--", "—", "...", "…"].contains(compact) { return true }
         return ["可以用", "后面的", "后面", "图标", "替换", "占位", "备注", "说明", "注释", "样式", "不用写", "待补", "todo", "tbd"]
             .contains { compact.contains($0.lowercased()) }
+    }
+
+    private nonisolated static func isMediaFilenameValue(_ raw: String) -> Bool {
+        let value = raw
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .split(separator: "?")
+            .first
+            .map(String.init) ?? ""
+        return value.range(of: #"\.(png|jpe?g|webp|gif|svg)$"#, options: .regularExpression) != nil
+    }
+
+    private nonisolated static func rarityImageRepeatCount(from raw: String) -> Int {
+        let compact = raw.replacingOccurrences(of: " ", with: "")
+        let starCount = compact.filter { $0 == "★" || $0 == "⭐" }.count
+        if starCount > 0 {
+            return min(max(starCount, 1), 5)
+        }
+        if let range = compact.range(of: #"\d+"#, options: .regularExpression),
+           let count = Int(compact[range])
+        {
+            return min(max(count, 1), 5)
+        }
+        return 1
     }
 
     private nonisolated static func normalizeWeaponTypeMetaValue(_ raw: String) -> String {
