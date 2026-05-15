@@ -4626,39 +4626,6 @@
         }
       }
     },
-    "ba.student.detail.gallery.detail" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Artwork, expressions, audio, video, and Live2D links parsed from GameKee."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "展示从 GameKee 解析到的立绘、表情、音频、视频和 Live2D 链接。"
-          }
-        }
-      }
-    },
-    "ba.student.detail.gallery.item.format" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gallery %d"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "鉴赏 %d"
-          }
-        }
-      }
-    },
     "ba.student.detail.gallery.audio.pause" : {
       "localizations" : {
         "en" : {
@@ -4687,6 +4654,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "播放"
+          }
+        }
+      }
+    },
+    "ba.student.detail.gallery.detail" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Artwork, expressions, audio, video, and Live2D links parsed from GameKee."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展示从 GameKee 解析到的立绘、表情、音频、视频和 Live2D 链接。"
           }
         }
       }
@@ -4735,6 +4719,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "表情"
+          }
+        }
+      }
+    },
+    "ba.student.detail.gallery.item.format" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gallery %d"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "鉴赏 %d"
           }
         }
       }
@@ -4852,6 +4852,7 @@
       }
     },
     "ba.student.detail.media.cover" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4916,6 +4917,7 @@
       }
     },
     "ba.student.detail.media.openSource" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

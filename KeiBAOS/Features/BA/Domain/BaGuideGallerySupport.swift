@@ -121,6 +121,10 @@ nonisolated enum BaGuideGallerySupport {
         isExpressionTitle(item.title)
     }
 
+    static func isExpressionTitleForLayout(_ raw: String) -> Bool {
+        isExpressionTitle(raw)
+    }
+
     static func isMemoryHall(_ item: BaGuideGalleryItem) -> Bool {
         let title = normalizeTitle(item.title)
         return title.hasPrefix("回忆大厅") &&

@@ -16,6 +16,29 @@ nonisolated struct BaStudentGalleryVideoGroup: Identifiable, Hashable {
     }
 }
 
+nonisolated enum BaStudentGalleryDisplayRow: Identifiable, Hashable {
+    case item(BaGuideGalleryItem)
+    case expression([BaGuideGalleryItem])
+    case videoGroup(BaStudentGalleryVideoGroup)
+    case memoryUnlock(String)
+    case relatedLinks([BaGuideRow])
+
+    var id: String {
+        switch self {
+        case let .item(item):
+            "item-\(item.id)"
+        case let .expression(items):
+            "expression-\(items.map(\.id).joined(separator: ","))"
+        case let .videoGroup(group):
+            "video-\(group.id)"
+        case let .memoryUnlock(level):
+            "memory-unlock-\(level)"
+        case let .relatedLinks(rows):
+            "related-\(rows.map(\.id).joined(separator: ","))"
+        }
+    }
+}
+
 nonisolated struct BaStudentGalleryDisplayState: Hashable {
     let previewVideoGroups: [BaStudentGalleryVideoGroup]
     let memoryHallVideoGroup: BaStudentGalleryVideoGroup?
@@ -29,12 +52,10 @@ nonisolated struct BaStudentGalleryDisplayState: Hashable {
     let firstExpressionIndex: Int?
     let firstMemoryHallIndex: Int?
     let lastOfficialIntroIndex: Int?
+    let rows: [BaStudentGalleryDisplayRow]
 
     var hasRenderableContent: Bool {
-        displayGalleryItems.isEmpty == false ||
-            previewVideoGroups.isEmpty == false ||
-            expressionItems.isEmpty == false ||
-            galleryRelatedLinkRows.isEmpty == false
+        rows.isEmpty == false
     }
 
     init(info: BaStudentGuideInfo?) {
@@ -51,6 +72,7 @@ nonisolated struct BaStudentGalleryDisplayState: Hashable {
             firstExpressionIndex = nil
             firstMemoryHallIndex = nil
             lastOfficialIntroIndex = nil
+            rows = []
             return
         }
 
@@ -88,6 +110,102 @@ nonisolated struct BaStudentGalleryDisplayState: Hashable {
         firstExpressionIndex = displayItems.firstIndex(where: BaGuideGallerySupport.isExpression)
         firstMemoryHallIndex = displayItems.firstIndex(where: BaGuideGallerySupport.isMemoryHall)
         lastOfficialIntroIndex = displayItems.lastIndex(where: BaGuideGallerySupport.isOfficialIntro)
+        rows = Self.rows(
+            displayItems: displayItems,
+            expressionItems: expressionItems,
+            memoryHallVideoGroup: memoryHallVideoGroup,
+            pvAndRoleVideoGroups: pvAndRoleVideoGroups,
+            otherTrailingVideoGroups: otherTrailingVideoGroups,
+            relatedRows: galleryRelatedLinkRows,
+            memoryUnlockLevel: memoryUnlockLevel,
+            firstExpressionIndex: firstExpressionIndex,
+            firstMemoryHallIndex: firstMemoryHallIndex,
+            lastOfficialIntroIndex: lastOfficialIntroIndex
+        )
+    }
+
+    private static func rows(
+        displayItems: [BaGuideGalleryItem],
+        expressionItems: [BaGuideGalleryItem],
+        memoryHallVideoGroup: BaStudentGalleryVideoGroup?,
+        pvAndRoleVideoGroups: [BaStudentGalleryVideoGroup],
+        otherTrailingVideoGroups: [BaStudentGalleryVideoGroup],
+        relatedRows: [BaGuideRow],
+        memoryUnlockLevel: String,
+        firstExpressionIndex: Int?,
+        firstMemoryHallIndex: Int?,
+        lastOfficialIntroIndex: Int?
+    ) -> [BaStudentGalleryDisplayRow] {
+        var out: [BaStudentGalleryDisplayRow] = []
+        var insertedUnlockLevel = false
+        var insertedMemoryHallVideo = false
+        var insertedPvAndRoleVideos = false
+        var insertedRelatedLinks = false
+
+        for (index, item) in displayItems.enumerated() {
+            let isExpression = BaGuideGallerySupport.isExpression(item)
+            if isExpression, index != firstExpressionIndex {
+                continue
+            }
+
+            if insertedUnlockLevel == false,
+               memoryUnlockLevel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false,
+               index == firstMemoryHallIndex
+            {
+                out.append(.memoryUnlock(memoryUnlockLevel))
+                insertedUnlockLevel = true
+            }
+
+            if isExpression, expressionItems.isEmpty == false {
+                out.append(.expression(expressionItems))
+            } else {
+                out.append(.item(item))
+            }
+
+            if insertedMemoryHallVideo == false,
+               index == firstMemoryHallIndex,
+               let memoryHallVideoGroup
+            {
+                out.append(.videoGroup(memoryHallVideoGroup))
+                insertedMemoryHallVideo = true
+            }
+
+            if insertedPvAndRoleVideos == false, index == lastOfficialIntroIndex {
+                out.append(contentsOf: pvAndRoleVideoGroups.map(BaStudentGalleryDisplayRow.videoGroup))
+                insertedPvAndRoleVideos = true
+                if insertedRelatedLinks == false, relatedRows.isEmpty == false {
+                    out.append(.relatedLinks(relatedRows))
+                    insertedRelatedLinks = true
+                }
+            }
+        }
+
+        if insertedUnlockLevel == false,
+           memoryUnlockLevel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false,
+           memoryHallVideoGroup != nil
+        {
+            out.append(.memoryUnlock(memoryUnlockLevel))
+        }
+
+        if insertedMemoryHallVideo == false, let memoryHallVideoGroup {
+            out.append(.videoGroup(memoryHallVideoGroup))
+        }
+
+        if insertedPvAndRoleVideos == false {
+            out.append(contentsOf: pvAndRoleVideoGroups.map(BaStudentGalleryDisplayRow.videoGroup))
+            if insertedRelatedLinks == false, relatedRows.isEmpty == false {
+                out.append(.relatedLinks(relatedRows))
+                insertedRelatedLinks = true
+            }
+        }
+
+        out.append(contentsOf: otherTrailingVideoGroups.map(BaStudentGalleryDisplayRow.videoGroup))
+
+        if insertedRelatedLinks == false, relatedRows.isEmpty == false {
+            out.append(.relatedLinks(relatedRows))
+        }
+
+        return out
     }
 
     private static func sourceGalleryItems(from info: BaStudentGuideInfo) -> [BaGuideGalleryItem] {
