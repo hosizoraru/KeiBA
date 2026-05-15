@@ -53,10 +53,7 @@ struct BaStudentGalleryPreviewSheet: View {
                 VStack(alignment: .leading, spacing: 16) {
                     switch item.kind {
                     case .video:
-                        BaStudentGalleryPreviewVideoSurface(
-                            item: galleryItem,
-                            presentation: presentation
-                        )
+                        BaStudentGalleryPreviewMediaSurface(presentation: presentation)
                     case .audio:
                         BaStudentGalleryAudioCard(item: galleryItem)
                     case .image, .live2d, .unknown:

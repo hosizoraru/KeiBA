@@ -16,6 +16,7 @@ struct BaStudentDetailView: View {
     @State private var voiceSearchText = ""
     @State private var selectedSameNameEntry: BaGuideCatalogEntry?
     @State private var selectedGalleryPreview: BaStudentGalleryPreviewItem?
+    @State private var selectedGalleryVideoPreview: BaStudentGalleryPreviewItem?
 
     private var state: BaLoadableState<BaStudentGuideInfo> {
         model.studentDetailStates[entry.contentId] ?? BaLoadableState<BaStudentGuideInfo>()
@@ -33,6 +34,16 @@ struct BaStudentDetailView: View {
             .sheet(item: $selectedGalleryPreview) { item in
                 BaStudentGalleryPreviewSheet(item: item)
             }
+            #if os(macOS)
+                .sheet(item: $selectedGalleryVideoPreview) { item in
+                    BaStudentGalleryVideoPlayerScreen(item: item)
+                        .frame(minWidth: 820, minHeight: 560)
+                }
+            #else
+            .fullScreenCover(item: $selectedGalleryVideoPreview) { item in
+                BaStudentGalleryVideoPlayerScreen(item: item)
+            }
+            #endif
     }
 
     private var detailList: some View {
@@ -128,7 +139,7 @@ struct BaStudentDetailView: View {
             )
         case .gallery:
             BaStudentGalleryCardsSection(info: info) { item in
-                selectedGalleryPreview = item
+                openGalleryPreview(item)
             }
         case .simulate:
             BaStudentSimulationCardsSection(rows: simulationRows, tint: BaDesign.violet)
@@ -176,6 +187,14 @@ struct BaStudentDetailView: View {
             BaDesign.amber
         case .favorites:
             BaDesign.green
+        }
+    }
+
+    private func openGalleryPreview(_ item: BaStudentGalleryPreviewItem) {
+        if item.kind == .video {
+            selectedGalleryVideoPreview = item
+        } else {
+            selectedGalleryPreview = item
         }
     }
 
