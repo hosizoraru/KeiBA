@@ -467,6 +467,7 @@
       }
     },
     "ba.activity.link.archive" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5317,22 +5318,6 @@
         }
       }
     },
-    "ba.student.detail.profile.furniture.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Furniture"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "互动家具"
-          }
-        }
-      }
-    },
     "ba.student.detail.profile.furniture.badge" : {
       "localizations" : {
         "en" : {
@@ -5361,6 +5346,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "互动家具 %@"
+          }
+        }
+      }
+    },
+    "ba.student.detail.profile.furniture.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Furniture"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "互动家具"
           }
         }
       }
