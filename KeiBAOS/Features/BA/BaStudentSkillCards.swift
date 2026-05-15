@@ -10,9 +10,12 @@ import SwiftUI
 struct BaStudentSkillCardsSection: View {
     let rows: [BaGuideRow]
     let tint: Color
+    private let cards: [BaStudentSkillDisplayModel]
 
-    private var cards: [BaStudentSkillDisplayModel] {
-        BaStudentSkillDisplayModel.cards(from: rows)
+    init(rows: [BaGuideRow], tint: Color) {
+        self.rows = rows
+        self.tint = tint
+        self.cards = BaStudentSkillDisplayModel.cards(from: rows)
     }
 
     var body: some View {
@@ -514,10 +517,24 @@ nonisolated struct BaStudentSkillDisplayModel: Identifiable, Hashable {
         var enteredSkillBlocks = false
         var pendingName = ""
         var pendingIconURL: URL?
+        var currentType = ""
+        var lastDescribedDraft: SkillDraft?
 
         func commitDraft() {
-            guard let item = draft else { return }
+            guard var item = draft else { return }
+            if item.hasDescription == false,
+               let inherited = lastDescribedDraft,
+               inherited.type == item.type {
+                item.descriptionByLevel = inherited.descriptionByLevel
+                item.descriptionIconsByLevel = inherited.descriptionIconsByLevel
+                item.costByLevel = inherited.costByLevel
+                item.fallbackDescription = inherited.fallbackDescription
+                item.fallbackDescriptionIcons = inherited.fallbackDescriptionIcons
+            }
             result.append(item)
+            if item.hasDescription {
+                lastDescribedDraft = item
+            }
             draft = nil
             currentLevelKey = nil
         }
@@ -540,7 +557,8 @@ nonisolated struct BaStudentSkillDisplayModel: Identifiable, Hashable {
                 guard value.isEmpty == false else { continue }
                 enteredSkillBlocks = true
                 commitDraft()
-                draft = SkillDraft(type: sanitizeSkillLabel(value))
+                currentType = sanitizeSkillLabel(value)
+                draft = SkillDraft(type: currentType)
                 if pendingName.isEmpty == false {
                     draft?.name = pendingName
                 }
@@ -571,18 +589,37 @@ nonisolated struct BaStudentSkillDisplayModel: Identifiable, Hashable {
             switch true {
             case key.contains("技能名称") && key.contains("★") == false:
                 if value.isEmpty == false {
+                    if let active = draft, active.name.isEmpty == false {
+                        commitDraft()
+                        draft = SkillDraft(type: currentType.ifBlank(active.type))
+                    } else if draft == nil {
+                        draft = SkillDraft(type: currentType)
+                    }
                     draft?.name = sanitizeSkillLabel(value)
                 }
             case key == "技能图标":
                 if let image {
                     draft?.iconURL = image
                 }
-            case key == "技能描述":
-                if value.isEmpty == false {
-                    draft?.fallbackDescription = value
+            case key == "技能等级":
+                if let levelLabel = toDisplayLevelLabel(value) {
+                    currentLevelKey = levelLabel
                 }
-                if iconCandidates.isEmpty == false {
-                    draft?.fallbackDescriptionIcons = iconCandidates
+            case key == "技能描述":
+                if let currentLevelKey {
+                    if value.isEmpty == false {
+                        draft?.descriptionByLevel[currentLevelKey] = value
+                    }
+                    if iconCandidates.isEmpty == false {
+                        draft?.descriptionIconsByLevel[currentLevelKey] = iconCandidates
+                    }
+                } else {
+                    if value.isEmpty == false {
+                        draft?.fallbackDescription = value
+                    }
+                    if iconCandidates.isEmpty == false {
+                        draft?.fallbackDescriptionIcons = iconCandidates
+                    }
                 }
             case key == "技能COST":
                 if value.isEmpty == false {
@@ -747,7 +784,7 @@ nonisolated struct BaStudentSkillDisplayModel: Identifiable, Hashable {
     }
 
     private static func isKnownSkillKey(_ value: String) -> Bool {
-        ["技能名称", "技能类型", "技能图标", "技能描述", "技能COST"].contains(value)
+        ["技能名称", "技能类型", "技能图标", "技能等级", "技能描述", "技能COST"].contains(value)
     }
 
     private static func normalizeCost(_ raw: String) -> String {
@@ -773,6 +810,10 @@ nonisolated struct BaStudentSkillDisplayModel: Identifiable, Hashable {
         var descriptionByLevel: [String: String] = [:]
         var descriptionIconsByLevel: [String: [URL]] = [:]
         var costByLevel: [String: String] = [:]
+
+        var hasDescription: Bool {
+            descriptionByLevel.isEmpty == false || fallbackDescription.isEmpty == false
+        }
     }
 }
 
