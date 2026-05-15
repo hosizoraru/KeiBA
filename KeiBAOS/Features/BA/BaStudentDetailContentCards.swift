@@ -7,37 +7,6 @@
 
 import SwiftUI
 
-struct BaStudentProfileCardsSection: View {
-    let info: BaStudentGuideInfo
-    let tint: Color
-
-    private var sections: [BaStudentProfileSection] {
-        info.profileSections
-    }
-
-    var body: some View {
-        if sections.isEmpty {
-            Section {
-                BaStudentDetailEmptyRow(section: .profile)
-                    .baStudentDetailListCardRow()
-            }
-        } else {
-            Section {
-                ForEach(sections) { section in
-                    BaStudentProfileSectionCard(section: section, tint: tint)
-                        .baStudentDetailListCardRow()
-                }
-            } header: {
-                BaStudentDetailSectionHeader(
-                    title: String(localized: "ba.student.detail.archive.title"),
-                    systemImage: BaStudentDetailSection.profile.systemImage,
-                    tint: tint
-                )
-            }
-        }
-    }
-}
-
 struct BaStudentDetailRowsCardsSection: View {
     let section: BaStudentDetailSection
     let rows: [BaGuideRow]
@@ -129,55 +98,6 @@ private struct BaStudentDetailSectionHeader: View {
                 .foregroundStyle(tint)
         }
         .textCase(nil)
-    }
-}
-
-private struct BaStudentProfileSectionCard: View {
-    let section: BaStudentProfileSection
-    let tint: Color
-
-    var body: some View {
-        BaGlassCard(tint: tint) {
-            VStack(alignment: .leading, spacing: 14) {
-                Text(section.title)
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(.primary)
-
-                VStack(spacing: 12) {
-                    ForEach(section.rows) { row in
-                        BaStudentProfilePillRow(row: row, tint: tint)
-                    }
-                }
-            }
-        }
-    }
-}
-
-private struct BaStudentProfilePillRow: View {
-    let row: BaGuideRow
-    let tint: Color
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Text(row.title)
-                .font(.body.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: 126, alignment: .leading)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-
-            Spacer(minLength: 8)
-
-            if BaStudentDetailContentFormatter.prefersChip(row.value) {
-                BaStudentDetailTextChip(title: row.value.ifBlank(String(localized: "ba.common.none")), tint: tint)
-            } else {
-                Text(row.value.ifBlank(String(localized: "ba.common.none")))
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(.primary)
-                    .multilineTextAlignment(.trailing)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
     }
 }
 

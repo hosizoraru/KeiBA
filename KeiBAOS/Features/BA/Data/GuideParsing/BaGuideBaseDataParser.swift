@@ -71,14 +71,16 @@ struct BaGuideBaseDataParser {
         let merged = "\(key) \(value)"
         if forceGrowth {
             parsed.growthRows.append(row)
-        } else if isVoiceKey(merged) {
-            return
         } else if isSkillKey(merged) {
             parsed.skillRows.append(row)
         } else if isSimulateKey(merged) {
             parsed.simulateRows.append(row)
         } else if isGrowthKey(merged) {
             parsed.growthRows.append(row)
+        } else if isProfileKey(key) {
+            parsed.profileRows.append(row)
+        } else if isVoiceKey(merged) {
+            return
         } else if isProfileKey(merged) {
             parsed.profileRows.append(row)
         } else if row.imageURL != nil {
@@ -218,6 +220,10 @@ struct BaGuideBaseDataParser {
                 "学生信息",
                 "角色名称",
                 "全名",
+                "假名注音",
+                "假名注明",
+                "繁中译名",
+                "简中译名",
                 "档案",
                 "基础",
                 "资料",
@@ -234,9 +240,16 @@ struct BaGuideBaseDataParser {
                 "年龄",
                 "身高",
                 "兴趣",
+                "个人简介",
                 "画师",
                 "声优",
+                "角色考据",
+                "设计",
                 "实装",
+                "MomoTalk状态消息",
+                "Momotalk状态消息",
+                "MomoTalk解锁等级",
+                "Momotalk解锁等级",
                 "战术位置",
                 "战术作用",
                 "作用",

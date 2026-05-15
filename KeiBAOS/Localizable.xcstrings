@@ -5237,6 +5237,22 @@
         }
       }
     },
+    "ba.student.detail.profile.chocolate.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chocolate"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "情人节巧克力"
+          }
+        }
+      }
+    },
     "ba.student.detail.profile.detail" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -5254,6 +5270,54 @@
         }
       }
     },
+    "ba.student.detail.profile.furniture.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Furniture"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "互动家具"
+          }
+        }
+      }
+    },
+    "ba.student.detail.profile.gifts.empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No gift preferences available."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂无礼物偏好。"
+          }
+        }
+      }
+    },
+    "ba.student.detail.profile.gifts.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gift Preferences"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "礼物偏好"
+          }
+        }
+      }
+    },
     "ba.student.detail.profile.hobby.title" : {
       "localizations" : {
         "en" : {
@@ -5266,6 +5330,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "学生爱好"
+          }
+        }
+      }
+    },
+    "ba.student.detail.profile.imageBelow" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "See image below"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "见下方图片"
           }
         }
       }
@@ -5303,7 +5383,6 @@
       }
     },
     "ba.student.detail.profile.other.title" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5315,6 +5394,70 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "其他档案"
+          }
+        }
+      }
+    },
+    "ba.student.detail.profile.sameName.empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No related same-name roles."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂无相关同名角色。"
+          }
+        }
+      }
+    },
+    "ba.student.detail.profile.sameName.item" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Same-name role"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同名角色"
+          }
+        }
+      }
+    },
+    "ba.student.detail.profile.sameName.linkUnavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guide link unavailable"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂无图鉴链接"
+          }
+        }
+      }
+    },
+    "ba.student.detail.profile.sameName.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Related Same-name Roles"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "相关同名角色"
           }
         }
       }
@@ -5623,118 +5766,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未命名技能"
-          }
-        }
-      }
-    },
-    "ba.student.detail.weapon.description.empty" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No weapon description."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "暂无专武描述"
-          }
-        }
-      }
-    },
-    "ba.student.detail.weapon.effect" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Weapon Effect"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "专武效果"
-          }
-        }
-      }
-    },
-    "ba.student.detail.weapon.effect.empty" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No effect description."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "暂无效果描述"
-          }
-        }
-      }
-    },
-    "ba.student.detail.weapon.passiveUpgrade" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Passive Skill Upgrade"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "辅助技能强化"
-          }
-        }
-      }
-    },
-    "ba.student.detail.weapon.short" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "UE"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "专武"
-          }
-        }
-      }
-    },
-    "ba.student.detail.weapon.stats" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stats"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "专武数值"
-          }
-        }
-      }
-    },
-    "ba.student.detail.weapon.unique" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unique Weapon"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "专属武器"
           }
         }
       }
@@ -6333,6 +6364,118 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%d / %d"
+          }
+        }
+      }
+    },
+    "ba.student.detail.weapon.description.empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No weapon description."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂无专武描述"
+          }
+        }
+      }
+    },
+    "ba.student.detail.weapon.effect" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weapon Effect"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "专武效果"
+          }
+        }
+      }
+    },
+    "ba.student.detail.weapon.effect.empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No effect description."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂无效果描述"
+          }
+        }
+      }
+    },
+    "ba.student.detail.weapon.passiveUpgrade" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passive Skill Upgrade"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "辅助技能强化"
+          }
+        }
+      }
+    },
+    "ba.student.detail.weapon.short" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UE"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "专武"
+          }
+        }
+      }
+    },
+    "ba.student.detail.weapon.stats" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stats"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "专武数值"
+          }
+        }
+      }
+    },
+    "ba.student.detail.weapon.unique" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unique Weapon"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "专属武器"
           }
         }
       }

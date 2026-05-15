@@ -177,7 +177,10 @@ final class BaStudentDetailTests: XCTestCase {
         XCTAssertEqual(profile[1].imageURL, academyURL)
     }
 
-    func testProfileSectionsKeepBenchmarkArchiveBuckets() {
+    func testProfileSectionsKeepBenchmarkArchiveBuckets() throws {
+        let giftURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/gift.webp"))
+        let emojiURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/emoji.webp"))
+        let sameNameImageURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina.webp"))
         let info = BaStudentGuideInfo(
             contentId: 1,
             sourceURL: nil,
@@ -193,8 +196,19 @@ final class BaStudentDetailTests: XCTestCase {
                 BaGuideRow(id: "trad-cn", title: "简中译名", value: "日奈(礼服)", imageURL: nil),
                 BaGuideRow(id: "age", title: "年龄", value: "17岁", imageURL: nil),
                 BaGuideRow(id: "birthday", title: "生日", value: "2月19日", imageURL: nil),
+                BaGuideRow(id: "height", title: "身高", value: "142cm", imageURL: nil),
+                BaGuideRow(id: "artist", title: "画师", value: "DoReMi", imageURL: nil),
+                BaGuideRow(id: "voice", title: "声优", value: "广桥凉 ← 大部分时候可以去别的图鉴复制", imageURL: nil),
                 BaGuideRow(id: "hobby", title: "兴趣爱好", value: "睡眠、休息", imageURL: nil),
-                BaGuideRow(id: "intro", title: "介绍", value: "为了参加派对上了礼服裙。", imageURL: nil),
+                BaGuideRow(id: "intro", title: "个人简介", value: "为了参加派对上了礼服裙。", imageURL: nil),
+                BaGuideRow(id: "momotalk", title: "MomoTalk状态消息", value: "今天也要加油。", imageURL: nil),
+                BaGuideRow(id: "momotalk-lv", title: "MomoTalk解锁等级", value: "3级 <- 不用写", imageURL: nil),
+                BaGuideRow(id: "gift", title: "礼物偏好礼物2", value: "古典乐谱", imageURL: giftURL, imageURLs: [giftURL, emojiURL]),
+                BaGuideRow(id: "same-name", title: "同名角色名称", value: "日奈 / https://www.gamekee.com/ba/tj/123456.html", imageURL: sameNameImageURL),
+                BaGuideRow(id: "header", title: "介绍", value: "这一行是分区标题", imageURL: nil),
+                BaGuideRow(id: "top-header", title: "顶级数据", value: "", imageURL: nil),
+                BaGuideRow(id: "attack", title: "攻击力", value: "969", imageURL: nil),
+                BaGuideRow(id: "skill-tier", title: "T2技能图标", value: "", imageURL: nil),
             ],
             skillRows: [],
             voiceRows: [],
@@ -207,14 +221,44 @@ final class BaStudentDetailTests: XCTestCase {
 
         let sections = info.profileSections
 
-        XCTAssertEqual(sections.map(\.title), [
-            String(localized: "ba.student.detail.profile.names.title"),
-            String(localized: "ba.student.detail.profile.info.title"),
-            String(localized: "ba.student.detail.profile.hobby.title"),
-        ])
+        XCTAssertEqual(sections.map(\.kind), [.names, .info, .hobby, .gifts, .sameName])
         XCTAssertEqual(sections[0].rows.map(\.title), ["角色名称", "全名", "假名注音", "简中译名"])
-        XCTAssertEqual(sections[1].rows.map(\.title), ["年龄", "生日"])
-        XCTAssertEqual(sections[2].rows.map(\.title), ["兴趣爱好", "介绍"])
+        XCTAssertEqual(sections[1].rows.map(\.title), ["年龄", "生日", "身高", "画师", "声优"])
+        XCTAssertEqual(sections[1].rows.first { $0.title == "声优" }?.value, "广桥凉")
+        XCTAssertEqual(sections[2].rows.map(\.title), ["兴趣爱好", "个人简介", "MomoTalk状态消息", "MomoTalk解锁等级"])
+        XCTAssertEqual(sections[2].rows.first { $0.title == "MomoTalk解锁等级" }?.value, "3级")
+        XCTAssertEqual(sections[3].giftItems.map(\.label), ["古典乐谱"])
+        XCTAssertEqual(sections[3].giftItems.first?.giftImageURL, giftURL)
+        XCTAssertEqual(sections[3].giftItems.first?.emojiImageURL, emojiURL)
+        XCTAssertEqual(sections[4].sameNameRoleItems.map(\.name), ["日奈"])
+        XCTAssertEqual(sections[4].sameNameRoleItems.first?.guideURL?.absoluteString, "https://www.gamekee.com/ba/tj/123456.html")
+        let displayedRowTitles = sections.flatMap(\.rows).map(\.title)
+        XCTAssertFalse(displayedRowTitles.contains("介绍"))
+        XCTAssertFalse(displayedRowTitles.contains("攻击力"))
+        XCTAssertFalse(displayedRowTitles.contains("T2技能图标"))
+    }
+
+    func testContentParserKeepsMomoTalkRowsInProfileData() {
+        let parsed = BaGuideContentParser().parse(
+            content: [
+                "baseData": [
+                    [
+                        ["value": "MomoTalk状态消息"],
+                        ["value": "今天也要加油。"],
+                    ],
+                    [
+                        ["value": "MomoTalk解锁等级"],
+                        ["value": "3级"],
+                    ],
+                ],
+            ],
+            apiData: [:],
+            html: nil,
+            entry: makeCatalogEntry()
+        )
+
+        XCTAssertTrue(parsed.profileRows.contains { $0.title == "MomoTalk状态消息" && $0.value == "今天也要加油。" })
+        XCTAssertTrue(parsed.profileRows.contains { $0.title == "MomoTalk解锁等级" && $0.value == "3级" })
     }
 
     func testSkillCardsParseLevelsCostAndDescriptionIcons() throws {

@@ -528,11 +528,7 @@ final class BaDataBridgeTests: XCTestCase {
             "生日",
             "实装日期",
         ])
-        XCTAssertEqual(info.profileSections.map(\.title), [
-            String(localized: "ba.student.detail.profile.names.title"),
-            String(localized: "ba.student.detail.profile.info.title"),
-            String(localized: "ba.student.detail.profile.hobby.title"),
-        ])
+        XCTAssertEqual(info.profileSections.map(\.kind), [.names, .info, .hobby, .sameName])
         XCTAssertEqual(info.profileSections[0].rows.map(\.title), [
             "角色名称",
             "全名",
@@ -549,7 +545,6 @@ final class BaDataBridgeTests: XCTestCase {
         ])
         XCTAssertEqual(info.profileSections[2].rows.map(\.title), [
             "兴趣爱好",
-            "介绍",
         ])
         let profileMeta = BaStudentGuideMeta.profileMetaItems(from: info)
         XCTAssertEqual(profileMeta.map(\.value), [
