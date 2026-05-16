@@ -466,6 +466,54 @@ final class BaOverviewSettingsTests: XCTestCase {
         XCTAssertEqual(reloaded.globalSettings.favoriteCatalogEntries.first?.category, .npcSatellite)
     }
 
+    @MainActor
+    func testNPCSatelliteEntryCanBecomeDutyStudentWithResolvedPortrait() async throws {
+        let defaults = try makeIsolatedDefaults()
+        let model = makeOverviewAppModel(defaults: defaults)
+        let fallbackURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/student/alice-icon.png"))
+        let portraitURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/student/alice-winter-portrait.png"))
+        let entry = makeOverviewCatalogEntry(
+            entryId: 174_603,
+            pid: BaCatalogCategory.npcSatellite.gameKeePID,
+            contentId: 647_097,
+            name: "爱丽丝（冬装）",
+            category: .npcSatellite,
+            iconURL: fallbackURL
+        )
+        model.studentDetailStates[entry.contentId] = BaLoadableState(
+            value: BaStudentGuideInfo(
+                contentId: entry.contentId,
+                sourceURL: entry.detailURL,
+                title: "爱丽丝（冬装）",
+                subtitle: "GameKee",
+                summary: "",
+                imageURL: portraitURL,
+                stats: [],
+                profileRows: [],
+                skillRows: [],
+                voiceRows: [],
+                galleryItems: [],
+                growthRows: [],
+                simulateRows: [],
+                contentSource: "fixture",
+                syncedAt: Date(timeIntervalSince1970: 1_700_000_000)
+            )
+        )
+
+        XCTAssertTrue(model.canSetDutyStudent(entry))
+
+        await model.toggleDutyStudent(entry)
+
+        XCTAssertEqual(model.settings.dutyStudent?.contentId, entry.contentId)
+        XCTAssertEqual(model.settings.dutyStudent?.name, "爱丽丝（冬装）")
+        XCTAssertEqual(model.settings.dutyStudent?.avatarURL, portraitURL)
+        XCTAssertTrue(model.isDutyStudent(entry))
+
+        await model.toggleDutyStudent(entry)
+
+        XCTAssertNil(model.settings.dutyStudent)
+    }
+
     func testRefreshIntervalControlsCacheStaleness() {
         let now = Date(timeIntervalSince1970: 1_800_000_000)
         XCTAssertEqual(BaRefreshInterval.threeHours.timeInterval, 10_800)
@@ -505,7 +553,8 @@ final class BaOverviewSettingsTests: XCTestCase {
         pid: Int,
         contentId: Int64,
         name: String,
-        category: BaCatalogCategory
+        category: BaCatalogCategory,
+        iconURL: URL? = nil
     ) -> BaGuideCatalogEntry {
         BaGuideCatalogEntry(
             entryId: entryId,
@@ -514,7 +563,7 @@ final class BaOverviewSettingsTests: XCTestCase {
             name: name,
             alias: "",
             aliasDisplay: "",
-            iconURL: nil,
+            iconURL: iconURL,
             type: 1,
             order: 0,
             createdAt: nil,

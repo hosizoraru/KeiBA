@@ -644,11 +644,12 @@ final class BaAppModel {
     }
 
     func canSetDutyStudent(_ entry: BaGuideCatalogEntry) -> Bool {
-        entry.category == .students
+        entry.contentId > 0
     }
 
     func isDutyStudent(_ entry: BaGuideCatalogEntry) -> Bool {
-        settings.dutyStudent?.contentId == entry.contentId
+        guard let dutyStudent = settings.dutyStudent else { return false }
+        return dutyIdentityKeys(for: entry).contains(dutyStudent.contentId)
     }
 
     func toggleDutyStudent(_ entry: BaGuideCatalogEntry) async {
@@ -686,12 +687,34 @@ final class BaAppModel {
     }
 
     private func dutyStudent(from entry: BaGuideCatalogEntry) -> BaDutyStudent {
-        let imageURL = studentDetailStates[entry.contentId]?.value?.preferredPortraitURL(fallback: entry.iconURL) ?? entry.iconURL
+        let info = studentDetailStates[entry.contentId]?.value
+        let catalogEntry = canonicalDutyEntry(for: entry)
+        let imageURL = info?.preferredPortraitURL(fallback: catalogEntry?.iconURL ?? entry.iconURL) ??
+            catalogEntry?.iconURL ??
+            entry.iconURL
         return BaDutyStudent(
-            contentId: entry.contentId,
-            name: entry.name,
+            contentId: info?.contentId ?? catalogEntry?.contentId ?? entry.contentId,
+            name: info?.title ?? catalogEntry?.name ?? entry.name,
             avatarURL: imageURL
         )
+    }
+
+    private func canonicalDutyEntry(for entry: BaGuideCatalogEntry) -> BaGuideCatalogEntry? {
+        if let match = catalogState.value?.entries.first(where: { sharesFavoriteIdentity($0, entry) }) {
+            return match
+        }
+        return settings.favoriteCatalogEntries.first { sharesFavoriteIdentity($0, entry) }
+    }
+
+    private func dutyIdentityKeys(for entry: BaGuideCatalogEntry) -> Set<Int64> {
+        var keys = favoriteIdentityKeys(for: entry)
+        if let catalogEntry = canonicalDutyEntry(for: entry) {
+            keys.formUnion(favoriteIdentityKeys(for: catalogEntry))
+        }
+        if let info = studentDetailStates[entry.contentId]?.value, info.contentId > 0 {
+            keys.insert(info.contentId)
+        }
+        return keys
     }
 
     func studentCatalogEntry(for pool: BaPoolEntry) -> BaGuideCatalogEntry? {

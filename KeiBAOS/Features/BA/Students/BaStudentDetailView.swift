@@ -98,15 +98,31 @@ struct BaStudentDetailView: View {
                 .labelStyle(.iconOnly)
                 .disabled(state.isLoading)
 
-                Button {
-                    model.toggleFavorite(entry)
+                Menu {
+                    Button {
+                        model.toggleFavorite(entry)
+                    } label: {
+                        Label(
+                            favoriteTitle,
+                            systemImage: model.isFavorite(entry) ? "star.slash" : "star"
+                        )
+                    }
+
+                    if model.canSetDutyStudent(entry) {
+                        Button {
+                            toggleDutyStudent()
+                        } label: {
+                            Label(
+                                dutyStudentTitle,
+                                systemImage: dutyStudentSystemImage
+                            )
+                        }
+                    }
                 } label: {
-                    Label(
-                        favoriteTitle,
-                        systemImage: model.isFavorite(entry) ? "star.fill" : "star"
-                    )
+                    Label(String(localized: "ba.action.more"), systemImage: "ellipsis.circle")
                 }
                 .labelStyle(.iconOnly)
+                .menuOrder(.fixed)
             }
         }
         .modifier(BaStudentVoiceSearchModifier(isActive: activePage == .voice, text: $voiceSearchText))
@@ -229,6 +245,24 @@ struct BaStudentDetailView: View {
         model.isFavorite(entry)
             ? String(localized: "ba.catalog.favorite.remove")
             : String(localized: "ba.catalog.favorite.add")
+    }
+
+    private var dutyStudentTitle: String {
+        model.isDutyStudent(entry)
+            ? String(localized: "ba.catalog.dutyStudent.clear")
+            : String(localized: "ba.catalog.dutyStudent.set")
+    }
+
+    private var dutyStudentSystemImage: String {
+        model.isDutyStudent(entry)
+            ? "person.crop.circle.badge.xmark"
+            : "person.crop.circle.badge.checkmark"
+    }
+
+    private func toggleDutyStudent() {
+        Task {
+            await model.toggleDutyStudent(entry)
+        }
     }
 }
 
