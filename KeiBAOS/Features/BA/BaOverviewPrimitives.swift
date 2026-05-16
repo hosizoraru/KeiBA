@@ -7,13 +7,6 @@
 
 import SwiftUI
 
-enum BaOverviewGrid {
-    static let columns = [
-        GridItem(.flexible(), spacing: 10, alignment: .top),
-        GridItem(.flexible(), spacing: 10, alignment: .top),
-    ]
-}
-
 struct BaOverviewSectionTitle: View {
     let title: String
     var asset: BaGameAsset?

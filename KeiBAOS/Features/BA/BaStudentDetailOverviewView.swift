@@ -28,14 +28,10 @@ struct BaStudentDetailOverviewSections: View {
             portraitURL: portraitURL,
             tint: tint
         )
-        .listRowInsets(EdgeInsets(top: 5, leading: 16, bottom: 4, trailing: 16))
-        .listRowBackground(Color.clear)
-        .listRowSeparator(.hidden)
+        .baAdaptiveListCardRow(top: 5, bottom: 4)
 
         BaStudentCombatMetaCard(items: combatItems)
-            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 8, trailing: 16))
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
+            .baAdaptiveListCardRow(top: 4, bottom: 8)
     }
 
     private static func combatItems(from info: BaStudentGuideInfo) -> [BaGuideMetaItem] {

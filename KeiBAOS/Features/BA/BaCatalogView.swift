@@ -24,28 +24,31 @@ struct BaCatalogView: View {
     var body: some View {
         let snapshot = snapshot
 
-        List {
-            Section {
-                Picker(String(localized: "ba.catalog.category.picker"), selection: $selectedCategory) {
-                    ForEach(BaCatalogCategory.catalogCases) { category in
-                        Text(category.title)
-                            .tag(category)
+        BaAdaptiveGeometry { _ in
+            List {
+                Section {
+                    Picker(String(localized: "ba.catalog.category.picker"), selection: $selectedCategory) {
+                        ForEach(BaCatalogCategory.catalogCases) { category in
+                            Text(category.title)
+                                .tag(category)
+                        }
                     }
+                    .pickerStyle(.segmented)
+                    .padding(.vertical, 4)
+                    .baAdaptiveReadableContent()
                 }
-                .pickerStyle(.segmented)
-                .padding(.vertical, 4)
-            }
 
-            Section {
-                catalogContent(snapshot: snapshot)
-            } footer: {
-                Text(footerText)
+                Section {
+                    catalogContent(snapshot: snapshot)
+                } footer: {
+                    Text(footerText)
+                }
             }
+            .platformInsetGroupedListStyle()
+            .baCatalogSectionSpacing()
+            .scrollContentBackground(.hidden)
+            .background(AppBackground())
         }
-        .platformInsetGroupedListStyle()
-        .baCatalogSectionSpacing()
-        .scrollContentBackground(.hidden)
-        .background(AppBackground())
         .searchable(text: $searchText, prompt: Text(selectedCategory.searchPrompt))
         .task {
             await model.loadCatalogIfNeeded()
@@ -74,6 +77,7 @@ struct BaCatalogView: View {
                 } label: {
                     BaCatalogEntryRow(row: row)
                         .equatable()
+                        .baAdaptiveReadableContent()
                 }
                 .swipeActions(edge: .trailing) {
                     Button {

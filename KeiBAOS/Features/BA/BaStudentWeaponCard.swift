@@ -403,9 +403,7 @@ private struct BaPlainRemoteImage: View {
 
 private extension View {
     func baStudentWeaponListCardRow() -> some View {
-        listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 10, trailing: 16))
-            .listRowSeparator(.hidden)
-            .listRowBackground(Color.clear)
+        baAdaptiveListCardRow(top: 8, bottom: 10)
     }
 }
 

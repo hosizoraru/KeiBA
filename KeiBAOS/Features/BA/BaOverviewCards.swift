@@ -83,6 +83,8 @@ struct BaOverviewIdentityCard: View {
 }
 
 struct BaOverviewAPCard: View {
+    @Environment(\.baAdaptiveMetrics) private var metrics
+
     let office: BaOfficeAPSnapshot
     let settings: BaAppSettings
     let onCommit: (Int, Int, Int) -> Void
@@ -100,7 +102,7 @@ struct BaOverviewAPCard: View {
                     onEdit: { isEditorPresented = true }
                 )
 
-                LazyVGrid(columns: BaOverviewGrid.columns, spacing: 10) {
+                LazyVGrid(columns: metrics.overviewInnerGridColumns, spacing: 10) {
                     BaOverviewMetricTile(
                         title: String(localized: "ba.office.ap.next.title"),
                         value: office.apNext,
@@ -151,6 +153,8 @@ struct BaOverviewAPCard: View {
 }
 
 struct BaOverviewCafeCard: View {
+    @Environment(\.baAdaptiveMetrics) private var metrics
+
     let office: BaOfficeSnapshot
     let settings: BaAppSettings
     let onClaimCafeAP: () -> Void
@@ -203,7 +207,7 @@ struct BaOverviewCafeCard: View {
                     }
                 }
 
-                LazyVGrid(columns: BaOverviewGrid.columns, spacing: 10) {
+                LazyVGrid(columns: metrics.overviewInnerGridColumns, spacing: 10) {
                     ForEach(office.cafeVisitSlots) { slot in
                         BaOverviewMetricTile(
                             title: slot.title,
@@ -215,7 +219,7 @@ struct BaOverviewCafeCard: View {
                     }
                 }
 
-                LazyVGrid(columns: BaOverviewGrid.columns, spacing: 10) {
+                LazyVGrid(columns: metrics.overviewInnerGridColumns, spacing: 10) {
                     BaOverviewMetricTile(
                         title: String(localized: "ba.cafe.metric.tactical"),
                         value: office.tacticalRefresh,
@@ -233,7 +237,7 @@ struct BaOverviewCafeCard: View {
                     }
                 }
 
-                LazyVGrid(columns: BaOverviewGrid.columns, spacing: 10) {
+                LazyVGrid(columns: metrics.overviewInnerGridColumns, spacing: 10) {
                     ForEach(inviteActions) { action in
                         BaOverviewActionTile(
                             action: action,
@@ -304,6 +308,8 @@ struct BaOverviewTimelineSummary: Equatable {
 }
 
 struct BaOverviewTimelineSummaryCard: View {
+    @Environment(\.baAdaptiveMetrics) private var metrics
+
     let summary: BaOverviewTimelineSummary
     let activitySyncAt: Date?
     let poolSyncAt: Date?
@@ -314,7 +320,7 @@ struct BaOverviewTimelineSummaryCard: View {
             VStack(alignment: .leading, spacing: BaOverviewMetricStyle.cardSpacing) {
                 BaOverviewSectionTitle(title: String(localized: "ba.overview.timeline.title"), asset: .guideMission)
 
-                LazyVGrid(columns: BaOverviewGrid.columns, spacing: 10) {
+                LazyVGrid(columns: metrics.overviewInnerGridColumns, spacing: 10) {
                     Button {
                         onOpenTab(.activity)
                     } label: {

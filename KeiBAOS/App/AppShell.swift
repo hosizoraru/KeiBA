@@ -21,6 +21,7 @@ struct AppShell: View {
                     .accessibilityIdentifier(tab.accessibilityIdentifier)
             }
         }
+        .platformAdaptiveTabViewStyle()
     }
 }
 

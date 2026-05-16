@@ -50,47 +50,59 @@ struct BaActivityView: View {
     var body: some View {
         let snapshot = activitySnapshot
 
-        List {
-            Section {
-                activitySummary(snapshot: snapshot)
-                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                    .listRowBackground(Color.clear)
-            }
-
-            Section {
-                if model.activityState.isLoading, snapshot.rows.isEmpty {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.vertical, 24)
-                } else if snapshot.rows.isEmpty {
-                    ContentUnavailableView(
-                        String(localized: "ba.activity.empty.title"),
-                        systemImage: "calendar.badge.exclamationmark",
-                        description: Text(String(localized: "ba.activity.empty.detail"))
-                    )
-                } else {
-                    ForEach(snapshot.rows) { row in
-                        BaActivityCard(row: row)
-                            .equatable()
-                            .listRowInsets(EdgeInsets(top: 7, leading: 16, bottom: 7, trailing: 16))
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
-                    }
+        BaAdaptiveGeometry { metrics in
+            List {
+                Section {
+                    activitySummary(snapshot: snapshot)
+                        .baAdaptiveListCardRow(top: 8, bottom: 8)
                 }
-            } header: {
-                Text(currentFilterTitle)
-            } footer: {
-                Text(footerText)
+
+                Section {
+                    if model.activityState.isLoading, snapshot.rows.isEmpty {
+                        ProgressView()
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(.vertical, 24)
+                    } else if snapshot.rows.isEmpty {
+                        ContentUnavailableView(
+                            String(localized: "ba.activity.empty.title"),
+                            systemImage: "calendar.badge.exclamationmark",
+                            description: Text(String(localized: "ba.activity.empty.detail"))
+                        )
+                    } else {
+                        activityRows(snapshot.rows, metrics: metrics)
+                    }
+                } header: {
+                    Text(currentFilterTitle)
+                } footer: {
+                    Text(footerText)
+                }
             }
+            .platformInsetGroupedListStyle()
+            .scrollContentBackground(.hidden)
+            .background(AppBackground())
         }
-        .platformInsetGroupedListStyle()
-        .scrollContentBackground(.hidden)
-        .background(AppBackground())
         .task(id: model.settings.server) {
             await model.loadActivitiesIfNeeded()
         }
         .refreshable {
             await model.refreshActivities(force: true)
+        }
+    }
+
+    private func activityRows(_ rows: [BaActivityRowDisplayModel], metrics: BaAdaptiveMetrics) -> some View {
+        ForEach(rows.baChunked(into: metrics.timelineColumnCount), id: \.baActivityChunkID) { chunk in
+            HStack(alignment: .top, spacing: metrics.cardSpacing) {
+                ForEach(chunk) { row in
+                    BaActivityCard(row: row)
+                        .equatable()
+                        .frame(maxWidth: .infinity, alignment: .top)
+                }
+                ForEach(0 ..< max(metrics.timelineColumnCount - chunk.count, 0), id: \.self) { _ in
+                    Color.clear
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .baAdaptiveListCardRow(top: 7, bottom: 7)
         }
     }
 
@@ -183,7 +195,13 @@ private struct BaActivityRowDisplayModel: Identifiable, Equatable {
 }
 
 private struct BaActivityCard: View, Equatable {
+    @Environment(\.baAdaptiveMetrics) private var metrics
+
     let row: BaActivityRowDisplayModel
+
+    static func == (lhs: BaActivityCard, rhs: BaActivityCard) -> Bool {
+        lhs.row == rhs.row
+    }
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -223,7 +241,7 @@ private struct BaActivityCard: View, Equatable {
                     fallbackSystemImage: row.fallbackSystemImage,
                     tint: row.status.tint,
                     width: nil,
-                    height: 164,
+                    height: metrics.timelineCardImageHeight,
                     cornerRadius: 18,
                     fallbackFont: .system(size: 40, weight: .semibold)
                 )
@@ -241,6 +259,12 @@ private struct BaActivityCard: View, Equatable {
         .padding(.vertical, 13)
         .frame(maxWidth: .infinity, alignment: .leading)
         .baTimelineScrollCardSurface(tint: row.status.tint)
+    }
+}
+
+private extension Array where Element == BaActivityRowDisplayModel {
+    var baActivityChunkID: String {
+        map { "\($0.id)" }.joined(separator: "-")
     }
 }
 

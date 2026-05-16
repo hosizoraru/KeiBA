@@ -19,36 +19,43 @@ struct BaOverviewView: View {
                 detail: String(localized: "ba.overview.detail")
             )
 
-            BaOverviewIdentityCard(
-                settings: model.settings,
-                onServerSelected: selectServer
-            )
-            TimelineView(.periodic(from: .now, by: 1)) { context in
-                BaOverviewAPCard(
-                    office: model.officeAPSnapshot(now: context.date),
+            BaOverviewAdaptiveCards {
+                BaOverviewIdentityCard(
                     settings: model.settings,
-                    onCommit: model.setAPEditorValues
+                    onServerSelected: selectServer
                 )
-            }
-            TimelineView(.periodic(from: .now, by: 60)) { context in
-                BaOverviewCafeCard(
-                    office: model.officeSnapshot(now: context.date),
-                    settings: model.settings,
-                    onClaimCafeAP: model.claimCafeAP,
-                    onPerformAction: model.performCafeAction,
-                    onResetAction: model.resetCafeAction,
-                    onCafeSettingsCommit: setCafeSettings
-                )
-                BaOverviewTimelineSummaryCard(
-                    summary: BaOverviewTimelineSummary(
-                        activities: model.activityState.value ?? [],
-                        pools: model.poolState.value ?? [],
-                        now: context.date
-                    ),
-                    activitySyncAt: model.activityState.lastSyncAt,
-                    poolSyncAt: model.poolState.lastSyncAt,
-                    onOpenTab: onOpenTab
-                )
+            } ap: {
+                TimelineView(.periodic(from: .now, by: 1)) { context in
+                    BaOverviewAPCard(
+                        office: model.officeAPSnapshot(now: context.date),
+                        settings: model.settings,
+                        onCommit: model.setAPEditorValues
+                    )
+                }
+            } cafe: {
+                TimelineView(.periodic(from: .now, by: 60)) { context in
+                    BaOverviewCafeCard(
+                        office: model.officeSnapshot(now: context.date),
+                        settings: model.settings,
+                        onClaimCafeAP: model.claimCafeAP,
+                        onPerformAction: model.performCafeAction,
+                        onResetAction: model.resetCafeAction,
+                        onCafeSettingsCommit: setCafeSettings
+                    )
+                }
+            } timeline: {
+                TimelineView(.periodic(from: .now, by: 60)) { context in
+                    BaOverviewTimelineSummaryCard(
+                        summary: BaOverviewTimelineSummary(
+                            activities: model.activityState.value ?? [],
+                            pools: model.poolState.value ?? [],
+                            now: context.date
+                        ),
+                        activitySyncAt: model.activityState.lastSyncAt,
+                        poolSyncAt: model.poolState.lastSyncAt,
+                        onOpenTab: onOpenTab
+                    )
+                }
             }
         }
         .task(id: model.settings.server) {
@@ -71,6 +78,52 @@ struct BaOverviewView: View {
             profile.cafeLevel = min(max(level, 1), 10)
             profile.cafeApNotifyThreshold = min(max(threshold, 0), BaTimeMath.apMax)
         }
+    }
+}
+
+private struct BaOverviewAdaptiveCards<Identity: View, AP: View, Cafe: View, Timeline: View>: View {
+    @Environment(\.baAdaptiveMetrics) private var metrics
+
+    let identity: Identity
+    let ap: AP
+    let cafe: Cafe
+    let timeline: Timeline
+
+    init(
+        @ViewBuilder identity: () -> Identity,
+        @ViewBuilder ap: () -> AP,
+        @ViewBuilder cafe: () -> Cafe,
+        @ViewBuilder timeline: () -> Timeline
+    ) {
+        self.identity = identity()
+        self.ap = ap()
+        self.cafe = cafe()
+        self.timeline = timeline()
+    }
+
+    var body: some View {
+        if metrics.overviewColumnCount > 1 {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: metrics.cardSpacing) {
+                identity
+                ap
+                cafe
+                timeline
+            }
+        } else {
+            VStack(alignment: .leading, spacing: metrics.cardSpacing) {
+                identity
+                ap
+                cafe
+                timeline
+            }
+        }
+    }
+
+    private var columns: [GridItem] {
+        Array(
+            repeating: GridItem(.flexible(), spacing: metrics.cardSpacing, alignment: .top),
+            count: metrics.overviewColumnCount
+        )
     }
 }
 

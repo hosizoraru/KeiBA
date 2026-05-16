@@ -40,15 +40,18 @@ struct BaScreenScaffold<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                content
+        BaAdaptiveGeometry { metrics in
+            ScrollView {
+                VStack(alignment: .leading, spacing: metrics.cardSpacing) {
+                    content
+                }
+                .baAdaptiveReadableContent(maxWidth: metrics.dashboardContentMaxWidth)
+                .padding(.horizontal, metrics.screenHorizontalPadding)
+                .padding(.vertical, metrics.screenVerticalPadding)
+                .safeAreaPadding(.bottom, 16)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 16)
-            .safeAreaPadding(.bottom, 16)
+            .background(AppBackground())
         }
-        .background(AppBackground())
     }
 }
 
@@ -72,6 +75,8 @@ struct BaScreenHeader: View {
 }
 
 struct BaGlassCard<Content: View>: View {
+    @Environment(\.baAdaptiveMetrics) private var metrics
+
     var tint: Color = .secondary
     let content: Content
 
@@ -82,7 +87,7 @@ struct BaGlassCard<Content: View>: View {
 
     var body: some View {
         content
-            .padding(16)
+            .padding(metrics.cardPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
             .liquidGlassSurface(cornerRadius: 24, tint: tint.opacity(0.045), isInteractive: false)
     }

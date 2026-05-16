@@ -11,16 +11,19 @@ struct BaSettingsView: View {
     @Environment(BaAppModel.self) private var model
 
     var body: some View {
-        Form {
-            serverIdentitySection
-            resourcesSection
-            activityPoolSection
-            notificationSection
-            mediaSection
-            platformSection
+        BaAdaptiveGeometry { _ in
+            Form {
+                serverIdentitySection
+                resourcesSection
+                activityPoolSection
+                notificationSection
+                mediaSection
+                platformSection
+            }
+            .baAdaptiveReadableContent(maxWidth: 760)
+            .scrollContentBackground(.hidden)
+            .background(AppBackground())
         }
-        .scrollContentBackground(.hidden)
-        .background(AppBackground())
     }
 
     private var serverIdentitySection: some View {

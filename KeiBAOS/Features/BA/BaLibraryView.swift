@@ -24,39 +24,42 @@ struct BaLibraryView: View {
     var body: some View {
         let snapshot = snapshot
 
-        List {
-            Section {
-                Picker(String(localized: "ba.library.category.picker"), selection: $selectedCategory) {
-                    ForEach(BaCatalogCategory.libraryCases) { category in
-                        Text(category.title)
-                            .tag(category)
+        BaAdaptiveGeometry { _ in
+            List {
+                Section {
+                    Picker(String(localized: "ba.library.category.picker"), selection: $selectedCategory) {
+                        ForEach(BaCatalogCategory.libraryCases) { category in
+                            Text(category.title)
+                                .tag(category)
+                        }
                     }
+                    .pickerStyle(.segmented)
+                    .padding(.vertical, 4)
+                    .baAdaptiveReadableContent()
                 }
-                .pickerStyle(.segmented)
-                .padding(.vertical, 4)
-            }
 
-            Section {
-                libraryContent(snapshot: snapshot)
-            } header: {
-                Text(selectedCategory.title)
-            } footer: {
-                Text(footerText)
-            }
+                Section {
+                    libraryContent(snapshot: snapshot)
+                } header: {
+                    Text(selectedCategory.title)
+                } footer: {
+                    Text(footerText)
+                }
 
-            Section {
-                Toggle(String(localized: "ba.settings.media.images.title"), isOn: globalBoolBinding(\.showPreviewImages))
-                Toggle(String(localized: "ba.settings.media.autoplay.title"), isOn: globalBoolBinding(\.mediaAutoplayEnabled))
-                Toggle(String(localized: "ba.settings.media.download.title"), isOn: globalBoolBinding(\.mediaDownloadEnabled))
-            } header: {
-                Text(String(localized: "ba.settings.media.title"))
-            } footer: {
-                Text(String(localized: "ba.settings.media.footer"))
+                Section {
+                    Toggle(String(localized: "ba.settings.media.images.title"), isOn: globalBoolBinding(\.showPreviewImages))
+                    Toggle(String(localized: "ba.settings.media.autoplay.title"), isOn: globalBoolBinding(\.mediaAutoplayEnabled))
+                    Toggle(String(localized: "ba.settings.media.download.title"), isOn: globalBoolBinding(\.mediaDownloadEnabled))
+                } header: {
+                    Text(String(localized: "ba.settings.media.title"))
+                } footer: {
+                    Text(String(localized: "ba.settings.media.footer"))
+                }
             }
+            .platformInsetGroupedListStyle()
+            .scrollContentBackground(.hidden)
+            .background(AppBackground())
         }
-        .platformInsetGroupedListStyle()
-        .scrollContentBackground(.hidden)
-        .background(AppBackground())
         .searchable(text: $searchText, prompt: Text(selectedCategory.searchPrompt))
         .task {
             await model.loadCatalogIfNeeded()
@@ -85,6 +88,7 @@ struct BaLibraryView: View {
                 } label: {
                     BaCatalogEntryRow(row: row)
                         .equatable()
+                        .baAdaptiveReadableContent()
                 }
                 .swipeActions(edge: .trailing) {
                     Button {

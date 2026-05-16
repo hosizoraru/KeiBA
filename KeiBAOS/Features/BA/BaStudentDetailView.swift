@@ -47,18 +47,24 @@ struct BaStudentDetailView: View {
     }
 
     private var detailList: some View {
-        List {
-            BaStudentDetailPageRailSection(selection: $selectedPage, tint: headerTint)
+        BaAdaptiveGeometry { _ in
+            List {
+                BaStudentDetailPageRailSection(selection: $selectedPage, tint: headerTint)
 
-            if state.isLoading, info == nil {
-                loadingSection
+                if state.isLoading, info == nil {
+                    loadingSection
+                }
+
+                if let error = state.errorMessage, error.isEmpty == false {
+                    errorSection(error)
+                }
+
+                activePageSections
             }
-
-            if let error = state.errorMessage, error.isEmpty == false {
-                errorSection(error)
-            }
-
-            activePageSections
+            .platformInsetGroupedListStyle()
+            .baStudentDetailSectionSpacing()
+            .scrollContentBackground(.hidden)
+            .background(AppBackground())
         }
         .navigationTitle(info?.title ?? entry.name)
         .toolbar {
@@ -91,10 +97,6 @@ struct BaStudentDetailView: View {
                 .labelStyle(.iconOnly)
             }
         }
-        .platformInsetGroupedListStyle()
-        .baStudentDetailSectionSpacing()
-        .scrollContentBackground(.hidden)
-        .background(AppBackground())
         .modifier(BaStudentVoiceSearchModifier(isActive: selectedPage == .voice, text: $voiceSearchText))
         .task(id: entry.contentId) {
             await model.loadStudentDetail(entry: entry)
@@ -223,46 +225,62 @@ private struct BaStudentDetailPageRailSection: View {
 
     var body: some View {
         BaStudentDetailPageRail(selection: $selection, tint: tint)
-            .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 5, trailing: 16))
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
+            .baAdaptiveListCardRow(top: 10, bottom: 5)
     }
 }
 
 private struct BaStudentDetailPageRail: View {
+    @Environment(\.baAdaptiveMetrics) private var metrics
+
     @Binding var selection: BaStudentDetailPage
     let tint: Color
 
     var body: some View {
         BaGlassCard(tint: tint) {
-            ScrollViewReader { proxy in
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10) {
-                        ForEach(BaStudentDetailPage.allCases) { page in
-                            Button {
-                                selection = page
-                            } label: {
-                                BaStudentDetailPageRailItem(
-                                    title: page.title,
-                                    isSelected: selection == page,
-                                    tint: tint
-                                )
-                            }
-                            .buttonStyle(.plain)
-                            .id(page)
-                        }
-                    }
-                    .padding(.vertical, 2)
+            if metrics.usesFullWidthPageRail {
+                HStack(spacing: 8) {
+                    pageButtons(expandsItems: true)
                 }
-                .onAppear {
-                    proxy.scrollTo(selection, anchor: .center)
+                .padding(.vertical, 2)
+            } else {
+                scrollablePageRail
+            }
+        }
+    }
+
+    private var scrollablePageRail: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    pageButtons(expandsItems: false)
                 }
-                .onChange(of: selection) { _, page in
-                    withAnimation(.easeOut(duration: 0.18)) {
-                        proxy.scrollTo(page, anchor: .center)
-                    }
+                .padding(.vertical, 2)
+            }
+            .onAppear {
+                proxy.scrollTo(selection, anchor: .center)
+            }
+            .onChange(of: selection) { _, page in
+                withAnimation(.easeOut(duration: 0.18)) {
+                    proxy.scrollTo(page, anchor: .center)
                 }
             }
+        }
+    }
+
+    private func pageButtons(expandsItems: Bool) -> some View {
+        ForEach(BaStudentDetailPage.allCases) { page in
+            Button {
+                selection = page
+            } label: {
+                BaStudentDetailPageRailItem(
+                    title: page.title,
+                    isSelected: selection == page,
+                    tint: tint
+                )
+                .frame(maxWidth: expandsItems ? .infinity : nil)
+            }
+            .buttonStyle(.plain)
+            .id(page)
         }
     }
 }

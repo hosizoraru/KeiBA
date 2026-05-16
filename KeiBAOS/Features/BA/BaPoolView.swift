@@ -51,57 +51,69 @@ struct BaPoolView: View {
     var body: some View {
         let snapshot = poolSnapshot
 
-        List {
-            Section {
-                poolSummary(snapshot: snapshot)
-                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                    .listRowBackground(Color.clear)
-            }
-
-            Section {
-                if model.poolState.isLoading, snapshot.rows.isEmpty {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.vertical, 24)
-                } else if snapshot.rows.isEmpty {
-                    ContentUnavailableView(
-                        String(localized: "ba.pool.empty.title"),
-                        systemImage: "rectangle.stack.badge.person.crop",
-                        description: Text(String(localized: "ba.pool.empty.detail"))
-                    )
-                } else {
-                    ForEach(snapshot.rows) { row in
-                        NavigationLink {
-                            if let entry = model.studentCatalogEntry(for: row.pool) {
-                                BaStudentDetailView(entry: entry)
-                            } else {
-                                BaPoolSourceDetailView(pool: row.pool, server: model.settings.server)
-                            }
-                        } label: {
-                            BaPoolNavigationCard(row: row)
-                                .equatable()
-                        }
-                        .buttonStyle(.plain)
-                        .listRowInsets(EdgeInsets(top: 7, leading: 16, bottom: 7, trailing: 16))
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
-                    }
+        BaAdaptiveGeometry { metrics in
+            List {
+                Section {
+                    poolSummary(snapshot: snapshot)
+                        .baAdaptiveListCardRow(top: 8, bottom: 8)
                 }
-            } header: {
-                Text(currentFilterTitle)
-            } footer: {
-                Text(footerText)
+
+                Section {
+                    if model.poolState.isLoading, snapshot.rows.isEmpty {
+                        ProgressView()
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(.vertical, 24)
+                    } else if snapshot.rows.isEmpty {
+                        ContentUnavailableView(
+                            String(localized: "ba.pool.empty.title"),
+                            systemImage: "rectangle.stack.badge.person.crop",
+                            description: Text(String(localized: "ba.pool.empty.detail"))
+                        )
+                    } else {
+                        poolRows(snapshot.rows, metrics: metrics)
+                    }
+                } header: {
+                    Text(currentFilterTitle)
+                } footer: {
+                    Text(footerText)
+                }
             }
+            .platformInsetGroupedListStyle()
+            .scrollContentBackground(.hidden)
+            .background(AppBackground())
         }
-        .platformInsetGroupedListStyle()
-        .scrollContentBackground(.hidden)
-        .background(AppBackground())
         .task(id: model.settings.server) {
             await model.loadPoolsIfNeeded()
             await model.loadCatalogIfNeeded()
         }
         .refreshable {
             await model.refreshPools(force: true)
+        }
+    }
+
+    private func poolRows(_ rows: [BaPoolRowDisplayModel], metrics: BaAdaptiveMetrics) -> some View {
+        ForEach(rows.baChunked(into: metrics.timelineColumnCount), id: \.baPoolChunkID) { chunk in
+            HStack(alignment: .top, spacing: metrics.cardSpacing) {
+                ForEach(chunk) { row in
+                    NavigationLink {
+                        if let entry = model.studentCatalogEntry(for: row.pool) {
+                            BaStudentDetailView(entry: entry)
+                        } else {
+                            BaPoolSourceDetailView(pool: row.pool, server: model.settings.server)
+                        }
+                    } label: {
+                        BaPoolNavigationCard(row: row)
+                            .equatable()
+                    }
+                    .buttonStyle(.plain)
+                    .frame(maxWidth: .infinity, alignment: .top)
+                }
+                ForEach(0 ..< max(metrics.timelineColumnCount - chunk.count, 0), id: \.self) { _ in
+                    Color.clear
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .baAdaptiveListCardRow(top: 7, bottom: 7)
         }
     }
 
@@ -195,7 +207,13 @@ private struct BaPoolRowDisplayModel: Identifiable, Equatable {
 }
 
 private struct BaPoolNavigationCard: View, Equatable {
+    @Environment(\.baAdaptiveMetrics) private var metrics
+
     let row: BaPoolRowDisplayModel
+
+    static func == (lhs: BaPoolNavigationCard, rhs: BaPoolNavigationCard) -> Bool {
+        lhs.row == rhs.row
+    }
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
@@ -222,8 +240,8 @@ private struct BaPoolNavigationCard: View, Equatable {
                         url: row.pool.imageURL,
                         fallbackSystemImage: row.fallbackSystemImage,
                         tint: row.status.tint,
-                        width: 108,
-                        height: 108,
+                        width: metrics.poolCardThumbnailSize,
+                        height: metrics.poolCardThumbnailSize,
                         cornerRadius: 22,
                         contentMode: .fit,
                         usesImageBackdrop: true,
@@ -268,37 +286,44 @@ private struct BaPoolNavigationCard: View, Equatable {
     }
 }
 
+private extension Array where Element == BaPoolRowDisplayModel {
+    var baPoolChunkID: String {
+        map { "\($0.id)" }.joined(separator: "-")
+    }
+}
+
 private struct BaPoolSourceDetailView: View {
     let pool: BaPoolEntry
     let server: BaServer
 
     var body: some View {
-        List {
-            Section {
-                BaDetailRemoteImage(url: pool.imageURL, fallbackSystemImage: "sparkles", tint: pool.status().tint)
-                    .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16))
-                    .listRowBackground(Color.clear)
-            }
+        BaAdaptiveGeometry { _ in
+            List {
+                Section {
+                    BaDetailRemoteImage(url: pool.imageURL, fallbackSystemImage: "sparkles", tint: pool.status().tint)
+                        .baAdaptiveListCardRow(top: 10, bottom: 10)
+                }
 
-            Section(String(localized: "ba.pool.detail.section.title")) {
-                LabeledContent(String(localized: "ba.pool.detail.name.title")) {
-                    Text(pool.name)
-                }
-                LabeledContent(String(localized: "ba.pool.detail.tag.title")) {
-                    Text(BaTimelineLabels.poolTagTitle(tagId: pool.tagId, fallback: pool.tagName))
-                }
-                LabeledContent(String(localized: "ba.timeline.start")) {
-                    Text(BaDisplayFormatters.dateTime(pool.startAt, server: server))
-                }
-                LabeledContent(String(localized: "ba.timeline.end")) {
-                    Text(BaDisplayFormatters.dateTime(pool.endAt, server: server))
+                Section(String(localized: "ba.pool.detail.section.title")) {
+                    LabeledContent(String(localized: "ba.pool.detail.name.title")) {
+                        Text(pool.name)
+                    }
+                    LabeledContent(String(localized: "ba.pool.detail.tag.title")) {
+                        Text(BaTimelineLabels.poolTagTitle(tagId: pool.tagId, fallback: pool.tagName))
+                    }
+                    LabeledContent(String(localized: "ba.timeline.start")) {
+                        Text(BaDisplayFormatters.dateTime(pool.startAt, server: server))
+                    }
+                    LabeledContent(String(localized: "ba.timeline.end")) {
+                        Text(BaDisplayFormatters.dateTime(pool.endAt, server: server))
+                    }
                 }
             }
+            .platformInsetGroupedListStyle()
+            .scrollContentBackground(.hidden)
+            .background(AppBackground())
         }
         .navigationTitle(pool.name)
-        .platformInsetGroupedListStyle()
-        .scrollContentBackground(.hidden)
-        .background(AppBackground())
     }
 }
 

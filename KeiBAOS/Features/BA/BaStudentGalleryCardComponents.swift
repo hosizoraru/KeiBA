@@ -627,9 +627,7 @@ extension URL {
 
 extension View {
     func baGalleryListCardRow() -> some View {
-        listRowInsets(EdgeInsets(top: 7, leading: 16, bottom: 9, trailing: 16))
-            .listRowSeparator(.hidden)
-            .listRowBackground(Color.clear)
+        baAdaptiveListCardRow(top: 7, bottom: 9)
     }
 }
 
