@@ -216,7 +216,7 @@ final class BaGuideContentParserDataTests: XCTestCase {
             "生日",
             "实装日期",
         ])
-        XCTAssertEqual(info.profileSections.map(\.kind), [.names, .info, .hobby, .sameName])
+        XCTAssertEqual(info.profileSections.map(\.kind), [.names, .info, .hobby])
         XCTAssertEqual(info.profileSections[0].rows.map(\.title), [
             "角色名称",
             "全名",
@@ -396,5 +396,273 @@ final class BaGuideContentParserDataTests: XCTestCase {
             indoor.imageURL?.absoluteString,
             "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_61/h_61/829/43637/2025/4/26/615650.png"
         )
+    }
+
+    func testArrayRichTextProfileDropsEditorMetadataForNpcSatelliteShape() throws {
+        let content: [Any] = [
+            [
+                "type": "illustrated-book",
+                "data": [
+                    [
+                        "type": "character-profile",
+                        "data": [
+                            "name": richText(["伪学生会长"]),
+                            "attrList": [
+                                [
+                                    "title": richText(["其他译名"]),
+                                    "content": richText(["会长"]),
+                                ],
+                                [
+                                    "title": richText(["所属"]),
+                                    "content": richText(["联邦学生会 / 总学生会长"]),
+                                ],
+                                [
+                                    "title": richText(["首次登场"]),
+                                    "content": richText(["第二部主线 Vol.0"]),
+                                ],
+                            ],
+                            "descTitle": richText(["个人简介"]),
+                            "desc": richText([
+                                "出处: 第二部主线 Vol.0 联邦学生会篇",
+                                "学生会长，堂堂归来！",
+                            ]),
+                            "imageList": [
+                                "//cdnimg-v2.gamekee.com/wiki2.0/images/w_918/h_2570/829/191981/2026/3/21/859265.png",
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]
+
+        let parsed = BaGuideContentParser().parse(
+            content: content,
+            apiData: [:],
+            html: nil,
+            entry: makeDataBridgeCatalogEntry(contentId: 702_789, name: "伪学生会长", category: .npcSatellite)
+        )
+
+        let packedProfileText = parsed.profileRows
+            .flatMap { [$0.title, $0.value] }
+            .joined(separator: "\n")
+        XCTAssertFalse(packedProfileText.contains("simpleEditor"))
+        XCTAssertFalse(packedProfileText.contains("paragraph"))
+        XCTAssertTrue(parsed.profileRows.contains { $0.title == "角色名称" && $0.value == "伪学生会长" })
+        XCTAssertTrue(parsed.profileRows.contains { $0.title == "所属" && $0.value == "联邦学生会 / 总学生会长" })
+        XCTAssertTrue(parsed.summary.contains("出处: 第二部主线 Vol.0 联邦学生会篇"))
+        XCTAssertEqual(
+            parsed.imageURL?.absoluteString,
+            "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_918/h_2570/829/191981/2026/3/21/859265.png"
+        )
+    }
+
+    func testArrayAudioInfoBuildsNpcSatelliteVoiceRows() throws {
+        let parsed = BaGuideContentParser().parse(
+            content: audioInfoContentFixture(),
+            apiData: [:],
+            html: nil,
+            entry: makeDataBridgeCatalogEntry(contentId: 161_175, name: "阿罗娜（阿洛娜）", category: .npcSatellite)
+        )
+
+        let voice = try XCTUnwrap(parsed.voiceRows.first { $0.title == "日程进入1" })
+        XCTAssertEqual(parsed.voiceLanguageHeaders, ["日配", "中配", "旧版日配"])
+        XCTAssertEqual(voice.section, "角色台词及语音")
+        XCTAssertEqual(voice.lineHeaders, ["日配", "中配", "旧版日配", "官翻"])
+        XCTAssertEqual(voice.lines, [
+            "ログインしました。先生、おかえりなさい。",
+            "老师，欢迎回来。",
+            "先生、お待ちしていました。",
+            "老师，欢迎回来。",
+        ])
+        XCTAssertEqual(voice.audioHeaders, ["日配", "中配", "旧版日配"])
+        XCTAssertEqual(voice.audioURLs?.map(\.absoluteString), [
+            "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_0/h_0/829/191981/2024/7/3/324967.ogg",
+            "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_0/h_0/829/191981/2024/7/3/231550.ogg",
+            "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_0/h_0/829/191981/2024/7/3/484551.ogg",
+        ])
+
+        let info = BaStudentGuideInfo(
+            contentId: 161_175,
+            sourceURL: URL(string: "https://www.gamekee.com/ba/161175.html"),
+            title: "阿罗娜（阿洛娜）",
+            subtitle: "GameKee",
+            summary: parsed.summary,
+            imageURL: parsed.imageURL,
+            stats: parsed.stats,
+            profileRows: parsed.profileRows,
+            skillRows: parsed.skillRows,
+            voiceLanguageHeaders: parsed.voiceLanguageHeaders,
+            voiceRows: parsed.voiceRows,
+            galleryItems: parsed.galleryItems,
+            growthRows: parsed.growthRows,
+            simulateRows: parsed.simulateRows,
+            contentSource: "content_cdn",
+            syncedAt: Date(timeIntervalSince1970: 0)
+        )
+
+        XCTAssertTrue(BaStudentDetailPageAvailability.pages(category: .npcSatellite, info: info).contains(.voice))
+    }
+
+    func testArrayAudioInfoPreservesDuplicateNpcSatelliteVoiceComponentsAsOldVersions() throws {
+        let parsed = BaGuideContentParser().parse(
+            content: duplicatedAudioInfoContentFixture(),
+            apiData: [:],
+            html: nil,
+            entry: makeDataBridgeCatalogEntry(contentId: 161_188, name: "凛", category: .npcSatellite)
+        )
+
+        let voice = try XCTUnwrap(parsed.voiceRows.first { $0.title == "日程进入1" })
+        XCTAssertEqual(parsed.voiceLanguageHeaders, ["日配", "中配", "旧版日配", "旧版中配"])
+        XCTAssertEqual(voice.lineHeaders, ["日配", "中配", "旧版日配", "旧版中配", "官翻"])
+        XCTAssertEqual(voice.lines, [
+            "お待ちしておりました。先生。",
+            "老师，等您很久了。",
+            "老师，等您很久了",
+            "老师，欢迎回来。",
+            "恭候您的光临，老师。",
+        ])
+        XCTAssertEqual(voice.audioHeaders, ["日配", "中配", "旧版日配", "旧版中配"])
+        XCTAssertEqual(voice.audioURLs?.map(\.absoluteString), [
+            "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_0/h_0/829/191981/2024/7/3/324967.ogg",
+            "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_0/h_0/829/191981/2024/10/8/49278.ogg",
+            "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_0/h_0/829/191981/2024/11/19/108692.ogg",
+            "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_0/h_0/829/191981/2024/11/19/391048.ogg",
+        ])
+    }
+
+    private func audioInfoContentFixture() -> [Any] {
+        [
+            [
+                "type": "illustrated-book",
+                "data": [
+                    [
+                        "type": "audio-info",
+                        "data": [
+                            "title": "角色台词及语音",
+                            "tabs": [
+                                ["key": "jp", "label": richText(["日配"])],
+                                ["key": "cn", "label": richText(["国配"])],
+                                ["key": "old-jp", "label": richText(["旧版日配"])],
+                            ],
+                            "list": [
+                                voiceGroup(
+                                    tabKey: "jp",
+                                    audio: "//cdnimg-v2.gamekee.com/wiki2.0/images/w_0/h_0/829/191981/2024/7/3/324967.ogg",
+                                    lines: [
+                                        "ログインしました。先生、おかえりなさい。",
+                                        "老师，欢迎回来。",
+                                    ]
+                                ),
+                                voiceGroup(
+                                    tabKey: "cn",
+                                    audio: "//cdnimg-v2.gamekee.com/wiki2.0/images/w_0/h_0/829/191981/2024/7/3/231550.ogg",
+                                    lines: [
+                                        "老师，欢迎回来。",
+                                    ]
+                                ),
+                                voiceGroup(
+                                    tabKey: "old-jp",
+                                    audio: "//cdnimg-v2.gamekee.com/wiki2.0/images/w_0/h_0/829/191981/2024/7/3/484551.ogg",
+                                    lines: [
+                                        "先生、お待ちしていました。",
+                                    ]
+                                ),
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]
+    }
+
+    private func duplicatedAudioInfoContentFixture() -> [Any] {
+        [
+            [
+                "type": "illustrated-book",
+                "data": [
+                    [
+                        "type": "audio-info",
+                        "data": [
+                            "title": "角色台词及语音",
+                            "tabs": [
+                                ["key": "jp", "label": richText(["日配"])],
+                                ["key": "cn", "label": richText(["国配"])],
+                            ],
+                            "list": [
+                                voiceGroup(
+                                    tabKey: "jp",
+                                    audio: "//cdnimg-v2.gamekee.com/wiki2.0/images/w_0/h_0/829/191981/2024/7/3/324967.ogg",
+                                    lines: [
+                                        "お待ちしておりました。先生。",
+                                        "恭候您的光临，老师。",
+                                    ]
+                                ),
+                                voiceGroup(
+                                    tabKey: "cn",
+                                    audio: "//cdnimg-v2.gamekee.com/wiki2.0/images/w_0/h_0/829/191981/2024/10/8/49278.ogg",
+                                    lines: [
+                                        "老师，等您很久了。",
+                                    ]
+                                ),
+                            ],
+                        ],
+                    ],
+                    [
+                        "type": "audio-info",
+                        "data": [
+                            "title": "角色台词及语音",
+                            "tabs": [
+                                ["key": "jp", "label": richText(["日配"])],
+                                ["key": "cn", "label": richText(["国配"])],
+                            ],
+                            "list": [
+                                voiceGroup(
+                                    tabKey: "jp",
+                                    audio: "//cdnimg-v2.gamekee.com/wiki2.0/images/w_0/h_0/829/191981/2024/11/19/108692.ogg",
+                                    lines: [
+                                        "老师，等您很久了",
+                                    ]
+                                ),
+                                voiceGroup(
+                                    tabKey: "cn",
+                                    audio: "//cdnimg-v2.gamekee.com/wiki2.0/images/w_0/h_0/829/191981/2024/11/19/391048.ogg",
+                                    lines: [
+                                        "老师，欢迎回来。",
+                                    ]
+                                ),
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]
+    }
+
+    private func voiceGroup(tabKey: String, audio: String, lines: [String]) -> BaJSONObject {
+        [
+            "filterTabKey": tabKey,
+            "title": richText([""]),
+            "content": [
+                [
+                    "name": richText(["日程进入1"]),
+                    "desc": richText(lines),
+                    "audio": audio,
+                ],
+            ],
+        ]
+    }
+
+    private func richText(_ lines: [String]) -> BaJSONObject {
+        [
+            "type": "simpleEditor",
+            "data": lines.map { line in
+                [
+                    "type": "paragraph",
+                    "children": [
+                        ["text": line],
+                    ],
+                ]
+            },
+        ]
     }
 }

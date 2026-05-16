@@ -12,7 +12,8 @@ import XCTest
 func makeDataBridgeCatalogEntry(
     contentId: Int64 = 609_145,
     name: String = "Test",
-    alias: String = ""
+    alias: String = "",
+    category: BaCatalogCategory = .students
 ) -> BaGuideCatalogEntry {
     BaGuideCatalogEntry(
         entryId: Int(contentId),
@@ -27,7 +28,7 @@ func makeDataBridgeCatalogEntry(
         createdAt: nil,
         releaseDate: nil,
         detailURL: URL(string: "https://www.gamekee.com/ba/tj/\(contentId).html"),
-        category: .students
+        category: category
     )
 }
 

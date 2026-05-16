@@ -305,32 +305,11 @@ struct BaGuideSupplementalContentParser {
     }
 
     private func text(from any: Any?, separator: String = " ") -> String {
-        textLines(from: any).joined(separator: separator)
+        BaGuideRichTextExtractor.text(from: any, separator: separator)
     }
 
     private func textLines(from any: Any?) -> [String] {
-        guard let any else { return [] }
-        if let string = any as? String {
-            let value = BaGuideTextNormalizer.cleanDisplayText(string)
-            return value.isEmpty ? [] : [value]
-        }
-        if let number = any as? NSNumber {
-            return [number.stringValue]
-        }
-        if let object = any as? BaJSONObject {
-            let preferredKeys = ["text", "value", "name", "title", "label", "content", "desc", "description"]
-            for key in preferredKeys {
-                let lines = textLines(from: object[key])
-                if lines.isEmpty == false {
-                    return lines
-                }
-            }
-            return object.values.flatMap(textLines)
-        }
-        if let array = any as? [Any] {
-            return array.flatMap(textLines)
-        }
-        return []
+        BaGuideRichTextExtractor.lines(from: any)
     }
 
     private func dedupeRows(_ rows: [BaGuideRow]) -> [BaGuideRow] {
