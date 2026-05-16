@@ -110,9 +110,11 @@ enum BaMusicCacheState: Hashable {
 
 @Observable
 @MainActor
-final class BaMusicPlaybackSession {
-    let player = BaGuideAudioPlaybackController()
+final class BaMusicPlaybackSession: BaMusicSystemMediaCommandHandling {
+    let player: BaAudioPlaybackController
     @ObservationIgnored private let audioCache: any BaAudioCaching
+    @ObservationIgnored private let systemMediaController: any BaMusicSystemMediaControlling
+    @ObservationIgnored private var systemMediaTimer: Timer?
 
     var selectedTrack: BaMusicTrack?
     var queue: [BaMusicTrack] = []
@@ -120,10 +122,31 @@ final class BaMusicPlaybackSession {
     var repeatMode: BaMusicRepeatMode = .off
     var cacheStates: [URL: BaMusicCacheState] = [:]
 
-    init(audioCache: any BaAudioCaching = BaAudioCache.shared) {
+    convenience init(audioCache: any BaAudioCaching = BaAudioCache.shared) {
+        self.init(
+            audioCache: audioCache,
+            systemMediaController: BaMusicSystemMediaController()
+        )
+    }
+
+    init(
+        audioCache: any BaAudioCaching,
+        systemMediaController: any BaMusicSystemMediaControlling
+    ) {
         self.audioCache = audioCache
+        self.systemMediaController = systemMediaController
+        player = BaAudioPlaybackController(audioCache: audioCache, profile: .music)
         player.onPlaybackFinished = { [weak self] in
             self?.handlePlaybackFinished()
+        }
+        systemMediaController.configure(commandHandler: self)
+    }
+
+    deinit {
+        systemMediaTimer?.invalidate()
+        let systemMediaController = systemMediaController
+        Task { @MainActor in
+            systemMediaController.clear()
         }
     }
 
@@ -141,6 +164,7 @@ final class BaMusicPlaybackSession {
         guard let selectedTrack else { return }
         if let refreshed = tracks.first(where: { $0.id == selectedTrack.id }) {
             self.selectedTrack = selectedTrack.refreshed(with: refreshed)
+            syncSystemMediaState()
         } else if tracks.isEmpty {
             stop()
         }
@@ -189,6 +213,7 @@ final class BaMusicPlaybackSession {
         guard let audioURL = track.audioURL else { return }
         selectedTrack = track
         player.play(remoteURL: audioURL)
+        syncSystemMediaState()
         Task {
             try? await Task.sleep(for: .seconds(1))
             await refreshCacheState(for: track)
@@ -198,6 +223,7 @@ final class BaMusicPlaybackSession {
     func toggleCurrent() {
         if let selectedTrack, let audioURL = selectedTrack.audioURL {
             player.toggle(remoteURL: audioURL)
+            syncSystemMediaState()
             return
         }
         if let firstTrack = queue.first {
@@ -219,6 +245,8 @@ final class BaMusicPlaybackSession {
         player.stop()
         selectedTrack = nil
         isExpanded = false
+        stopSystemMediaTimer()
+        systemMediaController.clear()
     }
 
     private func handlePlaybackFinished() {
@@ -233,6 +261,8 @@ final class BaMusicPlaybackSession {
         case .off:
             if let track = nextTrack(wraps: false) {
                 start(track)
+            } else {
+                syncSystemMediaState()
             }
         }
     }
@@ -254,5 +284,81 @@ final class BaMusicPlaybackSession {
             return wraps ? queue[queue.startIndex] : nil
         }
         return queue[nextIndex]
+    }
+
+    func handleSystemMediaCommand(_ command: BaMusicSystemMediaCommand) -> Bool {
+        switch command {
+        case .play:
+            if player.isPlaying == false {
+                toggleCurrent()
+            }
+        case .pause:
+            pauseCurrent()
+        case .togglePlayPause:
+            toggleCurrent()
+        case .previous:
+            playPrevious()
+        case .next:
+            playNext()
+        }
+        syncSystemMediaState()
+        return true
+    }
+
+    func handleSystemMediaSeek(to elapsedTime: TimeInterval) -> Bool {
+        guard let duration = player.duration, duration > 0 else { return false }
+        player.seek(to: elapsedTime / duration)
+        syncSystemMediaState()
+        return true
+    }
+
+    func nowPlayingMetadata() -> BaMusicNowPlayingMetadata? {
+        guard let selectedTrack else { return nil }
+        return BaMusicNowPlayingMetadata(
+            track: selectedTrack,
+            elapsedTime: player.currentTime,
+            duration: player.duration,
+            isPlaying: player.isPlaying,
+            queueIndex: currentIndex,
+            queueCount: queue.count
+        )
+    }
+
+    private func pauseCurrent() {
+        guard player.isPlaying,
+              let selectedTrack,
+              let audioURL = selectedTrack.audioURL
+        else {
+            return
+        }
+        player.toggle(remoteURL: audioURL)
+    }
+
+    private func syncSystemMediaState() {
+        guard let metadata = nowPlayingMetadata() else {
+            systemMediaController.clear()
+            stopSystemMediaTimer()
+            return
+        }
+        systemMediaController.update(metadata: metadata)
+        if player.isLoading || player.isPlaying {
+            startSystemMediaTimer()
+        } else {
+            stopSystemMediaTimer()
+        }
+    }
+
+    private func startSystemMediaTimer() {
+        guard systemMediaTimer == nil else { return }
+        systemMediaTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.syncSystemMediaState()
+            }
+        }
+    }
+
+    private func stopSystemMediaTimer() {
+        systemMediaTimer?.invalidate()
+        systemMediaTimer = nil
     }
 }

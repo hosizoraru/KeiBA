@@ -37,7 +37,9 @@ struct BaLibraryView: View {
         BaAdaptiveGeometry { metrics in
             ScrollView {
                 VStack(alignment: .leading, spacing: metrics.cardSpacing) {
-                    musicIntro(snapshot: snapshot)
+                    if let status = libraryStatusText(snapshot: snapshot) {
+                        musicStatus(status)
+                    }
                     musicContent(snapshot: snapshot, metrics: metrics)
                 }
                 .baAdaptiveReadableContent(maxWidth: metrics.dashboardContentMaxWidth)
@@ -67,23 +69,16 @@ struct BaLibraryView: View {
         }
     }
 
-    private func musicIntro(snapshot: BaMusicLibrarySnapshot) -> some View {
-        HStack(alignment: .top, spacing: 10) {
+    private func musicStatus(_ status: String) -> some View {
+        HStack(alignment: .center, spacing: 8) {
             Image(systemName: "music.note")
-                .font(.headline.weight(.semibold))
+                .font(.caption.weight(.semibold))
                 .foregroundStyle(BaDesign.pink)
-                .frame(width: 28, height: 28)
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(String(localized: "ba.music.library.title"))
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(.primary)
-
-                Text(librarySubtitle(snapshot: snapshot))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(3)
-            }
+            Text(status)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
         }
         .padding(.horizontal, 4)
     }
@@ -140,7 +135,6 @@ struct BaLibraryView: View {
                     metrics: metrics
                 )
                 trackSection(snapshot: snapshot, metrics: metrics)
-                    .padding(.top, playbackSession.hasCurrentTrack ? 56 : 0)
             }
         }
     }
@@ -160,14 +154,14 @@ struct BaLibraryView: View {
         )
     }
 
-    private func librarySubtitle(snapshot: BaMusicLibrarySnapshot) -> String {
+    private func libraryStatusText(snapshot: BaMusicLibrarySnapshot) -> String? {
         if let error = model.catalogState.errorMessage, error.isEmpty == false {
             return String(format: String(localized: "ba.state.error.format"), error)
         }
         if snapshot.playableTracks.isEmpty, snapshot.tracks.isEmpty == false {
             return String(localized: "ba.music.library.loading.subtitle")
         }
-        return String(localized: "ba.music.library.subtitle")
+        return nil
     }
 
     private func playTrack(_ track: BaMusicTrack) {

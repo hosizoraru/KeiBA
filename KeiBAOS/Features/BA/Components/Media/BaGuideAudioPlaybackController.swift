@@ -5,4 +5,4 @@
 //  Created by Codex on 2026/05/16.
 //
 
-typealias BaGuideAudioPlaybackController = BaVoicePlaybackController
+typealias BaGuideAudioPlaybackController = BaAudioPlaybackController

@@ -19,82 +19,143 @@ enum BaMusicNowPlayingPresentation {
     case full
 }
 
+nonisolated enum BaMusicMiniNowPlayingDisplayMode: Hashable {
+    case mini
+    case expanded
+
+    static func resolved(prefersExpanded: Bool, systemPlacementIsExpanded: Bool) -> Self {
+        prefersExpanded && systemPlacementIsExpanded ? .expanded : .mini
+    }
+}
+
 struct BaMusicMiniNowPlayingBar: View {
     let session: BaMusicPlaybackSession
+    var prefersExpanded = true
+
+    #if os(iOS)
+        @Environment(\.tabViewBottomAccessoryPlacement) private var accessoryPlacement
+    #endif
 
     var body: some View {
         if let track = session.selectedTrack {
+            switch displayMode {
+            case .mini:
+                inlineContent(track)
+            case .expanded:
+                expandedContent(track)
+            }
+        }
+    }
+
+    private func inlineContent(_ track: BaMusicTrack) -> some View {
+        HStack(spacing: 10) {
+            miniTrackButton(track, showsSubtitle: false)
+
+            miniPlayButton
+            miniNextButton
+        }
+        .padding(.horizontal, 4)
+        .padding(.vertical, 2)
+    }
+
+    private func expandedContent(_ track: BaMusicTrack) -> some View {
+        VStack(spacing: 6) {
             HStack(spacing: 10) {
-                Button {
-                    session.isExpanded = true
-                } label: {
-                    HStack(spacing: 10) {
-                        BaRowThumbnail(
-                            url: track.artworkURL,
-                            fallbackSystemImage: "music.note",
-                            tint: BaMusicVisualToken.accent,
-                            size: 38,
-                            maxPixelDimension: 144,
-                            usesGlassSurface: false
-                        )
+                miniTrackButton(track, showsSubtitle: true)
 
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack(spacing: 6) {
-                                Text(track.title)
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(.primary)
-                                    .lineLimit(1)
+                miniPlayButton
+                miniNextButton
+            }
 
-                                if session.player.isPlaying {
-                                    Image(systemName: "waveform")
-                                        .font(.caption2.weight(.semibold))
-                                        .foregroundStyle(BaMusicVisualToken.accent)
-                                        .accessibilityHidden(true)
-                                }
-                            }
+            BaMusicMiniProgressControl(session: session)
+        }
+        .padding(.horizontal, 4)
+        .padding(.vertical, 2)
+    }
 
-                            ProgressView(value: session.player.progress)
-                                .progressViewStyle(.linear)
-                                .tint(BaMusicVisualToken.accent)
+    private func miniTrackButton(_ track: BaMusicTrack, showsSubtitle: Bool) -> some View {
+        Button {
+            session.isExpanded = true
+        } label: {
+            HStack(spacing: 10) {
+                BaRowThumbnail(
+                    url: track.artworkURL,
+                    fallbackSystemImage: "music.note",
+                    tint: BaMusicVisualToken.accent,
+                    size: 38,
+                    maxPixelDimension: 144,
+                    usesGlassSurface: false
+                )
+
+                VStack(alignment: .leading, spacing: showsSubtitle ? 2 : 0) {
+                    HStack(spacing: 6) {
+                        Text(track.title)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+
+                        if session.player.isPlaying {
+                            Image(systemName: "waveform")
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(BaMusicVisualToken.accent)
+                                .accessibilityHidden(true)
                         }
                     }
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityLabel(Text(String(format: String(localized: "ba.music.mini.accessibility.format"), track.title)))
 
-                Button {
-                    session.toggleCurrent()
-                } label: {
-                    Image(systemName: session.player.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.headline.weight(.semibold))
-                        .foregroundStyle(.primary)
-                        .frame(width: 38, height: 38)
-                        .baMusicGlassCircle(isInteractive: true)
+                    if showsSubtitle {
+                        Text(track.subtitle)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
                 }
-                .buttonStyle(BaMusicControlButtonStyle())
-                .accessibilityLabel(Text(session.player.isPlaying ? String(localized: "ba.music.action.pause") : String(localized: "ba.music.action.play")))
-
-                Button {
-                    session.playNext()
-                } label: {
-                    Image(systemName: "forward.fill")
-                        .font(.headline.weight(.semibold))
-                        .foregroundStyle(.primary)
-                        .frame(width: 38, height: 38)
-                        .baMusicGlassCircle(isInteractive: true)
-                }
-                .buttonStyle(BaMusicControlButtonStyle())
-                .disabled(session.queue.count < 2)
-                .opacity(session.queue.count < 2 ? 0.42 : 1)
-                .accessibilityLabel(Text(String(localized: "ba.music.action.next")))
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .baMusicGlassSurface(cornerRadius: 24, isInteractive: true)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityLabel(Text(String(format: String(localized: "ba.music.mini.accessibility.format"), track.title)))
+    }
+
+    private var miniPlayButton: some View {
+        Button {
+            session.toggleCurrent()
+        } label: {
+            Image(systemName: session.player.isPlaying ? "pause.fill" : "play.fill")
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(.primary)
+                .frame(width: 40, height: 40)
+                .contentShape(Circle())
+        }
+        .buttonStyle(BaMusicControlButtonStyle())
+        .accessibilityLabel(Text(session.player.isPlaying ? String(localized: "ba.music.action.pause") : String(localized: "ba.music.action.play")))
+    }
+
+    private var miniNextButton: some View {
+        Button {
+            session.playNext()
+        } label: {
+            Image(systemName: "forward.fill")
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(.primary)
+                .frame(width: 40, height: 40)
+                .contentShape(Circle())
+        }
+        .buttonStyle(BaMusicControlButtonStyle())
+        .disabled(session.queue.count < 2)
+        .opacity(session.queue.count < 2 ? 0.42 : 1)
+        .accessibilityLabel(Text(String(localized: "ba.music.action.next")))
+    }
+
+    private var displayMode: BaMusicMiniNowPlayingDisplayMode {
+        #if os(iOS)
+            BaMusicMiniNowPlayingDisplayMode.resolved(
+                prefersExpanded: prefersExpanded,
+                systemPlacementIsExpanded: accessoryPlacement == .expanded
+            )
+        #else
+            .expanded
+        #endif
     }
 }
 
@@ -126,19 +187,19 @@ struct BaMusicNowPlayingHero: View {
             HStack(alignment: .center, spacing: 30) {
                 artwork(track, size: artworkSize)
 
-                VStack(spacing: 18) {
+                VStack(spacing: 16) {
                     trackInfo(track)
-                    BaMusicProgressControl(session: session, prefersSlider: prefersSlider)
+                    BaMusicProgressControl(session: session)
                     BaMusicTransportControls(track: track, session: session)
                     playbackError
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
             }
         } else {
-            VStack(spacing: 18) {
+            VStack(spacing: 14) {
                 artwork(track, size: artworkSize)
                 trackInfo(track)
-                BaMusicProgressControl(session: session, prefersSlider: prefersSlider)
+                BaMusicProgressControl(session: session)
                 BaMusicTransportControls(track: track, session: session)
                 playbackError
             }
@@ -204,7 +265,7 @@ struct BaMusicNowPlayingHero: View {
                 .multilineTextAlignment(.center)
                 .lineLimit(1)
 
-            if track.galleryTitle.isEmpty == false {
+            if showsGalleryTitle, track.galleryTitle.isEmpty == false {
                 Text(track.galleryTitle)
                     .font(.caption)
                     .foregroundStyle(.tertiary)
@@ -230,7 +291,7 @@ struct BaMusicNowPlayingHero: View {
         case .compact:
             switch presentation {
             case .inline:
-                min(max(metrics.containerWidth - 154, 160), 210)
+                min(max(metrics.containerWidth - 128, 188), 232)
             case .full:
                 min(max(metrics.containerWidth - 126, 172), 242)
             }
@@ -241,11 +302,11 @@ struct BaMusicNowPlayingHero: View {
         }
     }
 
-    private var prefersSlider: Bool {
+    private var showsPlayingLabel: Bool {
         presentation == .full || metrics.widthClass != .compact
     }
 
-    private var showsPlayingLabel: Bool {
+    private var showsGalleryTitle: Bool {
         presentation == .full || metrics.widthClass != .compact
     }
 }
@@ -257,11 +318,9 @@ private struct BaMusicTransportControls: View {
     let session: BaMusicPlaybackSession
 
     var body: some View {
-        GlassEffectContainer(spacing: transportSpacing) {
-            ViewThatFits(in: .horizontal) {
-                controlRow(scale: 1)
-                controlRow(scale: 0.88)
-            }
+        ViewThatFits(in: .horizontal) {
+            controlRow(scale: 1)
+            controlRow(scale: 0.88)
         }
         .frame(maxWidth: .infinity, alignment: .center)
     }
@@ -349,10 +408,10 @@ private struct BaMusicTransportButton: View {
                 .font(.system(size: fontSize, weight: .semibold))
                 .foregroundStyle(foregroundStyle)
                 .frame(width: size, height: size)
-                .baMusicGlassCircle(isInteractive: true)
+                .contentShape(Circle())
                 .overlay {
                     Circle()
-                        .strokeBorder(foregroundStyle.opacity(isActive || isProminent ? 0.28 : 0), lineWidth: 1)
+                        .strokeBorder(foregroundStyle.opacity(isActive ? 0.32 : 0), lineWidth: 1)
                 }
         }
         .buttonStyle(BaMusicControlButtonStyle())
@@ -392,7 +451,7 @@ private struct BaMusicCacheButton: View {
                 }
             }
             .frame(width: size, height: size)
-            .baMusicGlassCircle(isInteractive: true)
+            .contentShape(Circle())
             .overlay {
                 Circle()
                     .strokeBorder(BaMusicVisualToken.accent.opacity(state.isCached ? 0.28 : 0), lineWidth: 1)
@@ -412,10 +471,6 @@ private extension View {
             .glassEffect(isInteractive ? .regular.interactive() : .regular, in: shape)
     }
 
-    func baMusicGlassCircle(isInteractive: Bool) -> some View {
-        background(.clear, in: Circle())
-            .glassEffect(isInteractive ? .clear.interactive() : .clear, in: Circle())
-    }
 }
 
 struct BaMusicNowPlayingSheet: View {
@@ -463,27 +518,20 @@ struct BaMusicNowPlayingSheet: View {
 
 private struct BaMusicProgressControl: View {
     let session: BaMusicPlaybackSession
-    let prefersSlider: Bool
     @State private var editingProgress = 0.0
     @State private var isEditing = false
 
     var body: some View {
-        if session.player.canSeek, prefersSlider {
-            Slider(
-                value: Binding(
-                    get: { isEditing ? editingProgress : session.player.progress },
-                    set: { editingProgress = $0 }
-                ),
-                in: 0 ... 1,
-                onEditingChanged: handleEditingChanged
-            )
-            .tint(BaMusicVisualToken.accent)
-            .accessibilityLabel(Text(String(localized: "ba.music.progress.accessibility")))
-        } else {
-            ProgressView(value: session.player.progress)
-                .progressViewStyle(.linear)
-                .tint(BaMusicVisualToken.accent)
-        }
+        Slider(
+            value: Binding(
+                get: { isEditing ? editingProgress : session.player.progress },
+                set: { editingProgress = $0 }
+            ),
+            in: 0 ... 1,
+            onEditingChanged: handleEditingChanged
+        )
+        .tint(BaMusicVisualToken.accent)
+        .accessibilityLabel(Text(String(localized: "ba.music.progress.accessibility")))
     }
 
     private func handleEditingChanged(_ editing: Bool) {
@@ -492,7 +540,46 @@ private struct BaMusicProgressControl: View {
             isEditing = true
         } else {
             isEditing = false
-            session.player.seek(to: editingProgress)
+            if session.player.canSeek {
+                session.player.seek(to: editingProgress)
+            } else {
+                editingProgress = session.player.progress
+            }
+        }
+    }
+}
+
+private struct BaMusicMiniProgressControl: View {
+    let session: BaMusicPlaybackSession
+    @State private var editingProgress = 0.0
+    @State private var isEditing = false
+
+    var body: some View {
+        Slider(
+            value: Binding(
+                get: { isEditing ? editingProgress : session.player.progress },
+                set: { editingProgress = $0 }
+            ),
+            in: 0 ... 1,
+            onEditingChanged: handleEditingChanged
+        )
+        .tint(BaMusicVisualToken.accent)
+        .controlSize(.mini)
+        .frame(height: 14)
+        .accessibilityLabel(Text(String(localized: "ba.music.progress.accessibility")))
+    }
+
+    private func handleEditingChanged(_ editing: Bool) {
+        if editing {
+            editingProgress = session.player.progress
+            isEditing = true
+        } else {
+            isEditing = false
+            if session.player.canSeek {
+                session.player.seek(to: editingProgress)
+            } else {
+                editingProgress = session.player.progress
+            }
         }
     }
 }

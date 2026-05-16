@@ -21,7 +21,7 @@ struct AppShell: View {
             }
         }
         .platformAdaptiveTabViewStyle()
-        .baMusicMiniPlayerAccessory(session: musicPlaybackSession)
+        .baMusicMiniPlayerAccessory(session: musicPlaybackSession, selectedTab: selectedTab)
         .sheet(isPresented: musicNowPlayingExpandedBinding) {
             BaMusicNowPlayingSheet(session: musicPlaybackSession)
         }
@@ -209,13 +209,16 @@ private struct BaNavigationRoot: View {
 
 private extension View {
     @ViewBuilder
-    func baMusicMiniPlayerAccessory(session: BaMusicPlaybackSession) -> some View {
+    func baMusicMiniPlayerAccessory(session: BaMusicPlaybackSession, selectedTab: AppTab) -> some View {
         #if os(iOS)
             if session.hasCurrentTrack {
                 tabViewBottomAccessory {
-                    BaMusicMiniNowPlayingBar(session: session)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
+                    BaMusicMiniNowPlayingBar(
+                        session: session,
+                        prefersExpanded: selectedTab == .library
+                    )
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
                 }
                 .tabBarMinimizeBehavior(.onScrollDown)
             } else {

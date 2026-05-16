@@ -9,7 +9,7 @@ import AudioStreaming
 import AVFoundation
 import Foundation
 
-enum BaOggVoiceEvent {
+enum BaOggAudioEvent {
     case ready
     case playing
     case paused
@@ -18,9 +18,14 @@ enum BaOggVoiceEvent {
     case failed(String)
 }
 
+enum BaOggPlaybackMode: String, Sendable {
+    case decodedPreferred
+    case streaming
+}
+
 @MainActor
-final class BaOggVoicePlayer: NSObject {
-    var onEvent: ((BaOggVoiceEvent) -> Void)?
+final class BaOggAudioPlayer: NSObject {
+    var onEvent: ((BaOggAudioEvent) -> Void)?
 
     private var engine: AVAudioEngine?
     private var playerNode: AVAudioPlayerNode?
@@ -34,6 +39,26 @@ final class BaOggVoicePlayer: NSObject {
         return duration.isFinite && duration > 0
     }
 
+    var duration: TimeInterval? {
+        if let duration = streamingPlayer?.duration, duration.isFinite, duration > 0 {
+            return duration
+        }
+        if let duration = decodedAudio?.duration, duration.isFinite, duration > 0 {
+            return duration
+        }
+        return nil
+    }
+
+    var currentTime: TimeInterval {
+        if let decodedAudio, let playerNode {
+            return min(max(decodedElapsedTime(playerNode: playerNode), 0), decodedAudio.duration)
+        }
+        guard let streamingPlayer, let duration, duration > 0 else {
+            return 0
+        }
+        return min(max(streamingPlayer.progress, 0), duration)
+    }
+
     deinit {
         progressTimer?.invalidate()
         playerNode?.stop()
@@ -42,10 +67,14 @@ final class BaOggVoicePlayer: NSObject {
         streamingPlayer?.stop()
     }
 
-    func play(localURL: URL) {
+    func play(localURL: URL, mode: BaOggPlaybackMode = .decodedPreferred) {
         stop()
         let token = UUID()
         playbackToken = token
+        if mode == .streaming {
+            startStreamingPlayback(localURL: localURL, token: token)
+            return
+        }
         Task.detached(priority: .userInitiated) { [localURL] in
             do {
                 let decoded = try BaOggVorbisDecoder().decode(localURL: localURL)
@@ -54,7 +83,7 @@ final class BaOggVoicePlayer: NSObject {
                 }
             } catch {
                 await MainActor.run { [weak self] in
-                    self?.startStreamingFallback(localURL: localURL, token: token)
+                    self?.startStreamingPlayback(localURL: localURL, token: token)
                 }
             }
         }
@@ -123,7 +152,7 @@ final class BaOggVoicePlayer: NSObject {
         do {
             try nextEngine.start()
         } catch {
-            startStreamingFallback(localURL: localURL, token: token)
+            startStreamingPlayback(localURL: localURL, token: token)
             return
         }
 
@@ -145,7 +174,7 @@ final class BaOggVoicePlayer: NSObject {
         onEvent?(.playing)
     }
 
-    private func startStreamingFallback(localURL: URL, token: UUID) {
+    private func startStreamingPlayback(localURL: URL, token: UUID) {
         guard token == playbackToken else { return }
         stopCurrentPlayer()
         let nextPlayer = AudioPlayer()
@@ -232,7 +261,7 @@ final class BaOggVoicePlayer: NSObject {
     }
 }
 
-extension BaOggVoicePlayer: AudioPlayerDelegate {
+extension BaOggAudioPlayer: AudioPlayerDelegate {
     nonisolated func audioPlayerDidStartPlaying(player callbackPlayer: AudioPlayer, with _: AudioEntryId) {
         Task { @MainActor [weak self, weak callbackPlayer] in
             guard let self, let callbackPlayer, let currentPlayer = self.streamingPlayer, callbackPlayer === currentPlayer else { return }
@@ -303,3 +332,6 @@ extension BaOggVoicePlayer: AudioPlayerDelegate {
 
     nonisolated func audioPlayerDidReadMetadata(player _: AudioPlayer, metadata _: [String: String]) {}
 }
+
+typealias BaOggVoiceEvent = BaOggAudioEvent
+typealias BaOggVoicePlayer = BaOggAudioPlayer

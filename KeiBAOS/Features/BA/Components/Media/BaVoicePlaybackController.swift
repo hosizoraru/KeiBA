@@ -10,9 +10,23 @@ import Foundation
 import Observation
 import os
 
+nonisolated enum BaAudioPlaybackProfile: Sendable {
+    case voice
+    case music
+
+    var defaultOggPlaybackMode: BaOggPlaybackMode {
+        switch self {
+        case .voice:
+            .decodedPreferred
+        case .music:
+            .streaming
+        }
+    }
+}
+
 @Observable
 @MainActor
-final class BaVoicePlaybackController {
+final class BaAudioPlaybackController {
     private nonisolated static let nativePlaybackExtensions = Set(
         "3gp 3gpp aac aif aifc aiff amr caf flac m4a m4b m4p mp3 mp4 wav".split(separator: " ")
             .map(String.init)
@@ -48,11 +62,40 @@ final class BaVoicePlaybackController {
         }
     }
 
+    var duration: TimeInterval? {
+        switch playbackBackend {
+        case .avFoundation:
+            guard let duration = player?.duration, duration.isFinite, duration > 0 else { return nil }
+            return duration
+        case .avPlayer:
+            return avPlayerDuration
+        case .audioStreaming, .vorbisEngine:
+            return oggPlayer.duration
+        case nil:
+            return nil
+        }
+    }
+
+    var currentTime: TimeInterval {
+        switch playbackBackend {
+        case .avFoundation:
+            return player?.currentTime ?? 0
+        case .avPlayer:
+            return avPlayer?.currentTime().seconds ?? 0
+        case .audioStreaming, .vorbisEngine:
+            return oggPlayer.currentTime
+        case nil:
+            guard let duration else { return 0 }
+            return duration * progress
+        }
+    }
+
     private let audioCache: any BaAudioCaching
-    @ObservationIgnored private let oggPlayer = BaOggVoicePlayer()
+    @ObservationIgnored private let oggPlayer = BaOggAudioPlayer()
     @ObservationIgnored private let logger = Logger(subsystem: "os.kei.KeiBAOS", category: "BaVoicePlayback")
     @ObservationIgnored private var playbackObserver: NSObjectProtocol?
     @ObservationIgnored private var avPlayerEndObserver: NSObjectProtocol?
+    private let playbackProfile: BaAudioPlaybackProfile
     private var player: AVAudioPlayer?
     private var avPlayer: AVPlayer?
     private var playbackBackend: PlaybackBackend?
@@ -60,8 +103,9 @@ final class BaVoicePlaybackController {
     private var progressTimer: Timer?
     private var avPlayerDuration: TimeInterval?
 
-    init(audioCache: any BaAudioCaching = BaAudioCache.shared) {
+    init(audioCache: any BaAudioCaching = BaAudioCache.shared, profile: BaAudioPlaybackProfile = .voice) {
         self.audioCache = audioCache
+        playbackProfile = profile
         oggPlayer.onEvent = { [weak self] event in
             self?.handleOggEvent(event)
         }
@@ -162,7 +206,7 @@ final class BaVoicePlaybackController {
         isLoading = true
         isPlaying = false
         progress = 0
-        playbackBackend = Self.preferredBackend(for: remoteURL)
+        playbackBackend = Self.preferredBackend(for: remoteURL, profile: playbackProfile)
 
         if playbackBackend == .avPlayer, BaMediaPlaybackSource.requiresRemotePlayback(remoteURL) {
             startAVPlayer(remoteURL: remoteURL)
@@ -328,10 +372,22 @@ final class BaVoicePlaybackController {
         case avPlayer
         case vorbisEngine
         case audioStreaming
+
+        nonisolated var oggPlaybackMode: BaOggPlaybackMode {
+            switch self {
+            case .audioStreaming:
+                .streaming
+            case .vorbisEngine, .avFoundation, .avPlayer:
+                .decodedPreferred
+            }
+        }
     }
 
-    private nonisolated static func preferredBackend(for url: URL) -> PlaybackBackend {
+    private nonisolated static func preferredBackend(for url: URL, profile: BaAudioPlaybackProfile) -> PlaybackBackend {
         let ext = url.pathExtension.lowercased()
+        if profile == .music, supportsOggPlayback(url) {
+            return .audioStreaming
+        }
         if vorbisEngineExtensions.contains(ext) {
             return .vorbisEngine
         }
@@ -342,7 +398,18 @@ final class BaVoicePlaybackController {
     }
 
     nonisolated static func preferredBackendNameForTesting(_ url: URL) -> String {
-        preferredBackend(for: url).rawValue
+        preferredBackend(for: url, profile: .voice).rawValue
+    }
+
+    nonisolated static func preferredMusicBackendNameForTesting(_ url: URL) -> String {
+        preferredBackend(for: url, profile: .music).rawValue
+    }
+
+    nonisolated static func preferredOggPlaybackModeNameForTesting(
+        _ url: URL,
+        profile: BaAudioPlaybackProfile
+    ) -> String {
+        preferredBackend(for: url, profile: profile).oggPlaybackMode.rawValue
     }
 
     private nonisolated static func looksLikeAudioSource(_ url: URL) -> Bool {
@@ -435,11 +502,12 @@ final class BaVoicePlaybackController {
     }
 }
 
-private extension BaVoicePlaybackController {
+private extension BaAudioPlaybackController {
     func startOggPlayer(localURL: URL) {
         configureAudioSession()
-        logger.debug("voice ogg local playback start")
-        oggPlayer.play(localURL: localURL)
+        let mode = playbackBackend?.oggPlaybackMode ?? playbackProfile.defaultOggPlaybackMode
+        logger.debug("ogg local playback start, profile: \(String(describing: self.playbackProfile)), mode: \(String(describing: mode))")
+        oggPlayer.play(localURL: localURL, mode: mode)
     }
 
     func pauseOggPlayer() {
@@ -455,7 +523,7 @@ private extension BaVoicePlaybackController {
         oggPlayer.stop()
     }
 
-    func handleOggEvent(_ event: BaOggVoiceEvent) {
+    func handleOggEvent(_ event: BaOggAudioEvent) {
         switch event {
         case .ready:
             isLoading = false
@@ -473,3 +541,5 @@ private extension BaVoicePlaybackController {
         }
     }
 }
+
+typealias BaVoicePlaybackController = BaAudioPlaybackController

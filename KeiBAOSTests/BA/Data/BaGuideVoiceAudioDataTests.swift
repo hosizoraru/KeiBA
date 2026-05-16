@@ -227,6 +227,28 @@ final class BaGuideVoiceAudioDataTests: XCTestCase {
         XCTAssertFalse(BaVoicePlaybackController.supportsPlayback(pageURL))
     }
 
+    func testMusicPlaybackStreamsOggForLongBGM() throws {
+        let oggURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/bgm/memory.ogg"))
+        let opusURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/bgm/memory.opus"))
+        let mp3URL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/bgm/memory.mp3"))
+
+        XCTAssertEqual(BaVoicePlaybackController.preferredMusicBackendNameForTesting(oggURL), "audioStreaming")
+        XCTAssertEqual(BaVoicePlaybackController.preferredMusicBackendNameForTesting(opusURL), "audioStreaming")
+        XCTAssertEqual(BaVoicePlaybackController.preferredMusicBackendNameForTesting(mp3URL), "avFoundation")
+        XCTAssertEqual(
+            BaVoicePlaybackController.preferredOggPlaybackModeNameForTesting(oggURL, profile: .music),
+            "streaming"
+        )
+        XCTAssertEqual(
+            BaVoicePlaybackController.preferredOggPlaybackModeNameForTesting(opusURL, profile: .music),
+            "streaming"
+        )
+        XCTAssertEqual(
+            BaVoicePlaybackController.preferredOggPlaybackModeNameForTesting(oggURL, profile: .voice),
+            "decodedPreferred"
+        )
+    }
+
     func testShortGameKeeOggDecoderBuildsPlayablePCMBuffer() async throws {
         let data = try await fetchHinaDressTitleOggFixtureDataForTesting()
 
