@@ -14,6 +14,8 @@ final class BaAdaptiveLayoutTests: XCTestCase {
         XCTAssertEqual(compact.widthClass, .compact)
         XCTAssertEqual(compact.timelineColumnCount, 1)
         XCTAssertEqual(compact.overviewColumnCount, 1)
+        XCTAssertEqual(compact.overviewSummaryGridColumns.count, 1)
+        XCTAssertEqual(compact.poolCardThumbnailSize, 88)
         XCTAssertNil(compact.readableContentMaxWidth)
 
         let regular = BaAdaptiveMetrics(containerWidth: 760)
@@ -21,6 +23,7 @@ final class BaAdaptiveLayoutTests: XCTestCase {
         XCTAssertEqual(regular.timelineColumnCount, 2)
         XCTAssertEqual(regular.overviewColumnCount, 2)
         XCTAssertEqual(regular.overviewInnerGridColumns.count, 2)
+        XCTAssertEqual(regular.overviewSummaryGridColumns.count, 2)
         XCTAssertEqual(regular.readableContentMaxWidth, 760)
 
         let portraitIPad = BaAdaptiveMetrics(containerWidth: 834)

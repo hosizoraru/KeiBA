@@ -223,25 +223,52 @@ struct BaOverviewTimelineTile: View {
     let tint: Color
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Label(title, systemImage: systemImage)
-                .font(BaOverviewTextToken.rowTitle)
-                .foregroundStyle(.primary)
-                .frame(height: 24, alignment: .leading)
+        VStack(alignment: .leading, spacing: 9) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Label(title, systemImage: systemImage)
+                    .font(BaOverviewTextToken.rowTitle)
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
 
-            Text(item.titleText)
+                Spacer(minLength: 8)
+
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .frame(height: 24, alignment: .leading)
+
+            Text(item.primaryTitle)
                 .font(.subheadline)
                 .foregroundStyle(.primary)
                 .lineLimit(metrics.overviewTimelineTitleLineLimit)
                 .minimumScaleFactor(0.82)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Text(item.timeText)
-                .font(BaOverviewTextToken.timeValue)
-                .foregroundStyle(tint)
-                .lineLimit(1)
-                .minimumScaleFactor(0.76)
-                .frame(height: 24, alignment: .leading)
+            if let extraTitleText = item.extraTitleText {
+                Text(extraTitleText)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(tint)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.82)
+            }
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(item.remainingText)
+                    .font(BaOverviewTextToken.timeValue)
+                    .foregroundStyle(tint)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.78)
+                    .contentTransition(.numericText())
+
+                if let endLineText = item.endLineText {
+                    Text(endLineText)
+                        .font(BaOverviewTextToken.timeDetail)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.82)
+                }
+            }
 
             Text(syncText)
                 .font(BaOverviewTextToken.timeDetail)
@@ -253,6 +280,8 @@ struct BaOverviewTimelineTile: View {
         .frame(maxWidth: .infinity, minHeight: BaOverviewMetricStyle.timelineTileHeight, alignment: .topLeading)
         .padding(12)
         .liquidGlassSurface(cornerRadius: 18, tint: tint.opacity(0.045), isInteractive: false)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title), \(item.accessibilityTitle)")
     }
 
     private var syncText: String {

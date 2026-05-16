@@ -216,72 +216,74 @@ private struct BaPoolNavigationCard: View, Equatable {
     }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            RoundedRectangle(cornerRadius: 999, style: .continuous)
-                .fill(row.status.tint.opacity(0.78))
-                .frame(width: 4)
-                .padding(.vertical, 18)
+        VStack(alignment: .leading, spacing: 13) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                BaTimelineStatusPill(title: row.status.title, tint: row.status.tint)
 
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    BaTimelineStatusPill(title: row.status.title, tint: row.status.tint)
+                Text(row.tagTitle)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.82)
 
-                    Spacer(minLength: 8)
+                Spacer(minLength: 8)
 
-                    Text(row.timelineDetail)
-                        .font(.caption.monospacedDigit().weight(.semibold))
-                        .foregroundStyle(row.status.tint)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.78)
-                }
-
-                HStack(alignment: .top, spacing: 13) {
-                    BaRemoteImageSurface(
-                        url: row.pool.imageURL,
-                        fallbackSystemImage: row.fallbackSystemImage,
-                        tint: row.status.tint,
-                        width: metrics.poolCardThumbnailSize,
-                        height: metrics.poolCardThumbnailSize,
-                        cornerRadius: 22,
-                        contentMode: .fit,
-                        usesImageBackdrop: true,
-                        fallbackFont: .system(size: 33, weight: .semibold)
-                    )
-
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(row.tagTitle)
-                            .font(BaTextToken.rowCaption.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-
-                        Text(row.pool.name)
-                            .font(.title3.weight(.semibold))
-                            .foregroundStyle(.primary)
-                            .lineLimit(2)
-                            .fixedSize(horizontal: false, vertical: true)
-
-                        Text(row.subtitle)
-                            .font(BaTextToken.rowCaption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(2)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-
-                BaTimelineDatePair(
-                    start: row.startText,
-                    end: row.endText,
-                    detail: "",
-                    tint: row.status.tint,
-                    progress: row.progress
-                )
+                Text(row.timelineDetail)
+                    .font(.caption.monospacedDigit().weight(.semibold))
+                    .foregroundStyle(row.status.tint)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.78)
             }
+
+            HStack(alignment: .top, spacing: 13) {
+                BaRemoteImageSurface(
+                    url: row.pool.imageURL,
+                    fallbackSystemImage: row.fallbackSystemImage,
+                    tint: row.status.tint,
+                    width: metrics.poolCardThumbnailSize,
+                    height: metrics.poolCardThumbnailSize,
+                    cornerRadius: 20,
+                    contentMode: .fit,
+                    usesImageBackdrop: true,
+                    fallbackFont: .system(size: 30, weight: .semibold)
+                )
+
+                VStack(alignment: .leading, spacing: 7) {
+                    Text(row.pool.name)
+                        .font(.headline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Text(row.subtitle)
+                        .font(BaTextToken.rowCaption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            BaTimelineDatePair(
+                start: row.startText,
+                end: row.endText,
+                detail: "",
+                tint: row.status.tint,
+                progress: row.progress
+            )
         }
-        .padding(.horizontal, 14)
+        .padding(.leading, 20)
+        .padding(.trailing, 14)
         .padding(.vertical, 13)
         .frame(maxWidth: .infinity, alignment: .leading)
         .baTimelineScrollCardSurface(tint: row.status.tint)
+        .overlay(alignment: .leading) {
+            RoundedRectangle(cornerRadius: 999, style: .continuous)
+                .fill(row.status.tint.opacity(0.78))
+                .frame(width: 4)
+                .padding(.leading, 9)
+                .padding(.vertical, 18)
+        }
         .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 }

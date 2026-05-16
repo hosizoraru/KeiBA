@@ -309,15 +309,13 @@ struct BaOverviewTimelineSummary: Equatable {
 
         return BaOverviewTimelineSummaryItem(
             titles: titles,
-            timeText: [
-                BaDisplayFormatters.timelineDetail(
-                    start: earliestStart,
-                    end: earliestEnd,
-                    now: now,
-                    includingSeconds: false
-                ),
-                BaDisplayFormatters.dateTime(earliestEnd)
-            ].joined(separator: " · "),
+            remainingText: BaDisplayFormatters.timelineDetail(
+                start: earliestStart,
+                end: earliestEnd,
+                now: now,
+                includingSeconds: false
+            ),
+            endText: BaDisplayFormatters.dateTime(earliestEnd),
             endAt: earliestEnd
         )
     }
@@ -325,20 +323,47 @@ struct BaOverviewTimelineSummary: Equatable {
 
 struct BaOverviewTimelineSummaryItem: Equatable {
     let titles: [String]
-    let timeText: String
+    let remainingText: String
+    let endText: String?
     let endAt: Date?
 
-    var titleText: String {
-        guard titles.isEmpty == false else {
-            return String(localized: "ba.overview.timeline.empty")
+    var primaryTitle: String {
+        titles.first ?? String(localized: "ba.overview.timeline.empty")
+    }
+
+    var extraTitleText: String? {
+        let extraCount = titles.count - 1
+        guard extraCount > 0 else {
+            return nil
         }
-        return titles.joined(separator: "\n")
+        return String.localizedStringWithFormat(
+            String(localized: "ba.overview.timeline.moreItems.format"),
+            extraCount
+        )
+    }
+
+    var endLineText: String? {
+        guard let endText else {
+            return nil
+        }
+        return String.localizedStringWithFormat(
+            String(localized: "ba.overview.timeline.endsAt.format"),
+            endText
+        )
+    }
+
+    var accessibilityTitle: String {
+        guard let extraTitleText else {
+            return primaryTitle
+        }
+        return "\(primaryTitle), \(extraTitleText)"
     }
 
     static var empty: BaOverviewTimelineSummaryItem {
         BaOverviewTimelineSummaryItem(
             titles: [],
-            timeText: String(localized: "ba.state.notSynced"),
+            remainingText: String(localized: "ba.state.notSynced"),
+            endText: nil,
             endAt: nil
         )
     }
@@ -357,7 +382,7 @@ struct BaOverviewTimelineSummaryCard: View {
             VStack(alignment: .leading, spacing: BaOverviewMetricStyle.cardSpacing) {
                 BaOverviewSectionTitle(title: String(localized: "ba.overview.timeline.title"), asset: .guideMission)
 
-                LazyVGrid(columns: metrics.overviewInnerGridColumns, spacing: 10) {
+                LazyVGrid(columns: metrics.overviewSummaryGridColumns, spacing: 10) {
                     Button {
                         onOpenTab(.activity)
                     } label: {

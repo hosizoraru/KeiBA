@@ -240,12 +240,10 @@ final class BaOverviewSettingsTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            summary.activity.timeText,
-            [
-                String(format: String(localized: "ba.timeline.remaining.endsIn.format"), "2m"),
-                BaDisplayFormatters.dateTime(base.addingTimeInterval(90))
-            ].joined(separator: " · ")
+            summary.activity.remainingText,
+            String(format: String(localized: "ba.timeline.remaining.endsIn.format"), "2m")
         )
+        XCTAssertEqual(summary.activity.endText, BaDisplayFormatters.dateTime(base.addingTimeInterval(90)))
     }
 
     func testOverviewTimelineSummaryShowsAllEntriesWithEarliestEndTime() {
@@ -317,7 +315,14 @@ final class BaOverviewSettingsTests: XCTestCase {
 
         XCTAssertEqual(summary.activity.titles, ["Raid", "Login"])
         XCTAssertEqual(summary.activity.endAt, earliestEnd)
-        XCTAssertEqual(summary.activity.titleText, "Raid\nLogin")
+        XCTAssertEqual(summary.activity.primaryTitle, "Raid")
+        XCTAssertEqual(
+            summary.activity.extraTitleText,
+            String.localizedStringWithFormat(
+                String(localized: "ba.overview.timeline.moreItems.format"),
+                1
+            )
+        )
         XCTAssertEqual(summary.pool.titles, ["Pickup B"])
         XCTAssertEqual(summary.pool.endAt, earliestEnd)
     }

@@ -109,6 +109,14 @@ struct BaAdaptiveMetrics: Equatable {
         )
     }
 
+    var overviewSummaryGridColumns: [GridItem] {
+        let count = widthClass == .compact ? 1 : 2
+        return Array(
+            repeating: GridItem(.flexible(), spacing: 10, alignment: .top),
+            count: count
+        )
+    }
+
     var timelineCardImageHeight: CGFloat {
         guard timelineColumnCount > 1 else { return 172 }
         let targetHeight = (timelineCardColumnWidth / 1.92).rounded(.toNearestOrAwayFromZero)
@@ -131,11 +139,11 @@ struct BaAdaptiveMetrics: Equatable {
     }
 
     var overviewTimelineTitleLineLimit: Int {
-        widthClass == .compact ? 3 : 5
+        widthClass == .compact ? 2 : 3
     }
 
     var poolCardThumbnailSize: CGFloat {
-        guard timelineColumnCount > 1 else { return 108 }
+        guard timelineColumnCount > 1 else { return 88 }
         return containerWidth < 760 ? 84 : 92
     }
 
