@@ -16,15 +16,15 @@ struct BaStudentProfileCardsSection: View {
 
     init(
         info: BaStudentGuideInfo,
+        category: BaCatalogCategory = .students,
         tint: Color,
         sameNameEntryResolver: (BaStudentProfileSameNameRoleItem) -> BaGuideCatalogEntry?,
         onOpenSameNameEntry: @escaping (BaGuideCatalogEntry) -> Void
     ) {
         self.tint = tint
         self.onOpenSameNameEntry = onOpenSameNameEntry
-        let sections = info.profileSections
-        let hasContent = sections.contains { $0.isEmpty == false }
-        displaySections = hasContent ? sections : []
+        let sections = info.profileSections(for: category)
+        displaySections = sections.filter { $0.isEmpty == false }
         sameNameEntriesByItemID = Dictionary(
             sections
                 .flatMap(\.sameNameRoleItems)
@@ -91,7 +91,7 @@ private struct BaStudentProfileSectionCard: View {
             BaStudentProfileGalleryList(items: section.galleryItems, tint: tint)
         case .furniture:
             BaStudentProfileRowsView(rows: section.rows, tint: tint)
-        case .names, .info, .hobby:
+        case .names, .info, .hobby, .other:
             BaStudentProfileRowsView(rows: section.rows, tint: tint)
         }
     }

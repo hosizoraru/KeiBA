@@ -110,23 +110,38 @@ struct BaStudentGuideRepository {
         let subtitle = apiData.object("game")?.string("name") ?? "GameKee"
         let parsed = BaGuideContentParser().parse(content: content, apiData: apiData, html: html, entry: entry)
         let apiSummary = parsed.summary
-        let profileRows = parsed.profileRows
-        let skillRows = parsed.skillRows
-        let simulateRows = parsed.simulateRows
-        let growthRows = parsed.growthRows
+        var profileRows = parsed.profileRows
+        var skillRows = parsed.skillRows
+        var simulateRows = parsed.simulateRows
+        var growthRows = parsed.growthRows
         let voiceRows = parsed.voiceRows
         let galleryItems = parsed.galleryItems
         let imageURL = parsed.imageURL ?? entry.iconURL
+        let isNpcSatellite = entry.category == .npcSatellite
+        let resolvedSummary = summary(apiSummary: apiSummary, entry: entry, isNpcSatellite: isNpcSatellite)
+
+        if isNpcSatellite {
+            skillRows = []
+            simulateRows = []
+            growthRows = []
+        }
+
+        if profileRows.isEmpty {
+            profileRows = fallbackProfileRows(entry: entry, summary: resolvedSummary)
+        }
+        let stats = isNpcSatellite
+            ? npcSatelliteStats(from: profileRows, fallback: entry)
+            : (parsed.stats.isEmpty ? stats(from: profileRows, fallback: entry) : parsed.stats)
 
         return BaStudentGuideInfo(
             contentId: entry.contentId,
             sourceURL: entry.detailURL,
             title: title,
             subtitle: subtitle,
-            summary: apiSummary.isEmpty ? entry.aliasDisplay : apiSummary,
+            summary: resolvedSummary,
             imageURL: imageURL,
-            stats: parsed.stats.isEmpty ? stats(from: profileRows, fallback: entry) : parsed.stats,
-            profileRows: profileRows.isEmpty ? fallbackProfileRows(entry: entry, summary: apiSummary) : profileRows,
+            stats: stats,
+            profileRows: profileRows,
             skillRows: skillRows,
             voiceLanguageHeaders: parsed.voiceLanguageHeaders,
             voiceRows: voiceRows,
@@ -136,6 +151,20 @@ struct BaStudentGuideRepository {
             contentSource: contentSource,
             syncedAt: now
         )
+    }
+
+    private func summary(apiSummary: String, entry: BaGuideCatalogEntry, isNpcSatellite: Bool) -> String {
+        let cleaned = cleanText(apiSummary)
+        if cleaned.isEmpty == false {
+            return cleaned
+        }
+        if entry.aliasDisplay.isEmpty == false {
+            return entry.aliasDisplay
+        }
+        if isNpcSatellite {
+            return String(localized: "ba.student.detail.npc.summary.empty")
+        }
+        return ""
     }
 
     private func rows(from pairs: [(String, String)]) -> [BaGuideRow] {
@@ -191,6 +220,55 @@ struct BaStudentGuideRepository {
                 imageURL: nil
             ),
         ]
+    }
+
+    private func npcSatelliteStats(from profileRows: [BaGuideRow], fallback: BaGuideCatalogEntry) -> [BaGuideRow] {
+        var usedTitles = Set<String>()
+        let preferred = profileRows.filter { row in
+            guard isMeaningfulGuideRow(row) else { return false }
+            return usedTitles.insert(row.title.trimmingCharacters(in: .whitespacesAndNewlines)).inserted
+        }
+        if preferred.isEmpty == false {
+            return Array(preferred.prefix(14))
+        }
+        return [
+            BaGuideRow(
+                id: "stat-content-id",
+                title: String(localized: "ba.student.detail.contentId.title"),
+                value: "\(fallback.contentId)",
+                imageURL: nil
+            ),
+        ]
+    }
+
+    private func isMeaningfulGuideRow(_ row: BaGuideRow) -> Bool {
+        let title = row.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let value = row.value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard title.isEmpty == false, isPlaceholderValue(value) == false else {
+            return false
+        }
+        return title != value
+    }
+
+    private func isPlaceholderValue(_ value: String) -> Bool {
+        let compact = value
+            .replacingOccurrences(of: " ", with: "")
+            .replacingOccurrences(of: "\u{3000}", with: "")
+            .lowercased()
+        if value.isEmpty { return true }
+        if compact.range(of: #"^[\\/|｜／,，;；:：._\-—~·*]+$"#, options: .regularExpression) != nil {
+            return true
+        }
+        return value == "-" ||
+            value == "—" ||
+            value == "--" ||
+            value == "暂无" ||
+            value == "无" ||
+            compact == "n" ||
+            compact == "none" ||
+            compact == "null" ||
+            compact == "undefined" ||
+            compact == "nan"
     }
 
     private func fallbackProfileRows(entry: BaGuideCatalogEntry, summary: String) -> [BaGuideRow] {

@@ -62,6 +62,67 @@ final class BaStudentDetailProfileTests: XCTestCase {
         )
     }
 
+    func testNpcSatelliteDetailPagesOnlyShowAvailableContent() throws {
+        let portraitURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/npc-president.webp"))
+        let info = BaStudentGuideInfo(
+            contentId: 702_789,
+            sourceURL: URL(string: "https://www.gamekee.com/ba/tj/702789.html"),
+            title: "伪学生会长",
+            subtitle: "GameKee",
+            summary: "NPC及卫星图鉴条目数据较少，已展示可用信息。",
+            imageURL: portraitURL,
+            stats: [],
+            profileRows: [
+                BaGuideRow(id: "name", title: "角色名称", value: "伪学生会长", imageURL: nil),
+                BaGuideRow(id: "role", title: "剧情定位", value: "联邦学生会相关角色", imageURL: nil),
+            ],
+            skillRows: [],
+            voiceRows: [],
+            galleryItems: [],
+            growthRows: [],
+            simulateRows: [],
+            contentSource: "api",
+            syncedAt: Date(timeIntervalSince1970: 0)
+        )
+
+        XCTAssertEqual(
+            BaStudentDetailPageAvailability.pages(category: .npcSatellite, info: info),
+            [.overviewProfile, .profile, .gallery]
+        )
+    }
+
+    func testNpcSatelliteProfileKeepsOtherAvailableRows() throws {
+        let info = BaStudentGuideInfo(
+            contentId: 702_789,
+            sourceURL: URL(string: "https://www.gamekee.com/ba/tj/702789.html"),
+            title: "伪学生会长",
+            subtitle: "GameKee",
+            summary: "",
+            imageURL: nil,
+            stats: [],
+            profileRows: [
+                BaGuideRow(id: "name", title: "角色名称", value: "伪学生会长", imageURL: nil),
+                BaGuideRow(id: "alias", title: "其他译名", value: "会长", imageURL: nil),
+                BaGuideRow(id: "role", title: "剧情定位", value: "联邦学生会相关角色", imageURL: nil),
+                BaGuideRow(id: "placeholder", title: "未公开字段", value: "None", imageURL: nil),
+            ],
+            skillRows: [],
+            voiceRows: [],
+            galleryItems: [],
+            growthRows: [],
+            simulateRows: [],
+            contentSource: "content_json",
+            syncedAt: Date(timeIntervalSince1970: 0)
+        )
+
+        let studentSections = info.profileSections
+        let npcSections = info.profileSections(for: .npcSatellite)
+
+        XCTAssertEqual(studentSections.map(\.kind), [.names])
+        XCTAssertEqual(npcSections.map(\.kind), [.names, .other])
+        XCTAssertEqual(npcSections.first { $0.kind == .other }?.rows.map(\.title), ["其他译名", "剧情定位"])
+    }
+
     func testGuideMetaExtractsArchiveRowsAndFiltersMovedRows() {
         let info = BaStudentGuideInfo(
             contentId: 1,

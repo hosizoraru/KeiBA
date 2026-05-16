@@ -15,6 +15,7 @@ nonisolated enum BaStudentProfileSectionKind: String, CaseIterable, Codable, Ide
     case sameName
     case chocolate
     case furniture
+    case other
 
     var id: Self {
         self
@@ -36,6 +37,8 @@ nonisolated enum BaStudentProfileSectionKind: String, CaseIterable, Codable, Ide
             String(localized: "ba.student.detail.profile.chocolate.title")
         case .furniture:
             String(localized: "ba.student.detail.profile.furniture.title")
+        case .other:
+            String(localized: "ba.student.detail.profile.other.title")
         }
     }
 
@@ -55,6 +58,8 @@ nonisolated enum BaStudentProfileSectionKind: String, CaseIterable, Codable, Ide
             "heart.square"
         case .furniture:
             "sofa"
+        case .other:
+            "text.alignleft"
         }
     }
 }
@@ -134,11 +139,11 @@ nonisolated struct BaStudentProfileSection: Identifiable, Hashable {
 nonisolated struct BaStudentProfileDisplayModel: Hashable {
     let sections: [BaStudentProfileSection]
 
-    init(info: BaStudentGuideInfo) {
-        sections = Self.sections(from: info)
+    init(info: BaStudentGuideInfo, includesOtherRows: Bool = false) {
+        sections = Self.sections(from: info, includesOtherRows: includesOtherRows)
     }
 
-    static func sections(from info: BaStudentGuideInfo) -> [BaStudentProfileSection] {
+    static func sections(from info: BaStudentGuideInfo, includesOtherRows: Bool = false) -> [BaStudentProfileSection] {
         let profileRowsBase = info.profileDisplayRows
             .filter { BaStudentGuideMeta.shouldHideMovedHeaderRow($0) == false }
             .filter { isGrowthTitleVoiceRow($0) == false }
@@ -182,6 +187,15 @@ nonisolated struct BaStudentProfileDisplayModel: Hashable {
             .filter { $0.title.localizedCaseInsensitiveContains("互动家具") }
             .sortedByKeyNumbers()
             .compactMap { visibleProfileRow($0, section: .furniture, prefersCapsule: false) }
+        let otherInfoRows = allProfileRows.filter { row in
+            let title = row.title.trimmed
+            return title.localizedCaseInsensitiveContains("巧克力") == false &&
+                title.localizedCaseInsensitiveContains("互动家具") == false &&
+                isGiftPreferenceProfileRow(row) == false &&
+                isStructuredProfileCardRow(row) == false
+        }
+        .sortedByKeyNumbers()
+        .compactMap { visibleProfileRow($0, section: .other, prefersCapsule: false) }
 
         let chocolateGalleryItems = info.galleryItems
             .filter(isChocolateGalleryItem)
@@ -198,16 +212,20 @@ nonisolated struct BaStudentProfileDisplayModel: Hashable {
         appendSection(.names, rows: nicknameRows, to: &sections)
         appendSection(.info, rows: studentInfoRows, to: &sections)
         appendSection(.hobby, rows: hobbyRows, to: &sections)
+        if includesOtherRows {
+            appendSection(.other, rows: otherInfoRows, to: &sections)
+        }
         if giftItems.isEmpty == false {
             sections.append(BaStudentProfileSection(kind: .gifts, giftItems: giftItems))
         }
-        sections.append(
-            BaStudentProfileSection(
-                kind: .sameName,
-                sameNameRoleItems: sameNameRoleItems,
-                sameNameRoleHint: sameNameRoleHint
-            )
+        let sameNameSection = BaStudentProfileSection(
+            kind: .sameName,
+            sameNameRoleItems: sameNameRoleItems,
+            sameNameRoleHint: sameNameRoleHint
         )
+        if sameNameSection.isEmpty == false {
+            sections.append(sameNameSection)
+        }
         if chocolateInfoRows.isEmpty == false || chocolateGalleryItems.isEmpty == false {
             sections.append(
                 BaStudentProfileSection(
@@ -242,6 +260,13 @@ nonisolated struct BaStudentProfileDisplayModel: Hashable {
 extension BaStudentGuideInfo {
     nonisolated var profileSections: [BaStudentProfileSection] {
         BaStudentProfileDisplayModel(info: self).sections
+    }
+
+    nonisolated func profileSections(for category: BaCatalogCategory) -> [BaStudentProfileSection] {
+        BaStudentProfileDisplayModel(
+            info: self,
+            includesOtherRows: category == .npcSatellite
+        ).sections
     }
 }
 
@@ -511,6 +536,13 @@ nonisolated private func isProfileRowAliasMatch(_ row: BaGuideRow, aliases: [Str
     return aliases.contains { key == normalizeProfileFieldKey($0) }
 }
 
+nonisolated private func isStructuredProfileCardRow(_ row: BaGuideRow) -> Bool {
+    let specs = nicknameFieldSpecs + studentInfoFieldSpecs + hobbyFieldSpecs
+    return specs.contains { spec in
+        isProfileRowAliasMatch(row, aliases: spec.aliases)
+    }
+}
+
 nonisolated private func isGiftPreferenceProfileRow(_ row: BaGuideRow) -> Bool {
     let key = normalizeProfileFieldKey(row.title)
     return key.hasPrefix(giftPreferenceRowPrefixKey) ||
@@ -630,6 +662,7 @@ nonisolated private func isProfileValuePlaceholder(_ value: String) -> Bool {
         normalized == "暂无" ||
         normalized == "无" ||
         compact == "n" ||
+        compact == "none" ||
         compact == "null" ||
         compact == "undefined" ||
         compact == "nan"

@@ -26,6 +26,14 @@ struct BaStudentDetailView: View {
         state.value
     }
 
+    private var availablePages: [BaStudentDetailPage] {
+        BaStudentDetailPageAvailability.pages(category: entry.category, info: info)
+    }
+
+    private var activePage: BaStudentDetailPage {
+        availablePages.contains(selectedPage) ? selectedPage : availablePages.first ?? .overviewProfile
+    }
+
     var body: some View {
         detailList
             .navigationDestination(item: $selectedSameNameEntry) { entry in
@@ -49,7 +57,11 @@ struct BaStudentDetailView: View {
     private var detailList: some View {
         BaAdaptiveGeometry { _ in
             List {
-                BaStudentDetailPageRailSection(selection: $selectedPage, tint: headerTint)
+                BaStudentDetailPageRailSection(
+                    selection: $selectedPage,
+                    pages: availablePages,
+                    tint: headerTint
+                )
 
                 if state.isLoading, info == nil {
                     loadingSection
@@ -97,12 +109,18 @@ struct BaStudentDetailView: View {
                 .labelStyle(.iconOnly)
             }
         }
-        .modifier(BaStudentVoiceSearchModifier(isActive: selectedPage == .voice, text: $voiceSearchText))
+        .modifier(BaStudentVoiceSearchModifier(isActive: activePage == .voice, text: $voiceSearchText))
         .task(id: entry.contentId) {
             await model.loadStudentDetail(entry: entry)
         }
         .refreshable {
             await model.loadStudentDetail(entry: entry, force: true)
+        }
+        .onAppear {
+            clampSelectedPage(to: availablePages)
+        }
+        .onChange(of: availablePages) { _, pages in
+            clampSelectedPage(to: pages)
         }
         .onChange(of: selectedPage) { _, page in
             if page != .voice {
@@ -113,7 +131,7 @@ struct BaStudentDetailView: View {
 
     @ViewBuilder
     private var activePageSections: some View {
-        switch selectedPage {
+        switch activePage {
         case .overviewProfile:
             if let info {
                 BaStudentDetailOverviewSections(info: info, entry: entry, tint: headerTint)
@@ -127,6 +145,7 @@ struct BaStudentDetailView: View {
             if let info {
                 BaStudentProfileCardsSection(
                     info: info,
+                    category: entry.category,
                     tint: headerTint,
                     sameNameEntryResolver: { model.studentCatalogEntry(forSameNameRole: $0) },
                     onOpenSameNameEntry: { selectedSameNameEntry = $0 }
@@ -201,6 +220,11 @@ struct BaStudentDetailView: View {
         }
     }
 
+    private func clampSelectedPage(to pages: [BaStudentDetailPage]) {
+        guard pages.contains(selectedPage) == false, let firstPage = pages.first else { return }
+        selectedPage = firstPage
+    }
+
     private var favoriteTitle: String {
         model.isFavorite(entry)
             ? String(localized: "ba.catalog.favorite.remove")
@@ -221,10 +245,11 @@ private extension View {
 
 private struct BaStudentDetailPageRailSection: View {
     @Binding var selection: BaStudentDetailPage
+    let pages: [BaStudentDetailPage]
     let tint: Color
 
     var body: some View {
-        BaStudentDetailPageRail(selection: $selection, tint: tint)
+        BaStudentDetailPageRail(selection: $selection, pages: pages, tint: tint)
             .baAdaptiveListCardRow(top: 10, bottom: 5)
     }
 }
@@ -233,6 +258,7 @@ private struct BaStudentDetailPageRail: View {
     @Environment(\.baAdaptiveMetrics) private var metrics
 
     @Binding var selection: BaStudentDetailPage
+    let pages: [BaStudentDetailPage]
     let tint: Color
 
     var body: some View {
@@ -268,7 +294,7 @@ private struct BaStudentDetailPageRail: View {
     }
 
     private func pageButtons(expandsItems: Bool) -> some View {
-        ForEach(BaStudentDetailPage.allCases) { page in
+        ForEach(pages) { page in
             Button {
                 selection = page
             } label: {

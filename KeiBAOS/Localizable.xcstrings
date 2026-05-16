@@ -5973,6 +5973,22 @@
         }
       }
     },
+    "ba.student.detail.profile.other.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Available Info"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可用资料"
+          }
+        }
+      }
+    },
     "ba.student.detail.profile.names.title" : {
       "localizations" : {
         "en" : {
@@ -6471,6 +6487,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "来源"
+          }
+        }
+      }
+    },
+    "ba.student.detail.npc.summary.empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This NPC or upcoming entry has limited data, so available information is shown."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NPC 及卫星图鉴条目数据较少，已展示可用信息。"
           }
         }
       }

@@ -19,23 +19,29 @@ struct BaStudentDetailOverviewSections: View {
         self.entry = entry
         self.tint = tint
         portraitURL = info.preferredPortraitURL(fallback: entry.iconURL)
-        combatItems = Self.combatItems(from: info)
+        combatItems = Self.combatItems(from: info, category: entry.category)
     }
 
     var body: some View {
         BaStudentPortraitMetaCard(
             info: info,
+            category: entry.category,
             portraitURL: portraitURL,
             tint: tint
         )
         .baAdaptiveListCardRow(top: 5, bottom: 4)
 
-        BaStudentCombatMetaCard(items: combatItems)
-            .baAdaptiveListCardRow(top: 4, bottom: 8)
+        if combatItems.isEmpty == false {
+            BaStudentCombatMetaCard(items: combatItems)
+                .baAdaptiveListCardRow(top: 4, bottom: 8)
+        }
     }
 
-    private static func combatItems(from info: BaStudentGuideInfo) -> [BaGuideMetaItem] {
-        let items = BaStudentGuideMeta.combatMetaItems(from: info)
+    private static func combatItems(from info: BaStudentGuideInfo, category: BaCatalogCategory) -> [BaGuideMetaItem] {
+        let sourceItems = BaStudentGuideMeta.combatMetaItems(from: info)
+        let items = category == .npcSatellite
+            ? sourceItems.filter(\.hasRenderableMetaContent)
+            : sourceItems
         guard let tactical = items.first(where: { $0.isTacticalPositionItem }) else {
             return items
         }
@@ -55,15 +61,17 @@ struct BaStudentDetailOverviewSections: View {
 
 private struct BaStudentPortraitMetaCard: View {
     let info: BaStudentGuideInfo
+    let category: BaCatalogCategory
     let portraitURL: URL?
     let tint: Color
     private let profileItems: [BaGuideMetaItem]
 
-    init(info: BaStudentGuideInfo, portraitURL: URL?, tint: Color) {
+    init(info: BaStudentGuideInfo, category: BaCatalogCategory, portraitURL: URL?, tint: Color) {
         self.info = info
+        self.category = category
         self.portraitURL = portraitURL
         self.tint = tint
-        profileItems = Self.profileItems(from: info)
+        profileItems = Self.profileItems(from: info, category: category)
     }
 
     var body: some View {
@@ -99,7 +107,7 @@ private struct BaStudentPortraitMetaCard: View {
         }
     }
 
-    private static func profileItems(from info: BaStudentGuideInfo) -> [BaGuideMetaItem] {
+    private static func profileItems(from info: BaStudentGuideInfo, category: BaCatalogCategory) -> [BaGuideMetaItem] {
         var items = BaStudentGuideMeta.profileMetaItems(from: info)
         if let tactical = BaStudentGuideMeta.combatMetaItems(from: info).first(where: { $0.isTacticalPositionItem }) {
             items.append(
@@ -109,6 +117,9 @@ private struct BaStudentPortraitMetaCard: View {
                     imageURL: nil
                 )
             )
+        }
+        if category == .npcSatellite {
+            return items.filter(\.hasRenderableMetaContent)
         }
         return items
     }
@@ -312,5 +323,34 @@ private extension BaGuideMetaItem {
 
     var isTacticalPositionItem: Bool {
         title == String(localized: "ba.student.detail.meta.tacticalPosition")
+    }
+
+    var hasRenderableMetaContent: Bool {
+        value.hasMeaningfulMetaValue ||
+            extraValue?.hasMeaningfulMetaValue == true ||
+            imageURL != nil ||
+            extraImageURL != nil
+    }
+}
+
+private extension String {
+    var hasMeaningfulMetaValue: Bool {
+        let normalized = trimmingCharacters(in: .whitespacesAndNewlines)
+        let compact = normalized
+            .replacingOccurrences(of: " ", with: "")
+            .replacingOccurrences(of: "　", with: "")
+            .lowercased()
+        guard normalized.isEmpty == false else { return false }
+        return normalized != String(localized: "ba.common.none") &&
+            normalized != "-" &&
+            normalized != "—" &&
+            normalized != "--" &&
+            normalized != "暂无" &&
+            normalized != "无" &&
+            compact != "n" &&
+            compact != "none" &&
+            compact != "null" &&
+            compact != "undefined" &&
+            compact != "nan"
     }
 }
