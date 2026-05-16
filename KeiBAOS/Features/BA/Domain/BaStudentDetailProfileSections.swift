@@ -64,6 +64,47 @@ nonisolated enum BaStudentProfileSectionKind: String, CaseIterable, Codable, Ide
     }
 }
 
+nonisolated enum BaStudentProfileRoleRelationKind: Hashable {
+    case sameName
+    case related
+
+    var title: String {
+        switch self {
+        case .sameName:
+            String(localized: "ba.student.detail.profile.sameName.title")
+        case .related:
+            String(localized: "ba.student.detail.profile.relatedRoles.title")
+        }
+    }
+
+    var emptyText: String {
+        switch self {
+        case .sameName:
+            String(localized: "ba.student.detail.profile.sameName.empty")
+        case .related:
+            String(localized: "ba.student.detail.profile.relatedRoles.empty")
+        }
+    }
+
+    var fallbackItemTitle: String {
+        switch self {
+        case .sameName:
+            String(localized: "ba.student.detail.profile.sameName.item")
+        case .related:
+            String(localized: "ba.student.detail.profile.relatedRoles.item")
+        }
+    }
+
+    var openDetailHint: String {
+        switch self {
+        case .sameName:
+            String(localized: "ba.student.detail.profile.sameName.openDetail")
+        case .related:
+            String(localized: "ba.student.detail.profile.relatedRoles.openDetail")
+        }
+    }
+}
+
 nonisolated struct BaStudentProfileFieldRow: Identifiable, Hashable {
     let id: String
     let title: String
@@ -117,6 +158,7 @@ nonisolated struct BaStudentProfileSection: Identifiable, Hashable {
     var giftItems: [BaStudentProfileGiftItem] = []
     var sameNameRoleItems: [BaStudentProfileSameNameRoleItem] = []
     var sameNameRoleHint: String = ""
+    var roleRelationKind: BaStudentProfileRoleRelationKind = .sameName
     var galleryItems: [BaGuideGalleryItem] = []
 
     var id: BaStudentProfileSectionKind {
@@ -124,7 +166,10 @@ nonisolated struct BaStudentProfileSection: Identifiable, Hashable {
     }
 
     var title: String {
-        kind.title
+        if kind == .sameName {
+            return roleRelationKind.title
+        }
+        return kind.title
     }
 
     var isEmpty: Bool {
@@ -154,6 +199,7 @@ nonisolated struct BaStudentProfileDisplayModel: Hashable {
         let sameNameRoleRows = profileRowsBase.filter(isSameNameRoleRow)
         let sameNameRoleItems = buildSameNameRoleItems(from: sameNameRoleRows)
         let sameNameRoleHint = sameNameRoleRows.compactMap(extractSameNameRoleHint).first ?? ""
+        let roleRelationKind = relationKind(for: sameNameRoleRows)
 
         let hasTopDataHeader = profileRowsBase.contains {
             normalizeProfileFieldKey($0.title) == normalizeProfileFieldKey("顶级数据")
@@ -221,7 +267,8 @@ nonisolated struct BaStudentProfileDisplayModel: Hashable {
         let sameNameSection = BaStudentProfileSection(
             kind: .sameName,
             sameNameRoleItems: sameNameRoleItems,
-            sameNameRoleHint: sameNameRoleHint
+            sameNameRoleHint: sameNameRoleHint,
+            roleRelationKind: roleRelationKind
         )
         if sameNameSection.isEmpty == false {
             sections.append(sameNameSection)
@@ -438,7 +485,7 @@ nonisolated private func buildSameNameRoleItems(from rows: [BaGuideRow]) -> [BaS
     var seen = Set<String>()
     return rows.flatMap { row -> [BaStudentProfileSameNameRoleItem] in
         let normalizedKey = normalizeProfileFieldKey(row.title)
-        guard normalizedKey == sameNameRoleNameRowKey || normalizedKey == relatedSameNameRoleHeaderKey else {
+        guard isSameNameRoleKey(normalizedKey) else {
             return []
         }
         let imageURLs = ((row.imageURLs ?? []) + (row.imageURL.map { [$0] } ?? []))
@@ -448,9 +495,10 @@ nonisolated private func buildSameNameRoleItems(from rows: [BaGuideRow]) -> [BaS
             from: row.value,
             imageURLs: imageURLs,
             fallbackIDSeed: row.id,
-            headerKey: normalizedKey
+            headerKey: normalizedKey,
+            relationKind: relationKind(forNormalizedKey: normalizedKey)
         )
-        if normalizedKey == relatedSameNameRoleHeaderKey,
+        if isRelatedRoleHeaderKey(normalizedKey),
            items.isEmpty,
            imageURLs.isEmpty
         {
@@ -467,7 +515,8 @@ nonisolated private func sameNameRoleItems(
     from raw: String,
     imageURLs: [URL],
     fallbackIDSeed: String,
-    headerKey: String
+    headerKey: String,
+    relationKind: BaStudentProfileRoleRelationKind
 ) -> [BaStudentProfileSameNameRoleItem] {
     var seeds: [(name: String, guideURL: URL?, imageURL: URL?)] = []
     var pendingName = ""
@@ -515,10 +564,10 @@ nonisolated private func sameNameRoleItems(
         if seed.name.isBlank, seed.guideURL == nil, isSameNameRoleHintText(raw) {
             return nil
         }
-        if headerKey == relatedSameNameRoleHeaderKey, seed.guideURL == nil, imageURL == nil {
+        if isRelatedRoleHeaderKey(headerKey), seed.guideURL == nil, imageURL == nil {
             return nil
         }
-        let fallbackName = seed.guideURL.map { fallbackProfileLinkTitle($0) } ?? String(localized: "ba.student.detail.profile.sameName.item")
+        let fallbackName = seed.guideURL.map { fallbackProfileLinkTitle($0) } ?? relationKind.fallbackItemTitle
         let resolvedName = seed.name.ifBlank(fallbackName)
         let key = "\(fallbackIDSeed)|\(index)|\(resolvedName)|\(seed.guideURL?.absoluteString ?? "")|\(imageURL?.absoluteString ?? "")"
         return BaStudentProfileSameNameRoleItem(
@@ -552,11 +601,11 @@ nonisolated private func isGiftPreferenceProfileRow(_ row: BaGuideRow) -> Bool {
 
 nonisolated private func isSameNameRoleRow(_ row: BaGuideRow) -> Bool {
     let key = normalizeProfileFieldKey(row.title)
-    return key == relatedSameNameRoleHeaderKey || key == sameNameRoleNameRowKey
+    return isSameNameRoleKey(key)
 }
 
 nonisolated private func extractSameNameRoleHint(_ row: BaGuideRow) -> String? {
-    guard normalizeProfileFieldKey(row.title) == relatedSameNameRoleHeaderKey else { return nil }
+    guard isRelatedRoleHeaderKey(normalizeProfileFieldKey(row.title)) else { return nil }
     let rawValue = row.value.trimmed.trimmingCharacters(in: CharacterSet(charactersIn: "*"))
     guard rawValue.isBlank == false, isProfileValuePlaceholder(rawValue) == false else { return nil }
     let hasLink = extractProfileExternalURL(rawValue) != nil
@@ -564,6 +613,22 @@ nonisolated private func extractSameNameRoleHint(_ row: BaGuideRow) -> String? {
         .contains { BaGuideTextNormalizer.looksLikeImageURL($0) }
     guard hasLink == false, hasImage == false, isSameNameRoleHintText(rawValue) else { return nil }
     return rawValue
+}
+
+nonisolated private func relationKind(for rows: [BaGuideRow]) -> BaStudentProfileRoleRelationKind {
+    rows.contains { relationKind(forNormalizedKey: normalizeProfileFieldKey($0.title)) == .related } ? .related : .sameName
+}
+
+nonisolated private func relationKind(forNormalizedKey key: String) -> BaStudentProfileRoleRelationKind {
+    relatedRoleKeys.contains(key) ? .related : .sameName
+}
+
+nonisolated private func isSameNameRoleKey(_ key: String) -> Bool {
+    sameNameRoleKeys.contains(key) || relatedRoleKeys.contains(key)
+}
+
+nonisolated private func isRelatedRoleHeaderKey(_ key: String) -> Bool {
+    relatedRoleHeaderKeys.contains(key) || key == relatedSameNameRoleHeaderKey
 }
 
 nonisolated private func isProfileSectionHeaderRow(_ row: BaGuideRow) -> Bool {
@@ -877,6 +942,10 @@ nonisolated private func regexMatches(in raw: String, pattern: String) -> [Strin
 
 nonisolated private let relatedSameNameRoleHeaderKey = normalizeProfileFieldKey("相关同名角色")
 nonisolated private let sameNameRoleNameRowKey = normalizeProfileFieldKey("同名角色名称")
+nonisolated private let relatedRoleHeaderKeys = Set(["相关角色", "相关人物"].map(normalizeProfileFieldKey))
+nonisolated private let relatedRoleNameRowKey = normalizeProfileFieldKey("相关角色名称")
+nonisolated private let sameNameRoleKeys = Set([relatedSameNameRoleHeaderKey, sameNameRoleNameRowKey])
+nonisolated private let relatedRoleKeys = relatedRoleHeaderKeys.union([relatedRoleNameRowKey])
 nonisolated private let giftPreferenceRowPrefixKey = normalizeProfileFieldKey("礼物偏好礼物")
 nonisolated private let profileSectionHeaderKeys = Set(["介绍", "学生信息", "信息"].map(normalizeProfileFieldKey))
 nonisolated private let galleryRelatedProfileLinkKeyTokens = [

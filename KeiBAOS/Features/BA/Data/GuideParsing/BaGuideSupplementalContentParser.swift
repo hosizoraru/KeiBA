@@ -96,6 +96,9 @@ struct BaGuideSupplementalContentParser {
         guard let data = object.object("data") else { return }
         for group in objectArray(data["list"]) {
             let relationTitle = text(from: group["title"]).ifBlank("相关人物")
+            let relationRoleTitle = relationTitle.localizedCaseInsensitiveContains("同名")
+                ? "同名角色名称"
+                : "相关角色名称"
             if relationTitle.localizedCaseInsensitiveContains("同名") {
                 appendProfileRow(title: "相关同名角色", value: relationTitle, sourceURL: sourceURL, parsed: &parsed)
             }
@@ -109,7 +112,7 @@ struct BaGuideSupplementalContentParser {
                     .joined(separator: " / ")
                 guard value.isEmpty == false || avatar != nil else { continue }
                 appendProfileRow(
-                    title: "同名角色名称",
+                    title: relationRoleTitle,
                     value: value,
                     imageURLs: [avatar].compactMap(\.self),
                     sourceURL: sourceURL,

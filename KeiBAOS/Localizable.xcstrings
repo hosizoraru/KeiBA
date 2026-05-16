@@ -6026,13 +6026,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No related same-name roles."
+            "value" : "No same-name roles."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "暂无相关同名角色。"
+            "value" : "暂无同名角色。"
           }
         }
       }
@@ -6090,13 +6090,77 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Related Same-name Roles"
+            "value" : "Same-name Roles"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "相关同名角色"
+            "value" : "同名角色"
+          }
+        }
+      }
+    },
+    "ba.student.detail.profile.relatedRoles.empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No related roles."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂无相关角色。"
+          }
+        }
+      }
+    },
+    "ba.student.detail.profile.relatedRoles.item" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Related role"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "相关角色"
+          }
+        }
+      }
+    },
+    "ba.student.detail.profile.relatedRoles.openDetail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open related role guide"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开相关角色图鉴"
+          }
+        }
+      }
+    },
+    "ba.student.detail.profile.relatedRoles.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Related Roles"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "相关角色"
           }
         }
       }

@@ -317,13 +317,14 @@ private struct BaStudentSameNameRoleList: View {
             }
 
             if section.sameNameRoleItems.isEmpty {
-                Text(String(localized: "ba.student.detail.profile.sameName.empty"))
+                Text(section.roleRelationKind.emptyText)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(section.sameNameRoleItems.prefix(12)) { item in
                     BaStudentSameNameRoleRow(
                         item: item,
+                        relationKind: section.roleRelationKind,
                         entry: sameNameEntriesByItemID[item.id] ?? item.catalogEntry,
                         tint: tint,
                         onOpen: onOpen
@@ -336,6 +337,7 @@ private struct BaStudentSameNameRoleList: View {
 
 private struct BaStudentSameNameRoleRow: View {
     let item: BaStudentProfileSameNameRoleItem
+    let relationKind: BaStudentProfileRoleRelationKind
     let entry: BaGuideCatalogEntry?
     let tint: Color
     let onOpen: (BaGuideCatalogEntry) -> Void
@@ -349,7 +351,7 @@ private struct BaStudentSameNameRoleRow: View {
                     rowContent(isLinked: true)
                 }
                 .buttonStyle(.plain)
-                .accessibilityHint(String(localized: "ba.student.detail.profile.sameName.openDetail"))
+                .accessibilityHint(relationKind.openDetailHint)
             } else {
                 rowContent(isLinked: false)
             }

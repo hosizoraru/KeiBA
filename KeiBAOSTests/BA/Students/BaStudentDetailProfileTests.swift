@@ -351,6 +351,7 @@ final class BaStudentDetailProfileTests: XCTestCase {
         XCTAssertEqual(sections[3].giftItems.map(\.label), ["古典乐谱"])
         XCTAssertEqual(sections[3].giftItems.first?.giftImageURL, giftURL)
         XCTAssertEqual(sections[3].giftItems.first?.emojiImageURL, emojiURL)
+        XCTAssertEqual(sections[4].title, String(localized: "ba.student.detail.profile.sameName.title"))
         XCTAssertEqual(sections[4].sameNameRoleItems.map(\.name), ["日奈"])
         XCTAssertEqual(sections[4].sameNameRoleItems.first?.guideURL?.absoluteString, "https://www.gamekee.com/ba/tj/123456.html")
         let displayedRowTitles = sections.flatMap(\.rows).map(\.title)
@@ -513,6 +514,62 @@ final class BaStudentDetailProfileTests: XCTestCase {
 
         XCTAssertEqual(row.value, "日奈（泳装） / https://www.gamekee.com/ba/tj/83729.html")
         XCTAssertEqual(row.imageURL?.absoluteString, "https://cdnimg.gamekee.com/hina-swimsuit.webp")
+    }
+
+    func testRelationInfoParserKeepsGenericRelatedRolesDistinctFromSameNameRoles() throws {
+        let content: [Any] = [
+            [
+                "type": "relation-info",
+                "data": [
+                    "list": [
+                        [
+                            "title": "相关角色",
+                            "content": [
+                                [
+                                    "name": "桃香",
+                                    "jumpHref": "/ba/702789.html",
+                                    "avatar": "//cdnimg.gamekee.com/momoka.webp",
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]
+
+        let parsed = BaGuideContentParser().parse(
+            content: content,
+            apiData: [:],
+            html: nil,
+            entry: makeStudentDetailCatalogEntry()
+        )
+        XCTAssertNil(parsed.profileRows.first { $0.title == "同名角色名称" })
+        let row = try XCTUnwrap(parsed.profileRows.first { $0.title == "相关角色名称" })
+        XCTAssertEqual(row.value, "桃香 / https://www.gamekee.com/ba/tj/702789.html")
+        XCTAssertEqual(row.imageURL?.absoluteString, "https://cdnimg.gamekee.com/momoka.webp")
+
+        let info = BaStudentGuideInfo(
+            contentId: 161_188,
+            sourceURL: URL(string: "https://www.gamekee.com/ba/161188.html"),
+            title: "凛",
+            subtitle: "GameKee",
+            summary: parsed.summary,
+            imageURL: parsed.imageURL,
+            stats: parsed.stats,
+            profileRows: parsed.profileRows,
+            skillRows: parsed.skillRows,
+            voiceRows: parsed.voiceRows,
+            galleryItems: parsed.galleryItems,
+            growthRows: parsed.growthRows,
+            simulateRows: parsed.simulateRows,
+            contentSource: "content_json",
+            syncedAt: Date(timeIntervalSince1970: 0)
+        )
+
+        let section = try XCTUnwrap(info.profileSections.first { $0.kind == .sameName })
+        XCTAssertEqual(section.roleRelationKind, .related)
+        XCTAssertEqual(section.title, String(localized: "ba.student.detail.profile.relatedRoles.title"))
+        XCTAssertEqual(section.sameNameRoleItems.map(\.name), ["桃香"])
     }
 
     func testSameNameRoleCatalogResolverMatchesExactStudentAndNpcNames() throws {
