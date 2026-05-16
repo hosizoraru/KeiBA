@@ -4089,13 +4089,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Refresh cadence"
+            "value" : "Refresh interval"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "刷新节奏"
+            "value" : "刷新间隔"
           }
         }
       }

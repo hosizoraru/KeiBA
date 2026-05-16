@@ -108,81 +108,53 @@ private struct BaNavigationRoot: View {
 
     private var moreMenu: some View {
         Menu {
-            pageFilterMenu
-
-            Button {
-                presentedSheet = .editOffice
-            } label: {
-                Label(BaPresentedSheet.editOffice.menuTitle, systemImage: BaPresentedSheet.editOffice.systemImage)
-            }
-
-            Divider()
-
-            Button {
-                presentedSheet = .debugTools
-            } label: {
-                Label(BaPresentedSheet.debugTools.menuTitle, systemImage: BaPresentedSheet.debugTools.systemImage)
-            }
+            timelineOptionsMenu
+            officeActionsMenu
         } label: {
             Label(String(localized: "ba.action.more.title"), systemImage: "ellipsis.circle")
         }
         .labelStyle(.iconOnly)
+        .menuOrder(.fixed)
         .accessibilityLabel(Text(String(localized: "ba.action.more.title")))
     }
 
     @ViewBuilder
-    private var pageFilterMenu: some View {
+    private var timelineOptionsMenu: some View {
         switch tab {
         case .activity:
-            Section(String(localized: "ba.activity.action.filter")) {
-                timelineFilterButton(title: String(localized: "ba.filter.all"), selected: activityFilter == nil) {
-                    activityFilter = nil
-                }
-
-                ForEach(BaTimelineStatus.allCases) { status in
-                    timelineFilterButton(title: status.title, selected: activityFilter == status) {
-                        activityFilter = status
-                    }
-                }
-            }
-            Section(String(localized: "ba.settings.preferences.title")) {
-                Toggle(
-                    String(localized: "ba.settings.activity.showEnded.title"),
-                    isOn: globalBoolBinding(\.showEndedActivities)
-                )
-                refreshIntervalPicker
-            }
+            BaTimelineOptionsMenu(
+                scope: .activity,
+                statusFilter: $activityFilter,
+                showsEnded: globalBoolBinding(\.showEndedActivities),
+                refreshInterval: refreshIntervalBinding
+            )
             Divider()
         case .pool:
-            Section(String(localized: "ba.pool.action.filter")) {
-                timelineFilterButton(title: String(localized: "ba.filter.all"), selected: poolFilter == nil) {
-                    poolFilter = nil
-                }
-
-                ForEach(BaTimelineStatus.allCases) { status in
-                    timelineFilterButton(title: status.title, selected: poolFilter == status) {
-                        poolFilter = status
-                    }
-                }
-            }
-            Section(String(localized: "ba.settings.preferences.title")) {
-                Toggle(
-                    String(localized: "ba.settings.pool.showEnded.title"),
-                    isOn: globalBoolBinding(\.showEndedPools)
-                )
-                refreshIntervalPicker
-            }
+            BaTimelineOptionsMenu(
+                scope: .pool,
+                statusFilter: $poolFilter,
+                showsEnded: globalBoolBinding(\.showEndedPools),
+                refreshInterval: refreshIntervalBinding
+            )
             Divider()
         case .overview, .catalog, .library:
             EmptyView()
         }
     }
 
-    private var refreshIntervalPicker: some View {
-        Picker(String(localized: "ba.settings.refresh.title"), selection: refreshIntervalBinding) {
-            ForEach(BaRefreshInterval.allCases) { interval in
-                Text(interval.title)
-                    .tag(interval)
+    @ViewBuilder
+    private var officeActionsMenu: some View {
+        Section {
+            Button {
+                presentedSheet = .editOffice
+            } label: {
+                Label(BaPresentedSheet.editOffice.menuTitle, systemImage: BaPresentedSheet.editOffice.systemImage)
+            }
+
+            Button {
+                presentedSheet = .debugTools
+            } label: {
+                Label(BaPresentedSheet.debugTools.menuTitle, systemImage: BaPresentedSheet.debugTools.systemImage)
             }
         }
     }
@@ -203,16 +175,6 @@ private struct BaNavigationRoot: View {
                 model.updateGlobalSettings { $0[keyPath: keyPath] = value }
             }
         )
-    }
-
-    private func timelineFilterButton(
-        title: String,
-        selected: Bool,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            Label(title, systemImage: selected ? "checkmark" : "circle")
-        }
     }
 }
 
