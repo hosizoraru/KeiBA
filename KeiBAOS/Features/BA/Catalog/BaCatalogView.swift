@@ -11,11 +11,12 @@ struct BaCatalogView: View {
     @Environment(BaAppModel.self) private var model
 
     @State private var selectedCategory: BaCatalogCategory = .students
+    @State private var sortMode: BaCatalogSortMode = .defaultOrder
     @State private var searchText = ""
 
     private var snapshot: BaCatalogViewSnapshot {
         let favoriteIDs = model.settings.favoriteContentIDs
-        let rows = model.entries(for: selectedCategory, query: searchText).map { entry in
+        let rows = model.entries(for: selectedCategory, query: searchText, sortMode: sortMode).map { entry in
             BaCatalogEntryRowDisplayModel(entry: entry, isFavorite: favoriteIDs.contains(entry.contentId))
         }
         return BaCatalogViewSnapshot(rows: rows)
@@ -26,18 +27,6 @@ struct BaCatalogView: View {
 
         BaAdaptiveGeometry { _ in
             List {
-                Section {
-                    Picker(String(localized: "ba.catalog.category.picker"), selection: $selectedCategory) {
-                        ForEach(BaCatalogCategory.catalogCases) { category in
-                            Text(category.title)
-                                .tag(category)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.vertical, 4)
-                    .baAdaptiveReadableContent()
-                }
-
                 Section {
                     catalogContent(snapshot: snapshot)
                 } footer: {
@@ -50,6 +39,20 @@ struct BaCatalogView: View {
             .background(AppBackground())
         }
         .searchable(text: $searchText, prompt: Text(selectedCategory.searchPrompt))
+        .searchScopes($selectedCategory, activation: .automatic) {
+            ForEach(BaCatalogCategory.catalogCases) { category in
+                Text(category.title)
+                    .tag(category)
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                BaCatalogViewOptionsMenu(
+                    selectedCategory: $selectedCategory,
+                    sortMode: $sortMode
+                )
+            }
+        }
         .task {
             await model.loadCatalogIfNeeded()
         }
@@ -131,6 +134,55 @@ struct BaCatalogView: View {
 
 private struct BaCatalogViewSnapshot {
     let rows: [BaCatalogEntryRowDisplayModel]
+}
+
+private struct BaCatalogViewOptionsMenu: View {
+    @Binding var selectedCategory: BaCatalogCategory
+    @Binding var sortMode: BaCatalogSortMode
+
+    var body: some View {
+        Menu {
+            Section(String(localized: "ba.catalog.category.picker")) {
+                ForEach(BaCatalogCategory.catalogCases) { category in
+                    BaCatalogMenuSelectionButton(
+                        title: category.title,
+                        isSelected: selectedCategory == category
+                    ) {
+                        selectedCategory = category
+                    }
+                }
+            }
+
+            Section(String(localized: "ba.catalog.action.sort")) {
+                ForEach(BaCatalogSortMode.allCases) { mode in
+                    BaCatalogMenuSelectionButton(
+                        title: mode.title,
+                        isSelected: sortMode == mode
+                    ) {
+                        sortMode = mode
+                    }
+                }
+            }
+        } label: {
+            Label(String(localized: "ba.catalog.action.viewOptions"), systemImage: "line.3.horizontal.decrease.circle")
+        }
+        .labelStyle(.iconOnly)
+        .menuOrder(.fixed)
+        .accessibilityLabel(Text(String(localized: "ba.catalog.action.viewOptions")))
+        .accessibilityValue(Text(verbatim: "\(selectedCategory.title), \(sortMode.title)"))
+    }
+}
+
+private struct BaCatalogMenuSelectionButton: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label(title, systemImage: isSelected ? "checkmark" : "circle")
+        }
+    }
 }
 
 private extension View {

@@ -1270,6 +1270,38 @@
         }
       }
     },
+    "ba.catalog.action.sort" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sort"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "排序"
+          }
+        }
+      }
+    },
+    "ba.catalog.action.viewOptions" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Display Options"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示选项"
+          }
+        }
+      }
+    },
     "ba.catalog.bgm.entry.detail" : {
       "localizations" : {
         "en" : {
@@ -1791,6 +1823,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "实装 %@"
+          }
+        }
+      }
+    },
+    "ba.catalog.sort.default" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default order"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "默认排序"
+          }
+        }
+      }
+    },
+    "ba.catalog.sort.releaseDate.asc" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Release date: oldest first"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实装日期：旧到新"
+          }
+        }
+      }
+    },
+    "ba.catalog.sort.releaseDate.desc" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Release date: newest first"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实装日期：新到旧"
           }
         }
       }

@@ -444,7 +444,11 @@ final class BaAppModel {
         await imageCache.summary()
     }
 
-    func entries(for category: BaCatalogCategory, query: String = "") -> [BaGuideCatalogEntry] {
+    func entries(
+        for category: BaCatalogCategory,
+        query: String = "",
+        sortMode: BaCatalogSortMode = .releaseDateDescending
+    ) -> [BaGuideCatalogEntry] {
         guard let bundle = catalogState.value else { return [] }
         let source: [BaGuideCatalogEntry]
         switch category {
@@ -461,17 +465,7 @@ final class BaAppModel {
         }
         return source
             .filter { $0.matches(query: query) }
-            .sorted { lhs, rhs in
-                let lhsFavorite = settings.favoriteContentIDs.contains(lhs.contentId)
-                let rhsFavorite = settings.favoriteContentIDs.contains(rhs.contentId)
-                if lhsFavorite != rhsFavorite {
-                    return lhsFavorite
-                }
-                if lhs.releaseDate != rhs.releaseDate {
-                    return (lhs.releaseDate ?? .distantPast) > (rhs.releaseDate ?? .distantPast)
-                }
-                return lhs.order < rhs.order
-            }
+            .sorted(using: sortMode, favoriteContentIDs: settings.favoriteContentIDs)
     }
 
     func isFavorite(_ entry: BaGuideCatalogEntry) -> Bool {
