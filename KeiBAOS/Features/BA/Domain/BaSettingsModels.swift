@@ -116,6 +116,12 @@ nonisolated enum BaCalendarPoolNotifyLead: Int, CaseIterable, Codable, Identifia
     }
 }
 
+nonisolated struct BaDutyStudent: Codable, Equatable, Hashable {
+    var contentId: Int64
+    var name: String
+    var avatarURL: URL?
+}
+
 nonisolated struct BaGlobalSettings: Codable, Equatable {
     var identityIndependentByServer: Bool
     var showEndedActivities: Bool
@@ -133,6 +139,7 @@ nonisolated struct BaGlobalSettings: Codable, Equatable {
     var mediaDownloadEnabled: Bool
     var refreshInterval: BaRefreshInterval
     var favoriteContentIDs: Set<Int64>
+    var dutyStudent: BaDutyStudent?
 
     static func defaults() -> BaGlobalSettings {
         BaGlobalSettings(
@@ -151,7 +158,8 @@ nonisolated struct BaGlobalSettings: Codable, Equatable {
             mediaAutoplayEnabled: false,
             mediaDownloadEnabled: false,
             refreshInterval: .threeHours,
-            favoriteContentIDs: []
+            favoriteContentIDs: [],
+            dutyStudent: nil
         )
     }
 }
@@ -210,7 +218,7 @@ nonisolated struct BaSettingsEnvelope: Codable, Equatable {
     var globalSettings: BaGlobalSettings
     var serverProfiles: [BaServer: BaServerProfile]
 
-    static let currentSchemaVersion = 2
+    static let currentSchemaVersion = 3
 
     static func defaults(now: Date = Date()) -> BaSettingsEnvelope {
         let profile = BaServerProfile.defaults(now: now)
@@ -241,7 +249,8 @@ nonisolated struct BaSettingsEnvelope: Codable, Equatable {
             mediaAutoplayEnabled: settings.mediaAutoplayEnabled,
             mediaDownloadEnabled: settings.mediaDownloadEnabled,
             refreshInterval: settings.refreshInterval,
-            favoriteContentIDs: settings.favoriteContentIDs
+            favoriteContentIDs: settings.favoriteContentIDs,
+            dutyStudent: settings.dutyStudent
         )
         let profile = BaServerProfile(
             nickname: settings.nickname,
@@ -319,6 +328,7 @@ nonisolated struct BaSettingsEnvelope: Codable, Equatable {
             mediaDownloadEnabled: globalSettings.mediaDownloadEnabled,
             refreshInterval: globalSettings.refreshInterval,
             favoriteContentIDs: globalSettings.favoriteContentIDs,
+            dutyStudent: globalSettings.dutyStudent,
             identityIndependentByServer: globalSettings.identityIndependentByServer,
             apNotifyThreshold: profile.apNotifyThreshold,
             cafeApNotifyThreshold: profile.cafeApNotifyThreshold,
@@ -379,6 +389,7 @@ nonisolated struct BaAppSettings: Codable, Equatable {
     var mediaDownloadEnabled: Bool
     var refreshInterval: BaRefreshInterval
     var favoriteContentIDs: Set<Int64>
+    var dutyStudent: BaDutyStudent?
     var identityIndependentByServer: Bool
     var apNotifyThreshold: Int
     var cafeApNotifyThreshold: Int
@@ -420,6 +431,7 @@ nonisolated struct BaAppSettings: Codable, Equatable {
             mediaDownloadEnabled: false,
             refreshInterval: .threeHours,
             favoriteContentIDs: [],
+            dutyStudent: nil,
             identityIndependentByServer: false,
             apNotifyThreshold: 120,
             cafeApNotifyThreshold: 120,
@@ -464,6 +476,7 @@ nonisolated extension BaAppSettings {
         case mediaDownloadEnabled
         case refreshInterval
         case favoriteContentIDs
+        case dutyStudent
         case identityIndependentByServer
         case apNotifyThreshold
         case cafeApNotifyThreshold
@@ -507,6 +520,7 @@ nonisolated extension BaAppSettings {
         mediaDownloadEnabled = try container.decodeIfPresent(Bool.self, forKey: .mediaDownloadEnabled) ?? defaults.mediaDownloadEnabled
         refreshInterval = try container.decodeIfPresent(BaRefreshInterval.self, forKey: .refreshInterval) ?? defaults.refreshInterval
         favoriteContentIDs = try container.decodeIfPresent(Set<Int64>.self, forKey: .favoriteContentIDs) ?? defaults.favoriteContentIDs
+        dutyStudent = try container.decodeIfPresent(BaDutyStudent.self, forKey: .dutyStudent)
         identityIndependentByServer = try container.decodeIfPresent(Bool.self, forKey: .identityIndependentByServer) ?? false
         apNotifyThreshold = try container.decodeIfPresent(Int.self, forKey: .apNotifyThreshold) ?? defaults.apNotifyThreshold
         cafeApNotifyThreshold = try container.decodeIfPresent(Int.self, forKey: .cafeApNotifyThreshold) ?? defaults.cafeApNotifyThreshold

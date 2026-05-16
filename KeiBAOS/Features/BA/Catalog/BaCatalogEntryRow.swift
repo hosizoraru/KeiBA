@@ -10,12 +10,14 @@ import SwiftUI
 struct BaCatalogEntryRowDisplayModel: Identifiable, Equatable {
     let entry: BaGuideCatalogEntry
     let isFavorite: Bool
+    let isDutyStudent: Bool
     let subtitle: String
     let detail: String
 
-    init(entry: BaGuideCatalogEntry, isFavorite: Bool) {
+    init(entry: BaGuideCatalogEntry, isFavorite: Bool, isDutyStudent: Bool = false) {
         self.entry = entry
         self.isFavorite = isFavorite
+        self.isDutyStudent = isDutyStudent
         subtitle = Self.subtitle(for: entry)
         detail = Self.detail(for: entry)
     }
@@ -69,8 +71,8 @@ struct BaCatalogEntryRow: View, Equatable {
     var thumbnailMaxPixelDimension = 900
     var usesThumbnailGlassSurface = true
 
-    init(entry: BaGuideCatalogEntry, isFavorite: Bool) {
-        row = BaCatalogEntryRowDisplayModel(entry: entry, isFavorite: isFavorite)
+    init(entry: BaGuideCatalogEntry, isFavorite: Bool, isDutyStudent: Bool = false) {
+        row = BaCatalogEntryRowDisplayModel(entry: entry, isFavorite: isFavorite, isDutyStudent: isDutyStudent)
     }
 
     init(
@@ -104,6 +106,12 @@ struct BaCatalogEntryRow: View, Equatable {
                         Image(systemName: "star.fill")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.yellow)
+                    }
+
+                    if row.isDutyStudent {
+                        Image(systemName: "person.crop.circle.fill")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(BaDesign.blue)
                     }
                 }
 

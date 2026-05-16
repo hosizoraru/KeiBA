@@ -16,7 +16,11 @@ struct BaLibraryView: View {
     private var snapshot: BaLibraryViewSnapshot {
         let favoriteIDs = model.settings.favoriteContentIDs
         let rows = model.entries(for: selectedCategory, query: searchText).map { entry in
-            BaCatalogEntryRowDisplayModel(entry: entry, isFavorite: favoriteIDs.contains(entry.contentId))
+            BaCatalogEntryRowDisplayModel(
+                entry: entry,
+                isFavorite: favoriteIDs.contains(entry.contentId),
+                isDutyStudent: model.isDutyStudent(entry)
+            )
         }
         return BaLibraryViewSnapshot(rows: rows)
     }
@@ -94,7 +98,19 @@ struct BaLibraryView: View {
                         .equatable()
                         .baAdaptiveReadableContent()
                 }
-                .swipeActions(edge: .trailing) {
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    if model.canSetDutyStudent(row.entry) {
+                        Button {
+                            toggleDutyStudent(row.entry)
+                        } label: {
+                            Label(
+                                dutyStudentActionTitle(isDutyStudent: row.isDutyStudent),
+                                systemImage: row.isDutyStudent ? "person.crop.circle.badge.xmark" : "person.crop.circle.badge.checkmark"
+                            )
+                        }
+                        .tint(.blue)
+                    }
+
                     Button {
                         model.toggleFavorite(row.entry)
                     } label: {
@@ -141,6 +157,18 @@ struct BaLibraryView: View {
         isFavorite
             ? String(localized: "ba.catalog.favorite.remove")
             : String(localized: "ba.catalog.favorite.add")
+    }
+
+    private func dutyStudentActionTitle(isDutyStudent: Bool) -> String {
+        isDutyStudent
+            ? String(localized: "ba.catalog.dutyStudent.clear")
+            : String(localized: "ba.catalog.dutyStudent.set")
+    }
+
+    private func toggleDutyStudent(_ entry: BaGuideCatalogEntry) {
+        Task {
+            await model.toggleDutyStudent(entry)
+        }
     }
 
     private func globalBoolBinding(_ keyPath: WritableKeyPath<BaGlobalSettings, Bool>) -> Binding<Bool> {

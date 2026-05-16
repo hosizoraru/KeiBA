@@ -222,6 +222,7 @@ final class BaAppModel {
         envelope.globalSettings.mediaDownloadEnabled = next.mediaDownloadEnabled
         envelope.globalSettings.refreshInterval = next.refreshInterval
         envelope.globalSettings.favoriteContentIDs = next.favoriteContentIDs
+        envelope.globalSettings.dutyStudent = next.dutyStudent
         if next.server != previous.server {
             envelope.selectedServer = next.server
             return
@@ -506,6 +507,57 @@ final class BaAppModel {
                 settings.favoriteContentIDs.insert(entry.contentId)
             }
         }
+    }
+
+    func canSetDutyStudent(_ entry: BaGuideCatalogEntry) -> Bool {
+        entry.category == .students
+    }
+
+    func isDutyStudent(_ entry: BaGuideCatalogEntry) -> Bool {
+        settings.dutyStudent?.contentId == entry.contentId
+    }
+
+    func toggleDutyStudent(_ entry: BaGuideCatalogEntry) async {
+        guard canSetDutyStudent(entry) else { return }
+        if isDutyStudent(entry) {
+            clearDutyStudent()
+        } else {
+            await setDutyStudent(entry)
+        }
+    }
+
+    func clearDutyStudent() {
+        updateGlobalSettings { settings in
+            settings.dutyStudent = nil
+        }
+    }
+
+    func setDutyStudent(_ entry: BaGuideCatalogEntry) async {
+        guard canSetDutyStudent(entry) else { return }
+        let fallbackStudent = dutyStudent(from: entry)
+        updateGlobalSettings { settings in
+            settings.dutyStudent = fallbackStudent
+        }
+
+        if studentDetailStates[entry.contentId]?.value == nil {
+            await loadStudentDetail(entry: entry)
+        }
+
+        guard isDutyStudent(entry) else { return }
+        let resolvedStudent = dutyStudent(from: entry)
+        guard settings.dutyStudent != resolvedStudent else { return }
+        updateGlobalSettings { settings in
+            settings.dutyStudent = resolvedStudent
+        }
+    }
+
+    private func dutyStudent(from entry: BaGuideCatalogEntry) -> BaDutyStudent {
+        let imageURL = studentDetailStates[entry.contentId]?.value?.preferredPortraitURL(fallback: entry.iconURL) ?? entry.iconURL
+        return BaDutyStudent(
+            contentId: entry.contentId,
+            name: entry.name,
+            avatarURL: imageURL
+        )
     }
 
     func studentCatalogEntry(for pool: BaPoolEntry) -> BaGuideCatalogEntry? {

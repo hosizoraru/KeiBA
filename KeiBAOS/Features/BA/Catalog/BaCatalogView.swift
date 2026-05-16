@@ -17,7 +17,11 @@ struct BaCatalogView: View {
     private var snapshot: BaCatalogViewSnapshot {
         let favoriteIDs = model.settings.favoriteContentIDs
         let rows = model.entries(for: selectedCategory, query: searchText, sortMode: sortMode).map { entry in
-            BaCatalogEntryRowDisplayModel(entry: entry, isFavorite: favoriteIDs.contains(entry.contentId))
+            BaCatalogEntryRowDisplayModel(
+                entry: entry,
+                isFavorite: favoriteIDs.contains(entry.contentId),
+                isDutyStudent: model.isDutyStudent(entry)
+            )
         }
         return BaCatalogViewSnapshot(rows: rows)
     }
@@ -64,7 +68,10 @@ struct BaCatalogView: View {
                 emptyDetail: emptyDetail,
                 footerText: footerText,
                 favoriteActionTitle: favoriteActionTitle(isFavorite:),
-                onToggleFavorite: { model.toggleFavorite($0) }
+                dutyStudentActionTitle: dutyStudentActionTitle(isDutyStudent:),
+                canSetDutyStudent: model.canSetDutyStudent,
+                onToggleFavorite: { model.toggleFavorite($0) },
+                onToggleDutyStudent: toggleDutyStudent
             )
             .background(AppBackground())
         }
@@ -108,7 +115,19 @@ struct BaCatalogView: View {
                     )
                         .equatable()
                 }
-                .swipeActions(edge: .trailing) {
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    if model.canSetDutyStudent(row.entry) {
+                        Button {
+                            toggleDutyStudent(row.entry)
+                        } label: {
+                            Label(
+                                dutyStudentActionTitle(isDutyStudent: row.isDutyStudent),
+                                systemImage: row.isDutyStudent ? "person.crop.circle.badge.xmark" : "person.crop.circle.badge.checkmark"
+                            )
+                        }
+                        .tint(.blue)
+                    }
+
                     Button {
                         model.toggleFavorite(row.entry)
                     } label: {
@@ -155,6 +174,18 @@ struct BaCatalogView: View {
         isFavorite
             ? String(localized: "ba.catalog.favorite.remove")
             : String(localized: "ba.catalog.favorite.add")
+    }
+
+    private func dutyStudentActionTitle(isDutyStudent: Bool) -> String {
+        isDutyStudent
+            ? String(localized: "ba.catalog.dutyStudent.clear")
+            : String(localized: "ba.catalog.dutyStudent.set")
+    }
+
+    private func toggleDutyStudent(_ entry: BaGuideCatalogEntry) {
+        Task {
+            await model.toggleDutyStudent(entry)
+        }
     }
 }
 

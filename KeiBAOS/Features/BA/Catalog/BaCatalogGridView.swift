@@ -14,7 +14,10 @@ struct BaCatalogGridView: View {
     let emptyDetail: String
     let footerText: String
     let favoriteActionTitle: (Bool) -> String
+    let dutyStudentActionTitle: (Bool) -> String
+    let canSetDutyStudent: (BaGuideCatalogEntry) -> Bool
     let onToggleFavorite: (BaGuideCatalogEntry) -> Void
+    let onToggleDutyStudent: (BaGuideCatalogEntry) -> Void
 
     var body: some View {
         ScrollView {
@@ -60,6 +63,17 @@ struct BaCatalogGridView: View {
                     }
                     .buttonStyle(.plain)
                     .contextMenu {
+                        if canSetDutyStudent(row.entry) {
+                            Button {
+                                onToggleDutyStudent(row.entry)
+                            } label: {
+                                Label(
+                                    dutyStudentActionTitle(row.isDutyStudent),
+                                    systemImage: row.isDutyStudent ? "person.crop.circle.badge.xmark" : "person.crop.circle.badge.checkmark"
+                                )
+                            }
+                        }
+
                         Button {
                             onToggleFavorite(row.entry)
                         } label: {
@@ -117,6 +131,12 @@ private struct BaCatalogEntryGridCard: View, Equatable {
                         Image(systemName: "star.fill")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.yellow)
+                    }
+
+                    if row.isDutyStudent {
+                        Image(systemName: "person.crop.circle.fill")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(BaDesign.blue)
                     }
                 }
 

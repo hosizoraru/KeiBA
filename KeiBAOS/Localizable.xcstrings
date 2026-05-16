@@ -1612,6 +1612,38 @@
         }
       }
     },
+    "ba.catalog.dutyStudent.clear" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Duty Student"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消值日生"
+          }
+        }
+      }
+    },
+    "ba.catalog.dutyStudent.set" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set Duty Student"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设为值日生"
+          }
+        }
+      }
+    },
     "ba.catalog.footer.bgm" : {
       "localizations" : {
         "en" : {
@@ -2561,6 +2593,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kei"
+          }
+        }
+      }
+    },
+    "ba.office.dutyStudent.avatar.accessibility" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duty student avatar: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "值日生头像：%@"
+          }
+        }
+      }
+    },
+    "ba.office.identity.avatar.accessibility" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schale identity avatar"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "夏莱身份头像"
           }
         }
       }

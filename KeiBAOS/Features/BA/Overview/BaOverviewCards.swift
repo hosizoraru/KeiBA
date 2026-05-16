@@ -43,9 +43,7 @@ struct BaOverviewIdentityCard: View {
                 BaOverviewSectionTitle(title: String(localized: "ba.office.overview.title"), asset: .schale)
 
                 HStack(alignment: .top, spacing: 14) {
-                    BaGameAssetIcon(.schale, size: 44)
-                        .frame(width: 50, height: 50)
-                        .liquidGlassSurface(cornerRadius: 18, tint: BaDesign.blue.opacity(0.06), isInteractive: false)
+                    BaOverviewIdentityAvatar(dutyStudent: settings.dutyStudent)
 
                     VStack(alignment: .leading, spacing: 8) {
                         Text("\(settings.nickname) \(String(localized: "ba.office.nickname.suffix"))")
@@ -79,6 +77,32 @@ struct BaOverviewIdentityCard: View {
             get: { settings.server },
             set: onServerSelected
         )
+    }
+}
+
+private struct BaOverviewIdentityAvatar: View {
+    let dutyStudent: BaDutyStudent?
+
+    var body: some View {
+        if let dutyStudent {
+            BaRemoteImageSurface(
+                url: dutyStudent.avatarURL,
+                fallbackSystemImage: "person.crop.circle",
+                tint: BaDesign.blue,
+                width: 50,
+                height: 50,
+                cornerRadius: 18,
+                maxPixelDimension: 180
+            )
+            .accessibilityLabel(
+                Text(String(format: String(localized: "ba.office.dutyStudent.avatar.accessibility"), dutyStudent.name))
+            )
+        } else {
+            BaGameAssetIcon(.schale, size: 44)
+                .frame(width: 50, height: 50)
+                .liquidGlassSurface(cornerRadius: 18, tint: BaDesign.blue.opacity(0.06), isInteractive: false)
+                .accessibilityLabel(Text(String(localized: "ba.office.identity.avatar.accessibility")))
+        }
     }
 }
 

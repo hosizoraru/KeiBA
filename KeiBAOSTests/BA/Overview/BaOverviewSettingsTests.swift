@@ -386,6 +386,11 @@ final class BaOverviewSettingsTests: XCTestCase {
         envelope.globalSettings.refreshInterval = .twelveHours
         envelope.globalSettings.calendarUpcomingNotificationsEnabled = false
         envelope.globalSettings.poolEndingNotificationsEnabled = true
+        envelope.globalSettings.dutyStudent = BaDutyStudent(
+            contentId: 10_001,
+            name: "Shiroko",
+            avatarURL: URL(string: "https://cdnimg.gamekee.com/student/shiroko.png")
+        )
         var profile = envelope.profile(for: .cn)
         profile.apNotifyThreshold = 210
         profile.cafeApNotifyThreshold = 330
@@ -401,6 +406,9 @@ final class BaOverviewSettingsTests: XCTestCase {
         XCTAssertEqual(loaded.globalSettings.refreshInterval, .twelveHours)
         XCTAssertFalse(loaded.globalSettings.calendarUpcomingNotificationsEnabled)
         XCTAssertTrue(loaded.globalSettings.poolEndingNotificationsEnabled)
+        XCTAssertEqual(loaded.globalSettings.dutyStudent?.contentId, 10_001)
+        XCTAssertEqual(loaded.globalSettings.dutyStudent?.name, "Shiroko")
+        XCTAssertEqual(loaded.globalSettings.dutyStudent?.avatarURL?.absoluteString, "https://cdnimg.gamekee.com/student/shiroko.png")
         XCTAssertEqual(loaded.profile(for: .cn).apNotifyThreshold, 210)
         XCTAssertEqual(loaded.profile(for: .cn).cafeApNotifyThreshold, 330)
     }
