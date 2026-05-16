@@ -27,7 +27,11 @@ struct BaOverviewCafeEditorSheet: View {
                                 .monospacedDigit()
                         }
                     }
+                } footer: {
+                    Text(String(localized: "ba.overview.cafe.editor.level.footer"))
+                }
 
+                Section {
                     LabeledContent(String(localized: "ba.settings.cafe.threshold.title")) {
                         TextField("\(cafeThreshold)", text: $thresholdText)
                             .multilineTextAlignment(.trailing)
@@ -44,7 +48,7 @@ struct BaOverviewCafeEditorSheet: View {
                         #endif
                     }
                 } footer: {
-                    Text(String(localized: "ba.overview.cafe.editor.footer"))
+                    Text(String(localized: "ba.overview.cafe.editor.threshold.footer"))
                 }
             }
             .navigationTitle(String(localized: "ba.overview.cafe.editor.title"))

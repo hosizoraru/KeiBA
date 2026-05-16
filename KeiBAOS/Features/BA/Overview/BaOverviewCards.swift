@@ -37,6 +37,8 @@ struct BaOverviewIdentityCard: View {
     let settings: BaAppSettings
     let onServerSelected: (BaServer) -> Void
 
+    @State private var copiedFriendCode = false
+
     var body: some View {
         BaGlassCard(tint: BaDesign.blue) {
             VStack(alignment: .leading, spacing: BaOverviewMetricStyle.cardSpacing) {
@@ -52,9 +54,11 @@ struct BaOverviewIdentityCard: View {
                             .lineLimit(1)
                             .minimumScaleFactor(0.82)
 
-                        Text(settings.friendCode)
-                            .font(BaOverviewTextToken.number)
-                            .foregroundStyle(.secondary)
+                        BaFriendCodeCopyLine(
+                            friendCode: settings.friendCode,
+                            isCopied: copiedFriendCode,
+                            onCopy: copyFriendCode
+                        )
                     }
 
                     Spacer(minLength: 8)
@@ -77,6 +81,46 @@ struct BaOverviewIdentityCard: View {
             get: { settings.server },
             set: onServerSelected
         )
+    }
+
+    private func copyFriendCode() {
+        BaPasteboard.copy(settings.friendCode)
+        copiedFriendCode = true
+        Task {
+            try? await Task.sleep(for: .seconds(1.4))
+            guard Task.isCancelled == false else { return }
+            copiedFriendCode = false
+        }
+    }
+}
+
+private struct BaFriendCodeCopyLine: View {
+    let friendCode: String
+    let isCopied: Bool
+    let onCopy: () -> Void
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text(String(format: String(localized: "ba.office.friendCode.display.format"), friendCode))
+                .font(BaOverviewTextToken.number)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.82)
+
+            Button(action: onCopy) {
+                Label(copyTitle, systemImage: isCopied ? "checkmark.circle.fill" : "doc.on.doc")
+            }
+            .buttonStyle(.borderless)
+            .labelStyle(.iconOnly)
+            .foregroundStyle(isCopied ? BaDesign.green : BaDesign.blue)
+            .accessibilityLabel(Text(copyTitle))
+        }
+    }
+
+    private var copyTitle: String {
+        isCopied
+            ? String(localized: "ba.office.friendCode.copied")
+            : String(localized: "ba.office.friendCode.copy")
     }
 }
 

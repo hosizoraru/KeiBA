@@ -15,7 +15,7 @@ final class BaOverviewSettingsTests: XCTestCase {
         var legacy = BaAppSettings.defaults(now: base)
         legacy.server = .global
         legacy.nickname = "Global Sensei"
-        legacy.friendCode = "global-001"
+        legacy.friendCode = "glob0001"
         legacy.apCurrent = 177
         legacy.apLimit = 231
         legacy.cafeLevel = 8
@@ -38,7 +38,7 @@ final class BaOverviewSettingsTests: XCTestCase {
         XCTAssertEqual(envelope.schemaVersion, BaSettingsEnvelope.currentSchemaVersion)
         XCTAssertEqual(envelope.selectedServer, .global)
         XCTAssertEqual(profile.nickname, "Global Sensei")
-        XCTAssertEqual(profile.friendCode, "GLOBAL-001")
+        XCTAssertEqual(profile.friendCode, "GLOB0001")
         XCTAssertEqual(profile.apCurrent, 177)
         XCTAssertEqual(profile.apLimit, 231)
         XCTAssertEqual(profile.cafeLevel, 8)
@@ -61,19 +61,19 @@ final class BaOverviewSettingsTests: XCTestCase {
 
         var cnProfile = envelope.profile(for: .cn)
         cnProfile.nickname = "CN Sensei"
-        cnProfile.friendCode = "CN-001"
+        cnProfile.friendCode = "CN000001"
         cnProfile.apCurrent = 90
         envelope.setProfile(cnProfile, for: .cn)
 
         var globalProfile = envelope.profile(for: .global)
         globalProfile.nickname = "Global Sensei"
-        globalProfile.friendCode = "GL-001"
+        globalProfile.friendCode = "GL000001"
         globalProfile.apCurrent = 120
         envelope.setProfile(globalProfile, for: .global)
 
         var jpProfile = envelope.profile(for: .jp)
         jpProfile.nickname = "JP Sensei"
-        jpProfile.friendCode = "JP-001"
+        jpProfile.friendCode = "JP000001"
         jpProfile.apCurrent = 150
         envelope.setProfile(jpProfile, for: .jp)
 
@@ -88,6 +88,12 @@ final class BaOverviewSettingsTests: XCTestCase {
         XCTAssertEqual(loaded.profile(for: .cn).apCurrent, 90)
         XCTAssertEqual(loaded.profile(for: .global).apCurrent, 120)
         XCTAssertEqual(loaded.profile(for: .jp).apCurrent, 150)
+    }
+
+    func testFriendCodeKeepsEightUppercaseLettersOrDigits() {
+        XCTAssertEqual(BaFriendCodeFormat.sanitizedDraft("ab-12 cd34xyz"), "AB12CD34")
+        XCTAssertEqual(BaFriendCodeFormat.normalized("ke1os26x"), "KE1OS26X")
+        XCTAssertEqual(BaFriendCodeFormat.normalized("short7"), BaFriendCodeFormat.fallback)
     }
 
     func testCafeAPStorageUsesSingleSharedCafeBucket() {

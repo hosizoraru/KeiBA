@@ -342,9 +342,8 @@ nonisolated extension BaServerProfile {
     func normalized() -> BaServerProfile {
         var copy = self
         let nickname = copy.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
-        let friendCode = copy.friendCode.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
         copy.nickname = nickname.isEmpty ? "Kei" : nickname
-        copy.friendCode = friendCode.isEmpty ? "ARISUKEI" : friendCode
+        copy.friendCode = BaFriendCodeFormat.normalized(copy.friendCode)
         copy.apCurrent = BaTimeMath.normalizedAP(copy.apCurrent)
         copy.apLimit = min(max(copy.apLimit, 0), BaTimeMath.apLimitMax)
         copy.cafeLevel = min(max(copy.cafeLevel, 1), 10)

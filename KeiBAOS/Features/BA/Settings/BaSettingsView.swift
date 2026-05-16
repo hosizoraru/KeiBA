@@ -40,8 +40,18 @@ struct BaSettingsView: View {
                 isOn: globalBoolBinding(\.identityIndependentByServer)
             )
 
-            TextField(String(localized: "ba.office.nickname.label"), text: profileStringBinding(\.nickname))
-            TextField(String(localized: "ba.office.friendCode.label"), text: profileStringBinding(\.friendCode))
+            TextField(
+                String(localized: "ba.office.nickname.label"),
+                text: profileStringBinding(\.nickname),
+                prompt: Text(String(localized: "ba.office.nickname.prompt"))
+            )
+            TextField(
+                String(localized: "ba.office.friendCode.label"),
+                text: friendCodeBinding,
+                prompt: Text(String(localized: "ba.office.friendCode.prompt"))
+            )
+            .monospaced()
+            .autocorrectionDisabled()
             #if os(iOS)
                 .textInputAutocapitalization(.characters)
             #endif
@@ -53,7 +63,7 @@ struct BaSettingsView: View {
     }
 
     private var resourcesSection: some View {
-        Section(String(localized: "ba.settings.resources.section")) {
+        Section {
             LabeledContent(String(localized: "ba.office.ap.limit.title")) {
                 TextField(
                     "240",
@@ -95,6 +105,10 @@ struct BaSettingsView: View {
                     .keyboardType(.numberPad)
                 #endif
             }
+        } header: {
+            Text(String(localized: "ba.settings.resources.section"))
+        } footer: {
+            Text(String(localized: "ba.settings.resources.footer"))
         }
     }
 
@@ -261,6 +275,15 @@ struct BaSettingsView: View {
             get: { model.currentProfile[keyPath: keyPath] },
             set: { value in
                 model.updateCurrentProfile { $0[keyPath: keyPath] = value }
+            }
+        )
+    }
+
+    private var friendCodeBinding: Binding<String> {
+        Binding(
+            get: { model.currentProfile.friendCode },
+            set: { value in
+                model.updateCurrentProfile { $0.friendCode = BaFriendCodeFormat.sanitizedDraft(value) }
             }
         )
     }

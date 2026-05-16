@@ -1515,6 +1515,38 @@
         }
       }
     },
+    "ba.catalog.dutyStudent.clear" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Duty Student"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消值日生"
+          }
+        }
+      }
+    },
+    "ba.catalog.dutyStudent.set" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set Duty Student"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设为值日生"
+          }
+        }
+      }
+    },
     "ba.catalog.empty.detail" : {
       "localizations" : {
         "en" : {
@@ -1608,38 +1640,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "取消收藏"
-          }
-        }
-      }
-    },
-    "ba.catalog.dutyStudent.clear" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear Duty Student"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "取消值日生"
-          }
-        }
-      }
-    },
-    "ba.catalog.dutyStudent.set" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Set Duty Student"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "设为值日生"
           }
         }
       }
@@ -2515,6 +2515,70 @@
         }
       }
     },
+    "ba.office.dutyStudent.avatar.accessibility" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duty student avatar: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "值日生头像：%@"
+          }
+        }
+      }
+    },
+    "ba.office.friendCode.copied" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Friend Code Copied"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "好友码已复制"
+          }
+        }
+      }
+    },
+    "ba.office.friendCode.copy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Friend Code"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制好友码"
+          }
+        }
+      }
+    },
+    "ba.office.friendCode.display.format" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Friend Code: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "好友码：%@"
+          }
+        }
+      }
+    },
     "ba.office.friendCode.label" : {
       "localizations" : {
         "en" : {
@@ -2527,6 +2591,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "好友码"
+          }
+        }
+      }
+    },
+    "ba.office.friendCode.prompt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "8 uppercase letters or digits"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "8 位大写字母或数字"
           }
         }
       }
@@ -2548,6 +2628,22 @@
         }
       }
     },
+    "ba.office.identity.avatar.accessibility" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schale identity avatar"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "夏莱身份头像"
+          }
+        }
+      }
+    },
     "ba.office.nickname.label" : {
       "localizations" : {
         "en" : {
@@ -2560,6 +2656,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "昵称"
+          }
+        }
+      }
+    },
+    "ba.office.nickname.prompt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teacher name shown on the ID card"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示在 ID 卡上的老师名称"
           }
         }
       }
@@ -2593,38 +2705,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kei"
-          }
-        }
-      }
-    },
-    "ba.office.dutyStudent.avatar.accessibility" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Duty student avatar: %@"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "值日生头像：%@"
-          }
-        }
-      }
-    },
-    "ba.office.identity.avatar.accessibility" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schale identity avatar"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "夏莱身份头像"
           }
         }
       }
@@ -2710,7 +2790,24 @@
         }
       }
     },
+    "ba.overview.ap.editor.current.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current AP is the Action Point value shown in game. Saving it starts recovery timing from now."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前 AP 对应游戏内行动点数；保存后会从现在开始重新计算自然恢复。"
+          }
+        }
+      }
+    },
     "ba.overview.ap.editor.footer" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2739,6 +2836,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "当前 AP 会重置恢复基线。AP 上限为 %@。"
+          }
+        }
+      }
+    },
+    "ba.overview.ap.editor.rules.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AP limit is your current in-game maximum. The threshold controls when AP reminders become useful."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AP 上限对应游戏内当前最大体力；阈值用于决定 AP 提醒触发时机。"
           }
         }
       }
@@ -2776,6 +2889,7 @@
       }
     },
     "ba.overview.cafe.editor.footer" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2787,6 +2901,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "咖啡厅等级控制共享 Cafe AP 储量，阈值会保存到当前服务器。"
+          }
+        }
+      }
+    },
+    "ba.overview.cafe.editor.level.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cafe level changes stored Cafe AP capacity and hourly recovery estimates."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "咖啡厅等级会影响咖啡厅 AP 储量上限和每小时恢复估算。"
+          }
+        }
+      }
+    },
+    "ba.overview.cafe.editor.threshold.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cafe AP reminders fire when stored Cafe AP reaches this threshold."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "咖啡厅库存 AP 达到这个阈值后会触发提醒。"
           }
         }
       }
@@ -3777,13 +3923,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Teachers who play multiple servers can keep office identity per server."
+            "value" : "Nickname is shown as “Sensei.” Friend Code is 8 uppercase letters or digits for friend requests."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "多服务器游玩的老师可以为每个服务器保留独立身份。"
+            "value" : "昵称会显示为“老师”；好友码用于添加好友，固定 8 位大写字母或数字。"
           }
         }
       }
@@ -4262,6 +4408,22 @@
         }
       }
     },
+    "ba.settings.resources.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AP limit and Cafe level drive recovery estimates. Reminder thresholds stay local to the selected server."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AP 上限和咖啡厅等级用于估算恢复；提醒阈值会按当前服务器保存在本地。"
+          }
+        }
+      }
+    },
     "ba.settings.resources.section" : {
       "localizations" : {
         "en" : {
@@ -4473,6 +4635,22 @@
         }
       }
     },
+    "ba.sheet.edit.identity.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use the nickname and Friend Code from your in-game ID card. Server-specific identity keeps each server separate."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这里填写游戏内 ID 卡上的昵称和好友码；开启按服独立后，每个服务器会分别保存。"
+          }
+        }
+      }
+    },
     "ba.sheet.edit.identity.title" : {
       "localizations" : {
         "en" : {
@@ -4489,6 +4667,22 @@
         }
       }
     },
+    "ba.sheet.edit.resources.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AP limit is the maximum Action Points shown in game. Cafe level affects stored Cafe AP estimates."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AP 上限对应游戏内最大体力；咖啡厅等级会影响咖啡厅 AP 储量估算。"
+          }
+        }
+      }
+    },
     "ba.sheet.edit.resources.title" : {
       "localizations" : {
         "en" : {
@@ -4501,6 +4695,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "资源"
+          }
+        }
+      }
+    },
+    "ba.sheet.notifications.activityPool.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Event and recruitment reminders use the selected server schedule. Lead time applies to both start and end alerts."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "活动和卡池提醒会按当前服务器日程触发；提前时间同时作用于开始与结束提醒。"
           }
         }
       }
@@ -4542,13 +4752,29 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "These preferences are saved locally. System notification scheduling stays for the notification layer pass."
+            "value" : "Reminder preferences are saved locally. Delivery still follows system notification permissions and Focus settings."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "这些偏好会保存到本地；系统通知调度留到通知层迁移。"
+            "value" : "提醒偏好会保存在本地；实际送达仍会受系统通知权限和专注模式影响。"
+          }
+        }
+      }
+    },
+    "ba.sheet.notifications.resources.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AP, Cafe AP, Cafe student visits, and Tactical Challenge resets are daily gameplay reminders."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AP、咖啡厅 AP、咖啡厅学生来访和战术对抗刷新都属于日常游玩提醒。"
           }
         }
       }

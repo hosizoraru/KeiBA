@@ -29,7 +29,7 @@ private struct BaNotificationSettingsSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section(String(localized: "ba.settings.resources.section")) {
+                Section {
                     Toggle(String(localized: "ba.sheet.notifications.ap.title"), isOn: profileBinding(\.apNotificationsEnabled))
                     Toggle(String(localized: "ba.sheet.notifications.cafeAp.title"), isOn: profileBinding(\.cafeApNotificationsEnabled))
                     Toggle(String(localized: "ba.sheet.notifications.visit.title"), isOn: profileBinding(\.visitNotificationsEnabled))
@@ -37,6 +37,10 @@ private struct BaNotificationSettingsSheet: View {
                         String(localized: "ba.settings.arena.notifications.title"),
                         isOn: profileBinding(\.arenaRefreshNotificationsEnabled)
                     )
+                } header: {
+                    Text(String(localized: "ba.settings.resources.section"))
+                } footer: {
+                    Text(String(localized: "ba.sheet.notifications.resources.footer"))
                 }
 
                 Section {
@@ -69,7 +73,7 @@ private struct BaNotificationSettingsSheet: View {
                 } header: {
                     Text(String(localized: "ba.settings.activityPool.title"))
                 } footer: {
-                    Text(String(localized: "ba.sheet.notifications.footer"))
+                    Text(String(localized: "ba.sheet.notifications.activityPool.footer"))
                 }
             }
             .navigationTitle(BaPresentedSheet.notifications.title)
@@ -119,36 +123,68 @@ private struct BaEditOfficeSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section(String(localized: "ba.sheet.edit.identity.title")) {
+                Section {
                     Toggle(
                         String(localized: "ba.settings.identity.independent.title"),
                         isOn: $draft.identityIndependentByServer
                     )
-                    TextField(String(localized: "ba.office.nickname.label"), text: $draft.nickname)
-                    TextField(String(localized: "ba.office.friendCode.label"), text: $draft.friendCode)
+                    TextField(
+                        String(localized: "ba.office.nickname.label"),
+                        text: $draft.nickname,
+                        prompt: Text(String(localized: "ba.office.nickname.prompt"))
+                    )
+                    TextField(
+                        String(localized: "ba.office.friendCode.label"),
+                        text: $draft.friendCode,
+                        prompt: Text(String(localized: "ba.office.friendCode.prompt"))
+                    )
+                    .monospaced()
+                    .autocorrectionDisabled()
+                    #if os(iOS)
+                        .textInputAutocapitalization(.characters)
+                    #endif
                     Picker(String(localized: "ba.office.server.label"), selection: $draft.server) {
                         ForEach(BaServer.allCases) { server in
                             Text(server.title)
                                 .tag(server)
                         }
                     }
+                } header: {
+                    Text(String(localized: "ba.sheet.edit.identity.title"))
+                } footer: {
+                    Text(String(localized: "ba.sheet.edit.identity.footer"))
                 }
 
-                Section(String(localized: "ba.sheet.edit.resources.title")) {
-                    TextField(String(localized: "ba.office.ap.limit.title"), value: $draft.apLimit, format: .number)
-                    #if os(iOS)
-                        .keyboardType(.numberPad)
-                    #endif
+                Section {
+                    LabeledContent(String(localized: "ba.office.ap.limit.title")) {
+                        TextField("240", value: $draft.apLimit, format: .number)
+                            .multilineTextAlignment(.trailing)
+                            .monospacedDigit()
+                        #if os(iOS)
+                            .keyboardType(.numberPad)
+                        #endif
+                    }
                     Stepper(value: $draft.cafeLevel, in: 1 ... 10) {
                         LabeledContent(String(localized: "ba.cafe.level.title")) {
                             Text("Lv\(draft.cafeLevel)")
+                                .monospacedDigit()
                         }
                     }
+                } header: {
+                    Text(String(localized: "ba.sheet.edit.resources.title"))
+                } footer: {
+                    Text(String(localized: "ba.sheet.edit.resources.footer"))
                 }
             }
             .navigationTitle(BaPresentedSheet.editOffice.title)
             .onAppear {
                 draft = model.settings
+            }
+            .onChange(of: draft.friendCode) { _, value in
+                let sanitized = BaFriendCodeFormat.sanitizedDraft(value)
+                if sanitized != value {
+                    draft.friendCode = sanitized
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -161,6 +197,7 @@ private struct BaEditOfficeSheet: View {
                     Button(String(localized: "ba.common.done")) {
                         model.updateSettings { settings in
                             settings = draft
+                            settings.friendCode = BaFriendCodeFormat.normalized(settings.friendCode)
                             settings.apLimit = min(max(settings.apLimit, 0), BaTimeMath.apLimitMax)
                             settings.cafeLevel = min(max(settings.cafeLevel, 1), 10)
                         }

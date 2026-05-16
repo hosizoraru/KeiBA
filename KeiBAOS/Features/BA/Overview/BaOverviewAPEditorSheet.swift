@@ -28,6 +28,11 @@ struct BaOverviewAPEditorSheet: View {
                         text: $currentText,
                         fallback: currentAP
                     )
+                } footer: {
+                    Text(String(localized: "ba.overview.ap.editor.current.footer"))
+                }
+
+                Section {
                     numberField(
                         title: String(localized: "ba.settings.ap.threshold.title"),
                         text: $thresholdText,
@@ -39,7 +44,7 @@ struct BaOverviewAPEditorSheet: View {
                         fallback: apLimit
                     )
                 } footer: {
-                    Text(String(localized: "ba.overview.ap.editor.footer"))
+                    Text(String(localized: "ba.overview.ap.editor.rules.footer"))
                 }
             }
             .navigationTitle(String(localized: "ba.overview.ap.editor.title"))
