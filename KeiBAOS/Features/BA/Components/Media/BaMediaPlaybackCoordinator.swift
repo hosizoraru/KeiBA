@@ -12,11 +12,14 @@ import os
 enum BaMediaPlaybackCoordinator {
     static let willStartPlaybackNotification = Notification.Name("BaMediaPlaybackCoordinatorWillStartPlayback")
     private static let logger = Logger(subsystem: "os.kei.KeiBAOS", category: "BaMediaPlayback")
+    @MainActor private static var activePlaybackMode: PlaybackMode?
+
     private enum PlaybackMode {
         case audio
         case video
     }
 
+    @MainActor
     static func notifyWillStartPlayback(sender: AnyObject) {
         NotificationCenter.default.post(
             name: willStartPlaybackNotification,
@@ -24,18 +27,22 @@ enum BaMediaPlaybackCoordinator {
         )
     }
 
+    @MainActor
     static func configurePrimaryPlaybackSession() {
         configureAudioPlaybackSession()
     }
 
+    @MainActor
     static func configureAudioPlaybackSession() {
         configurePlaybackSession(mode: .audio)
     }
 
+    @MainActor
     static func configureVideoPlaybackSession() {
         configurePlaybackSession(mode: .video)
     }
 
+    @MainActor
     private static func configurePlaybackSession(mode: PlaybackMode) {
         #if os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
             let session = AVAudioSession.sharedInstance()
@@ -46,11 +53,16 @@ enum BaMediaPlaybackCoordinator {
                 .moviePlayback
             }
             do {
-                try session.setCategory(.playback, mode: sessionMode, options: [])
+                if activePlaybackMode != mode {
+                    try session.setCategory(.playback, mode: sessionMode, options: [])
+                }
                 try session.setActive(true)
+                activePlaybackMode = mode
             } catch {
                 logger.error("audio session activation failed: \(error.localizedDescription, privacy: .public)")
             }
+        #else
+            activePlaybackMode = mode
         #endif
     }
 }

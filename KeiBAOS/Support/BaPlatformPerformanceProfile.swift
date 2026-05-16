@@ -47,6 +47,18 @@ enum BaPlatformPerformanceProfile {
         #endif
     }
 
+    static var musicSamplesRowAvatarAccent: Bool {
+        #if os(macOS)
+            true
+        #elseif os(iOS)
+            isPad
+        #elseif os(watchOS)
+            false
+        #else
+            false
+        #endif
+    }
+
     #if os(iOS)
         private static var isPad: Bool {
             UIDevice.current.userInterfaceIdiom == .pad

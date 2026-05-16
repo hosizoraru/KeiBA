@@ -13,6 +13,7 @@ struct BaLibraryView: View {
     let playbackSession: BaMusicPlaybackSession
 
     @State private var searchText = ""
+    @State private var visibleTrackID: Int64?
 
     @MainActor
     init() {
@@ -49,8 +50,9 @@ struct BaLibraryView: View {
                 .baAdaptiveReadableContent(maxWidth: metrics.dashboardContentMaxWidth)
                 .padding(.horizontal, metrics.screenHorizontalPadding)
                 .padding(.vertical, metrics.screenVerticalPadding)
-                .safeAreaPadding(.bottom, playbackSession.hasCurrentTrack ? 104 : 16)
+                .safeAreaPadding(.bottom, 16)
             }
+            .scrollPosition(id: $visibleTrackID, anchor: .top)
             .refreshable {
                 await refreshMusicLibrary()
             }

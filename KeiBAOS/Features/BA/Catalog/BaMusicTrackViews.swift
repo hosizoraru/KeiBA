@@ -22,7 +22,7 @@ struct BaMusicTrackRow: View {
     @State private var isDetailPresented = false
 
     var body: some View {
-        BaMusicAccentReader(track: track) { accent in
+        BaMusicAccentReader(track: accentSourceTrack) { accent in
             HStack(spacing: 12) {
                 Button(action: onPrimaryAction) {
                     rowContent(accent: accent)
@@ -43,6 +43,14 @@ struct BaMusicTrackRow: View {
                 BaStudentDetailView(entry: track.entry)
             }
         }
+        .id(track.id)
+    }
+
+    private var accentSourceTrack: BaMusicTrack? {
+        if isCurrent || BaPlatformPerformanceProfile.musicSamplesRowAvatarAccent {
+            return track
+        }
+        return nil
     }
 
     private func rowContent(accent: Color) -> some View {
@@ -314,6 +322,7 @@ struct BaMusicQueueSection: View {
                     }
                 }
             }
+            .scrollTargetLayout()
         }
     }
 

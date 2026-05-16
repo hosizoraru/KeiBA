@@ -56,19 +56,20 @@ nonisolated struct BaMusicTrack: Identifiable, Hashable {
 nonisolated struct BaMusicLibrarySnapshot: Hashable {
     let tracks: [BaMusicTrack]
     let visibleTracks: [BaMusicTrack]
+    let playableTracks: [BaMusicTrack]
+    let queueSignature: String
 
-    var playableTracks: [BaMusicTrack] {
-        tracks.filter(\.isPlayable)
+    init(tracks: [BaMusicTrack], visibleTracks: [BaMusicTrack]) {
+        self.tracks = tracks
+        self.visibleTracks = visibleTracks
+        playableTracks = tracks.filter(\.isPlayable)
+        queueSignature = playableTracks
+            .map { "\($0.id):\($0.audioURL?.absoluteString ?? "")" }
+            .joined(separator: "|")
     }
 
     var firstPlayableTrack: BaMusicTrack? {
         playableTracks.first
-    }
-
-    var queueSignature: String {
-        playableTracks
-            .map { "\($0.id):\($0.audioURL?.absoluteString ?? "")" }
-            .joined(separator: "|")
     }
 }
 
