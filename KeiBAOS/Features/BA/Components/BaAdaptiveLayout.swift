@@ -111,10 +111,15 @@ struct BaAdaptiveMetrics: Equatable {
 
     var timelineCardImageHeight: CGFloat {
         guard timelineColumnCount > 1 else { return 172 }
-        if widthClass == .expanded {
-            return 188
+        let targetHeight = (timelineCardColumnWidth / 1.92).rounded(.toNearestOrAwayFromZero)
+        switch widthClass {
+        case .compact:
+            return 172
+        case .regular:
+            return min(max(targetHeight, 156), 214)
+        case .expanded:
+            return min(max(targetHeight, 220), 270)
         }
-        return containerWidth < 760 ? 156 : 172
     }
 
     var poolCardThumbnailSize: CGFloat {
@@ -134,6 +139,17 @@ struct BaAdaptiveMetrics: Equatable {
             return .regular
         }
         return .compact
+    }
+
+    private var timelineReadableWidth: CGFloat {
+        let contentWidth = min(containerWidth, readableContentMaxWidth ?? containerWidth)
+        return max(contentWidth - listRowHorizontalInset * 2, 1)
+    }
+
+    private var timelineCardColumnWidth: CGFloat {
+        guard timelineColumnCount > 1 else { return timelineReadableWidth }
+        let totalSpacing = cardSpacing * CGFloat(timelineColumnCount - 1)
+        return max((timelineReadableWidth - totalSpacing) / CGFloat(timelineColumnCount), 1)
     }
 }
 
