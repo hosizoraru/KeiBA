@@ -18,19 +18,23 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
         self
     }
 
-    var title: String {
+    var titleResource: LocalizedStringResource {
         switch self {
         case .overview:
-            String(localized: "ba.tab.overview")
+            "ba.tab.overview"
         case .activity:
-            String(localized: "ba.tab.activity")
+            "ba.tab.activity"
         case .pool:
-            String(localized: "ba.tab.pool")
+            "ba.tab.pool"
         case .catalog:
-            String(localized: "ba.tab.catalog")
+            "ba.tab.catalog"
         case .library:
-            String(localized: "ba.tab.library")
+            "ba.tab.library"
         }
+    }
+
+    var title: String {
+        String(localized: titleResource)
     }
 
     var navigationTitle: String {
@@ -44,11 +48,11 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
         case .activity:
             "calendar"
         case .pool:
-            "rectangle.stack.badge.person.crop"
+            "rectangle.stack"
         case .catalog:
-            "person.3.fill"
+            "person.2"
         case .library:
-            "music.note.list"
+            "music.note"
         }
     }
 

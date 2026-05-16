@@ -55,25 +55,6 @@ struct BaScreenScaffold<Content: View>: View {
     }
 }
 
-struct BaScreenHeader: View {
-    let title: String
-    let detail: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(.primary)
-
-            Text(detail)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
 struct BaGlassCard<Content: View>: View {
     @Environment(\.baAdaptiveMetrics) private var metrics
 

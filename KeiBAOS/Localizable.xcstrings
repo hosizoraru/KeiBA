@@ -2695,39 +2695,6 @@
         }
       }
     },
-    "ba.overview.detail" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AP, cafe AP, server, and identity signals are grouped for quick native iOS scanning."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AP、咖啡厅 AP、服务器和身份状态按原生 iOS 扫读方式组合。"
-          }
-        }
-      }
-    },
-    "ba.overview.eyebrow" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schale"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "夏莱"
-          }
-        }
-      }
-    },
     "ba.overview.sync.detail" : {
       "localizations" : {
         "en" : {
@@ -2836,22 +2803,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "活动与卡池摘要"
-          }
-        }
-      }
-    },
-    "ba.overview.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Office Dashboard"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "办公室仪表盘"
           }
         }
       }

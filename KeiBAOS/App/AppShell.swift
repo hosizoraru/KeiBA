@@ -13,12 +13,10 @@ struct AppShell: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             ForEach(AppTab.allCases) { tab in
-                BaNavigationRoot(tab: tab) { selectedTab = $0 }
-                    .tabItem {
-                        Label(tab.title, systemImage: tab.systemImage)
-                    }
-                    .tag(tab)
-                    .accessibilityIdentifier(tab.accessibilityIdentifier)
+                Tab(tab.titleResource, systemImage: tab.systemImage, value: tab) {
+                    BaNavigationRoot(tab: tab) { selectedTab = $0 }
+                        .accessibilityIdentifier(tab.accessibilityIdentifier)
+                }
             }
         }
         .platformAdaptiveTabViewStyle()

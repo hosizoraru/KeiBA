@@ -14,11 +14,6 @@ struct BaOverviewView: View {
 
     var body: some View {
         BaScreenScaffold {
-            BaScreenHeader(
-                title: String(localized: "ba.overview.title"),
-                detail: String(localized: "ba.overview.detail")
-            )
-
             BaOverviewAdaptiveCards {
                 BaOverviewIdentityCard(
                     settings: model.settings,
