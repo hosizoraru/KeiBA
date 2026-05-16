@@ -336,7 +336,7 @@ private struct BaMusicTransportControls: View {
                 BaMusicTransportButton(
                     systemImage: "backward.fill",
                     size: regularSize * scale,
-                    isDisabled: session.queue.count < 2,
+                    isDisabled: session.canPlayPrevious == false,
                     accessibilityLabel: String(localized: "ba.music.action.previous")
                 ) {
                     session.playPrevious()
@@ -470,6 +470,8 @@ private extension View {
 }
 
 struct BaMusicNowPlayingSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
     let session: BaMusicPlaybackSession
 
     var body: some View {
@@ -509,6 +511,14 @@ struct BaMusicNowPlayingSheet: View {
             }
             .navigationTitle(String(localized: "ba.music.nowPlaying.title"))
             .platformInlineNavigationTitle()
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(String(localized: "ba.action.dismiss")) {
+                        session.isExpanded = false
+                        dismiss()
+                    }
+                }
+            }
         }
         .baMusicNowPlayingSheetStyle()
     }
@@ -529,41 +539,6 @@ private struct BaMusicProgressControl: View {
             onEditingChanged: handleEditingChanged
         )
         .tint(BaMusicVisualToken.accent)
-        .accessibilityLabel(Text(String(localized: "ba.music.progress.accessibility")))
-    }
-
-    private func handleEditingChanged(_ editing: Bool) {
-        if editing {
-            editingProgress = session.player.progress
-            isEditing = true
-        } else {
-            isEditing = false
-            if session.player.canSeek {
-                session.player.seek(to: editingProgress)
-            } else {
-                editingProgress = session.player.progress
-            }
-        }
-    }
-}
-
-private struct BaMusicMiniProgressControl: View {
-    let session: BaMusicPlaybackSession
-    @State private var editingProgress = 0.0
-    @State private var isEditing = false
-
-    var body: some View {
-        Slider(
-            value: Binding(
-                get: { isEditing ? editingProgress : session.player.progress },
-                set: { editingProgress = $0 }
-            ),
-            in: 0 ... 1,
-            onEditingChanged: handleEditingChanged
-        )
-        .tint(BaMusicVisualToken.accent)
-        .controlSize(.mini)
-        .frame(height: 14)
         .accessibilityLabel(Text(String(localized: "ba.music.progress.accessibility")))
     }
 

@@ -11,6 +11,46 @@ import XCTest
 
 @MainActor
 final class BaMusicPlaybackSessionTests: XCTestCase {
+    func testDefaultRepeatModeUsesSequentialLoop() {
+        let session = BaMusicPlaybackSession(
+            audioCache: FakeAudioCache(),
+            systemMediaController: RecordingSystemMediaController()
+        )
+
+        XCTAssertEqual(session.repeatMode, .all)
+        XCTAssertTrue(session.repeatMode.isActive)
+    }
+
+    func testPreviousActionRestartsCurrentTrackAfterPlaybackHasAdvanced() {
+        XCTAssertEqual(
+            BaMusicPlaybackNavigationPolicy.previousAction(elapsedTime: 2.9),
+            .moveToPreviousTrack
+        )
+        XCTAssertEqual(
+            BaMusicPlaybackNavigationPolicy.previousAction(elapsedTime: 3),
+            .restartCurrentTrack
+        )
+        XCTAssertEqual(
+            BaMusicPlaybackNavigationPolicy.previousAction(elapsedTime: 42),
+            .restartCurrentTrack
+        )
+    }
+
+    func testQueueNavigationWrapsForSequentialLoop() {
+        XCTAssertEqual(
+            BaMusicPlaybackNavigationPolicy.nextIndex(after: 2, queueCount: 3, wraps: true),
+            0
+        )
+        XCTAssertEqual(
+            BaMusicPlaybackNavigationPolicy.nextIndex(after: 2, queueCount: 3, wraps: false),
+            nil
+        )
+        XCTAssertEqual(
+            BaMusicPlaybackNavigationPolicy.previousIndex(before: 0, queueCount: 3, wraps: true),
+            2
+        )
+    }
+
     func testMiniNowPlayingUsesExpandedOnlyInsideMusicContext() {
         XCTAssertEqual(
             BaMusicMiniNowPlayingDisplayMode.resolved(

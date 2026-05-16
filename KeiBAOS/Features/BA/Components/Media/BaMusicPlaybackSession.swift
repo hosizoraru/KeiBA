@@ -49,6 +49,43 @@ enum BaMusicRepeatMode: Hashable {
     }
 }
 
+nonisolated enum BaMusicPreviousPlaybackAction: Equatable {
+    case restartCurrentTrack
+    case moveToPreviousTrack
+}
+
+nonisolated enum BaMusicPlaybackNavigationPolicy {
+    static let previousRestartThreshold: TimeInterval = 3
+
+    static func previousAction(elapsedTime: TimeInterval) -> BaMusicPreviousPlaybackAction {
+        guard elapsedTime.isFinite,
+              elapsedTime >= previousRestartThreshold
+        else {
+            return .moveToPreviousTrack
+        }
+        return .restartCurrentTrack
+    }
+
+    static func nextIndex(after currentIndex: Int?, queueCount: Int, wraps: Bool) -> Int? {
+        guard queueCount > 0 else { return nil }
+        guard let currentIndex, currentIndex >= 0, currentIndex < queueCount else { return 0 }
+        let nextIndex = currentIndex + 1
+        if nextIndex < queueCount {
+            return nextIndex
+        }
+        return wraps ? 0 : nil
+    }
+
+    static func previousIndex(before currentIndex: Int?, queueCount: Int, wraps: Bool) -> Int? {
+        guard queueCount > 0 else { return nil }
+        guard let currentIndex, currentIndex >= 0, currentIndex < queueCount else { return 0 }
+        if currentIndex > 0 {
+            return currentIndex - 1
+        }
+        return wraps ? queueCount - 1 : nil
+    }
+}
+
 enum BaMusicCacheState: Hashable {
     case unknown
     case notCached
@@ -119,7 +156,7 @@ final class BaMusicPlaybackSession: BaMusicSystemMediaCommandHandling {
     var selectedTrack: BaMusicTrack?
     var queue: [BaMusicTrack] = []
     var isExpanded = false
-    var repeatMode: BaMusicRepeatMode = .off
+    var repeatMode: BaMusicRepeatMode = .all
     var cacheStates: [URL: BaMusicCacheState] = [:]
 
     convenience init(audioCache: any BaAudioCaching = BaAudioCache.shared) {
@@ -157,6 +194,10 @@ final class BaMusicPlaybackSession: BaMusicSystemMediaCommandHandling {
     var currentIndex: Int? {
         guard let selectedTrack else { return nil }
         return queue.firstIndex { $0.id == selectedTrack.id }
+    }
+
+    var canPlayPrevious: Bool {
+        selectedTrack != nil
     }
 
     func updateQueue(_ tracks: [BaMusicTrack]) {
@@ -232,6 +273,11 @@ final class BaMusicPlaybackSession: BaMusicSystemMediaCommandHandling {
     }
 
     func playPrevious() {
+        if selectedTrack != nil,
+           BaMusicPlaybackNavigationPolicy.previousAction(elapsedTime: player.currentTime) == .restartCurrentTrack {
+            restartSelectedTrack()
+            return
+        }
         guard let track = previousTrack(wraps: true) else { return }
         start(track)
     }
@@ -268,22 +314,25 @@ final class BaMusicPlaybackSession: BaMusicSystemMediaCommandHandling {
     }
 
     private func previousTrack(wraps: Bool) -> BaMusicTrack? {
-        guard queue.isEmpty == false else { return nil }
-        guard let currentIndex else { return queue.first }
-        if currentIndex == queue.startIndex {
-            return wraps ? queue[queue.index(before: queue.endIndex)] : nil
+        guard let index = BaMusicPlaybackNavigationPolicy.previousIndex(
+            before: currentIndex,
+            queueCount: queue.count,
+            wraps: wraps
+        ) else {
+            return nil
         }
-        return queue[queue.index(before: currentIndex)]
+        return queue[index]
     }
 
     private func nextTrack(wraps: Bool) -> BaMusicTrack? {
-        guard queue.isEmpty == false else { return nil }
-        guard let currentIndex else { return queue.first }
-        let nextIndex = queue.index(after: currentIndex)
-        if nextIndex == queue.endIndex {
-            return wraps ? queue[queue.startIndex] : nil
+        guard let index = BaMusicPlaybackNavigationPolicy.nextIndex(
+            after: currentIndex,
+            queueCount: queue.count,
+            wraps: wraps
+        ) else {
+            return nil
         }
-        return queue[nextIndex]
+        return queue[index]
     }
 
     func handleSystemMediaCommand(_ command: BaMusicSystemMediaCommand) -> Bool {
@@ -332,6 +381,16 @@ final class BaMusicPlaybackSession: BaMusicSystemMediaCommandHandling {
             return
         }
         player.toggle(remoteURL: audioURL)
+    }
+
+    private func restartSelectedTrack() {
+        guard let selectedTrack else { return }
+        if selectedTrack.audioURL == player.currentRemoteURL, player.canSeek {
+            player.seek(to: 0)
+            syncSystemMediaState()
+        } else {
+            start(selectedTrack)
+        }
     }
 
     private func syncSystemMediaState() {
