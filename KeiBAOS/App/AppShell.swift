@@ -91,7 +91,15 @@ private struct BaNavigationRoot: View {
             }
             .labelStyle(.iconOnly)
             .disabled(model.poolState.isLoading)
-        case .overview, .catalog, .library:
+        case .catalog:
+            Button {
+                Task { await model.refreshCatalog(force: true) }
+            } label: {
+                Label(String(localized: "ba.action.refresh"), systemImage: "arrow.clockwise")
+            }
+            .labelStyle(.iconOnly)
+            .disabled(model.catalogState.isLoading)
+        case .overview, .library:
             EmptyView()
         }
     }
