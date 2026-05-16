@@ -63,6 +63,23 @@ final class BaAdaptiveLayoutTests: XCTestCase {
         XCTAssertEqual(landscapeIPadWindow.timelineCardImageHeight, 270)
     }
 
+    func testOverviewIdentityLayoutKeepsFriendCodeReadableOnNarrowCards() {
+        let iPhone15Pro = BaAdaptiveMetrics(containerWidth: 393)
+        XCTAssertTrue(iPhone15Pro.usesCompactOverviewIdentityLayout)
+
+        let proMaxWidth = BaAdaptiveMetrics(containerWidth: 430)
+        XCTAssertTrue(proMaxWidth.usesCompactOverviewIdentityLayout)
+
+        let portraitIPadTwoColumn = BaAdaptiveMetrics(containerWidth: 834)
+        XCTAssertTrue(portraitIPadTwoColumn.usesCompactOverviewIdentityLayout)
+
+        let landscapeIPadTwoColumn = BaAdaptiveMetrics(containerWidth: 1_024)
+        XCTAssertFalse(landscapeIPadTwoColumn.usesCompactOverviewIdentityLayout)
+
+        let macWindow = BaAdaptiveMetrics(containerWidth: 1_280)
+        XCTAssertFalse(macWindow.usesCompactOverviewIdentityLayout)
+    }
+
     func testChunkingKeepsTimelineRowsStableForAdaptiveColumns() {
         XCTAssertEqual([1, 2, 3, 4, 5].baChunked(into: 2), [[1, 2], [3, 4], [5]])
         XCTAssertEqual([1, 2, 3].baChunked(into: 1), [[1], [2], [3]])

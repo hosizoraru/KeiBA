@@ -39,6 +39,8 @@ enum BaOverviewMetricStyle {
 }
 
 struct BaOverviewIdentityCard: View {
+    @Environment(\.baAdaptiveMetrics) private var metrics
+
     let settings: BaAppSettings
     let onServerSelected: (BaServer) -> Void
 
@@ -49,36 +51,79 @@ struct BaOverviewIdentityCard: View {
             VStack(alignment: .leading, spacing: BaOverviewMetricStyle.cardSpacing) {
                 BaOverviewSectionTitle(title: String(localized: "ba.office.overview.title"), asset: .schale)
 
-                HStack(alignment: .top, spacing: 14) {
-                    BaOverviewIdentityAvatar(dutyStudent: settings.dutyStudent)
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("\(settings.nickname) \(String(localized: "ba.office.nickname.suffix"))")
-                            .font(.title3.weight(.semibold))
-                            .foregroundStyle(.primary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.82)
-
-                        BaFriendCodeCopyLine(
-                            friendCode: settings.friendCode,
-                            isCopied: copiedFriendCode,
-                            onCopy: copyFriendCode
-                        )
-                    }
-
-                    Spacer(minLength: 8)
-
-                    Picker(String(localized: "ba.settings.server.title"), selection: serverBinding) {
-                        ForEach(BaServer.allCases) { server in
-                            Text(server.title)
-                                .tag(server)
-                        }
-                    }
-                    .labelsHidden()
-                    .pickerStyle(.menu)
+                if metrics.usesCompactOverviewIdentityLayout {
+                    compactIdentityContent
+                } else {
+                    regularIdentityContent
                 }
             }
         }
+    }
+
+    private var displayName: String {
+        "\(settings.nickname) \(String(localized: "ba.office.nickname.suffix"))"
+    }
+
+    private var regularIdentityContent: some View {
+        HStack(alignment: .top, spacing: 14) {
+            BaOverviewIdentityAvatar(dutyStudent: settings.dutyStudent)
+
+            VStack(alignment: .leading, spacing: 8) {
+                identityName
+
+                BaFriendCodeCopyLine(
+                    friendCode: settings.friendCode,
+                    isCopied: copiedFriendCode,
+                    onCopy: copyFriendCode
+                )
+            }
+            .layoutPriority(1)
+
+            Spacer(minLength: 8)
+
+            serverPicker
+        }
+    }
+
+    private var compactIdentityContent: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .center, spacing: 12) {
+                BaOverviewIdentityAvatar(dutyStudent: settings.dutyStudent)
+
+                identityName
+                    .layoutPriority(1)
+
+                Spacer(minLength: 6)
+
+                serverPicker
+            }
+
+            BaFriendCodeCopyPill(
+                friendCode: settings.friendCode,
+                isCopied: copiedFriendCode,
+                onCopy: copyFriendCode
+            )
+        }
+    }
+
+    private var identityName: some View {
+        Text(displayName)
+            .font(.title3.weight(.semibold))
+            .foregroundStyle(.primary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.78)
+    }
+
+    private var serverPicker: some View {
+        Picker(String(localized: "ba.settings.server.title"), selection: serverBinding) {
+            ForEach(BaServer.allCases) { server in
+                Text(server.title)
+                    .tag(server)
+            }
+        }
+        .labelsHidden()
+        .pickerStyle(.menu)
+        .fixedSize(horizontal: true, vertical: false)
     }
 
     private var serverBinding: Binding<BaServer> {
@@ -106,11 +151,7 @@ private struct BaFriendCodeCopyLine: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Text(String(format: String(localized: "ba.office.friendCode.display.format"), friendCode))
-                .font(BaOverviewTextToken.number)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.82)
+            BaFriendCodeInlineText(friendCode: friendCode)
 
             Button(action: onCopy) {
                 Label(copyTitle, systemImage: isCopied ? "checkmark.circle.fill" : "doc.on.doc")
@@ -126,6 +167,63 @@ private struct BaFriendCodeCopyLine: View {
         isCopied
             ? String(localized: "ba.office.friendCode.copied")
             : String(localized: "ba.office.friendCode.copy")
+    }
+}
+
+private struct BaFriendCodeCopyPill: View {
+    let friendCode: String
+    let isCopied: Bool
+    let onCopy: () -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            BaFriendCodeInlineText(friendCode: friendCode)
+                .layoutPriority(1)
+
+            Spacer(minLength: 8)
+
+            Button(action: onCopy) {
+                Label(copyTitle, systemImage: isCopied ? "checkmark.circle.fill" : "doc.on.doc")
+                    .labelStyle(.iconOnly)
+            }
+            .buttonStyle(.glass)
+            .foregroundStyle(isCopied ? BaDesign.green : BaDesign.blue)
+            .accessibilityLabel(Text(copyTitle))
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .liquidGlassSurface(cornerRadius: 18, tint: BaDesign.blue.opacity(0.045), isInteractive: false)
+    }
+
+    private var copyTitle: String {
+        isCopied
+            ? String(localized: "ba.office.friendCode.copied")
+            : String(localized: "ba.office.friendCode.copy")
+    }
+}
+
+private struct BaFriendCodeInlineText: View {
+    let friendCode: String
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Text(prefix)
+                .layoutPriority(0)
+
+            Text(friendCode)
+                .font(BaOverviewTextToken.number)
+                .monospaced()
+                .layoutPriority(2)
+        }
+        .font(BaOverviewTextToken.number)
+        .foregroundStyle(.secondary)
+        .lineLimit(1)
+        .minimumScaleFactor(0.82)
+    }
+
+    private var prefix: String {
+        String(format: String(localized: "ba.office.friendCode.display.format"), "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 

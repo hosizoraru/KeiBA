@@ -117,6 +117,10 @@ struct BaAdaptiveMetrics: Equatable {
         )
     }
 
+    var usesCompactOverviewIdentityLayout: Bool {
+        overviewCardInnerWidth < 370
+    }
+
     var overviewSummaryGridColumns: [GridItem] {
         let count = widthClass == .compact ? 1 : 2
         return Array(
@@ -310,6 +314,23 @@ struct BaAdaptiveMetrics: Equatable {
             return .regular
         }
         return .compact
+    }
+
+    private var dashboardReadableWidth: CGFloat {
+        let availableWidth = max(containerWidth - screenHorizontalPadding * 2, 1)
+        guard let dashboardContentMaxWidth else { return availableWidth }
+        return min(availableWidth, dashboardContentMaxWidth)
+    }
+
+    private var overviewCardInnerWidth: CGFloat {
+        let cardWidth: CGFloat
+        if overviewColumnCount > 1 {
+            let totalSpacing = cardSpacing * CGFloat(overviewColumnCount - 1)
+            cardWidth = max((dashboardReadableWidth - totalSpacing) / CGFloat(overviewColumnCount), 1)
+        } else {
+            cardWidth = dashboardReadableWidth
+        }
+        return max(cardWidth - cardPadding * 2, 1)
     }
 
     private var timelineReadableWidth: CGFloat {
