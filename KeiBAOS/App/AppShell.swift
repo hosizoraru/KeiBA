@@ -9,17 +9,29 @@ import SwiftUI
 
 struct AppShell: View {
     @State private var selectedTab: AppTab = .overview
+    @State private var musicPlaybackSession = BaMusicPlaybackSession()
 
     var body: some View {
         TabView(selection: $selectedTab) {
             ForEach(AppTab.allCases) { tab in
                 Tab(tab.titleResource, systemImage: tab.systemImage, value: tab) {
-                    BaNavigationRoot(tab: tab) { selectedTab = $0 }
+                    BaNavigationRoot(tab: tab, musicPlaybackSession: musicPlaybackSession) { selectedTab = $0 }
                         .accessibilityIdentifier(tab.accessibilityIdentifier)
                 }
             }
         }
         .platformAdaptiveTabViewStyle()
+        .baMusicMiniPlayerAccessory(session: musicPlaybackSession)
+        .sheet(isPresented: musicNowPlayingExpandedBinding) {
+            BaMusicNowPlayingSheet(session: musicPlaybackSession)
+        }
+    }
+
+    private var musicNowPlayingExpandedBinding: Binding<Bool> {
+        Binding(
+            get: { musicPlaybackSession.isExpanded },
+            set: { musicPlaybackSession.isExpanded = $0 }
+        )
     }
 }
 
@@ -27,6 +39,7 @@ private struct BaNavigationRoot: View {
     @Environment(BaAppModel.self) private var model
 
     let tab: AppTab
+    let musicPlaybackSession: BaMusicPlaybackSession
     let onSelectTab: (AppTab) -> Void
     @State private var presentedSheet: BaPresentedSheet?
     @State private var activityFilter: BaTimelineStatus?
@@ -67,7 +80,7 @@ private struct BaNavigationRoot: View {
             BaCatalogView()
                 .environment(\.baShowPreviewImages, model.settings.showPreviewImages)
         case .library:
-            BaLibraryView()
+            BaLibraryView(playbackSession: musicPlaybackSession)
                 .environment(\.baShowPreviewImages, model.settings.showPreviewImages)
         }
     }
@@ -99,7 +112,15 @@ private struct BaNavigationRoot: View {
             }
             .labelStyle(.iconOnly)
             .disabled(model.catalogState.isLoading)
-        case .overview, .library:
+        case .library:
+            Button {
+                Task { await model.refreshCatalog(force: true) }
+            } label: {
+                Label(String(localized: "ba.action.refresh"), systemImage: "arrow.clockwise")
+            }
+            .labelStyle(.iconOnly)
+            .disabled(model.catalogState.isLoading)
+        case .overview:
             EmptyView()
         }
     }
@@ -183,6 +204,26 @@ private struct BaNavigationRoot: View {
                 model.updateGlobalSettings { $0[keyPath: keyPath] = value }
             }
         )
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func baMusicMiniPlayerAccessory(session: BaMusicPlaybackSession) -> some View {
+        #if os(iOS)
+            if session.hasCurrentTrack {
+                tabViewBottomAccessory {
+                    BaMusicMiniNowPlayingBar(session: session)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                }
+                .tabBarMinimizeBehavior(.onScrollDown)
+            } else {
+                tabBarMinimizeBehavior(.onScrollDown)
+            }
+        #else
+            self
+        #endif
     }
 }
 

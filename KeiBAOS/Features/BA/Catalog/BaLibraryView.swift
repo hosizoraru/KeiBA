@@ -10,179 +10,186 @@ import SwiftUI
 struct BaLibraryView: View {
     @Environment(BaAppModel.self) private var model
 
-    @State private var selectedCategory: BaCatalogCategory = .studentBgm
+    let playbackSession: BaMusicPlaybackSession
+
     @State private var searchText = ""
 
-    private var snapshot: BaLibraryViewSnapshot {
-        let favoriteIDs = model.settings.favoriteContentIDs
-        let rows = model.entries(for: selectedCategory, query: searchText).map { entry in
-            BaCatalogEntryRowDisplayModel(
-                entry: entry,
-                isFavorite: favoriteIDs.contains(entry.contentId),
-                isDutyStudent: model.isDutyStudent(entry)
-            )
-        }
-        return BaLibraryViewSnapshot(rows: rows)
+    @MainActor
+    init() {
+        playbackSession = BaMusicPlaybackSession()
+    }
+
+    init(playbackSession: BaMusicPlaybackSession) {
+        self.playbackSession = playbackSession
+    }
+
+    private var snapshot: BaMusicLibrarySnapshot {
+        BaMusicLibraryBuilder.snapshot(
+            favoriteEntries: model.entries(for: .favorites, query: "", sortMode: .defaultOrder),
+            detailStates: model.studentDetailStates,
+            query: searchText
+        )
     }
 
     var body: some View {
         let snapshot = snapshot
 
         BaAdaptiveGeometry { metrics in
-            List {
-                Section {
-                    Picker(String(localized: "ba.library.category.picker"), selection: $selectedCategory) {
-                        ForEach(BaCatalogCategory.libraryCases) { category in
-                            Text(category.title)
-                                .tag(category)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.vertical, 4)
-                    .baAdaptiveReadableContent()
+            ScrollView {
+                VStack(alignment: .leading, spacing: metrics.cardSpacing) {
+                    musicIntro(snapshot: snapshot)
+                    musicContent(snapshot: snapshot, metrics: metrics)
                 }
-
-                Section {
-                    libraryContent(snapshot: snapshot, metrics: metrics)
-                } header: {
-                    Text(selectedCategory.title)
-                } footer: {
-                    Text(footerText)
-                }
-
-                Section {
-                    Toggle(String(localized: "ba.settings.media.images.title"), isOn: globalBoolBinding(\.showPreviewImages))
-                    Toggle(String(localized: "ba.settings.media.autoplay.title"), isOn: globalBoolBinding(\.mediaAutoplayEnabled))
-                    Toggle(String(localized: "ba.settings.media.download.title"), isOn: globalBoolBinding(\.mediaDownloadEnabled))
-                } header: {
-                    Text(String(localized: "ba.settings.media.title"))
-                } footer: {
-                    Text(String(localized: "ba.settings.media.footer"))
-                }
+                .baAdaptiveReadableContent(maxWidth: metrics.dashboardContentMaxWidth)
+                .padding(.horizontal, metrics.screenHorizontalPadding)
+                .padding(.vertical, metrics.screenVerticalPadding)
+                .safeAreaPadding(.bottom, 16)
             }
-            .platformInsetGroupedListStyle()
-            .scrollContentBackground(.hidden)
+            .refreshable {
+                await refreshMusicLibrary()
+            }
+            .scrollDismissesKeyboard(.interactively)
             .background(AppBackground())
+            #if os(macOS)
+                .safeAreaInset(edge: .bottom, spacing: 10) {
+                    BaMusicMiniNowPlayingBar(session: playbackSession)
+                        .padding(.horizontal, metrics.screenHorizontalPadding)
+                        .padding(.bottom, 10)
+                }
+            #endif
         }
-        .searchable(text: $searchText, prompt: Text(selectedCategory.searchPrompt))
+        .searchable(text: $searchText, prompt: Text(String(localized: "ba.music.search.prompt")))
         .task {
             await model.loadCatalogIfNeeded()
         }
-        .refreshable {
-            await model.refreshCatalog(force: true)
+        .task(id: snapshot.queueSignature) {
+            playbackSession.updateQueue(snapshot.playableTracks)
+        }
+    }
+
+    private func musicIntro(snapshot: BaMusicLibrarySnapshot) -> some View {
+        BaGlassCard(tint: BaDesign.pink) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 10) {
+                    Image(systemName: "music.note")
+                        .font(.headline.weight(.semibold))
+                        .foregroundStyle(BaDesign.pink)
+                        .frame(width: 28, height: 28)
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(String(localized: "ba.music.library.title"))
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(.primary)
+
+                        Text(librarySubtitle(snapshot: snapshot))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                    }
+                }
+            }
         }
     }
 
     @ViewBuilder
-    private func libraryContent(snapshot: BaLibraryViewSnapshot, metrics: BaAdaptiveMetrics) -> some View {
-        if model.catalogState.isLoading, snapshot.rows.isEmpty {
-            ProgressView()
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, 24)
-        } else if snapshot.rows.isEmpty {
+    private func musicContent(snapshot: BaMusicLibrarySnapshot, metrics: BaAdaptiveMetrics) -> some View {
+        if model.catalogState.isLoading, snapshot.tracks.isEmpty {
+            BaGlassCard(tint: BaDesign.pink) {
+                ProgressView()
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 22)
+            }
+        } else if snapshot.tracks.isEmpty {
+            ContentUnavailableView(
+                String(localized: "ba.music.empty.title"),
+                systemImage: "music.note",
+                description: Text(String(localized: "ba.music.empty.detail"))
+            )
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 34)
+        } else if snapshot.visibleTracks.isEmpty {
             ContentUnavailableView(
                 String(localized: "ba.catalog.empty.title"),
-                systemImage: selectedCategory == .favorites ? "star" : "music.note",
-                description: Text(emptyDetail)
+                systemImage: "magnifyingglass",
+                description: Text(String(localized: "ba.music.empty.search.detail"))
             )
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 34)
         } else {
-            ForEach(snapshot.rows) { row in
-                NavigationLink {
-                    BaStudentDetailView(entry: row.entry)
-                } label: {
-                    BaCatalogEntryRow(
-                        row: row,
-                        thumbnailMaxPixelDimension: metrics.catalogThumbnailMaxPixelDimension,
-                        usesThumbnailGlassSurface: false
-                    )
-                        .equatable()
-                        .baAdaptiveReadableContent()
-                }
-                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    if model.canSetDutyStudent(row.entry) {
-                        Button {
-                            toggleDutyStudent(row.entry)
-                        } label: {
-                            Label(
-                                dutyStudentActionTitle(isDutyStudent: row.isDutyStudent),
-                                systemImage: row.isDutyStudent ? "person.crop.circle.badge.xmark" : "person.crop.circle.badge.checkmark"
-                            )
-                        }
-                        .tint(.blue)
-                    }
+            musicLayout(snapshot: snapshot, metrics: metrics)
+        }
+    }
 
-                    Button {
-                        model.toggleFavorite(row.entry)
-                    } label: {
-                        Label(favoriteActionTitle(isFavorite: row.isFavorite), systemImage: row.isFavorite ? "star.slash" : "star")
-                    }
-                    .tint(.yellow)
-                }
+    @ViewBuilder
+    private func musicLayout(snapshot: BaMusicLibrarySnapshot, metrics: BaAdaptiveMetrics) -> some View {
+        let displayTrack = playbackSession.selectedTrack ?? snapshot.firstPlayableTrack
+
+        if metrics.widthClass == .expanded {
+            HStack(alignment: .top, spacing: metrics.cardSpacing) {
+                BaMusicNowPlayingHero(
+                    track: displayTrack,
+                    session: playbackSession,
+                    metrics: metrics
+                )
+                .frame(width: 420)
+
+                trackSection(snapshot: snapshot, metrics: metrics)
+            }
+        } else {
+            VStack(alignment: .leading, spacing: metrics.cardSpacing) {
+                BaMusicNowPlayingHero(
+                    track: displayTrack,
+                    session: playbackSession,
+                    metrics: metrics
+                )
+                trackSection(snapshot: snapshot, metrics: metrics)
             }
         }
     }
 
-    private var footerText: String {
+    private func trackSection(snapshot: BaMusicLibrarySnapshot, metrics: BaAdaptiveMetrics) -> some View {
+        BaMusicQueueSection(
+            title: String(localized: "ba.music.queue.title"),
+            tracks: snapshot.visibleTracks,
+            thumbnailSize: metrics.catalogThumbnailSize,
+            thumbnailMaxPixelDimension: metrics.catalogThumbnailMaxPixelDimension,
+            currentTrackID: playbackSession.selectedTrack?.id,
+            isPlaying: playbackSession.player.isPlaying,
+            onPrimaryAction: playTrack,
+            onLoadDetail: loadDetail
+        )
+    }
+
+    private func librarySubtitle(snapshot: BaMusicLibrarySnapshot) -> String {
         if let error = model.catalogState.errorMessage, error.isEmpty == false {
             return String(format: String(localized: "ba.state.error.format"), error)
         }
-        if let lastSyncAt = model.catalogState.lastSyncAt {
-            let syncText = model.catalogState.isShowingCache
-                ? String(format: String(localized: "ba.state.cachedAt.format"), BaDisplayFormatters.syncTime(lastSyncAt))
-                : String(format: String(localized: "ba.state.syncedAt.format"), BaDisplayFormatters.syncTime(lastSyncAt))
-            return "\(categoryFooter) \(syncText)"
+        if snapshot.playableTracks.isEmpty, snapshot.tracks.isEmpty == false {
+            return String(localized: "ba.music.library.loading.subtitle")
         }
-        return categoryFooter
+        return String(localized: "ba.music.library.subtitle")
     }
 
-    private var categoryFooter: String {
-        switch selectedCategory {
-        case .studentBgm:
-            String(localized: "ba.catalog.footer.bgm")
-        case .favorites:
-            String(localized: "ba.catalog.footer.favorites.live")
-        case .students, .npcSatellite:
-            String(localized: "ba.catalog.placeholder.footer")
+    private func playTrack(_ track: BaMusicTrack) {
+        if track.isPlayable {
+            playbackSession.play(track)
+        } else {
+            loadDetail(track)
         }
     }
 
-    private var emptyDetail: String {
-        if selectedCategory == .favorites {
-            return String(localized: "ba.catalog.empty.favorites.detail")
-        }
-        return String(localized: "ba.catalog.empty.detail")
-    }
-
-    private func favoriteActionTitle(isFavorite: Bool) -> String {
-        isFavorite
-            ? String(localized: "ba.catalog.favorite.remove")
-            : String(localized: "ba.catalog.favorite.add")
-    }
-
-    private func dutyStudentActionTitle(isDutyStudent: Bool) -> String {
-        isDutyStudent
-            ? String(localized: "ba.catalog.dutyStudent.clear")
-            : String(localized: "ba.catalog.dutyStudent.set")
-    }
-
-    private func toggleDutyStudent(_ entry: BaGuideCatalogEntry) {
+    private func loadDetail(_ track: BaMusicTrack) {
         Task {
-            await model.toggleDutyStudent(entry)
+            await model.loadStudentDetail(entry: track.entry)
         }
     }
 
-    private func globalBoolBinding(_ keyPath: WritableKeyPath<BaGlobalSettings, Bool>) -> Binding<Bool> {
-        Binding(
-            get: { model.envelope.globalSettings[keyPath: keyPath] },
-            set: { value in
-                model.updateGlobalSettings { $0[keyPath: keyPath] = value }
-            }
-        )
+    private func refreshMusicLibrary() async {
+        await model.refreshCatalog(force: true)
+        for track in snapshot.visibleTracks.prefix(BaPlatformPerformanceProfile.musicInitialDetailFetchLimit) {
+            await model.loadStudentDetail(entry: track.entry, force: true)
+        }
     }
-}
-
-private struct BaLibraryViewSnapshot {
-    let rows: [BaCatalogEntryRowDisplayModel]
 }
 
 #Preview {

@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct BaLoadableState<Value> {
+nonisolated struct BaLoadableState<Value> {
     var value: Value?
     var isLoading: Bool
     var errorMessage: String?

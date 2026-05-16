@@ -35,6 +35,18 @@ enum BaPlatformPerformanceProfile {
         #endif
     }
 
+    static var musicInitialDetailFetchLimit: Int {
+        #if os(macOS)
+            18
+        #elseif os(iOS)
+            isPad ? 12 : 7
+        #elseif os(watchOS)
+            3
+        #else
+            7
+        #endif
+    }
+
     #if os(iOS)
         private static var isPad: Bool {
             UIDevice.current.userInterfaceIdiom == .pad
