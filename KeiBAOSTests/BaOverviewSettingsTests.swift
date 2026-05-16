@@ -240,9 +240,86 @@ final class BaOverviewSettingsTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            summary.activityTime,
-            String(format: String(localized: "ba.timeline.remaining.endsIn.format"), "2m")
+            summary.activity.timeText,
+            [
+                String(format: String(localized: "ba.timeline.remaining.endsIn.format"), "2m"),
+                BaDisplayFormatters.dateTime(base.addingTimeInterval(90))
+            ].joined(separator: " · ")
         )
+    }
+
+    func testOverviewTimelineSummaryShowsAllEntriesWithEarliestEndTime() {
+        let base = Date(timeIntervalSince1970: 1_700_000_000)
+        let earliestEnd = base.addingTimeInterval(3_600)
+        let laterEnd = base.addingTimeInterval(7_200)
+        let activities = [
+            BaActivityEntry(
+                id: 1,
+                title: "Later",
+                kindId: 1,
+                kindName: "Event",
+                beginAt: base.addingTimeInterval(-60),
+                endAt: laterEnd,
+                linkURL: nil,
+                imageURL: nil
+            ),
+            BaActivityEntry(
+                id: 2,
+                title: "Raid",
+                kindId: 1,
+                kindName: "Event",
+                beginAt: base.addingTimeInterval(-60),
+                endAt: earliestEnd,
+                linkURL: nil,
+                imageURL: nil
+            ),
+            BaActivityEntry(
+                id: 3,
+                title: "Login",
+                kindId: 1,
+                kindName: "Event",
+                beginAt: base.addingTimeInterval(-120),
+                endAt: earliestEnd,
+                linkURL: nil,
+                imageURL: nil
+            )
+        ]
+        let pools = [
+            BaPoolEntry(
+                id: 1,
+                name: "Pickup A",
+                tagId: 1,
+                tagName: "Pool",
+                alias: "",
+                startAt: base.addingTimeInterval(-60),
+                endAt: laterEnd,
+                linkURL: nil,
+                imageURL: nil,
+                contentId: nil,
+                studentGuideURL: nil
+            ),
+            BaPoolEntry(
+                id: 2,
+                name: "Pickup B",
+                tagId: 1,
+                tagName: "Pool",
+                alias: "",
+                startAt: base.addingTimeInterval(-60),
+                endAt: earliestEnd,
+                linkURL: nil,
+                imageURL: nil,
+                contentId: nil,
+                studentGuideURL: nil
+            )
+        ]
+
+        let summary = BaOverviewTimelineSummary(activities: activities, pools: pools, now: base)
+
+        XCTAssertEqual(summary.activity.titles, ["Raid", "Login"])
+        XCTAssertEqual(summary.activity.endAt, earliestEnd)
+        XCTAssertEqual(summary.activity.titleText, "Raid\nLogin")
+        XCTAssertEqual(summary.pool.titles, ["Pickup B"])
+        XCTAssertEqual(summary.pool.endAt, earliestEnd)
     }
 
     func testInviteTicketsHaveIndependentTwentyHourCooldowns() throws {

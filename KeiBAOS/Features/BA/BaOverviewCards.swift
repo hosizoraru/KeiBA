@@ -269,41 +269,78 @@ struct BaOverviewCafeCard: View {
 }
 
 struct BaOverviewTimelineSummary: Equatable {
-    let activityTitle: String
-    let activityTime: String
-    let poolTitle: String
-    let poolTime: String
+    let activity: BaOverviewTimelineSummaryItem
+    let pool: BaOverviewTimelineSummaryItem
 
     init(activities: [BaActivityEntry], pools: [BaPoolEntry], now: Date) {
-        let activity = activities.reduce(nil as BaActivityEntry?) { current, entry in
-            guard entry.status(at: now) != .ended else { return current }
-            guard let current else { return entry }
-            return entry.beginAt < current.beginAt ? entry : current
-        }
-        let pool = pools.reduce(nil as BaPoolEntry?) { current, entry in
-            guard entry.status(at: now) != .ended else { return current }
-            guard let current else { return entry }
-            return entry.startAt < current.startAt ? entry : current
+        activity = Self.earliestEndingItem(
+            entries: activities,
+            now: now,
+            title: \.title,
+            start: \.beginAt,
+            end: \.endAt
+        )
+        pool = Self.earliestEndingItem(
+            entries: pools,
+            now: now,
+            title: \.name,
+            start: \.startAt,
+            end: \.endAt
+        )
+    }
+
+    static func earliestEndingItem<Entry>(
+        entries: [Entry],
+        now: Date,
+        title titleKeyPath: KeyPath<Entry, String>,
+        start startKeyPath: KeyPath<Entry, Date>,
+        end endKeyPath: KeyPath<Entry, Date>
+    ) -> BaOverviewTimelineSummaryItem {
+        let activeEntries = entries.filter { $0[keyPath: endKeyPath] > now }
+        guard let earliestEnd = activeEntries.map({ $0[keyPath: endKeyPath] }).min() else {
+            return .empty
         }
 
-        activityTitle = activity?.title ?? String(localized: "ba.overview.timeline.empty")
-        activityTime = activity.map {
-            BaDisplayFormatters.timelineDetail(
-                start: $0.beginAt,
-                end: $0.endAt,
-                now: now,
-                includingSeconds: false
-            )
-        } ?? String(localized: "ba.state.notSynced")
-        poolTitle = pool?.name ?? String(localized: "ba.overview.timeline.empty")
-        poolTime = pool.map {
-            BaDisplayFormatters.timelineDetail(
-                start: $0.startAt,
-                end: $0.endAt,
-                now: now,
-                includingSeconds: false
-            )
-        } ?? String(localized: "ba.state.notSynced")
+        let endingTogether = activeEntries.filter {
+            $0[keyPath: endKeyPath] == earliestEnd
+        }
+        let titles = endingTogether.map { $0[keyPath: titleKeyPath] }
+        let earliestStart = endingTogether.map { $0[keyPath: startKeyPath] }.min() ?? now
+
+        return BaOverviewTimelineSummaryItem(
+            titles: titles,
+            timeText: [
+                BaDisplayFormatters.timelineDetail(
+                    start: earliestStart,
+                    end: earliestEnd,
+                    now: now,
+                    includingSeconds: false
+                ),
+                BaDisplayFormatters.dateTime(earliestEnd)
+            ].joined(separator: " · "),
+            endAt: earliestEnd
+        )
+    }
+}
+
+struct BaOverviewTimelineSummaryItem: Equatable {
+    let titles: [String]
+    let timeText: String
+    let endAt: Date?
+
+    var titleText: String {
+        guard titles.isEmpty == false else {
+            return String(localized: "ba.overview.timeline.empty")
+        }
+        return titles.joined(separator: "\n")
+    }
+
+    static var empty: BaOverviewTimelineSummaryItem {
+        BaOverviewTimelineSummaryItem(
+            titles: [],
+            timeText: String(localized: "ba.state.notSynced"),
+            endAt: nil
+        )
     }
 }
 
@@ -326,8 +363,7 @@ struct BaOverviewTimelineSummaryCard: View {
                     } label: {
                         BaOverviewTimelineTile(
                             title: String(localized: "ba.tab.activity"),
-                            entryTitle: summary.activityTitle,
-                            timeText: summary.activityTime,
+                            item: summary.activity,
                             syncAt: activitySyncAt,
                             systemImage: "calendar",
                             tint: BaDesign.blue
@@ -341,8 +377,7 @@ struct BaOverviewTimelineSummaryCard: View {
                     } label: {
                         BaOverviewTimelineTile(
                             title: String(localized: "ba.tab.pool"),
-                            entryTitle: summary.poolTitle,
-                            timeText: summary.poolTime,
+                            item: summary.pool,
                             syncAt: poolSyncAt,
                             systemImage: "sparkles",
                             tint: BaDesign.violet

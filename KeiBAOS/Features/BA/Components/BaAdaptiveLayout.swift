@@ -130,6 +130,10 @@ struct BaAdaptiveMetrics: Equatable {
         widthClass == .expanded ? 15 : 13
     }
 
+    var overviewTimelineTitleLineLimit: Int {
+        widthClass == .compact ? 3 : 5
+    }
+
     var poolCardThumbnailSize: CGFloat {
         guard timelineColumnCount > 1 else { return 108 }
         return containerWidth < 760 ? 84 : 92

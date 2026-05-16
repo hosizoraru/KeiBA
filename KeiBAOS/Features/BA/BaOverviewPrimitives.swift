@@ -214,9 +214,10 @@ struct BaOverviewActionTile: View {
 }
 
 struct BaOverviewTimelineTile: View {
+    @Environment(\.baAdaptiveMetrics) private var metrics
+
     let title: String
-    let entryTitle: String
-    let timeText: String
+    let item: BaOverviewTimelineSummaryItem
     let syncAt: Date?
     let systemImage: String
     let tint: Color
@@ -228,14 +229,14 @@ struct BaOverviewTimelineTile: View {
                 .foregroundStyle(.primary)
                 .frame(height: 24, alignment: .leading)
 
-            Text(entryTitle)
+            Text(item.titleText)
                 .font(.subheadline)
                 .foregroundStyle(.primary)
-                .lineLimit(2)
+                .lineLimit(metrics.overviewTimelineTitleLineLimit)
                 .minimumScaleFactor(0.82)
-                .frame(height: 44, alignment: .topLeading)
+                .fixedSize(horizontal: false, vertical: true)
 
-            Text(timeText)
+            Text(item.timeText)
                 .font(BaOverviewTextToken.timeValue)
                 .foregroundStyle(tint)
                 .lineLimit(1)
