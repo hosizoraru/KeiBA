@@ -43,7 +43,7 @@ struct BaLibraryView: View {
                 .baAdaptiveReadableContent(maxWidth: metrics.dashboardContentMaxWidth)
                 .padding(.horizontal, metrics.screenHorizontalPadding)
                 .padding(.vertical, metrics.screenVerticalPadding)
-                .safeAreaPadding(.bottom, 16)
+                .safeAreaPadding(.bottom, playbackSession.hasCurrentTrack ? 104 : 16)
             }
             .refreshable {
                 await refreshMusicLibrary()
@@ -68,27 +68,24 @@ struct BaLibraryView: View {
     }
 
     private func musicIntro(snapshot: BaMusicLibrarySnapshot) -> some View {
-        BaGlassCard(tint: BaDesign.pink) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 10) {
-                    Image(systemName: "music.note")
-                        .font(.headline.weight(.semibold))
-                        .foregroundStyle(BaDesign.pink)
-                        .frame(width: 28, height: 28)
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "music.note")
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(BaDesign.pink)
+                .frame(width: 28, height: 28)
 
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(String(localized: "ba.music.library.title"))
-                            .font(.title3.weight(.semibold))
-                            .foregroundStyle(.primary)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(String(localized: "ba.music.library.title"))
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(.primary)
 
-                        Text(librarySubtitle(snapshot: snapshot))
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(2)
-                    }
-                }
+                Text(librarySubtitle(snapshot: snapshot))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(3)
             }
         }
+        .padding(.horizontal, 4)
     }
 
     @ViewBuilder
@@ -143,6 +140,7 @@ struct BaLibraryView: View {
                     metrics: metrics
                 )
                 trackSection(snapshot: snapshot, metrics: metrics)
+                    .padding(.top, playbackSession.hasCurrentTrack ? 56 : 0)
             }
         }
     }

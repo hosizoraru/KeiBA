@@ -18,6 +18,10 @@ struct BaMusicTrackRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
+            Capsule()
+                .fill(isCurrent ? BaDesign.pink : Color.clear)
+                .frame(width: 3, height: 36)
+
             BaRowThumbnail(
                 url: track.artworkURL,
                 fallbackSystemImage: "music.note",
@@ -67,8 +71,8 @@ struct BaMusicTrackRow: View {
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .liquidGlassSurface(
-            cornerRadius: 20,
-            tint: isCurrent ? BaDesign.pink.opacity(0.10) : Color.secondary.opacity(0.045),
+            cornerRadius: 18,
+            tint: isCurrent ? BaDesign.pink.opacity(0.055) : Color.white.opacity(0.024),
             isInteractive: true
         )
     }
@@ -80,6 +84,7 @@ struct BaMusicTrackRow: View {
             Button(action: onPrimaryAction) {
                 Image(systemName: isCurrent && isPlaying ? "pause.fill" : "play.fill")
                     .font(.headline.weight(.semibold))
+                    .foregroundStyle(isCurrent ? BaDesign.pink : .primary)
                     .frame(width: 36, height: 36)
             }
             .buttonStyle(.borderless)

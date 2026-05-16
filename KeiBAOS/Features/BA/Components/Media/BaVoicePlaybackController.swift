@@ -32,6 +32,8 @@ final class BaVoicePlaybackController {
     var isPlaying = false
     var progress = 0.0
     var errorMessage: String?
+    @ObservationIgnored var onPlaybackFinished: (() -> Void)?
+
     var canSeek: Bool {
         switch playbackBackend {
         case .avFoundation:
@@ -149,7 +151,7 @@ final class BaVoicePlaybackController {
         }
     }
 
-    private func play(remoteURL: URL) {
+    func play(remoteURL: URL) {
         BaMediaPlaybackCoordinator.notifyWillStartPlayback(sender: self)
         let token = UUID()
         loadToken = token
@@ -274,12 +276,19 @@ final class BaVoicePlaybackController {
     }
 
     private func finishPlayback() {
+        let finished = onPlaybackFinished
+        loadToken = UUID()
         player?.currentTime = 0
+        player?.stop()
+        player = nil
+        stopAVPlayer()
         currentRemoteURL = nil
+        isLoading = false
         isPlaying = false
         progress = 0
         playbackBackend = nil
         stopProgressTimer()
+        finished?()
     }
 
     private func fail(message: String) {
@@ -422,11 +431,7 @@ final class BaVoicePlaybackController {
 
     private func finishAVPlayerPlayback() {
         avPlayer?.seek(to: .zero)
-        currentRemoteURL = nil
-        isPlaying = false
-        progress = 0
-        playbackBackend = nil
-        stopProgressTimer()
+        finishPlayback()
     }
 }
 
@@ -460,11 +465,7 @@ private extension BaVoicePlaybackController {
         case .paused:
             isPlaying = false
         case .ended:
-            isLoading = false
-            isPlaying = false
-            progress = 0
-            currentRemoteURL = nil
-            playbackBackend = nil
+            finishPlayback()
         case let .progress(value):
             progress = min(max(value, 0), 1)
         case let .failed(message):

@@ -1645,6 +1645,7 @@
       }
     },
     "ba.catalog.footer.bgm" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1678,6 +1679,7 @@
       }
     },
     "ba.catalog.footer.favorites.live" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2189,6 +2191,7 @@
       }
     },
     "ba.library.category.picker" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2296,6 +2299,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "上一首"
+          }
+        }
+      }
+    },
+    "ba.music.action.repeat.all" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repeat All"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "列表循环"
+          }
+        }
+      }
+    },
+    "ba.music.action.repeat.off" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repeat Off"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭循环"
+          }
+        }
+      }
+    },
+    "ba.music.action.repeat.one" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repeat One"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "单曲循环"
           }
         }
       }
@@ -6049,6 +6100,22 @@
         }
       }
     },
+    "ba.student.detail.npc.summary.empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This NPC or upcoming entry has limited data, so available information is shown."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NPC 及卫星图鉴条目数据较少，已展示可用信息。"
+          }
+        }
+      }
+    },
     "ba.student.detail.overview.title" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -6373,6 +6440,22 @@
         }
       }
     },
+    "ba.student.detail.profile.names.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Names"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "学生昵称"
+          }
+        }
+      }
+    },
     "ba.student.detail.profile.other.title" : {
       "localizations" : {
         "en" : {
@@ -6389,18 +6472,66 @@
         }
       }
     },
-    "ba.student.detail.profile.names.title" : {
+    "ba.student.detail.profile.relatedRoles.empty" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Names"
+            "value" : "No related roles."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "学生昵称"
+            "value" : "暂无相关角色。"
+          }
+        }
+      }
+    },
+    "ba.student.detail.profile.relatedRoles.item" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Related role"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "相关角色"
+          }
+        }
+      }
+    },
+    "ba.student.detail.profile.relatedRoles.openDetail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open related role guide"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开相关角色图鉴"
+          }
+        }
+      }
+    },
+    "ba.student.detail.profile.relatedRoles.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Related Roles"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "相关角色"
           }
         }
       }
@@ -6481,70 +6612,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "同名角色"
-          }
-        }
-      }
-    },
-    "ba.student.detail.profile.relatedRoles.empty" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No related roles."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "暂无相关角色。"
-          }
-        }
-      }
-    },
-    "ba.student.detail.profile.relatedRoles.item" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Related role"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "相关角色"
-          }
-        }
-      }
-    },
-    "ba.student.detail.profile.relatedRoles.openDetail" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open related role guide"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "打开相关角色图鉴"
-          }
-        }
-      }
-    },
-    "ba.student.detail.profile.relatedRoles.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Related Roles"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "相关角色"
           }
         }
       }
@@ -6951,22 +7018,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "来源"
-          }
-        }
-      }
-    },
-    "ba.student.detail.npc.summary.empty" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This NPC or upcoming entry has limited data, so available information is shown."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NPC 及卫星图鉴条目数据较少，已展示可用信息。"
           }
         }
       }
@@ -7872,13 +7923,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Media"
+            "value" : "Music"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "媒体"
+            "value" : "音乐"
           }
         }
       }
