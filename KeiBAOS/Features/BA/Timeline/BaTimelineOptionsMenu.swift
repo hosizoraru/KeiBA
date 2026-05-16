@@ -28,6 +28,10 @@ enum BaTimelineOptionsScope {
             String(localized: "ba.settings.pool.showEnded.title")
         }
     }
+
+    var showEndedMenuTitle: String {
+        String(localized: "ba.timeline.options.showEnded.title")
+    }
 }
 
 struct BaTimelineOptionsMenu: View {
@@ -55,8 +59,9 @@ struct BaTimelineOptionsMenu: View {
             }
         }
 
-        Section(String(localized: "ba.settings.preferences.title")) {
-            Toggle(scope.showEndedTitle, isOn: $showsEnded)
+        Section(String(localized: "ba.timeline.options.visibility.title")) {
+            Toggle(scope.showEndedMenuTitle, isOn: $showsEnded)
+                .accessibilityLabel(Text(scope.showEndedTitle))
         }
 
         Section(String(localized: "ba.settings.refresh.title")) {

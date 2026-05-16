@@ -7081,6 +7081,38 @@
         }
       }
     },
+    "ba.timeline.options.showEnded.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ended"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已结束"
+          }
+        }
+      }
+    },
+    "ba.timeline.options.visibility.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visibility"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示范围"
+          }
+        }
+      }
+    },
     "ba.timeline.remaining.ended" : {
       "localizations" : {
         "en" : {
