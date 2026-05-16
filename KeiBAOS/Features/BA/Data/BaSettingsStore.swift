@@ -53,6 +53,7 @@ nonisolated extension BaSettingsEnvelope {
         if BaServer.allCases.contains(copy.selectedServer) == false {
             copy.selectedServer = .cn
         }
+        copy.globalSettings = copy.globalSettings.normalized()
         for server in BaServer.allCases where copy.serverProfiles[server] == nil {
             copy.serverProfiles[server] = .defaults()
         }

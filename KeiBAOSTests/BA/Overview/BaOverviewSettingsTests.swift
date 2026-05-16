@@ -397,6 +397,16 @@ final class BaOverviewSettingsTests: XCTestCase {
             name: "Shiroko",
             avatarURL: URL(string: "https://cdnimg.gamekee.com/student/shiroko.png")
         )
+        envelope.globalSettings.favoriteContentIDs = [647_097]
+        envelope.globalSettings.favoriteCatalogEntries = [
+            makeOverviewCatalogEntry(
+                entryId: 174_603,
+                pid: BaCatalogCategory.npcSatellite.gameKeePID,
+                contentId: 647_097,
+                name: "爱丽丝(冬装)",
+                category: .npcSatellite
+            ),
+        ]
         var profile = envelope.profile(for: .cn)
         profile.apNotifyThreshold = 210
         profile.cafeApNotifyThreshold = 330
@@ -415,8 +425,45 @@ final class BaOverviewSettingsTests: XCTestCase {
         XCTAssertEqual(loaded.globalSettings.dutyStudent?.contentId, 10_001)
         XCTAssertEqual(loaded.globalSettings.dutyStudent?.name, "Shiroko")
         XCTAssertEqual(loaded.globalSettings.dutyStudent?.avatarURL?.absoluteString, "https://cdnimg.gamekee.com/student/shiroko.png")
+        XCTAssertEqual(loaded.globalSettings.favoriteContentIDs, [647_097])
+        XCTAssertEqual(loaded.globalSettings.favoriteCatalogEntries.first?.contentId, 647_097)
+        XCTAssertEqual(loaded.globalSettings.favoriteCatalogEntries.first?.category, .npcSatellite)
         XCTAssertEqual(loaded.profile(for: .cn).apNotifyThreshold, 210)
         XCTAssertEqual(loaded.profile(for: .cn).cafeApNotifyThreshold, 330)
+    }
+
+    @MainActor
+    func testFavoriteNPCEntryPersistsAsCatalogSnapshotAndMigratesLegacyEntryID() throws {
+        let defaults = try makeIsolatedDefaults()
+        let model = makeOverviewAppModel(defaults: defaults)
+        let canonical = makeOverviewCatalogEntry(
+            entryId: 174_603,
+            pid: BaCatalogCategory.npcSatellite.gameKeePID,
+            contentId: 647_097,
+            name: "爱丽丝(冬装)",
+            category: .npcSatellite
+        )
+        let staleEntry = makeOverviewCatalogEntry(
+            entryId: 174_603,
+            pid: BaCatalogCategory.npcSatellite.gameKeePID,
+            contentId: 174_603,
+            name: "爱丽丝(冬装)",
+            category: .npcSatellite
+        )
+        model.catalogState = BaLoadableState(
+            value: BaGuideCatalogBundle(entries: [canonical], syncedAt: Date(timeIntervalSince1970: 1_700_000_000))
+        )
+
+        model.toggleFavorite(staleEntry)
+
+        XCTAssertEqual(model.settings.favoriteContentIDs, [647_097])
+        XCTAssertEqual(model.settings.favoriteCatalogEntries.first?.contentId, 647_097)
+        XCTAssertEqual(model.entries(for: .favorites).map(\.contentId), [647_097])
+
+        let reloaded = BaSettingsStore(defaults: defaults).loadEnvelope()
+        XCTAssertEqual(reloaded.globalSettings.favoriteContentIDs, [647_097])
+        XCTAssertEqual(reloaded.globalSettings.favoriteCatalogEntries.first?.entryId, 174_603)
+        XCTAssertEqual(reloaded.globalSettings.favoriteCatalogEntries.first?.category, .npcSatellite)
     }
 
     func testRefreshIntervalControlsCacheStaleness() {
@@ -432,5 +479,48 @@ final class BaOverviewSettingsTests: XCTestCase {
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
         return defaults
+    }
+
+    @MainActor
+    private func makeOverviewAppModel(defaults: UserDefaults) -> BaAppModel {
+        let client = GameKeeClient()
+        let cacheStore = BaCacheStore()
+        return BaAppModel(
+            settingsStore: BaSettingsStore(defaults: defaults),
+            cacheStore: cacheStore,
+            imageCache: BaImageCache(client: client),
+            activityPoolRepository: BaActivityPoolRepository(client: client),
+            catalogRepository: BaGuideCatalogRepository(client: client),
+            catalogReleaseDateHydrator: BaCatalogReleaseDateHydrator(
+                cacheStore: cacheStore,
+                studentRepository: BaStudentGuideRepository(client: client)
+            ),
+            studentRepository: BaStudentGuideRepository(client: client),
+            officeRepository: BaOfficeRepository()
+        )
+    }
+
+    private func makeOverviewCatalogEntry(
+        entryId: Int,
+        pid: Int,
+        contentId: Int64,
+        name: String,
+        category: BaCatalogCategory
+    ) -> BaGuideCatalogEntry {
+        BaGuideCatalogEntry(
+            entryId: entryId,
+            pid: pid,
+            contentId: contentId,
+            name: name,
+            alias: "",
+            aliasDisplay: "",
+            iconURL: nil,
+            type: 1,
+            order: 0,
+            createdAt: nil,
+            releaseDate: nil,
+            detailURL: URL(string: "https://www.gamekee.com/ba/tj/\(contentId).html"),
+            category: category
+        )
     }
 }

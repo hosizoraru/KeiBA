@@ -139,6 +139,7 @@ nonisolated struct BaGlobalSettings: Codable, Equatable {
     var mediaDownloadEnabled: Bool
     var refreshInterval: BaRefreshInterval
     var favoriteContentIDs: Set<Int64>
+    var favoriteCatalogEntries: [BaGuideCatalogEntry]
     var dutyStudent: BaDutyStudent?
 
     static func defaults() -> BaGlobalSettings {
@@ -159,8 +160,88 @@ nonisolated struct BaGlobalSettings: Codable, Equatable {
             mediaDownloadEnabled: false,
             refreshInterval: .threeHours,
             favoriteContentIDs: [],
+            favoriteCatalogEntries: [],
             dutyStudent: nil
         )
+    }
+}
+
+nonisolated extension BaGlobalSettings {
+    enum CodingKeys: String, CodingKey {
+        case identityIndependentByServer
+        case showEndedActivities
+        case showEndedPools
+        case showPreviewImages
+        case activityNotificationsEnabled
+        case poolNotificationsEnabled
+        case calendarUpcomingNotificationsEnabled
+        case calendarEndingNotificationsEnabled
+        case poolUpcomingNotificationsEnabled
+        case poolEndingNotificationsEnabled
+        case calendarPoolChangeNotificationsEnabled
+        case calendarPoolNotifyLead
+        case mediaAutoplayEnabled
+        case mediaDownloadEnabled
+        case refreshInterval
+        case favoriteContentIDs
+        case favoriteCatalogEntries
+        case dutyStudent
+    }
+
+    init(from decoder: Decoder) throws {
+        let defaults = BaGlobalSettings.defaults()
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        identityIndependentByServer = try container.decodeIfPresent(Bool.self, forKey: .identityIndependentByServer) ?? defaults.identityIndependentByServer
+        showEndedActivities = try container.decodeIfPresent(Bool.self, forKey: .showEndedActivities) ?? defaults.showEndedActivities
+        showEndedPools = try container.decodeIfPresent(Bool.self, forKey: .showEndedPools) ?? defaults.showEndedPools
+        showPreviewImages = try container.decodeIfPresent(Bool.self, forKey: .showPreviewImages) ?? defaults.showPreviewImages
+        activityNotificationsEnabled = try container.decodeIfPresent(Bool.self, forKey: .activityNotificationsEnabled) ?? defaults.activityNotificationsEnabled
+        poolNotificationsEnabled = try container.decodeIfPresent(Bool.self, forKey: .poolNotificationsEnabled) ?? defaults.poolNotificationsEnabled
+        calendarUpcomingNotificationsEnabled = try container.decodeIfPresent(Bool.self, forKey: .calendarUpcomingNotificationsEnabled) ?? defaults.calendarUpcomingNotificationsEnabled
+        calendarEndingNotificationsEnabled = try container.decodeIfPresent(Bool.self, forKey: .calendarEndingNotificationsEnabled) ?? defaults.calendarEndingNotificationsEnabled
+        poolUpcomingNotificationsEnabled = try container.decodeIfPresent(Bool.self, forKey: .poolUpcomingNotificationsEnabled) ?? defaults.poolUpcomingNotificationsEnabled
+        poolEndingNotificationsEnabled = try container.decodeIfPresent(Bool.self, forKey: .poolEndingNotificationsEnabled) ?? defaults.poolEndingNotificationsEnabled
+        calendarPoolChangeNotificationsEnabled = try container.decodeIfPresent(Bool.self, forKey: .calendarPoolChangeNotificationsEnabled) ?? defaults.calendarPoolChangeNotificationsEnabled
+        calendarPoolNotifyLead = try container.decodeIfPresent(BaCalendarPoolNotifyLead.self, forKey: .calendarPoolNotifyLead) ?? defaults.calendarPoolNotifyLead
+        mediaAutoplayEnabled = try container.decodeIfPresent(Bool.self, forKey: .mediaAutoplayEnabled) ?? defaults.mediaAutoplayEnabled
+        mediaDownloadEnabled = try container.decodeIfPresent(Bool.self, forKey: .mediaDownloadEnabled) ?? defaults.mediaDownloadEnabled
+        refreshInterval = try container.decodeIfPresent(BaRefreshInterval.self, forKey: .refreshInterval) ?? defaults.refreshInterval
+        favoriteContentIDs = try container.decodeIfPresent(Set<Int64>.self, forKey: .favoriteContentIDs) ?? defaults.favoriteContentIDs
+        favoriteCatalogEntries = try container.decodeIfPresent([BaGuideCatalogEntry].self, forKey: .favoriteCatalogEntries) ?? defaults.favoriteCatalogEntries
+        dutyStudent = try container.decodeIfPresent(BaDutyStudent.self, forKey: .dutyStudent)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(identityIndependentByServer, forKey: .identityIndependentByServer)
+        try container.encode(showEndedActivities, forKey: .showEndedActivities)
+        try container.encode(showEndedPools, forKey: .showEndedPools)
+        try container.encode(showPreviewImages, forKey: .showPreviewImages)
+        try container.encode(activityNotificationsEnabled, forKey: .activityNotificationsEnabled)
+        try container.encode(poolNotificationsEnabled, forKey: .poolNotificationsEnabled)
+        try container.encode(calendarUpcomingNotificationsEnabled, forKey: .calendarUpcomingNotificationsEnabled)
+        try container.encode(calendarEndingNotificationsEnabled, forKey: .calendarEndingNotificationsEnabled)
+        try container.encode(poolUpcomingNotificationsEnabled, forKey: .poolUpcomingNotificationsEnabled)
+        try container.encode(poolEndingNotificationsEnabled, forKey: .poolEndingNotificationsEnabled)
+        try container.encode(calendarPoolChangeNotificationsEnabled, forKey: .calendarPoolChangeNotificationsEnabled)
+        try container.encode(calendarPoolNotifyLead, forKey: .calendarPoolNotifyLead)
+        try container.encode(mediaAutoplayEnabled, forKey: .mediaAutoplayEnabled)
+        try container.encode(mediaDownloadEnabled, forKey: .mediaDownloadEnabled)
+        try container.encode(refreshInterval, forKey: .refreshInterval)
+        try container.encode(favoriteContentIDs, forKey: .favoriteContentIDs)
+        try container.encode(favoriteCatalogEntries, forKey: .favoriteCatalogEntries)
+        try container.encodeIfPresent(dutyStudent, forKey: .dutyStudent)
+    }
+
+    func normalized() -> BaGlobalSettings {
+        var copy = self
+        var seen = Set<Int64>()
+        copy.favoriteCatalogEntries = copy.favoriteCatalogEntries.filter { entry in
+            guard entry.contentId > 0 else { return false }
+            return seen.insert(entry.contentId).inserted
+        }
+        copy.favoriteContentIDs.formUnion(copy.favoriteCatalogEntries.map(\.contentId))
+        return copy
     }
 }
 
@@ -218,7 +299,7 @@ nonisolated struct BaSettingsEnvelope: Codable, Equatable {
     var globalSettings: BaGlobalSettings
     var serverProfiles: [BaServer: BaServerProfile]
 
-    static let currentSchemaVersion = 3
+    static let currentSchemaVersion = 4
 
     static func defaults(now: Date = Date()) -> BaSettingsEnvelope {
         let profile = BaServerProfile.defaults(now: now)
@@ -250,6 +331,7 @@ nonisolated struct BaSettingsEnvelope: Codable, Equatable {
             mediaDownloadEnabled: settings.mediaDownloadEnabled,
             refreshInterval: settings.refreshInterval,
             favoriteContentIDs: settings.favoriteContentIDs,
+            favoriteCatalogEntries: settings.favoriteCatalogEntries,
             dutyStudent: settings.dutyStudent
         )
         let profile = BaServerProfile(
@@ -328,6 +410,7 @@ nonisolated struct BaSettingsEnvelope: Codable, Equatable {
             mediaDownloadEnabled: globalSettings.mediaDownloadEnabled,
             refreshInterval: globalSettings.refreshInterval,
             favoriteContentIDs: globalSettings.favoriteContentIDs,
+            favoriteCatalogEntries: globalSettings.favoriteCatalogEntries,
             dutyStudent: globalSettings.dutyStudent,
             identityIndependentByServer: globalSettings.identityIndependentByServer,
             apNotifyThreshold: profile.apNotifyThreshold,
@@ -388,6 +471,7 @@ nonisolated struct BaAppSettings: Codable, Equatable {
     var mediaDownloadEnabled: Bool
     var refreshInterval: BaRefreshInterval
     var favoriteContentIDs: Set<Int64>
+    var favoriteCatalogEntries: [BaGuideCatalogEntry]
     var dutyStudent: BaDutyStudent?
     var identityIndependentByServer: Bool
     var apNotifyThreshold: Int
@@ -430,6 +514,7 @@ nonisolated struct BaAppSettings: Codable, Equatable {
             mediaDownloadEnabled: false,
             refreshInterval: .threeHours,
             favoriteContentIDs: [],
+            favoriteCatalogEntries: [],
             dutyStudent: nil,
             identityIndependentByServer: false,
             apNotifyThreshold: 120,
@@ -475,6 +560,7 @@ nonisolated extension BaAppSettings {
         case mediaDownloadEnabled
         case refreshInterval
         case favoriteContentIDs
+        case favoriteCatalogEntries
         case dutyStudent
         case identityIndependentByServer
         case apNotifyThreshold
@@ -519,6 +605,7 @@ nonisolated extension BaAppSettings {
         mediaDownloadEnabled = try container.decodeIfPresent(Bool.self, forKey: .mediaDownloadEnabled) ?? defaults.mediaDownloadEnabled
         refreshInterval = try container.decodeIfPresent(BaRefreshInterval.self, forKey: .refreshInterval) ?? defaults.refreshInterval
         favoriteContentIDs = try container.decodeIfPresent(Set<Int64>.self, forKey: .favoriteContentIDs) ?? defaults.favoriteContentIDs
+        favoriteCatalogEntries = try container.decodeIfPresent([BaGuideCatalogEntry].self, forKey: .favoriteCatalogEntries) ?? defaults.favoriteCatalogEntries
         dutyStudent = try container.decodeIfPresent(BaDutyStudent.self, forKey: .dutyStudent)
         identityIndependentByServer = try container.decodeIfPresent(Bool.self, forKey: .identityIndependentByServer) ?? false
         apNotifyThreshold = try container.decodeIfPresent(Int.self, forKey: .apNotifyThreshold) ?? defaults.apNotifyThreshold

@@ -222,6 +222,7 @@ final class BaAppModel {
         envelope.globalSettings.mediaDownloadEnabled = next.mediaDownloadEnabled
         envelope.globalSettings.refreshInterval = next.refreshInterval
         envelope.globalSettings.favoriteContentIDs = next.favoriteContentIDs
+        envelope.globalSettings.favoriteCatalogEntries = next.favoriteCatalogEntries
         envelope.globalSettings.dutyStudent = next.dutyStudent
         if next.server != previous.server {
             envelope.selectedServer = next.server
@@ -392,6 +393,7 @@ final class BaAppModel {
                 isShowingCache: false
             )
             await cacheStore.save(snapshot.value, for: .catalog, schemaVersion: Self.catalogCacheSchemaVersion, syncedAt: snapshot.syncedAt)
+            reconcileFavoriteCatalogEntries(with: snapshot.value)
             let hydrated = await catalogReleaseDateHydrator.hydrate(
                 bundle: snapshot.value,
                 maxNetworkFetchPerPass: BaPlatformPerformanceProfile.catalogReleaseDateFetchLimit,
@@ -406,6 +408,7 @@ final class BaAppModel {
                     isShowingCache: false
                 )
                 await cacheStore.save(hydrated, for: .catalog, schemaVersion: Self.catalogCacheSchemaVersion, syncedAt: snapshot.syncedAt)
+                reconcileFavoriteCatalogEntries(with: hydrated)
             }
         } catch {
             guard Self.isCancellation(error) == false else {
@@ -487,20 +490,21 @@ final class BaAppModel {
         query: String = "",
         sortMode: BaCatalogSortMode = .releaseDateDescending
     ) -> [BaGuideCatalogEntry] {
-        guard let bundle = catalogState.value else { return [] }
+        let bundle = catalogState.value
+        guard bundle != nil || category == .favorites else { return [] }
         let keyword = query.trimmingCharacters(in: .whitespacesAndNewlines)
         let source: [BaGuideCatalogEntry]
         switch category {
         case .students:
-            source = bundle.entries(in: .students)
+            source = bundle?.entries(in: .students) ?? []
         case .npcSatellite:
-            source = bundle.entries(in: .npcSatellite)
+            source = bundle?.entries(in: .npcSatellite) ?? []
         case .studentBgm:
-            source = bundle.entries(in: .students)
+            source = (bundle?.entries(in: .students) ?? [])
                 .prefix(80)
                 .map { $0.withCategory(.studentBgm) }
         case .favorites:
-            source = bundle.entries.filter { settings.favoriteContentIDs.contains($0.contentId) }
+            source = favoriteCatalogEntries(from: bundle)
         }
         return source
             .filter { $0.matches(trimmedQuery: keyword) }
@@ -508,17 +512,135 @@ final class BaAppModel {
     }
 
     func isFavorite(_ entry: BaGuideCatalogEntry) -> Bool {
-        settings.favoriteContentIDs.contains(entry.contentId)
+        isFavoriteEntry(entry, ids: settings.favoriteContentIDs, snapshots: settings.favoriteCatalogEntries)
     }
 
     func toggleFavorite(_ entry: BaGuideCatalogEntry) {
-        updateSettings { settings in
-            if settings.favoriteContentIDs.contains(entry.contentId) {
-                settings.favoriteContentIDs.remove(entry.contentId)
+        let canonicalEntry = canonicalFavoriteEntry(for: entry)
+        updateGlobalSettings { global in
+            if isFavoriteEntry(entry, ids: global.favoriteContentIDs, snapshots: global.favoriteCatalogEntries) ||
+                isFavoriteEntry(canonicalEntry, ids: global.favoriteContentIDs, snapshots: global.favoriteCatalogEntries)
+            {
+                let removeKeys = favoriteIdentityKeys(for: entry).union(favoriteIdentityKeys(for: canonicalEntry))
+                global.favoriteContentIDs.subtract(removeKeys)
+                global.favoriteCatalogEntries.removeAll { snapshot in
+                    favoriteIdentityKeys(for: snapshot).isDisjoint(with: removeKeys) == false
+                }
             } else {
-                settings.favoriteContentIDs.insert(entry.contentId)
+                global.favoriteContentIDs.insert(canonicalEntry.contentId)
+                global.favoriteCatalogEntries.removeAll { snapshot in
+                    sharesFavoriteIdentity(snapshot, canonicalEntry)
+                }
+                global.favoriteCatalogEntries.append(canonicalEntry)
             }
         }
+    }
+
+    private func favoriteCatalogEntries(from bundle: BaGuideCatalogBundle?) -> [BaGuideCatalogEntry] {
+        let ids = settings.favoriteContentIDs
+        let snapshots = settings.favoriteCatalogEntries
+        var entries: [BaGuideCatalogEntry] = []
+
+        if let bundle {
+            for entry in bundle.entries where isFavoriteEntry(entry, ids: ids, snapshots: snapshots) {
+                appendFavoriteEntry(entry, to: &entries)
+            }
+        }
+        for snapshot in snapshots {
+            appendFavoriteEntry(snapshot, to: &entries)
+        }
+        return entries
+    }
+
+    private func canonicalFavoriteEntry(for entry: BaGuideCatalogEntry) -> BaGuideCatalogEntry {
+        if let match = catalogState.value?.entries.first(where: { sharesFavoriteIdentity($0, entry) }) {
+            return match
+        }
+        if let match = settings.favoriteCatalogEntries.first(where: { sharesFavoriteIdentity($0, entry) }) {
+            return match
+        }
+        if let info = studentDetailStates[entry.contentId]?.value, info.contentId != entry.contentId {
+            return BaGuideCatalogEntry(
+                entryId: entry.entryId,
+                pid: entry.pid,
+                contentId: info.contentId,
+                name: info.title,
+                alias: entry.alias,
+                aliasDisplay: entry.aliasDisplay,
+                iconURL: info.imageURL ?? entry.iconURL,
+                type: entry.type,
+                order: entry.order,
+                createdAt: entry.createdAt,
+                releaseDate: entry.releaseDate,
+                detailURL: info.sourceURL ?? URL(string: "https://www.gamekee.com/ba/tj/\(info.contentId).html"),
+                category: entry.category
+            )
+        }
+        return entry
+    }
+
+    private func reconcileFavoriteCatalogEntries(with bundle: BaGuideCatalogBundle) {
+        let previous = envelope.globalSettings
+        let favoriteIDs = previous.favoriteContentIDs
+        var entries: [BaGuideCatalogEntry] = []
+        var resolvedLegacyIDs = Set<Int64>()
+
+        for entry in bundle.entries {
+            let entryKeys = favoriteIdentityKeys(for: entry)
+            if entryKeys.isDisjoint(with: favoriteIDs) == false {
+                resolvedLegacyIDs.formUnion(entryKeys.intersection(favoriteIDs))
+                appendFavoriteEntry(entry, to: &entries)
+            }
+        }
+        for snapshot in previous.favoriteCatalogEntries {
+            if let current = bundle.entries.first(where: { sharesFavoriteIdentity($0, snapshot) }) {
+                appendFavoriteEntry(current, to: &entries)
+            } else {
+                appendFavoriteEntry(snapshot, to: &entries)
+            }
+        }
+
+        let resolvedContentIDs = Set(entries.map(\.contentId))
+        let unresolvedIDs = favoriteIDs.subtracting(resolvedLegacyIDs).subtracting(resolvedContentIDs)
+        var next = previous
+        next.favoriteCatalogEntries = entries
+        next.favoriteContentIDs = resolvedContentIDs.union(unresolvedIDs)
+        next = next.normalized()
+        guard next != previous else { return }
+        envelope.globalSettings = next
+        settings = envelope.flattenedSettings()
+        settingsStore.saveEnvelope(envelope)
+    }
+
+    private nonisolated func appendFavoriteEntry(_ entry: BaGuideCatalogEntry, to entries: inout [BaGuideCatalogEntry]) {
+        guard entries.contains(where: { sharesFavoriteIdentity($0, entry) }) == false else { return }
+        entries.append(entry)
+    }
+
+    private nonisolated func isFavoriteEntry(
+        _ entry: BaGuideCatalogEntry,
+        ids: Set<Int64>,
+        snapshots: [BaGuideCatalogEntry]
+    ) -> Bool {
+        if favoriteIdentityKeys(for: entry).isDisjoint(with: ids) == false {
+            return true
+        }
+        return snapshots.contains { sharesFavoriteIdentity($0, entry) }
+    }
+
+    private nonisolated func sharesFavoriteIdentity(_ lhs: BaGuideCatalogEntry, _ rhs: BaGuideCatalogEntry) -> Bool {
+        favoriteIdentityKeys(for: lhs).isDisjoint(with: favoriteIdentityKeys(for: rhs)) == false
+    }
+
+    private nonisolated func favoriteIdentityKeys(for entry: BaGuideCatalogEntry) -> Set<Int64> {
+        var keys: Set<Int64> = []
+        if entry.contentId > 0 {
+            keys.insert(entry.contentId)
+        }
+        if entry.entryId > 0 {
+            keys.insert(Int64(entry.entryId))
+        }
+        return keys
     }
 
     func canSetDutyStudent(_ entry: BaGuideCatalogEntry) -> Bool {
@@ -642,6 +764,7 @@ final class BaAppModel {
             lastSyncAt: cached.syncedAt,
             isShowingCache: true
         )
+        reconcileFavoriteCatalogEntries(with: cached.value)
     }
 
     private func applyActivityFailure(_ error: Error) async {
