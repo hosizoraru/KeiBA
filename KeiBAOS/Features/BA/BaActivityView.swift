@@ -243,6 +243,8 @@ private struct BaActivityCard: View, Equatable {
                     width: nil,
                     height: metrics.timelineCardImageHeight,
                     cornerRadius: 18,
+                    contentMode: .fit,
+                    usesImageBackdrop: true,
                     fallbackFont: .system(size: 40, weight: .semibold)
                 )
 

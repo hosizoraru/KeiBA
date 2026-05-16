@@ -18,15 +18,36 @@ final class BaAdaptiveLayoutTests: XCTestCase {
 
         let regular = BaAdaptiveMetrics(containerWidth: 760)
         XCTAssertEqual(regular.widthClass, .regular)
-        XCTAssertEqual(regular.timelineColumnCount, 1)
+        XCTAssertEqual(regular.timelineColumnCount, 2)
+        XCTAssertEqual(regular.overviewColumnCount, 1)
         XCTAssertEqual(regular.overviewInnerGridColumns.count, 3)
         XCTAssertEqual(regular.readableContentMaxWidth, 760)
+
+        let portraitIPad = BaAdaptiveMetrics(containerWidth: 834)
+        XCTAssertEqual(portraitIPad.widthClass, .regular)
+        XCTAssertEqual(portraitIPad.overviewColumnCount, 2)
+        XCTAssertEqual(portraitIPad.overviewInnerGridColumns.count, 2)
 
         let expanded = BaAdaptiveMetrics(containerWidth: 1_120)
         XCTAssertEqual(expanded.widthClass, .expanded)
         XCTAssertEqual(expanded.timelineColumnCount, 2)
         XCTAssertEqual(expanded.overviewColumnCount, 2)
         XCTAssertEqual(expanded.dashboardContentMaxWidth, 1_180)
+    }
+
+    func testTimelineColumnsMatchIPadWindowDensity() {
+        let narrowStageManagerWindow = BaAdaptiveMetrics(containerWidth: 620)
+        XCTAssertEqual(narrowStageManagerWindow.timelineColumnCount, 1)
+
+        let portraitIPadWindow = BaAdaptiveMetrics(containerWidth: 680)
+        XCTAssertEqual(portraitIPadWindow.timelineColumnCount, 2)
+        XCTAssertEqual(portraitIPadWindow.timelineCardImageHeight, 128)
+        XCTAssertEqual(portraitIPadWindow.poolCardThumbnailSize, 84)
+
+        let fullWidthIPadWindow = BaAdaptiveMetrics(containerWidth: 834)
+        XCTAssertEqual(fullWidthIPadWindow.timelineColumnCount, 2)
+        XCTAssertEqual(fullWidthIPadWindow.timelineCardImageHeight, 136)
+        XCTAssertEqual(fullWidthIPadWindow.poolCardThumbnailSize, 92)
     }
 
     func testChunkingKeepsTimelineRowsStableForAdaptiveColumns() {
