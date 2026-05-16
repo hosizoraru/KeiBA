@@ -19,8 +19,8 @@ final class BaAdaptiveLayoutTests: XCTestCase {
         let regular = BaAdaptiveMetrics(containerWidth: 760)
         XCTAssertEqual(regular.widthClass, .regular)
         XCTAssertEqual(regular.timelineColumnCount, 2)
-        XCTAssertEqual(regular.overviewColumnCount, 1)
-        XCTAssertEqual(regular.overviewInnerGridColumns.count, 3)
+        XCTAssertEqual(regular.overviewColumnCount, 2)
+        XCTAssertEqual(regular.overviewInnerGridColumns.count, 2)
         XCTAssertEqual(regular.readableContentMaxWidth, 760)
 
         let portraitIPad = BaAdaptiveMetrics(containerWidth: 834)
@@ -52,6 +52,8 @@ final class BaAdaptiveLayoutTests: XCTestCase {
         let topRailIPadWindow = BaAdaptiveMetrics(containerWidth: 1_024)
         XCTAssertEqual(topRailIPadWindow.timelineColumnCount, 2)
         XCTAssertEqual(topRailIPadWindow.timelineCardImageHeight, 248)
+        XCTAssertEqual(topRailIPadWindow.timelineCardHorizontalPadding, 16)
+        XCTAssertEqual(topRailIPadWindow.timelineCardVerticalPadding, 15)
 
         let landscapeIPadWindow = BaAdaptiveMetrics(containerWidth: 1_120)
         XCTAssertEqual(landscapeIPadWindow.timelineColumnCount, 2)

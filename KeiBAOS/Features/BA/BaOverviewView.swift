@@ -103,11 +103,18 @@ private struct BaOverviewAdaptiveCards<Identity: View, AP: View, Cafe: View, Tim
 
     var body: some View {
         if metrics.overviewColumnCount > 1 {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: metrics.cardSpacing) {
-                identity
-                ap
-                cafe
-                timeline
+            HStack(alignment: .top, spacing: metrics.cardSpacing) {
+                VStack(alignment: .leading, spacing: metrics.cardSpacing) {
+                    identity
+                    cafe
+                }
+                .frame(maxWidth: .infinity, alignment: .top)
+
+                VStack(alignment: .leading, spacing: metrics.cardSpacing) {
+                    ap
+                    timeline
+                }
+                .frame(maxWidth: .infinity, alignment: .top)
             }
         } else {
             VStack(alignment: .leading, spacing: metrics.cardSpacing) {
@@ -117,13 +124,6 @@ private struct BaOverviewAdaptiveCards<Identity: View, AP: View, Cafe: View, Tim
                 timeline
             }
         }
-    }
-
-    private var columns: [GridItem] {
-        Array(
-            repeating: GridItem(.flexible(), spacing: metrics.cardSpacing, alignment: .top),
-            count: metrics.overviewColumnCount
-        )
     }
 }
 

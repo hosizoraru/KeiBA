@@ -94,7 +94,7 @@ struct BaAdaptiveMetrics: Equatable {
     }
 
     var overviewColumnCount: Int {
-        containerWidth >= 820 ? 2 : 1
+        containerWidth >= 760 ? 2 : 1
     }
 
     var timelineColumnCount: Int {
@@ -120,6 +120,14 @@ struct BaAdaptiveMetrics: Equatable {
         case .expanded:
             return min(max(targetHeight, 220), 270)
         }
+    }
+
+    var timelineCardHorizontalPadding: CGFloat {
+        widthClass == .expanded ? 16 : 14
+    }
+
+    var timelineCardVerticalPadding: CGFloat {
+        widthClass == .expanded ? 15 : 13
     }
 
     var poolCardThumbnailSize: CGFloat {

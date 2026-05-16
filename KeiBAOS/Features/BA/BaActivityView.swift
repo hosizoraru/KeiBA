@@ -257,8 +257,8 @@ private struct BaActivityCard: View, Equatable {
                 )
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 13)
+        .padding(.horizontal, metrics.timelineCardHorizontalPadding)
+        .padding(.vertical, metrics.timelineCardVerticalPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .baTimelineScrollCardSurface(tint: row.status.tint)
     }
