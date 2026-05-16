@@ -45,6 +45,19 @@ nonisolated enum BaCatalogCategory: String, CaseIterable, Codable, Identifiable,
             String(localized: "ba.catalog.search.favorites.prompt")
         }
     }
+
+    var gameKeePID: Int {
+        switch self {
+        case .students:
+            49_443
+        case .npcSatellite:
+            107_619
+        case .studentBgm, .favorites:
+            0
+        }
+    }
+
+    static let gameKeeSecondPageID = 23_941
 }
 
 nonisolated struct BaGuideCatalogEntry: Identifiable, Codable, Hashable {

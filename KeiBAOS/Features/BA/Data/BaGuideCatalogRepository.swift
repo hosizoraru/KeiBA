@@ -15,8 +15,8 @@ struct BaGuideCatalogRepository {
     }
 
     func fetchCatalog(now: Date = Date()) async throws -> BaRepositorySnapshot<BaGuideCatalogBundle> {
-        async let students = fetchEntries(pid: Self.studentPID, category: .students)
-        async let npcSatellite = fetchEntries(pid: Self.npcSatellitePID, category: .npcSatellite)
+        async let students = fetchEntries(pid: BaCatalogCategory.students.gameKeePID, category: .students)
+        async let npcSatellite = fetchEntries(pid: BaCatalogCategory.npcSatellite.gameKeePID, category: .npcSatellite)
         let (studentEntries, npcSatelliteEntries) = try await (students, npcSatellite)
         let entries = (studentEntries + npcSatelliteEntries)
             .sorted { lhs, rhs in
@@ -33,7 +33,7 @@ struct BaGuideCatalogRepository {
     }
 
     func fetchStudentCatalog(now: Date = Date()) async throws -> BaRepositorySnapshot<[BaGuideCatalogEntry]> {
-        let entries = try await fetchEntries(pid: Self.studentPID, category: .students)
+        let entries = try await fetchEntries(pid: BaCatalogCategory.students.gameKeePID, category: .students)
         return BaRepositorySnapshot(value: entries, syncedAt: now, sourceErrors: [])
     }
 
@@ -41,7 +41,7 @@ struct BaGuideCatalogRepository {
         let data = try await client.fetchJSONData(
             GameKeeRequest(
                 pathOrURL: "/v1/entry/treesByPid?pid=\(pid)",
-                refererPath: "/ba/second/\(Self.secondPageID)",
+                refererPath: "/ba/second/\(BaCatalogCategory.gameKeeSecondPageID)",
                 extraHeaders: GameKeeClient.baHeaders
             )
         )
@@ -80,8 +80,4 @@ struct BaGuideCatalogRepository {
             .filter { $0.isEmpty == false }
             .joined(separator: " · ")
     }
-
-    private static let secondPageID = 23941
-    private static let studentPID = 49443
-    private static let npcSatellitePID = 107_619
 }

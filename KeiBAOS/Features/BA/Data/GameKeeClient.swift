@@ -397,9 +397,25 @@ struct GameKeeClient {
     }
 
     private func isJSONLike(_ data: Data) -> Bool {
-        guard let text = String(data: data.prefix(128), encoding: .utf8) else { return false }
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.hasPrefix("{") || trimmed.hasPrefix("[")
+        var index = data.startIndex
+        if data.count >= 3,
+           data[index] == 0xEF,
+           data[data.index(after: index)] == 0xBB,
+           data[data.index(index, offsetBy: 2)] == 0xBF
+        {
+            index = data.index(index, offsetBy: 3)
+        }
+        while index < data.endIndex {
+            switch data[index] {
+            case 0x09, 0x0A, 0x0D, 0x20:
+                index = data.index(after: index)
+            case 0x7B, 0x5B:
+                return true
+            default:
+                return false
+            }
+        }
+        return false
     }
 
     private func looksLikeImageData(_ data: Data) -> Bool {

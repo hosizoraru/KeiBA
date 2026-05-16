@@ -18,7 +18,7 @@ struct BaStudentGuideRepository {
         entry: BaGuideCatalogEntry,
         now: Date = Date()
     ) async throws -> BaRepositorySnapshot<BaStudentGuideInfo> {
-        let detail = try await fetchContentDetail(contentId: entry.contentId)
+        let detail = try await fetchContentDetail(entry: entry)
         let info = parseGuideInfo(
             apiData: detail.apiData,
             content: detail.content,
@@ -30,11 +30,31 @@ struct BaStudentGuideRepository {
         return BaRepositorySnapshot(value: info, syncedAt: now, sourceErrors: detail.errors)
     }
 
-    private func fetchContentDetail(contentId: Int64) async throws -> RawContentDetail {
+    private func fetchContentDetail(entry: BaGuideCatalogEntry) async throws -> RawContentDetail {
+        do {
+            return try await fetchContentDetail(
+                contentId: entry.contentId,
+                refererContentId: entry.contentId
+            )
+        } catch {
+            guard let resolvedContentId = try? await resolveCurrentContentID(for: entry),
+                  resolvedContentId > 0,
+                  resolvedContentId != entry.contentId
+            else {
+                throw error
+            }
+            return try await fetchContentDetail(
+                contentId: resolvedContentId,
+                refererContentId: resolvedContentId
+            )
+        }
+    }
+
+    private func fetchContentDetail(contentId: Int64, refererContentId: Int64) async throws -> RawContentDetail {
         let apiData = try await client.fetchJSONData(
             GameKeeRequest(
                 pathOrURL: "/v1/content/detail/\(contentId)",
-                refererPath: "/ba/tj/\(contentId).html",
+                refererPath: "/ba/tj/\(refererContentId).html",
                 extraHeaders: GameKeeClient.baHeaders
             )
         )
@@ -51,7 +71,7 @@ struct BaStudentGuideRepository {
         if let cdnURL = GameKeeJSON.normalizeImageURL(dataObject.string("content_cdn") ?? "") {
             do {
                 let cdnData = try await client.fetchJSONData(
-                    GameKeeRequest(pathOrURL: cdnURL.absoluteString, refererPath: "/ba/tj/\(contentId).html")
+                    GameKeeRequest(pathOrURL: cdnURL.absoluteString, refererPath: "/ba/tj/\(refererContentId).html")
                 )
                 if let content = resolveContent(from: String(decoding: cdnData, as: UTF8.self)) {
                     return RawContentDetail(apiData: dataObject, content: content, html: nil, source: "content_cdn", errors: errors)
@@ -65,7 +85,7 @@ struct BaStudentGuideRepository {
         }
 
         let html = try? await client.fetchHTML(
-            GameKeeRequest(pathOrURL: "/ba/tj/\(contentId).html", refererPath: "/ba/tj/\(contentId).html")
+            GameKeeRequest(pathOrURL: "/ba/tj/\(contentId).html", refererPath: "/ba/tj/\(refererContentId).html")
         )
         return RawContentDetail(
             apiData: dataObject,
@@ -74,6 +94,60 @@ struct BaStudentGuideRepository {
             source: html == nil ? "api" : "html",
             errors: html == nil ? errors : []
         )
+    }
+
+    private func resolveCurrentContentID(for entry: BaGuideCatalogEntry) async throws -> Int64? {
+        let pid = entry.pid > 0 ? entry.pid : entry.category.gameKeePID
+        guard pid > 0 else { return nil }
+        let data = try await client.fetchJSONData(
+            GameKeeRequest(
+                pathOrURL: "/v1/entry/treesByPid?pid=\(pid)",
+                refererPath: "/ba/second/\(BaCatalogCategory.gameKeeSecondPageID)",
+                extraHeaders: GameKeeClient.baHeaders
+            )
+        )
+        let rows = try GameKeeJSON.dataArray(from: data)
+        return Self.resolvedContentID(for: entry, catalogRows: rows)
+    }
+
+    nonisolated static func resolvedContentID(for entry: BaGuideCatalogEntry, catalogRows rows: [BaJSONObject]) -> Int64? {
+        if let exactEntry = rows.first(where: { $0.int("id") == entry.entryId }),
+           let contentId = exactEntry.int64("content_id"),
+           contentId > 0
+        {
+            return contentId
+        }
+        let nameKey = Self.catalogLookupKey(entry.name)
+        guard nameKey.isEmpty == false else { return nil }
+        let aliasKeys = Set(
+            entry.alias
+                .split(separator: ",")
+                .map { Self.catalogLookupKey(String($0)) }
+                .filter { $0.isEmpty == false }
+        )
+        let matched = rows.first { item in
+            let itemNameKey = Self.catalogLookupKey(item.string("name") ?? item.string("title") ?? "")
+            let itemAliasKeys = Set(
+                (item.string("name_alias") ?? "")
+                    .split(separator: ",")
+                    .map { Self.catalogLookupKey(String($0)) }
+                    .filter { $0.isEmpty == false }
+            )
+            return itemNameKey == nameKey || aliasKeys.contains(itemNameKey) || itemAliasKeys.contains(nameKey)
+        }
+        guard let contentId = matched?.int64("content_id"), contentId > 0 else {
+            return nil
+        }
+        return contentId
+    }
+
+    private nonisolated static func catalogLookupKey(_ raw: String) -> String {
+        raw
+            .replacingOccurrences(of: "（", with: "(")
+            .replacingOccurrences(of: "）", with: ")")
+            .replacingOccurrences(of: " ", with: "")
+            .replacingOccurrences(of: "\u{3000}", with: "")
+            .lowercased()
     }
 
     private func resolveContent(from raw: String?) -> Any? {
@@ -106,6 +180,8 @@ struct BaStudentGuideRepository {
         contentSource: String,
         now: Date
     ) -> BaStudentGuideInfo {
+        let resolvedContentId = apiData.int64("content_id") ?? apiData.int64("id") ?? entry.contentId
+        let sourceURL = URL(string: "https://www.gamekee.com/ba/tj/\(resolvedContentId).html") ?? entry.detailURL
         let title = apiData.string("title") ?? entry.name
         let subtitle = apiData.object("game")?.string("name") ?? "GameKee"
         let parsed = BaGuideContentParser().parse(content: content, apiData: apiData, html: html, entry: entry)
@@ -134,8 +210,8 @@ struct BaStudentGuideRepository {
             : (parsed.stats.isEmpty ? stats(from: profileRows, fallback: entry) : parsed.stats)
 
         return BaStudentGuideInfo(
-            contentId: entry.contentId,
-            sourceURL: entry.detailURL,
+            contentId: resolvedContentId,
+            sourceURL: sourceURL,
             title: title,
             subtitle: subtitle,
             summary: resolvedSummary,

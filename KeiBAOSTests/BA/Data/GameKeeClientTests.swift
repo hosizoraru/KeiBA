@@ -124,6 +124,122 @@ final class GameKeeClientTests: XCTestCase {
         XCTAssertEqual(request.value(forHTTPHeaderField: "game-alias"), "ba")
     }
 
+    func testStudentDetailFetchRecoversLegacyNPCEntryIDFromCatalog() async throws {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [GameKeeClientURLProtocol.self]
+        let session = URLSession(configuration: configuration)
+        let client = GameKeeClient(session: session, retryAttempts: 1)
+        let repository = BaStudentGuideRepository(client: client)
+        let staleEntry = BaGuideCatalogEntry(
+            entryId: 174_603,
+            pid: BaCatalogCategory.npcSatellite.gameKeePID,
+            contentId: 174_603,
+            name: "爱丽丝(冬装)",
+            alias: "",
+            aliasDisplay: "",
+            iconURL: nil,
+            type: 1,
+            order: 0,
+            createdAt: nil,
+            releaseDate: nil,
+            detailURL: URL(string: "https://www.gamekee.com/ba/tj/174603.html"),
+            category: .npcSatellite
+        )
+        let cdnPath = "/wiki2.0/pro/829/content/647097.json"
+        GameKeeClientURLProtocol.handler = { request in
+            GameKeeClientURLProtocol.requests.append(request)
+            guard let url = request.url,
+                  let response = HTTPURLResponse(
+                      url: url,
+                      statusCode: 200,
+                      httpVersion: nil,
+                      headerFields: ["Content-Type": "application/json"]
+                  )
+            else {
+                throw GameKeeError.invalidURL(request.url?.absoluteString ?? "")
+            }
+            if url.path == "/v1/entry/treesByPid" {
+                return (response, Data(#"{"code":0,"data":[{"id":174603,"pid":107619,"content_id":647097,"name":"爱丽丝(冬装)","type":1}]}"#.utf8))
+            }
+            if url.path == "/v1/content/detail/174603" {
+                return (response, Data(#"{"code":500,"msg":"record not found","data":null}"#.utf8))
+            }
+            if url.path == "/v1/content/detail/647097" {
+                return (
+                    response,
+                    Data(
+                        """
+                        {
+                          "code": 0,
+                          "data": {
+                            "id": 647097,
+                            "entry_id": 174603,
+                            "content_id": 647097,
+                            "title": "爱丽丝（冬装）",
+                            "summary": "卫星学生",
+                            "content_json": "",
+                            "content": "",
+                            "content_cdn": "//api-cdn.gamekee.com\(cdnPath)"
+                          }
+                        }
+                        """.utf8
+                    )
+                )
+            }
+            if url.host == "api-cdn.gamekee.com", url.path == cdnPath {
+                return (
+                    response,
+                    Data(
+                        #"""
+                        {
+                          "content": "[{\"key\":\"root\",\"type\":\"illustrated-book\",\"data\":[{\"key\":\"profile\",\"type\":\"character-profile\",\"data\":{\"name\":\"爱丽丝（冬装）\",\"desc\":\"卫星学生\",\"content\":[{\"key\":\"角色定位\",\"content\":\"冬装卫星\"}]}}]}]"
+                        }
+                        """#.utf8
+                    )
+                )
+            }
+            throw GameKeeError.invalidURL(url.absoluteString)
+        }
+
+        let snapshot = try await repository.fetchStudentDetail(entry: staleEntry)
+
+        XCTAssertEqual(snapshot.value.contentId, 647_097)
+        XCTAssertEqual(snapshot.value.title, "爱丽丝（冬装）")
+        XCTAssertEqual(snapshot.value.sourceURL?.absoluteString, "https://www.gamekee.com/ba/tj/647097.html")
+        XCTAssertEqual(snapshot.sourceErrors, [])
+        let cdnRequest = try XCTUnwrap(GameKeeClientURLProtocol.requests.first { $0.url?.host == "api-cdn.gamekee.com" })
+        XCTAssertEqual(cdnRequest.value(forHTTPHeaderField: "Referer"), "https://www.gamekee.com/")
+    }
+
+    func testStudentDetailResolverKeepsNPCEntryIDSeparateFromContentID() throws {
+        let staleEntry = BaGuideCatalogEntry(
+            entryId: 174_603,
+            pid: BaCatalogCategory.npcSatellite.gameKeePID,
+            contentId: 174_603,
+            name: "爱丽丝(冬装)",
+            alias: "",
+            aliasDisplay: "",
+            iconURL: nil,
+            type: 1,
+            order: 0,
+            createdAt: nil,
+            releaseDate: nil,
+            detailURL: URL(string: "https://www.gamekee.com/ba/tj/174603.html"),
+            category: .npcSatellite
+        )
+        let rows: [BaJSONObject] = [
+            [
+                "id": 174_603,
+                "pid": BaCatalogCategory.npcSatellite.gameKeePID,
+                "content_id": 647_097,
+                "name": "爱丽丝(冬装)",
+                "type": 1,
+            ],
+        ]
+
+        XCTAssertEqual(BaStudentGuideRepository.resolvedContentID(for: staleEntry, catalogRows: rows), 647_097)
+    }
+
     func testGuideMediaCacheHitsLocalFileAfterFirstDownload() async throws {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [GameKeeClientURLProtocol.self]

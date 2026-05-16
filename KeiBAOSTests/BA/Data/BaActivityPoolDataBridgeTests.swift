@@ -11,6 +11,34 @@ import Foundation
 import XCTest
 
 final class BaActivityPoolDataBridgeTests: XCTestCase {
+    func testCatalogParserKeepsNPCContentIDSeparateFromEntryID() throws {
+        let json = """
+        {
+          "code": 0,
+          "data": [
+            {
+              "id": 174603,
+              "pid": 107619,
+              "content_id": 647097,
+              "name": "爱丽丝(冬装)",
+              "type": 1,
+              "icon": "//cdnimg-v2.gamekee.com/wiki2.0/images/w_200/h_200/829/alice.png"
+            }
+          ]
+        }
+        """
+        let repository = BaGuideCatalogRepository(client: GameKeeClient())
+        let entries = try repository.parseEntries(
+            data: Data(json.utf8),
+            pid: BaCatalogCategory.npcSatellite.gameKeePID,
+            category: .npcSatellite
+        )
+
+        XCTAssertEqual(entries.first?.entryId, 174_603)
+        XCTAssertEqual(entries.first?.contentId, 647_097)
+        XCTAssertEqual(entries.first?.detailURL?.absoluteString, "https://www.gamekee.com/ba/tj/647097.html")
+    }
+
     func testActivityParserClassifiesAndSortsEntries() throws {
         let now = Date(timeIntervalSince1970: 1_700_000_000)
         let json = """

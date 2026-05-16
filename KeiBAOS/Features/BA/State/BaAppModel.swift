@@ -391,7 +391,7 @@ final class BaAppModel {
                 lastSyncAt: snapshot.syncedAt,
                 isShowingCache: false
             )
-            await cacheStore.save(snapshot.value, for: .catalog, schemaVersion: 2, syncedAt: snapshot.syncedAt)
+            await cacheStore.save(snapshot.value, for: .catalog, schemaVersion: Self.catalogCacheSchemaVersion, syncedAt: snapshot.syncedAt)
             let hydrated = await catalogReleaseDateHydrator.hydrate(
                 bundle: snapshot.value,
                 maxNetworkFetchPerPass: BaPlatformPerformanceProfile.catalogReleaseDateFetchLimit,
@@ -405,7 +405,7 @@ final class BaAppModel {
                     lastSyncAt: snapshot.syncedAt,
                     isShowingCache: false
                 )
-                await cacheStore.save(hydrated, for: .catalog, schemaVersion: 2, syncedAt: snapshot.syncedAt)
+                await cacheStore.save(hydrated, for: .catalog, schemaVersion: Self.catalogCacheSchemaVersion, syncedAt: snapshot.syncedAt)
             }
         } catch {
             guard Self.isCancellation(error) == false else {
@@ -435,19 +435,31 @@ final class BaAppModel {
         studentDetailStates[entry.contentId] = state
         do {
             let snapshot = try await studentRepository.fetchStudentDetail(entry: entry)
-            studentDetailStates[entry.contentId] = BaLoadableState(
+            let loadedState = BaLoadableState(
                 value: snapshot.value,
                 isLoading: false,
                 errorMessage: BaDataErrorPresenter.studentDetailMessage(for: snapshot.sourceErrors.first),
                 lastSyncAt: snapshot.syncedAt,
                 isShowingCache: false
             )
+            studentDetailStates[entry.contentId] = loadedState
+            if snapshot.value.contentId != entry.contentId {
+                studentDetailStates[snapshot.value.contentId] = loadedState
+            }
             await cacheStore.save(
                 snapshot.value,
                 for: .studentDetail(entry.contentId),
                 schemaVersion: 3,
                 syncedAt: snapshot.syncedAt
             )
+            if snapshot.value.contentId != entry.contentId {
+                await cacheStore.save(
+                    snapshot.value,
+                    for: .studentDetail(snapshot.value.contentId),
+                    schemaVersion: 3,
+                    syncedAt: snapshot.syncedAt
+                )
+            }
         } catch {
             guard Self.isCancellation(error) == false else {
                 var cancelled = studentDetailStates[entry.contentId] ?? BaLoadableState<BaStudentGuideInfo>()
@@ -622,6 +634,7 @@ final class BaAppModel {
 
     private func loadCachedCatalog() async {
         guard let cached = await cacheStore.load(BaGuideCatalogBundle.self, for: .catalog) else { return }
+        guard cached.schemaVersion >= Self.catalogCacheSchemaVersion else { return }
         catalogState = BaLoadableState(
             value: cached.value,
             isLoading: false,
@@ -691,6 +704,7 @@ final class BaAppModel {
             return bundle.entries(in: .students)
         }
         if let cached = await cacheStore.load(BaGuideCatalogBundle.self, for: .catalog) {
+            guard cached.schemaVersion >= Self.catalogCacheSchemaVersion else { return [] }
             return cached.value.entries(in: .students)
         }
         return []
@@ -730,6 +744,7 @@ final class BaAppModel {
         )
     }
 
+    private static let catalogCacheSchemaVersion = 3
     private static let poolCacheSchemaVersion = 6
-    private static let studentCatalogPID = 49443
+    private static let studentCatalogPID = BaCatalogCategory.students.gameKeePID
 }
