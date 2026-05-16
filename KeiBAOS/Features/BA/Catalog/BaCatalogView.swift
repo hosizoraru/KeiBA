@@ -25,18 +25,8 @@ struct BaCatalogView: View {
     var body: some View {
         let snapshot = snapshot
 
-        BaAdaptiveGeometry { _ in
-            List {
-                Section {
-                    catalogContent(snapshot: snapshot)
-                } footer: {
-                    Text(footerText)
-                }
-            }
-            .platformInsetGroupedListStyle()
-            .baCatalogSectionSpacing()
-            .scrollContentBackground(.hidden)
-            .background(AppBackground())
+        BaAdaptiveGeometry { metrics in
+            catalogLayout(snapshot: snapshot, metrics: metrics)
         }
         .searchable(text: $searchText, prompt: Text(selectedCategory.searchPrompt))
         .searchScopes($selectedCategory, activation: .automatic) {
@@ -62,7 +52,40 @@ struct BaCatalogView: View {
     }
 
     @ViewBuilder
-    private func catalogContent(snapshot: BaCatalogViewSnapshot) -> some View {
+    private func catalogLayout(snapshot: BaCatalogViewSnapshot, metrics: BaAdaptiveMetrics) -> some View {
+        switch metrics.widthClass {
+        case .compact:
+            compactCatalogList(snapshot: snapshot)
+        case .regular, .expanded:
+            BaCatalogGridView(
+                rows: snapshot.rows,
+                metrics: metrics,
+                isLoading: model.catalogState.isLoading,
+                emptyDetail: emptyDetail,
+                footerText: footerText,
+                favoriteActionTitle: favoriteActionTitle(isFavorite:),
+                onToggleFavorite: { model.toggleFavorite($0) }
+            )
+            .background(AppBackground())
+        }
+    }
+
+    private func compactCatalogList(snapshot: BaCatalogViewSnapshot) -> some View {
+        List {
+            Section {
+                compactCatalogContent(snapshot: snapshot)
+            } footer: {
+                Text(footerText)
+            }
+        }
+        .platformInsetGroupedListStyle()
+        .baCatalogSectionSpacing()
+        .scrollContentBackground(.hidden)
+        .background(AppBackground())
+    }
+
+    @ViewBuilder
+    private func compactCatalogContent(snapshot: BaCatalogViewSnapshot) -> some View {
         if model.catalogState.isLoading, snapshot.rows.isEmpty {
             ProgressView()
                 .frame(maxWidth: .infinity, alignment: .center)
@@ -80,7 +103,6 @@ struct BaCatalogView: View {
                 } label: {
                     BaCatalogEntryRow(row: row)
                         .equatable()
-                        .baAdaptiveReadableContent()
                 }
                 .swipeActions(edge: .trailing) {
                     Button {

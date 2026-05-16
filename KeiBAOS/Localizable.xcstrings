@@ -1827,54 +1827,6 @@
         }
       }
     },
-    "ba.catalog.sort.default" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Default order"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "默认排序"
-          }
-        }
-      }
-    },
-    "ba.catalog.sort.releaseDate.asc" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Release date: oldest first"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "实装日期：旧到新"
-          }
-        }
-      }
-    },
-    "ba.catalog.sort.releaseDate.desc" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Release date: newest first"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "实装日期：新到旧"
-          }
-        }
-      }
-    },
     "ba.catalog.satellite.detail" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2020,6 +1972,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "搜索学生、学院、职责"
+          }
+        }
+      }
+    },
+    "ba.catalog.sort.default" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default order"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "默认排序"
+          }
+        }
+      }
+    },
+    "ba.catalog.sort.releaseDate.asc" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Release date: oldest first"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实装日期：旧到新"
+          }
+        }
+      }
+    },
+    "ba.catalog.sort.releaseDate.desc" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Release date: newest first"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实装日期：新到旧"
           }
         }
       }
@@ -4018,6 +4018,7 @@
       }
     },
     "ba.settings.preferences.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
