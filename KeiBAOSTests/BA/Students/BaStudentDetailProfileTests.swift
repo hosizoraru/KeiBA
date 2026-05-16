@@ -123,6 +123,65 @@ final class BaStudentDetailProfileTests: XCTestCase {
         XCTAssertEqual(npcSections.first { $0.kind == .other }?.rows.map(\.title), ["其他译名", "剧情定位"])
     }
 
+    func testNpcSatelliteProfileMetaUsesOriginalAffiliationField() {
+        let info = BaStudentGuideInfo(
+            contentId: 702_789,
+            sourceURL: URL(string: "https://www.gamekee.com/ba/tj/702789.html"),
+            title: "伪学生会长",
+            subtitle: "GameKee",
+            summary: "",
+            imageURL: nil,
+            stats: [],
+            profileRows: [
+                BaGuideRow(id: "name", title: "角色名称", value: "伪学生会长", imageURL: nil),
+                BaGuideRow(id: "belongs", title: "所属", value: "联邦学生会 / 总学生会长", imageURL: nil),
+            ],
+            skillRows: [],
+            voiceRows: [],
+            galleryItems: [],
+            growthRows: [],
+            simulateRows: [],
+            contentSource: "content_json",
+            syncedAt: Date(timeIntervalSince1970: 0)
+        )
+
+        let profile = BaStudentGuideMeta.profileMetaItems(from: info, category: .npcSatellite)
+
+        XCTAssertEqual(profile.map(\.title), [String(localized: "ba.student.detail.meta.belongs")])
+        XCTAssertEqual(profile.map(\.value), ["联邦学生会 / 总学生会长"])
+    }
+
+    func testNpcSatelliteProfileMetaKeepsExplicitSchoolAndClubFields() {
+        let info = BaStudentGuideInfo(
+            contentId: 611_754,
+            sourceURL: URL(string: "https://www.gamekee.com/ba/tj/611754.html"),
+            title: "日奈(睡衣)",
+            subtitle: "GameKee",
+            summary: "",
+            imageURL: nil,
+            stats: [],
+            profileRows: [
+                BaGuideRow(id: "academy", title: "所属学院", value: "格黑娜学园", imageURL: nil),
+                BaGuideRow(id: "club", title: "所属社团", value: "风纪委员会", imageURL: nil),
+            ],
+            skillRows: [],
+            voiceRows: [],
+            galleryItems: [],
+            growthRows: [],
+            simulateRows: [],
+            contentSource: "content_json",
+            syncedAt: Date(timeIntervalSince1970: 0)
+        )
+
+        let profile = BaStudentGuideMeta.profileMetaItems(from: info, category: .npcSatellite)
+
+        XCTAssertEqual(profile.map(\.title), [
+            String(localized: "ba.student.detail.meta.academy"),
+            String(localized: "ba.student.detail.meta.club"),
+        ])
+        XCTAssertEqual(profile.map(\.value), ["格黑娜学园", "风纪委员会"])
+    }
+
     func testGuideMetaExtractsArchiveRowsAndFiltersMovedRows() {
         let info = BaStudentGuideInfo(
             contentId: 1,

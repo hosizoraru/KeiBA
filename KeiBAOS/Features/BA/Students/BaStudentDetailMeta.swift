@@ -47,6 +47,16 @@ enum BaStudentGuideMeta {
         ]
     }
 
+    nonisolated static func profileMetaItems(
+        from info: BaStudentGuideInfo,
+        category: BaCatalogCategory
+    ) -> [BaGuideMetaItem] {
+        guard category == .npcSatellite else {
+            return profileMetaItems(from: info)
+        }
+        return npcSatelliteProfileMetaItems(from: info)
+    }
+
     nonisolated static func combatMetaItems(from info: BaStudentGuideInfo) -> [BaGuideMetaItem] {
         let rows = info.profileDisplayRows + info.skillDisplayRows
         return [
@@ -191,6 +201,110 @@ enum BaStudentGuideMeta {
             stats: stats,
             valuePriority: valuePriority
         )
+    }
+
+    private nonisolated static func npcSatelliteProfileMetaItems(from info: BaStudentGuideInfo) -> [BaGuideMetaItem] {
+        let rows = info.profileDisplayRows
+        let stats = info.stats
+        let items = [
+            buildExactProfileMetaItem(
+                title: String(localized: "ba.student.detail.meta.rarity"),
+                role: .rarity,
+                titleKeywords: ["稀有度", "星级"],
+                rows: rows,
+                stats: stats
+            ),
+            buildExactProfileMetaItem(
+                title: String(localized: "ba.student.detail.meta.belongs"),
+                role: .affiliation,
+                titleKeywords: ["所属", "阵营"],
+                rows: rows,
+                stats: stats
+            ),
+            buildExactProfileMetaItem(
+                title: String(localized: "ba.student.detail.meta.academy"),
+                role: .academy,
+                titleKeywords: ["所属学园", "所属学院", "学园", "学院", "school"],
+                rows: rows,
+                stats: stats,
+                valuePriority: academyValuePriority
+            ),
+            buildExactProfileMetaItem(
+                title: String(localized: "ba.student.detail.meta.club"),
+                role: .club,
+                titleKeywords: ["所属社团", "社团"],
+                rows: rows,
+                stats: stats
+            ),
+        ]
+            .compactMap(\.self)
+            .filter { $0.hasMeaningfulGuideValue }
+        return deduplicatedMetaItems(items)
+    }
+
+    private nonisolated static func buildExactProfileMetaItem(
+        title: String,
+        role: MetaRole,
+        titleKeywords: [String],
+        rows: [BaGuideRow],
+        stats: [BaGuideRow],
+        valuePriority: ((String) -> Int)? = nil
+    ) -> BaGuideMetaItem? {
+        let allRows = rows + stats
+        let candidates = fieldCandidates(
+            rows: allRows,
+            keywords: titleKeywords,
+            requireImage: false,
+            requireUsableValue: true,
+            valuePriority: valuePriority,
+            exactMatchOnly: true,
+            allowsValueMatch: false
+        )
+        guard let best = candidates.max(by: { isWorseCandidate($0, than: $1) }) else {
+            return nil
+        }
+        let iconRow = findBestRowByExactTitleKeywords(
+            rows: allRows,
+            keywords: titleKeywords,
+            requireImage: true,
+            valuePriority: valuePriority
+        )
+        return BaGuideMetaItem(
+            title: title,
+            value: sanitizeMetaValue(role: role, raw: best.value),
+            imageURL: iconRow?.imageURL
+        )
+    }
+
+    private nonisolated static func findBestRowByExactTitleKeywords(
+        rows: [BaGuideRow],
+        keywords: [String],
+        requireImage: Bool,
+        valuePriority: ((String) -> Int)? = nil
+    ) -> BaGuideRow? {
+        fieldCandidates(
+            rows: rows,
+            keywords: keywords,
+            requireImage: requireImage,
+            requireUsableValue: false,
+            valuePriority: valuePriority,
+            exactMatchOnly: true,
+            allowsValueMatch: false
+        )
+        .max(by: { isWorseCandidate($0, than: $1) })?
+        .row
+    }
+
+    private nonisolated static func deduplicatedMetaItems(_ items: [BaGuideMetaItem]) -> [BaGuideMetaItem] {
+        var seen = Set<String>()
+        return items.filter { item in
+            let key = [
+                BaGuideTextNormalizer.normalizedKey(item.title),
+                BaGuideTextNormalizer.normalizedKey(item.value),
+            ]
+                .joined(separator: "|")
+            return seen.insert(key).inserted
+        }
     }
 
     private nonisolated static func buildMetaItem(
@@ -533,6 +647,7 @@ enum BaStudentGuideMeta {
 
     private nonisolated enum MetaRole {
         case rarity
+        case affiliation
         case academy
         case club
         case tacticalPosition
@@ -547,6 +662,37 @@ enum BaStudentGuideMeta {
         let row: BaGuideRow
         let value: String
         let score: Int
+    }
+}
+
+private extension BaGuideMetaItem {
+    nonisolated var hasMeaningfulGuideValue: Bool {
+        value.hasMeaningfulMetaValue ||
+            extraValue?.hasMeaningfulMetaValue == true ||
+            imageURL != nil ||
+            extraImageURL != nil
+    }
+}
+
+private extension String {
+    nonisolated var hasMeaningfulMetaValue: Bool {
+        let normalized = trimmingCharacters(in: .whitespacesAndNewlines)
+        let compact = normalized
+            .replacingOccurrences(of: " ", with: "")
+            .replacingOccurrences(of: "　", with: "")
+            .lowercased()
+        guard normalized.isEmpty == false else { return false }
+        return normalized != String(localized: "ba.common.none") &&
+            normalized != "-" &&
+            normalized != "—" &&
+            normalized != "--" &&
+            normalized != "暂无" &&
+            normalized != "无" &&
+            compact != "n" &&
+            compact != "none" &&
+            compact != "null" &&
+            compact != "undefined" &&
+            compact != "nan"
     }
 }
 

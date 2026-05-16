@@ -60,6 +60,8 @@ struct BaStudentDetailOverviewSections: View {
 }
 
 private struct BaStudentPortraitMetaCard: View {
+    @Environment(\.baAdaptiveMetrics) private var metrics
+
     let info: BaStudentGuideInfo
     let category: BaCatalogCategory
     let portraitURL: URL?
@@ -76,13 +78,14 @@ private struct BaStudentPortraitMetaCard: View {
 
     var body: some View {
         BaGlassCard(tint: BaDesign.blue) {
+            let size = portraitSize
             HStack(alignment: .top, spacing: 12) {
                 BaRemoteImageSurface(
                     url: portraitURL,
                     fallbackSystemImage: "person.crop.square",
                     tint: tint,
-                    width: 108,
-                    height: 144,
+                    width: size.width,
+                    height: size.height,
                     cornerRadius: 20,
                     contentMode: .fit,
                     usesImageBackdrop: true,
@@ -102,13 +105,19 @@ private struct BaStudentPortraitMetaCard: View {
                         }
                     }
                 }
-                .frame(maxWidth: .infinity, minHeight: 144, alignment: .topLeading)
+                .frame(maxWidth: .infinity, minHeight: size.height, alignment: .topLeading)
             }
         }
     }
 
+    private var portraitSize: CGSize {
+        metrics.widthClass == .compact
+            ? CGSize(width: 96, height: 128)
+            : CGSize(width: 108, height: 144)
+    }
+
     private static func profileItems(from info: BaStudentGuideInfo, category: BaCatalogCategory) -> [BaGuideMetaItem] {
-        var items = BaStudentGuideMeta.profileMetaItems(from: info)
+        var items = BaStudentGuideMeta.profileMetaItems(from: info, category: category)
         if let tactical = BaStudentGuideMeta.combatMetaItems(from: info).first(where: { $0.isTacticalPositionItem }) {
             items.append(
                 BaGuideMetaItem(
@@ -140,27 +149,87 @@ private struct BaStudentCombatMetaCard: View {
 }
 
 private struct BaStudentMetaLine: View {
+    @Environment(\.baAdaptiveMetrics) private var metrics
+
     let item: BaGuideMetaItem
     let tint: Color
 
     var body: some View {
-        HStack(spacing: 8) {
-            BaStudentMetaTitle(item: item, tint: tint)
-                .frame(width: 92, alignment: .leading)
-
-            if item.isAcademyItem == false {
-                BaStudentMetaImages(item: item, tint: tint, size: 16)
+        Group {
+            if usesStackedValueLayout {
+                stackedLayout
+            } else {
+                inlineLayout
             }
-
-            Text(item.value)
-                .font(.body.weight(.semibold))
-                .foregroundStyle(.primary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.72)
-                .multilineTextAlignment(.trailing)
-                .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var inlineLayout: some View {
+        HStack(spacing: 8) {
+            metaTitle
+
+            metaImages
+
+            metaValue(lineLimit: 1, alignment: .trailing)
+        }
+    }
+
+    private var stackedLayout: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                metaTitle
+                metaImages
+                Spacer(minLength: 0)
+            }
+
+            metaValue(lineLimit: stackedValueLineLimit, alignment: .leading, textAlignment: .leading)
+        }
+    }
+
+    private var metaTitle: some View {
+        BaStudentMetaTitle(item: item, tint: tint)
+            .frame(width: usesStackedValueLayout ? nil : 92, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private var metaImages: some View {
+        if item.isAcademyItem == false {
+            BaStudentMetaImages(item: item, tint: tint, size: 16)
+        }
+    }
+
+    private func metaValue(
+        lineLimit: Int?,
+        alignment: Alignment,
+        textAlignment: TextAlignment = .trailing
+    ) -> some View {
+        Text(item.value)
+            .font(.body.weight(.semibold))
+            .foregroundStyle(.primary)
+            .lineLimit(lineLimit)
+            .minimumScaleFactor(0.82)
+            .multilineTextAlignment(textAlignment)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: alignment)
+    }
+
+    private var usesStackedValueLayout: Bool {
+        if item.isAffiliationItem {
+            return item.value.count >= 7
+        }
+        switch metrics.widthClass {
+        case .compact:
+            return item.value.count >= 9
+        case .regular:
+            return item.value.count >= 18
+        case .expanded:
+            return item.value.count >= 28
+        }
+    }
+
+    private var stackedValueLineLimit: Int? {
+        item.isAffiliationItem ? nil : 3
     }
 }
 
@@ -317,6 +386,10 @@ private struct BaStudentMetaImages: View {
 }
 
 private extension BaGuideMetaItem {
+    var isAffiliationItem: Bool {
+        title == String(localized: "ba.student.detail.meta.belongs")
+    }
+
     var isAcademyItem: Bool {
         title == String(localized: "ba.student.detail.meta.academy")
     }
