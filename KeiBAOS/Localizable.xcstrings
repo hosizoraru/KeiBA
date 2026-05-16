@@ -2207,22 +2207,6 @@
         }
       }
     },
-    "ba.music.action.loadDetail" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Load BGM"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "读取 BGM"
-          }
-        }
-      }
-    },
     "ba.music.action.cache" : {
       "localizations" : {
         "en" : {
@@ -2251,6 +2235,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "重试缓存"
+          }
+        }
+      }
+    },
+    "ba.music.action.loadDetail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Load BGM"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "读取 BGM"
           }
         }
       }
@@ -2464,6 +2464,7 @@
       }
     },
     "ba.music.library.subtitle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2480,6 +2481,7 @@
       }
     },
     "ba.music.library.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

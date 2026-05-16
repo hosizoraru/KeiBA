@@ -215,7 +215,7 @@ final class BaGuideVoiceAudioDataTests: XCTestCase {
         XCTAssertTrue(BaVoicePlaybackController.supportsPlayback(mp3URL))
         XCTAssertFalse(BaVoicePlaybackController.supportsNativePlayback(oggURL))
         XCTAssertTrue(BaVoicePlaybackController.supportsOggPlayback(oggURL))
-        XCTAssertEqual(BaVoicePlaybackController.preferredBackendNameForTesting(oggURL), "vorbisEngine")
+        XCTAssertEqual(BaVoicePlaybackController.preferredBackendNameForTesting(oggURL), "decodedOgg")
         XCTAssertTrue(BaVoicePlaybackController.supportsPlayback(oggURL))
         XCTAssertTrue(BaVoicePlaybackController.supportsOggPlayback(opusURL))
         XCTAssertEqual(BaVoicePlaybackController.preferredBackendNameForTesting(opusURL), "audioStreaming")
@@ -227,17 +227,17 @@ final class BaGuideVoiceAudioDataTests: XCTestCase {
         XCTAssertFalse(BaVoicePlaybackController.supportsPlayback(pageURL))
     }
 
-    func testMusicPlaybackStreamsOggForLongBGM() throws {
+    func testMusicPlaybackDecodesOggForLongBGM() throws {
         let oggURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/bgm/memory.ogg"))
         let opusURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/bgm/memory.opus"))
         let mp3URL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/bgm/memory.mp3"))
 
-        XCTAssertEqual(BaVoicePlaybackController.preferredMusicBackendNameForTesting(oggURL), "audioStreaming")
+        XCTAssertEqual(BaVoicePlaybackController.preferredMusicBackendNameForTesting(oggURL), "decodedOgg")
         XCTAssertEqual(BaVoicePlaybackController.preferredMusicBackendNameForTesting(opusURL), "audioStreaming")
         XCTAssertEqual(BaVoicePlaybackController.preferredMusicBackendNameForTesting(mp3URL), "avFoundation")
         XCTAssertEqual(
             BaVoicePlaybackController.preferredOggPlaybackModeNameForTesting(oggURL, profile: .music),
-            "streaming"
+            "decodedPreferred"
         )
         XCTAssertEqual(
             BaVoicePlaybackController.preferredOggPlaybackModeNameForTesting(opusURL, profile: .music),
@@ -288,7 +288,15 @@ final class BaGuideVoiceAudioDataTests: XCTestCase {
         }
 
         player.play(localURL: localURL)
-        await fulfillment(of: [playingExpectation, endedExpectation], timeout: 5, enforceOrder: true)
+        await fulfillment(of: [playingExpectation], timeout: 5)
+
+        let duration = try XCTUnwrap(player.duration)
+        XCTAssertTrue(player.canSeek)
+        XCTAssertGreaterThan(duration, 0.5)
+        player.seek(to: 0.45)
+        XCTAssertGreaterThan(player.currentTime, duration * 0.35)
+
+        await fulfillment(of: [endedExpectation], timeout: 5)
         player.stop()
 
         let elapsed = try XCTUnwrap(endedAt?.timeIntervalSince(try XCTUnwrap(playingAt)))

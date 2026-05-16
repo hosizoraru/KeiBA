@@ -19,7 +19,7 @@ nonisolated enum BaAudioPlaybackProfile: Sendable {
         case .voice:
             .decodedPreferred
         case .music:
-            .streaming
+            .decodedPreferred
         }
     }
 }
@@ -34,7 +34,7 @@ final class BaAudioPlaybackController {
     private nonisolated static let oggPlaybackExtensions = Set(
         "oga ogg opus".split(separator: " ").map(String.init)
     )
-    private nonisolated static let vorbisEngineExtensions = Set(
+    private nonisolated static let decodedOggExtensions = Set(
         "oga ogg".split(separator: " ").map(String.init)
     )
     private nonisolated static let avPlayerPlaybackExtensions = Set(
@@ -55,9 +55,9 @@ final class BaAudioPlaybackController {
             return duration.isFinite && duration > 0
         case .avPlayer:
             return avPlayerDuration?.isFinite == true && (avPlayerDuration ?? 0) > 0
-        case .audioStreaming:
+        case .decodedOgg, .audioStreaming:
             return oggPlayer.canSeek
-        case .vorbisEngine, nil:
+        case nil:
             return false
         }
     }
@@ -69,7 +69,7 @@ final class BaAudioPlaybackController {
             return duration
         case .avPlayer:
             return avPlayerDuration
-        case .audioStreaming, .vorbisEngine:
+        case .decodedOgg, .audioStreaming:
             return oggPlayer.duration
         case nil:
             return nil
@@ -82,7 +82,7 @@ final class BaAudioPlaybackController {
             return player?.currentTime ?? 0
         case .avPlayer:
             return avPlayer?.currentTime().seconds ?? 0
-        case .audioStreaming, .vorbisEngine:
+        case .decodedOgg, .audioStreaming:
             return oggPlayer.currentTime
         case nil:
             guard let duration else { return 0 }
@@ -188,9 +188,9 @@ final class BaAudioPlaybackController {
             guard let duration = avPlayerDuration, duration.isFinite, duration > 0 else { return }
             avPlayer?.seek(to: CMTime(seconds: duration * clampedProgress, preferredTimescale: 600))
             updateProgress()
-        case .audioStreaming:
+        case .decodedOgg, .audioStreaming:
             oggPlayer.seek(to: clampedProgress)
-        case .vorbisEngine, nil:
+        case nil:
             break
         }
     }
@@ -228,7 +228,7 @@ final class BaAudioPlaybackController {
     private func resume() {
         BaMediaPlaybackCoordinator.notifyWillStartPlayback(sender: self)
         errorMessage = nil
-        if playbackBackend == .vorbisEngine || playbackBackend == .audioStreaming {
+        if playbackBackend == .decodedOgg || playbackBackend == .audioStreaming {
             resumeOggPlayer()
             return
         }
@@ -247,7 +247,7 @@ final class BaAudioPlaybackController {
     }
 
     private func pause() {
-        if playbackBackend == .vorbisEngine || playbackBackend == .audioStreaming {
+        if playbackBackend == .decodedOgg || playbackBackend == .audioStreaming {
             pauseOggPlayer()
             isPlaying = false
             return
@@ -264,7 +264,7 @@ final class BaAudioPlaybackController {
     }
 
     private func startPlayer(localURL: URL, backend: PlaybackBackend?) {
-        if backend == .vorbisEngine || backend == .audioStreaming {
+        if backend == .decodedOgg || backend == .audioStreaming {
             startOggPlayer(localURL: localURL)
             return
         }
@@ -279,7 +279,7 @@ final class BaAudioPlaybackController {
             nextPlayer.prepareToPlay()
             guard nextPlayer.play() else {
                 if isOggFile(localURL) {
-                    playbackBackend = .audioStreaming
+                    playbackBackend = .decodedOgg
                     startOggPlayer(localURL: localURL)
                 } else {
                     fail(message: String(localized: "ba.student.detail.voice.error.playback"))
@@ -292,7 +292,7 @@ final class BaAudioPlaybackController {
             startProgressTimer()
         } catch {
             if isOggFile(localURL) {
-                playbackBackend = .audioStreaming
+                playbackBackend = .decodedOgg
                 startOggPlayer(localURL: localURL)
             } else {
                 fail(message: String(localized: "ba.student.detail.voice.error.unsupported"))
@@ -370,14 +370,14 @@ final class BaAudioPlaybackController {
     private enum PlaybackBackend: String {
         case avFoundation
         case avPlayer
-        case vorbisEngine
+        case decodedOgg
         case audioStreaming
 
         nonisolated var oggPlaybackMode: BaOggPlaybackMode {
             switch self {
             case .audioStreaming:
                 .streaming
-            case .vorbisEngine, .avFoundation, .avPlayer:
+            case .decodedOgg, .avFoundation, .avPlayer:
                 .decodedPreferred
             }
         }
@@ -385,11 +385,8 @@ final class BaAudioPlaybackController {
 
     private nonisolated static func preferredBackend(for url: URL, profile: BaAudioPlaybackProfile) -> PlaybackBackend {
         let ext = url.pathExtension.lowercased()
-        if profile == .music, supportsOggPlayback(url) {
-            return .audioStreaming
-        }
-        if vorbisEngineExtensions.contains(ext) {
-            return .vorbisEngine
+        if decodedOggExtensions.contains(ext) {
+            return .decodedOgg
         }
         if avPlayerPlaybackExtensions.contains(ext) {
             return .avPlayer

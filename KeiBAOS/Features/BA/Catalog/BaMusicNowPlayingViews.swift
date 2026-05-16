@@ -59,15 +59,11 @@ struct BaMusicMiniNowPlayingBar: View {
     }
 
     private func expandedContent(_ track: BaMusicTrack) -> some View {
-        VStack(spacing: 6) {
-            HStack(spacing: 10) {
-                miniTrackButton(track, showsSubtitle: true)
+        HStack(spacing: 10) {
+            miniTrackButton(track, showsSubtitle: true)
 
-                miniPlayButton
-                miniNextButton
-            }
-
-            BaMusicMiniProgressControl(session: session)
+            miniPlayButton
+            miniNextButton
         }
         .padding(.horizontal, 4)
         .padding(.vertical, 2)
@@ -291,7 +287,7 @@ struct BaMusicNowPlayingHero: View {
         case .compact:
             switch presentation {
             case .inline:
-                min(max(metrics.containerWidth - 128, 188), 232)
+                min(max(metrics.containerWidth * 0.46, 170), 208)
             case .full:
                 min(max(metrics.containerWidth - 126, 172), 242)
             }
@@ -506,6 +502,8 @@ struct BaMusicNowPlayingSheet: View {
                     .baAdaptiveReadableContent(maxWidth: metrics.dashboardContentMaxWidth)
                     .padding(.horizontal, metrics.screenHorizontalPadding)
                     .padding(.vertical, metrics.screenVerticalPadding)
+                    .safeAreaPadding(.top, 10)
+                    .safeAreaPadding(.bottom, 24)
                 }
                 .background(AppBackground())
             }
@@ -588,7 +586,7 @@ private extension View {
     @ViewBuilder
     func baMusicNowPlayingSheetStyle() -> some View {
         #if os(iOS)
-            presentationDetents([.medium, .large])
+            presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         #else
             frame(minWidth: 460, minHeight: 560)
