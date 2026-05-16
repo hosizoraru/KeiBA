@@ -633,10 +633,7 @@ private extension View {
         if usesGlassSurface {
             liquidGlassSurface(cornerRadius: cornerRadius, tint: tint.opacity(0.08), isInteractive: false)
         } else {
-            background(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(tint.opacity(0.08))
-            )
+            background(.clear)
         }
     }
 }

@@ -11,6 +11,7 @@ import os
 
 nonisolated protocol BaAudioCaching: Sendable {
     func localURL(for url: URL, refererPath: String) async throws -> URL
+    func isCached(_ url: URL) async -> Bool
 }
 
 actor BaAudioCache: BaAudioCaching {
@@ -65,6 +66,14 @@ actor BaAudioCache: BaAudioCaching {
             throw error
         }
         return fileURL
+    }
+
+    func isCached(_ url: URL) async -> Bool {
+        let fileURL = cachedFileURL(for: url)
+        guard let data = try? Data(contentsOf: fileURL), data.isEmpty == false else {
+            return false
+        }
+        return Self.looksLikeAudioData(data, expectedExtension: url.pathExtension)
     }
 
     private func recordFailure(for url: URL) {

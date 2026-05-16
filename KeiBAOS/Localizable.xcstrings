@@ -2223,6 +2223,38 @@
         }
       }
     },
+    "ba.music.action.cache" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache Track"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缓存曲目"
+          }
+        }
+      }
+    },
+    "ba.music.action.cache.retry" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retry Cache"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重试缓存"
+          }
+        }
+      }
+    },
     "ba.music.action.next" : {
       "localizations" : {
         "en" : {
@@ -2571,6 +2603,70 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "搜索收藏学生或 BGM"
+          }
+        }
+      }
+    },
+    "ba.music.status.cache.cached" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cached"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已缓存"
+          }
+        }
+      }
+    },
+    "ba.music.status.cache.caching" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caching"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缓存中"
+          }
+        }
+      }
+    },
+    "ba.music.status.cache.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache Failed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缓存失败"
+          }
+        }
+      }
+    },
+    "ba.music.status.cache.notCached" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not Cached"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未缓存"
           }
         }
       }

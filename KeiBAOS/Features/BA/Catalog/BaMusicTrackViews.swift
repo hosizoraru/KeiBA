@@ -13,6 +13,7 @@ struct BaMusicTrackRow: View {
     let thumbnailMaxPixelDimension: Int
     let isCurrent: Bool
     let isPlaying: Bool
+    let cacheState: BaMusicCacheState
     let onPrimaryAction: () -> Void
     let onLoadDetail: () -> Void
 
@@ -46,10 +47,17 @@ struct BaMusicTrackRow: View {
                     }
                 }
 
-                Text(statusText)
-                    .font(.caption)
-                    .foregroundStyle(statusColor)
-                    .lineLimit(1)
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 6) {
+                        statusLabel
+                        cacheStatusLabel
+                    }
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        statusLabel
+                        cacheStatusLabel
+                    }
+                }
             }
 
             Spacer(minLength: 8)
@@ -87,7 +95,7 @@ struct BaMusicTrackRow: View {
                     .foregroundStyle(isCurrent ? BaDesign.pink : .primary)
                     .frame(width: 36, height: 36)
             }
-            .buttonStyle(.borderless)
+            .buttonStyle(BaMusicControlButtonStyle())
             .accessibilityLabel(Text(isCurrent && isPlaying ? String(localized: "ba.music.action.pause") : String(localized: "ba.music.action.play")))
         case .loadingDetail:
             ProgressView()
@@ -99,8 +107,26 @@ struct BaMusicTrackRow: View {
                     .font(.headline.weight(.semibold))
                     .frame(width: 36, height: 36)
             }
-            .buttonStyle(.borderless)
+            .buttonStyle(BaMusicControlButtonStyle())
             .accessibilityLabel(Text(String(localized: "ba.music.action.loadDetail")))
+        }
+    }
+
+    private var statusLabel: some View {
+        Text(statusText)
+            .font(.caption)
+            .foregroundStyle(statusColor)
+            .lineLimit(1)
+    }
+
+    @ViewBuilder
+    private var cacheStatusLabel: some View {
+        if let cacheStatusText = cacheState.statusText {
+            Label(cacheStatusText, systemImage: cacheState.systemImage)
+                .font(.caption)
+                .labelStyle(.titleAndIcon)
+                .foregroundStyle(cacheState.isCached ? BaDesign.pink : .secondary)
+                .lineLimit(1)
         }
     }
 
@@ -138,8 +164,10 @@ struct BaMusicQueueSection: View {
     let thumbnailMaxPixelDimension: Int
     let currentTrackID: Int64?
     let isPlaying: Bool
+    let cacheState: (BaMusicTrack) -> BaMusicCacheState
     let onPrimaryAction: (BaMusicTrack) -> Void
     let onLoadDetail: (BaMusicTrack) -> Void
+    let onRefreshCacheState: (BaMusicTrack) async -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -153,6 +181,7 @@ struct BaMusicQueueSection: View {
                         thumbnailMaxPixelDimension: thumbnailMaxPixelDimension,
                         isCurrent: currentTrackID == track.id,
                         isPlaying: isPlaying,
+                        cacheState: cacheState(track),
                         onPrimaryAction: { onPrimaryAction(track) },
                         onLoadDetail: { onLoadDetail(track) }
                     )
@@ -160,6 +189,7 @@ struct BaMusicQueueSection: View {
                         if track.availability == .needsDetail {
                             onLoadDetail(track)
                         }
+                        await onRefreshCacheState(track)
                     }
                 }
             }

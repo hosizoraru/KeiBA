@@ -153,8 +153,10 @@ struct BaLibraryView: View {
             thumbnailMaxPixelDimension: metrics.catalogThumbnailMaxPixelDimension,
             currentTrackID: playbackSession.selectedTrack?.id,
             isPlaying: playbackSession.player.isPlaying,
+            cacheState: playbackSession.cacheState(for:),
             onPrimaryAction: playTrack,
-            onLoadDetail: loadDetail
+            onLoadDetail: loadDetail,
+            onRefreshCacheState: playbackSession.refreshCacheState(for:)
         )
     }
 

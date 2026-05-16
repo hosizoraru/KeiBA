@@ -49,17 +49,79 @@ enum BaMusicRepeatMode: Hashable {
     }
 }
 
+enum BaMusicCacheState: Hashable {
+    case unknown
+    case notCached
+    case caching
+    case cached
+    case failed(String)
+
+    var isCached: Bool {
+        if case .cached = self { return true }
+        return false
+    }
+
+    var isCaching: Bool {
+        if case .caching = self { return true }
+        return false
+    }
+
+    var statusText: String? {
+        switch self {
+        case .unknown:
+            nil
+        case .notCached:
+            String(localized: "ba.music.status.cache.notCached")
+        case .caching:
+            String(localized: "ba.music.status.cache.caching")
+        case .cached:
+            String(localized: "ba.music.status.cache.cached")
+        case .failed:
+            String(localized: "ba.music.status.cache.failed")
+        }
+    }
+
+    var accessibilityTitle: String {
+        switch self {
+        case .unknown, .notCached:
+            String(localized: "ba.music.action.cache")
+        case .caching:
+            String(localized: "ba.music.status.cache.caching")
+        case .cached:
+            String(localized: "ba.music.status.cache.cached")
+        case .failed:
+            String(localized: "ba.music.action.cache.retry")
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .unknown, .notCached:
+            "arrow.down.circle"
+        case .caching:
+            "arrow.down.circle.dotted"
+        case .cached:
+            "checkmark.circle.fill"
+        case .failed:
+            "exclamationmark.arrow.trianglehead.2.clockwise.rotate.90"
+        }
+    }
+}
+
 @Observable
 @MainActor
 final class BaMusicPlaybackSession {
     let player = BaGuideAudioPlaybackController()
+    @ObservationIgnored private let audioCache: any BaAudioCaching
 
     var selectedTrack: BaMusicTrack?
     var queue: [BaMusicTrack] = []
     var isExpanded = false
     var repeatMode: BaMusicRepeatMode = .off
+    var cacheStates: [URL: BaMusicCacheState] = [:]
 
-    init() {
+    init(audioCache: any BaAudioCaching = BaAudioCache.shared) {
+        self.audioCache = audioCache
         player.onPlaybackFinished = { [weak self] in
             self?.handlePlaybackFinished()
         }
@@ -97,10 +159,40 @@ final class BaMusicPlaybackSession {
         repeatMode = repeatMode.next
     }
 
+    func cacheState(for track: BaMusicTrack) -> BaMusicCacheState {
+        guard let audioURL = track.audioURL else { return .notCached }
+        return cacheStates[audioURL] ?? .unknown
+    }
+
+    func refreshCacheState(for track: BaMusicTrack) async {
+        guard let audioURL = track.audioURL else { return }
+        if cacheStates[audioURL]?.isCaching == true { return }
+        cacheStates[audioURL] = await audioCache.isCached(audioURL) ? .cached : .notCached
+    }
+
+    func cache(_ track: BaMusicTrack) {
+        guard let audioURL = track.audioURL else { return }
+        cacheStates[audioURL] = .caching
+        Task {
+            do {
+                _ = try await audioCache.localURL(for: audioURL, refererPath: "/ba")
+                guard Task.isCancelled == false else { return }
+                cacheStates[audioURL] = .cached
+            } catch {
+                guard Task.isCancelled == false else { return }
+                cacheStates[audioURL] = .failed(error.localizedDescription)
+            }
+        }
+    }
+
     func start(_ track: BaMusicTrack) {
         guard let audioURL = track.audioURL else { return }
         selectedTrack = track
         player.play(remoteURL: audioURL)
+        Task {
+            try? await Task.sleep(for: .seconds(1))
+            await refreshCacheState(for: track)
+        }
     }
 
     func toggleCurrent() {
