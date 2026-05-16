@@ -41,13 +41,17 @@ final class BaAdaptiveLayoutTests: XCTestCase {
 
         let portraitIPadWindow = BaAdaptiveMetrics(containerWidth: 680)
         XCTAssertEqual(portraitIPadWindow.timelineColumnCount, 2)
-        XCTAssertEqual(portraitIPadWindow.timelineCardImageHeight, 128)
+        XCTAssertEqual(portraitIPadWindow.timelineCardImageHeight, 156)
         XCTAssertEqual(portraitIPadWindow.poolCardThumbnailSize, 84)
 
         let fullWidthIPadWindow = BaAdaptiveMetrics(containerWidth: 834)
         XCTAssertEqual(fullWidthIPadWindow.timelineColumnCount, 2)
-        XCTAssertEqual(fullWidthIPadWindow.timelineCardImageHeight, 136)
+        XCTAssertEqual(fullWidthIPadWindow.timelineCardImageHeight, 172)
         XCTAssertEqual(fullWidthIPadWindow.poolCardThumbnailSize, 92)
+
+        let landscapeIPadWindow = BaAdaptiveMetrics(containerWidth: 1_120)
+        XCTAssertEqual(landscapeIPadWindow.timelineColumnCount, 2)
+        XCTAssertEqual(landscapeIPadWindow.timelineCardImageHeight, 188)
     }
 
     func testChunkingKeepsTimelineRowsStableForAdaptiveColumns() {

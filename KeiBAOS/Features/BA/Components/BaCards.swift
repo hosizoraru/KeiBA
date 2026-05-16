@@ -377,6 +377,7 @@ struct BaRemoteImageSurface: View {
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .scaleEffect(1.08)
                         .blur(radius: 10)
                         .saturation(1.05)
@@ -385,6 +386,7 @@ struct BaRemoteImageSurface: View {
                 image
                     .resizable()
                     .aspectRatio(contentMode: contentMode)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 placeholder
             }
