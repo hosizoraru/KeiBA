@@ -37,18 +37,20 @@ struct BaMusicMiniNowPlayingBar: View {
 
     var body: some View {
         if let track = session.selectedTrack {
-            switch displayMode {
-            case .mini:
-                inlineContent(track)
-            case .expanded:
-                expandedContent(track)
+            BaMusicAccentReader(track: track) { accent in
+                switch displayMode {
+                case .mini:
+                    inlineContent(track, accent: accent)
+                case .expanded:
+                    expandedContent(track, accent: accent)
+                }
             }
         }
     }
 
-    private func inlineContent(_ track: BaMusicTrack) -> some View {
+    private func inlineContent(_ track: BaMusicTrack, accent: Color) -> some View {
         HStack(spacing: 10) {
-            miniTrackButton(track, showsSubtitle: false)
+            miniTrackButton(track, accent: accent, showsSubtitle: false)
 
             miniPlayButton
             miniNextButton
@@ -57,9 +59,9 @@ struct BaMusicMiniNowPlayingBar: View {
         .padding(.vertical, 2)
     }
 
-    private func expandedContent(_ track: BaMusicTrack) -> some View {
+    private func expandedContent(_ track: BaMusicTrack, accent: Color) -> some View {
         HStack(spacing: 10) {
-            miniTrackButton(track, showsSubtitle: true)
+            miniTrackButton(track, accent: accent, showsSubtitle: true)
 
             miniPlayButton
             miniNextButton
@@ -68,7 +70,7 @@ struct BaMusicMiniNowPlayingBar: View {
         .padding(.vertical, 2)
     }
 
-    private func miniTrackButton(_ track: BaMusicTrack, showsSubtitle: Bool) -> some View {
+    private func miniTrackButton(_ track: BaMusicTrack, accent: Color, showsSubtitle: Bool) -> some View {
         Button {
             session.isExpanded = true
         } label: {
@@ -76,7 +78,7 @@ struct BaMusicMiniNowPlayingBar: View {
                 BaRowThumbnail(
                     url: track.artworkURL,
                     fallbackSystemImage: "music.note",
-                    tint: track.musicAccentColor,
+                    tint: accent,
                     size: 38,
                     maxPixelDimension: 144,
                     usesGlassSurface: false
@@ -92,7 +94,7 @@ struct BaMusicMiniNowPlayingBar: View {
                         if session.player.isPlaying {
                             Image(systemName: "waveform")
                                 .font(.caption2.weight(.semibold))
-                                .foregroundStyle(track.musicAccentColor)
+                                .foregroundStyle(accent)
                                 .accessibilityHidden(true)
                         }
                     }
@@ -161,34 +163,36 @@ struct BaMusicNowPlayingHero: View {
     var presentation: BaMusicNowPlayingPresentation = .inline
 
     var body: some View {
-        Group {
-            if let track {
-                heroContent(track)
-            } else {
-                placeholderContent
+        BaMusicAccentReader(track: track) { accent in
+            Group {
+                if let track {
+                    heroContent(track, accent: accent)
+                } else {
+                    placeholderContent
+                }
             }
-        }
-        .padding(metrics.cardPadding)
-        .frame(maxWidth: .infinity, alignment: .center)
-        .task(id: track?.audioURL?.absoluteString ?? "nil") {
-            guard let track else { return }
-            await session.refreshCacheState(for: track)
+            .padding(metrics.cardPadding)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .task(id: track?.audioURL?.absoluteString ?? "nil") {
+                guard let track else { return }
+                await session.refreshCacheState(for: track)
+            }
         }
     }
 
     @ViewBuilder
-    private func heroContent(_ track: BaMusicTrack) -> some View {
+    private func heroContent(_ track: BaMusicTrack, accent: Color) -> some View {
         if metrics.widthClass == .expanded {
             HStack(alignment: .center, spacing: 30) {
-                artwork(track, size: artworkSize)
+                artwork(track, accent: accent, size: artworkSize)
 
                 VStack(spacing: 16) {
-                    trackInfo(track)
-                    BaMusicProgressControl(session: session, accent: track.musicAccentColor)
+                    trackInfo(track, accent: accent)
+                    BaMusicProgressControl(session: session, accent: accent)
                     BaMusicTransportControls(
                         track: track,
                         session: session,
-                        accent: track.musicAccentColor,
+                        accent: accent,
                         showsStop: true
                     )
                     playbackError
@@ -197,13 +201,13 @@ struct BaMusicNowPlayingHero: View {
             }
         } else {
             VStack(spacing: 14) {
-                artwork(track, size: artworkSize)
-                trackInfo(track)
-                BaMusicProgressControl(session: session, accent: track.musicAccentColor)
+                artwork(track, accent: accent, size: artworkSize)
+                trackInfo(track, accent: accent)
+                BaMusicProgressControl(session: session, accent: accent)
                 BaMusicTransportControls(
                     track: track,
                     session: session,
-                    accent: track.musicAccentColor,
+                    accent: accent,
                     showsStop: true
                 )
                 playbackError
@@ -233,11 +237,11 @@ struct BaMusicNowPlayingHero: View {
         .padding(.vertical, 8)
     }
 
-    private func artwork(_ track: BaMusicTrack, size: CGFloat) -> some View {
+    private func artwork(_ track: BaMusicTrack, accent: Color, size: CGFloat) -> some View {
         BaRemoteImageSurface(
             url: track.artworkURL,
             fallbackSystemImage: "music.note",
-            tint: track.musicAccentColor,
+            tint: accent,
             width: size,
             height: size,
             cornerRadius: 26,
@@ -249,12 +253,12 @@ struct BaMusicNowPlayingHero: View {
         .shadow(color: .black.opacity(0.08), radius: 16, x: 0, y: 10)
     }
 
-    private func trackInfo(_ track: BaMusicTrack) -> some View {
+    private func trackInfo(_ track: BaMusicTrack, accent: Color) -> some View {
         VStack(spacing: 6) {
             if showsPlayingLabel, session.selectedTrack?.id == track.id, session.player.isPlaying {
                 Label(String(localized: "ba.music.nowPlaying.title"), systemImage: "waveform")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(track.musicAccentColor)
+                    .foregroundStyle(accent)
                     .labelStyle(.titleAndIcon)
             }
 

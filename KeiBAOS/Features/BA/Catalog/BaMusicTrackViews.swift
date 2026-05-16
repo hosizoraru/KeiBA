@@ -22,28 +22,30 @@ struct BaMusicTrackRow: View {
     @State private var isDetailPresented = false
 
     var body: some View {
-        HStack(spacing: 12) {
-            Button(action: onPrimaryAction) {
-                rowContent
-            }
-            .buttonStyle(.plain)
+        BaMusicAccentReader(track: track) { accent in
+            HStack(spacing: 12) {
+                Button(action: onPrimaryAction) {
+                    rowContent(accent: accent)
+                }
+                .buttonStyle(.plain)
 
-            trackMenu
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .liquidGlassSurface(
-            cornerRadius: 18,
-            tint: isCurrent ? accent.opacity(0.065) : Color.white.opacity(0.024),
-            isInteractive: true
-        )
-        .navigationDestination(isPresented: $isDetailPresented) {
-            BaStudentDetailView(entry: track.entry)
+                trackMenu
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .liquidGlassSurface(
+                cornerRadius: 18,
+                tint: isCurrent ? accent.opacity(0.065) : Color.white.opacity(0.024),
+                isInteractive: true
+            )
+            .navigationDestination(isPresented: $isDetailPresented) {
+                BaStudentDetailView(entry: track.entry)
+            }
         }
     }
 
-    private var rowContent: some View {
+    private func rowContent(accent: Color) -> some View {
         HStack(spacing: 12) {
             Capsule()
                 .fill(isCurrent ? accent : Color.clear)
@@ -73,7 +75,7 @@ struct BaMusicTrackRow: View {
                     }
                 }
 
-                secondaryContent
+                secondaryContent(accent: accent)
             }
 
             Spacer(minLength: 8)
@@ -88,24 +90,24 @@ struct BaMusicTrackRow: View {
     }
 
     @ViewBuilder
-    private var secondaryContent: some View {
+    private func secondaryContent(accent: Color) -> some View {
         switch track.availability {
         case .ready:
-            cacheStatusLabel
+            cacheStatusLabel(accent: accent)
         case .needsDetail, .failed, .missing:
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 6) {
-                    statusLabel
-                    cacheStatusLabel
+                    statusLabel(accent: accent)
+                    cacheStatusLabel(accent: accent)
                 }
 
                 VStack(alignment: .leading, spacing: 3) {
-                    statusLabel
-                    cacheStatusLabel
+                    statusLabel(accent: accent)
+                    cacheStatusLabel(accent: accent)
                 }
             }
         case .loadingDetail:
-            statusLabel
+            statusLabel(accent: accent)
         }
     }
 
@@ -179,15 +181,15 @@ struct BaMusicTrackRow: View {
         }
     }
 
-    private var statusLabel: some View {
+    private func statusLabel(accent: Color) -> some View {
         Text(statusText)
             .font(.caption)
-            .foregroundStyle(statusColor)
+            .foregroundStyle(statusColor(accent: accent))
             .lineLimit(1)
     }
 
     @ViewBuilder
-    private var cacheStatusLabel: some View {
+    private func cacheStatusLabel(accent: Color) -> some View {
         if let cacheStatusText = visibleCacheStatusText {
             Label(cacheStatusText, systemImage: cacheState.systemImage)
                 .font(.caption)
@@ -221,7 +223,7 @@ struct BaMusicTrackRow: View {
         }
     }
 
-    private var statusColor: Color {
+    private func statusColor(accent: Color) -> Color {
         switch track.availability {
         case .ready:
             isCurrent ? accent : .secondary
@@ -230,10 +232,6 @@ struct BaMusicTrackRow: View {
         case .needsDetail, .loadingDetail:
             .secondary
         }
-    }
-
-    private var accent: Color {
-        track.musicAccentColor
     }
 }
 
