@@ -14,7 +14,7 @@ struct BaOverviewSectionTitle: View {
     var body: some View {
         HStack(spacing: 8) {
             if let asset {
-                BaGameAssetIcon(asset, size: BaOverviewMetricStyle.rowIcon)
+                BaOverviewAssetIcon(asset, size: BaOverviewMetricStyle.sectionIconSlot)
             }
             Text(title)
                 .font(BaOverviewTextToken.sectionTitle)
@@ -31,9 +31,7 @@ struct BaOverviewInfoPill: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: systemImage)
-                .font(.system(size: BaOverviewMetricStyle.badgeIcon, weight: .semibold))
-                .foregroundStyle(tint)
+            BaOverviewSymbolIcon(systemImage, tint: tint)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(BaOverviewTextToken.caption)
@@ -49,6 +47,57 @@ struct BaOverviewInfoPill: View {
     }
 }
 
+struct BaOverviewAssetIcon: View {
+    let asset: BaGameAsset
+    let size: CGFloat
+    var glyphSize: CGFloat?
+
+    init(_ asset: BaGameAsset, size: CGFloat, glyphSize: CGFloat? = nil) {
+        self.asset = asset
+        self.size = size
+        self.glyphSize = glyphSize
+    }
+
+    var body: some View {
+        BaGameAssetIcon(
+            asset,
+            size: glyphSize ?? size,
+            visualScale: asset.overviewIconVisualScale
+        )
+        .frame(width: size, height: size, alignment: .center)
+        .accessibilityHidden(true)
+    }
+}
+
+struct BaOverviewSymbolIcon: View {
+    let systemImage: String
+    let size: CGFloat
+    let fontSize: CGFloat
+    let tint: Color
+
+    init(
+        _ systemImage: String,
+        size: CGFloat = BaOverviewMetricStyle.rowIconSlot,
+        fontSize: CGFloat = BaOverviewMetricStyle.symbolIcon,
+        tint: Color
+    ) {
+        self.systemImage = systemImage
+        self.size = size
+        self.fontSize = fontSize
+        self.tint = tint
+    }
+
+    var body: some View {
+        Image(systemName: systemImage)
+            .symbolRenderingMode(.hierarchical)
+            .font(.system(size: fontSize, weight: .semibold))
+            .imageScale(.medium)
+            .foregroundStyle(tint)
+            .frame(width: size, height: size, alignment: .center)
+            .accessibilityHidden(true)
+    }
+}
+
 struct BaOverviewMetricTile: View {
     let title: String
     let value: String
@@ -61,11 +110,9 @@ struct BaOverviewMetricTile: View {
         VStack(alignment: .leading, spacing: BaOverviewMetricStyle.compactTileSpacing) {
             HStack(spacing: 7) {
                 if let asset {
-                    BaGameAssetIcon(asset, size: BaOverviewMetricStyle.rowIcon)
+                    BaOverviewAssetIcon(asset, size: BaOverviewMetricStyle.rowIconSlot)
                 } else if let systemImage {
-                    Image(systemName: systemImage)
-                        .font(.system(size: BaOverviewMetricStyle.badgeIcon, weight: .semibold))
-                        .foregroundStyle(tint)
+                    BaOverviewSymbolIcon(systemImage, tint: tint)
                 }
                 Text(title)
                     .font(BaOverviewTextToken.rowTitle)
@@ -122,7 +169,11 @@ struct BaOverviewResourceReadout<Actions: View>: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
-            BaGameAssetIcon(asset, size: BaOverviewMetricStyle.mainIcon)
+            BaOverviewAssetIcon(
+                asset,
+                size: BaOverviewMetricStyle.mainIconSlot,
+                glyphSize: BaOverviewMetricStyle.mainIcon
+            )
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
@@ -176,8 +227,7 @@ struct BaOverviewActionTile: View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: BaOverviewMetricStyle.compactTileSpacing) {
                 HStack(spacing: 7) {
-                    BaGameAssetIcon(action.asset, size: BaOverviewMetricStyle.rowIcon)
-                        .frame(width: BaOverviewMetricStyle.rowIcon, height: BaOverviewMetricStyle.rowIcon)
+                    BaOverviewAssetIcon(action.asset, size: BaOverviewMetricStyle.rowIconSlot)
 
                     Text(action.title)
                         .font(BaOverviewTextToken.rowTitle)
@@ -187,10 +237,12 @@ struct BaOverviewActionTile: View {
 
                     Spacer(minLength: 0)
 
-                    Image(systemName: action.isReady ? "checkmark.circle.fill" : "clock.fill")
-                        .font(.system(size: BaOverviewMetricStyle.badgeIcon, weight: .semibold))
-                        .foregroundStyle(action.isReady ? BaDesign.green : tint)
-                        .frame(width: BaOverviewMetricStyle.badgeIcon, height: BaOverviewMetricStyle.badgeIcon)
+                    BaOverviewSymbolIcon(
+                        action.isReady ? "checkmark.circle.fill" : "clock.fill",
+                        size: BaOverviewMetricStyle.badgeIconSlot,
+                        fontSize: BaOverviewMetricStyle.badgeIcon,
+                        tint: action.isReady ? BaDesign.green : tint
+                    )
                 }
                 .frame(height: BaOverviewMetricStyle.compactHeaderHeight, alignment: .leading)
 
@@ -255,19 +307,24 @@ struct BaOverviewTimelineTile: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 9) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Label(title, systemImage: systemImage)
+            HStack(alignment: .center, spacing: 7) {
+                BaOverviewSymbolIcon(systemImage, tint: tint)
+
+                Text(title)
                     .font(BaOverviewTextToken.rowTitle)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
 
                 Spacer(minLength: 8)
 
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.tertiary)
+                BaOverviewSymbolIcon(
+                    "chevron.right",
+                    size: BaOverviewMetricStyle.badgeIconSlot,
+                    fontSize: 12,
+                    tint: .secondary
+                )
             }
-            .frame(height: 24, alignment: .leading)
+            .frame(height: BaOverviewMetricStyle.compactHeaderHeight, alignment: .leading)
 
             Text(item.primaryTitle)
                 .font(.subheadline)
@@ -323,5 +380,34 @@ struct BaOverviewTimelineTile: View {
             format: String(localized: "ba.state.syncedAt.format"),
             BaDisplayFormatters.syncTime(syncAt, includingSeconds: false)
         )
+    }
+}
+
+private extension BaGameAsset {
+    var overviewIconVisualScale: CGFloat {
+        switch self {
+        case .actionPoint:
+            1.44
+        case .actionPointTight:
+            0.86
+        case .arenaCoin:
+            1.38
+        case .guideMission:
+            1.24
+        case .guideMissionAlt:
+            1.32
+        case .dailyReward:
+            0.88
+        case .lobbyWork:
+            0.96
+        case .cafeAP:
+            0.92
+        case .cafeCoupon:
+            0.98
+        case .schale:
+            1.04
+        case .tabProfile, .tabSkill, .tabBGM, .tabPlay, .tabSimulate, .weaponStarBadge:
+            1
+        }
     }
 }

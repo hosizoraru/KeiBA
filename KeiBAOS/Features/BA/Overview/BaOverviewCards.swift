@@ -20,12 +20,17 @@ enum BaOverviewTextToken {
 enum BaOverviewMetricStyle {
     static let cardSpacing: CGFloat = 14
     static let rowSpacing: CGFloat = 10
+    static let sectionIconSlot: CGFloat = 26
+    static let rowIconSlot: CGFloat = 26
+    static let mainIconSlot: CGFloat = 40
     static let mainIcon: CGFloat = 32
     static let rowIcon: CGFloat = 24
+    static let symbolIcon: CGFloat = 15
+    static let badgeIconSlot: CGFloat = 18
     static let badgeIcon: CGFloat = 16
     static let compactTilePadding: CGFloat = 10
     static let compactTileSpacing: CGFloat = 6
-    static let compactHeaderHeight: CGFloat = 24
+    static let compactHeaderHeight: CGFloat = 28
     static let compactValueHeight: CGFloat = 22
     static let compactDetailHeight: CGFloat = 28
     static let metricTileHeight: CGFloat = 100
