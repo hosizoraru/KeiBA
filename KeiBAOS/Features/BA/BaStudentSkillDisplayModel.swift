@@ -560,6 +560,90 @@ private nonisolated struct BaStudentSkillTypeMeta: Hashable {
 }
 
 enum BaStudentSkillTextNormalizer {
+    static func richTextSegments(
+        description: String,
+        glossaryIcons: [String: URL],
+        leadingIcons: [URL]
+    ) -> [BaStudentSkillDescriptionSegment] {
+        let trimmedDescription = description.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmedDescription.isEmpty == false else { return [] }
+
+        let glossary = glossaryIcons
+            .filter { label, _ in label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false }
+            .sorted { lhs, rhs in
+                if lhs.key.count == rhs.key.count {
+                    return lhs.key < rhs.key
+                }
+                return lhs.key.count > rhs.key.count
+            }
+        let normalizedDescription = normalizeGlossaryToken(trimmedDescription)
+        let fuzzyLeadingIcons = glossary
+            .filter { label, _ in
+                trimmedDescription.contains(label) == false &&
+                    normalizedDescription.contains(normalizeGlossaryToken(label))
+            }
+            .map(\.value)
+        let prefixIcons = dedupeURLs(leadingIcons + fuzzyLeadingIcons).prefix(6)
+
+        var segments: [BaStudentSkillDescriptionSegment] = prefixIcons.map { .icon($0) }
+        if segments.isEmpty == false {
+            segments.append(.text(" "))
+        }
+
+        guard let numberRegex = try? NSRegularExpression(
+            pattern: #"(?<![A-Za-z])[-+]?\d+(?:\.\d+)?\s*(?:%|％|秒|s|S|倍)?"#,
+            options: []
+        ) else {
+            segments.append(.text(trimmedDescription))
+            return segments
+        }
+
+        var cursor = trimmedDescription.startIndex
+        while cursor < trimmedDescription.endIndex {
+            let glossaryMatch = nextGlossaryMatch(
+                in: trimmedDescription,
+                from: cursor,
+                glossary: glossary
+            )
+            let numberRange = nextNumberRange(
+                in: trimmedDescription,
+                from: cursor,
+                regex: numberRegex
+            )
+
+            let shouldUseGlossary: Bool
+            switch (glossaryMatch, numberRange) {
+            case (nil, nil):
+                appendPlainText(String(trimmedDescription[cursor...]), to: &segments)
+                cursor = trimmedDescription.endIndex
+                continue
+            case (.some, nil):
+                shouldUseGlossary = true
+            case (nil, .some):
+                shouldUseGlossary = false
+            case let (.some(glossary), .some(numberRange)):
+                shouldUseGlossary = glossary.range.lowerBound <= numberRange.lowerBound
+            }
+
+            if shouldUseGlossary, let match = glossaryMatch {
+                if match.range.lowerBound > cursor {
+                    appendPlainText(String(trimmedDescription[cursor ..< match.range.lowerBound]), to: &segments)
+                }
+                segments.append(.icon(match.url))
+                segments.append(.term(match.label))
+                cursor = match.range.upperBound
+            } else if let numberRange {
+                if numberRange.lowerBound > cursor {
+                    appendPlainText(String(trimmedDescription[cursor ..< numberRange.lowerBound]), to: &segments)
+                }
+                segments.append(.highlightedText(String(trimmedDescription[numberRange])))
+                cursor = numberRange.upperBound
+            }
+        }
+
+        return coalescedTextSegments(segments)
+    }
+
     static func highlightedAttributedString(in text: String, tint: Color) -> AttributedString {
         var attributed = AttributedString(text)
         guard let regex = try? NSRegularExpression(
@@ -589,6 +673,83 @@ enum BaStudentSkillTextNormalizer {
             .replacingOccurrences(of: #"[，。、“”‘’：:；;（）()【】\[\]《》<>·•\-—_+*/\\|!?！？]"#, with: "", options: .regularExpression)
             .lowercased()
     }
+
+    private static func appendPlainText(_ text: String, to segments: inout [BaStudentSkillDescriptionSegment]) {
+        guard text.isEmpty == false else { return }
+        segments.append(.text(text))
+    }
+
+    private static func nextGlossaryMatch(
+        in description: String,
+        from cursor: String.Index,
+        glossary: [(key: String, value: URL)]
+    ) -> (range: Range<String.Index>, label: String, url: URL)? {
+        var best: (range: Range<String.Index>, label: String, url: URL)?
+        for entry in glossary {
+            guard let range = description.range(of: entry.key, range: cursor ..< description.endIndex) else {
+                continue
+            }
+            if let current = best {
+                if range.lowerBound < current.range.lowerBound ||
+                    (range.lowerBound == current.range.lowerBound && entry.key.count > current.label.count) {
+                    best = (range, entry.key, entry.value)
+                }
+            } else {
+                best = (range, entry.key, entry.value)
+            }
+        }
+        return best
+    }
+
+    private static func nextNumberRange(
+        in description: String,
+        from cursor: String.Index,
+        regex: NSRegularExpression
+    ) -> Range<String.Index>? {
+        let searchRange = NSRange(cursor ..< description.endIndex, in: description)
+        guard let match = regex.firstMatch(in: description, range: searchRange),
+              let range = Range(match.range, in: description)
+        else {
+            return nil
+        }
+        return range
+    }
+
+    private static func coalescedTextSegments(
+        _ segments: [BaStudentSkillDescriptionSegment]
+    ) -> [BaStudentSkillDescriptionSegment] {
+        segments.reduce(into: []) { result, segment in
+            guard let last = result.last else {
+                result.append(segment)
+                return
+            }
+            switch (last, segment) {
+            case let (.text(lhs), .text(rhs)):
+                result[result.count - 1] = .text(lhs + rhs)
+            case let (.highlightedText(lhs), .highlightedText(rhs)):
+                result[result.count - 1] = .highlightedText(lhs + rhs)
+            case let (.term(lhs), .term(rhs)):
+                result[result.count - 1] = .term(lhs + rhs)
+            default:
+                result.append(segment)
+            }
+        }
+    }
+
+    private static func dedupeURLs(_ urls: [URL]) -> [URL] {
+        urls.reduce(into: []) { result, url in
+            if result.contains(url) == false {
+                result.append(url)
+            }
+        }
+    }
+}
+
+nonisolated enum BaStudentSkillDescriptionSegment: Hashable {
+    case text(String)
+    case highlightedText(String)
+    case term(String)
+    case icon(URL)
 }
 
 private extension String {

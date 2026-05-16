@@ -213,83 +213,111 @@ private struct BaStudentSkillCostPill: View {
 }
 
 struct BaStudentSkillDescriptionView: View {
-    let descriptionIcons: [URL]
     let tint: Color
-    private let highlightedDescription: AttributedString
-    private let matchedGlossary: [(label: String, url: URL)]
+    private let description: String
+    private let segments: [BaStudentSkillDescriptionSegment]
 
     init(description: String, glossaryIcons: [String: URL], descriptionIcons: [URL], tint: Color) {
-        self.descriptionIcons = descriptionIcons
         self.tint = tint
-        self.highlightedDescription = BaStudentSkillTextNormalizer.highlightedAttributedString(in: description, tint: tint)
-        let normalizedDescription = BaStudentSkillTextNormalizer.normalizeGlossaryToken(description)
-        self.matchedGlossary = glossaryIcons
-            .filter { label, _ in
-                description.contains(label) ||
-                    normalizedDescription.contains(BaStudentSkillTextNormalizer.normalizeGlossaryToken(label))
-            }
-            .sorted { lhs, rhs in
-                if lhs.key.count == rhs.key.count {
-                    return lhs.key < rhs.key
-                }
-                return lhs.key.count > rhs.key.count
-            }
-            .map { ($0.key, $0.value) }
+        self.description = description
+        self.segments = BaStudentSkillTextNormalizer.richTextSegments(
+            description: description,
+            glossaryIcons: glossaryIcons,
+            leadingIcons: descriptionIcons
+        )
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 9) {
-            HStack(alignment: .top, spacing: 7) {
-                ForEach(Array(descriptionIcons.prefix(6).enumerated()), id: \.offset) { _, url in
+        BaStudentSkillInlineTextFlow(segments: segments, tint: tint)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text(description))
+    }
+}
+
+private struct BaStudentSkillInlineTextFlow: View {
+    let segments: [BaStudentSkillDescriptionSegment]
+    let tint: Color
+
+    private var renderItems: [BaStudentSkillInlineTextItem] {
+        Self.renderItems(from: segments)
+    }
+
+    var body: some View {
+        FlowLayout(spacing: 0, lineSpacing: 5) {
+            ForEach(Array(renderItems.enumerated()), id: \.offset) { _, item in
+                switch item {
+                case let .icon(url):
                     BaRemoteIconSurface(
                         url: url,
                         fallbackSystemImage: "seal",
                         tint: tint,
-                        size: 18,
-                        fallbackFont: .caption.weight(.semibold)
+                        size: 16,
+                        fallbackFont: .caption2.weight(.semibold)
                     )
+                    .padding(.horizontal, 1.5)
+                case let .text(value, highlighted):
+                    Text(value)
+                        .font(.body)
+                        .fontWeight(highlighted ? .semibold : .regular)
+                        .foregroundStyle(highlighted ? tint : Color.primary)
+                        .lineLimit(1)
                 }
-
-                Text(highlightedDescription)
-                    .font(.body)
-                    .foregroundStyle(.primary)
-                    .lineSpacing(3)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
             }
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
 
-            if matchedGlossary.isEmpty == false {
-                SkillGlossaryIconFlow(items: matchedGlossary, tint: tint)
+    private static func renderItems(from segments: [BaStudentSkillDescriptionSegment]) -> [BaStudentSkillInlineTextItem] {
+        segments.flatMap { segment in
+            switch segment {
+            case let .icon(url):
+                return [BaStudentSkillInlineTextItem.icon(url)]
+            case let .term(value):
+                return [BaStudentSkillInlineTextItem.text(value, highlighted: false)]
+            case let .highlightedText(value):
+                return [BaStudentSkillInlineTextItem.text(value, highlighted: true)]
+            case let .text(value):
+                return textFragments(value).map { BaStudentSkillInlineTextItem.text($0, highlighted: false) }
             }
         }
     }
-}
 
-private struct SkillGlossaryIconFlow: View {
-    let items: [(label: String, url: URL)]
-    let tint: Color
+    private static func textFragments(_ value: String) -> [String] {
+        var fragments: [String] = []
+        var latinBuffer = ""
 
-    var body: some View {
-        FlowLayout(spacing: 6, lineSpacing: 6) {
-            ForEach(Array(items.prefix(8).enumerated()), id: \.offset) { _, item in
-                HStack(spacing: 4) {
-                    BaRemoteIconSurface(
-                        url: item.url,
-                        fallbackSystemImage: "seal",
-                        tint: tint,
-                        size: 15,
-                        fallbackFont: .caption2.weight(.semibold)
-                    )
-                    Text(item.label)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 5)
-                .background(.quaternary.opacity(0.35), in: Capsule())
+        func flushLatinBuffer() {
+            if latinBuffer.isEmpty == false {
+                fragments.append(latinBuffer)
+                latinBuffer = ""
             }
         }
+
+        for scalar in value.unicodeScalars {
+            let character = String(scalar)
+            if scalar.isASCIILetterOrDigit || scalar.value == 95 {
+                latinBuffer.append(character)
+            } else {
+                flushLatinBuffer()
+                fragments.append(character)
+            }
+        }
+        flushLatinBuffer()
+        return fragments.filter { $0.isEmpty == false }
+    }
+}
+
+private enum BaStudentSkillInlineTextItem: Hashable {
+    case text(String, highlighted: Bool)
+    case icon(URL)
+}
+
+private extension Unicode.Scalar {
+    var isASCIILetterOrDigit: Bool {
+        (65 ... 90).contains(value) ||
+            (97 ... 122).contains(value) ||
+            (48 ... 57).contains(value)
     }
 }
 
@@ -308,7 +336,7 @@ private struct FlowLayout: Layout {
             var x = bounds.minX
             for item in row.items {
                 item.subview.place(
-                    at: CGPoint(x: x, y: y),
+                    at: CGPoint(x: x, y: y + (row.height - item.size.height) / 2),
                     proposal: ProposedViewSize(item.size)
                 )
                 x += item.size.width + spacing

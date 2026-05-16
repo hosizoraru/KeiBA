@@ -621,6 +621,33 @@ final class BaStudentDetailTests: XCTestCase {
         XCTAssertEqual(card.cost(for: "Lv.5"), "5")
         XCTAssertEqual(card.descriptionIcons(for: "Lv.5"), [burnIcon])
         XCTAssertEqual(card.glossaryIcons["集中射击"], glossaryIcon)
+
+        XCTAssertEqual(
+            BaStudentSkillTextNormalizer.richTextSegments(
+                description: "转换为集中射击姿态（持续10秒）。",
+                glossaryIcons: card.glossaryIcons,
+                leadingIcons: []
+            ),
+            [
+                .text("转换为"),
+                .icon(glossaryIcon),
+                .term("集中射击"),
+                .text("姿态（持续"),
+                .highlightedText("10秒"),
+                .text("）。"),
+            ]
+        )
+        XCTAssertEqual(
+            BaStudentSkillTextNormalizer.richTextSegments(
+                description: "造成伤害。",
+                glossaryIcons: card.glossaryIcons,
+                leadingIcons: [burnIcon]
+            ).prefix(2),
+            [
+                .icon(burnIcon),
+                .text(" 造成伤害。"),
+            ]
+        )
     }
 
     func testContentParserSplitsRoleSkillPairsForSkillCards() throws {
