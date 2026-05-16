@@ -148,6 +148,58 @@ final class BaMusicPlaybackSessionTests: XCTestCase {
         XCTAssertNil(session.selectedTrack)
     }
 
+    func testRemoteStopCommandClearsPlaybackOnce() throws {
+        let systemMediaController = RecordingSystemMediaController()
+        let session = BaMusicPlaybackSession(
+            audioCache: FakeAudioCache(),
+            systemMediaController: systemMediaController
+        )
+        session.selectedTrack = try musicTrack(contentId: 3002, title: "爱丽丝", audioFileName: "alice.ogg")
+
+        XCTAssertTrue(session.handleSystemMediaCommand(.stop))
+
+        XCTAssertEqual(systemMediaController.clearCount, 1)
+        XCTAssertNil(session.selectedTrack)
+    }
+
+    func testCacheAllCachesPlayableTracks() async throws {
+        let audioCache = FakeAudioCache()
+        let session = BaMusicPlaybackSession(
+            audioCache: audioCache,
+            systemMediaController: RecordingSystemMediaController()
+        )
+        let firstTrack = try musicTrack(contentId: 4001, title: "日奈(礼服)", audioFileName: "hina.ogg")
+        let nextTrack = try musicTrack(contentId: 4002, title: "爱丽丝(临战)", audioFileName: "alice.ogg")
+
+        session.cacheAll([firstTrack, nextTrack])
+        try await Task.sleep(for: .milliseconds(60))
+
+        XCTAssertTrue(session.cacheState(for: firstTrack).isCached)
+        XCTAssertTrue(session.cacheState(for: nextTrack).isCached)
+        let cachedAudioURLs = await audioCache.cachedAudioURLs()
+        XCTAssertEqual(cachedAudioURLs, Set([try XCTUnwrap(firstTrack.audioURL), try XCTUnwrap(nextTrack.audioURL)]))
+    }
+
+    func testClearCacheRemovesCachedTrackState() async throws {
+        let audioCache = FakeAudioCache()
+        let session = BaMusicPlaybackSession(
+            audioCache: audioCache,
+            systemMediaController: RecordingSystemMediaController()
+        )
+        let track = try musicTrack(contentId: 5001, title: "柯伊", audioFileName: "kei.ogg")
+
+        session.cache(track)
+        try await Task.sleep(for: .milliseconds(60))
+        session.clearCache(for: track)
+        try await Task.sleep(for: .milliseconds(60))
+
+        XCTAssertFalse(session.cacheState(for: track).isCached)
+        let cachedAudioURLs = await audioCache.cachedAudioURLs()
+        let removedAudioURLs = await audioCache.removedAudioURLs()
+        XCTAssertEqual(cachedAudioURLs, [])
+        XCTAssertEqual(removedAudioURLs, [try XCTUnwrap(track.audioURL)])
+    }
+
     private func musicTrack(
         contentId: Int64,
         title: String,
@@ -201,11 +253,33 @@ private final class RecordingSystemMediaController: BaMusicSystemMediaControllin
 }
 
 private actor FakeAudioCache: BaAudioCaching {
+    private var cachedURLs: Set<URL> = []
+    private var removedURLs: [URL] = []
+
     func localURL(for url: URL, refererPath _: String) async throws -> URL {
-        FileManager.default.temporaryDirectory.appendingPathComponent(url.lastPathComponent)
+        cachedURLs.insert(url)
+        return FileManager.default.temporaryDirectory.appendingPathComponent(url.lastPathComponent)
     }
 
-    func isCached(_: URL) async -> Bool {
-        false
+    func cachedURL(for url: URL) async -> URL? {
+        guard cachedURLs.contains(url) else { return nil }
+        return FileManager.default.temporaryDirectory.appendingPathComponent(url.lastPathComponent)
+    }
+
+    func isCached(_ url: URL) async -> Bool {
+        cachedURLs.contains(url)
+    }
+
+    func removeCachedAudio(for url: URL) async {
+        cachedURLs.remove(url)
+        removedURLs.append(url)
+    }
+
+    func cachedAudioURLs() async -> Set<URL> {
+        cachedURLs
+    }
+
+    func removedAudioURLs() async -> [URL] {
+        removedURLs
     }
 }

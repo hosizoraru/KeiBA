@@ -24,10 +24,14 @@ struct BaLibraryView: View {
     }
 
     private var snapshot: BaMusicLibrarySnapshot {
+        musicSnapshot(query: searchText)
+    }
+
+    private func musicSnapshot(query: String) -> BaMusicLibrarySnapshot {
         BaMusicLibraryBuilder.snapshot(
             favoriteEntries: model.entries(for: .favorites, query: "", sortMode: .defaultOrder),
             detailStates: model.studentDetailStates,
-            query: searchText
+            query: query
         )
     }
 
@@ -149,6 +153,11 @@ struct BaLibraryView: View {
             isPlaying: playbackSession.player.isPlaying,
             cacheState: playbackSession.cacheState(for:),
             onPrimaryAction: playTrack,
+            onCache: cacheTrack,
+            onClearCache: { playbackSession.clearCache(for: $0) },
+            onStop: { playbackSession.stop() },
+            onCacheAll: cacheTracks,
+            onClearAllCache: { playbackSession.clearCachedTracks($0) },
             onLoadDetail: loadDetail,
             onRefreshCacheState: playbackSession.refreshCacheState(for:)
         )
@@ -178,10 +187,49 @@ struct BaLibraryView: View {
         }
     }
 
+    private func cacheTrack(_ track: BaMusicTrack) {
+        if track.audioURL != nil {
+            playbackSession.cache(track)
+            return
+        }
+        Task {
+            await model.loadStudentDetail(entry: track.entry)
+            if let refreshedTrack = refreshedTracks(matching: [track.id], query: searchText).first {
+                playbackSession.cache(refreshedTrack)
+            }
+        }
+    }
+
+    private func cacheTracks(_ tracks: [BaMusicTrack]) {
+        let requestedIDs = Set(tracks.map(\.id))
+        Task {
+            for track in tracks where track.needsDetailForMusicCache {
+                await model.loadStudentDetail(entry: track.entry)
+            }
+            playbackSession.cacheAll(refreshedTracks(matching: requestedIDs, query: searchText))
+        }
+    }
+
+    private func refreshedTracks(matching ids: Set<Int64>, query: String) -> [BaMusicTrack] {
+        musicSnapshot(query: query).tracks.filter { ids.contains($0.id) }
+    }
+
     private func refreshMusicLibrary() async {
         await model.refreshCatalog(force: true)
         for track in snapshot.visibleTracks.prefix(BaPlatformPerformanceProfile.musicInitialDetailFetchLimit) {
             await model.loadStudentDetail(entry: track.entry, force: true)
+        }
+    }
+}
+
+private extension BaMusicTrack {
+    var needsDetailForMusicCache: Bool {
+        guard audioURL == nil else { return false }
+        switch availability {
+        case .needsDetail, .failed:
+            return true
+        case .loadingDetail, .ready, .missing:
+            return false
         }
     }
 }

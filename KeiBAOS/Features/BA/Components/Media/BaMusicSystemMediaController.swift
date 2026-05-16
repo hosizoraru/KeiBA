@@ -44,6 +44,7 @@ enum BaMusicSystemMediaCommand {
     case togglePlayPause
     case previous
     case next
+    case stop
 }
 
 @MainActor
@@ -102,6 +103,7 @@ final class BaMusicSystemMediaController: BaMusicSystemMediaControlling {
         commandCenter.togglePlayPauseCommand.isEnabled = true
         commandCenter.previousTrackCommand.isEnabled = true
         commandCenter.nextTrackCommand.isEnabled = true
+        commandCenter.stopCommand.isEnabled = true
         commandCenter.changePlaybackPositionCommand.isEnabled = true
 
         addTarget(commandCenter.playCommand, command: .play)
@@ -109,6 +111,7 @@ final class BaMusicSystemMediaController: BaMusicSystemMediaControlling {
         addTarget(commandCenter.togglePlayPauseCommand, command: .togglePlayPause)
         addTarget(commandCenter.previousTrackCommand, command: .previous)
         addTarget(commandCenter.nextTrackCommand, command: .next)
+        addTarget(commandCenter.stopCommand, command: .stop)
 
         let seekTarget = commandCenter.changePlaybackPositionCommand.addTarget { [weak self] event in
             guard let positionEvent = event as? MPChangePlaybackPositionCommandEvent else {

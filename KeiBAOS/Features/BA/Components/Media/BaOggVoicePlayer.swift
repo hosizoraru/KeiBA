@@ -320,6 +320,15 @@ private extension BaOggAudioPlayer {
     }
 }
 
+extension BaOggAudioPlayer {
+    nonisolated static func removeDecodedAudioFile(forCachedAudioURL localURL: URL) {
+        let fileManager = FileManager.default
+        guard let directory = try? decodedAudioCacheDirectory(fileManager: fileManager) else { return }
+        let cacheURL = directory.appendingPathComponent("\(decodedAudioCacheKey(for: localURL)).caf")
+        try? fileManager.removeItem(at: cacheURL)
+    }
+}
+
 extension BaOggAudioPlayer: AVAudioPlayerDelegate {
     nonisolated func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
         Task { @MainActor [weak self, weak player] in

@@ -53,6 +53,7 @@ struct BaMusicMiniNowPlayingBar: View {
 
             miniPlayButton
             miniNextButton
+            miniMoreMenu
         }
         .padding(.horizontal, 4)
         .padding(.vertical, 2)
@@ -64,6 +65,7 @@ struct BaMusicMiniNowPlayingBar: View {
 
             miniPlayButton
             miniNextButton
+            miniMoreMenu
         }
         .padding(.horizontal, 4)
         .padding(.vertical, 2)
@@ -141,6 +143,30 @@ struct BaMusicMiniNowPlayingBar: View {
         .disabled(session.queue.count < 2)
         .opacity(session.queue.count < 2 ? 0.42 : 1)
         .accessibilityLabel(Text(String(localized: "ba.music.action.next")))
+    }
+
+    private var miniMoreMenu: some View {
+        Menu {
+            Button {
+                session.isExpanded = true
+            } label: {
+                Label(String(localized: "ba.music.action.openNowPlaying"), systemImage: "music.note")
+            }
+
+            Button {
+                session.stop()
+            } label: {
+                Label(String(localized: "ba.music.action.stop"), systemImage: "stop.fill")
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(.primary)
+                .frame(width: 40, height: 40)
+                .contentShape(Circle())
+        }
+        .buttonStyle(BaMusicControlButtonStyle())
+        .accessibilityLabel(Text(String(localized: "ba.music.action.moreNowPlaying")))
     }
 
     private var displayMode: BaMusicMiniNowPlayingDisplayMode {
@@ -317,6 +343,7 @@ private struct BaMusicTransportControls: View {
         ViewThatFits(in: .horizontal) {
             controlRow(scale: 1)
             controlRow(scale: 0.88)
+            controlRow(scale: 0.78)
         }
         .frame(maxWidth: .infinity, alignment: .center)
     }
@@ -360,6 +387,15 @@ private struct BaMusicTransportControls: View {
                     accessibilityLabel: String(localized: "ba.music.action.next")
                 ) {
                     session.playNext()
+                }
+
+                BaMusicTransportButton(
+                    systemImage: "stop.fill",
+                    size: compactSize * scale,
+                    isDisabled: session.hasCurrentTrack == false,
+                    accessibilityLabel: String(localized: "ba.music.action.stop")
+                ) {
+                    session.stop()
                 }
 
                 BaMusicCacheButton(track: track, session: session, size: compactSize * scale)
@@ -496,6 +532,11 @@ struct BaMusicNowPlayingSheet: View {
                                 isPlaying: session.player.isPlaying,
                                 cacheState: session.cacheState(for:),
                                 onPrimaryAction: { session.play($0) },
+                                onCache: { session.cache($0) },
+                                onClearCache: { session.clearCache(for: $0) },
+                                onStop: { session.stop() },
+                                onCacheAll: { session.cacheAll($0) },
+                                onClearAllCache: { session.clearCachedTracks($0) },
                                 onLoadDetail: { _ in },
                                 onRefreshCacheState: session.refreshCacheState(for:)
                             )

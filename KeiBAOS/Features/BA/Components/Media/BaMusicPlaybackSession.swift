@@ -103,6 +103,15 @@ enum BaMusicCacheState: Hashable {
         return false
     }
 
+    var canStartCaching: Bool {
+        switch self {
+        case .unknown, .notCached, .failed:
+            true
+        case .caching, .cached:
+            false
+        }
+    }
+
     var statusText: String? {
         switch self {
         case .unknown:
@@ -237,15 +246,42 @@ final class BaMusicPlaybackSession: BaMusicSystemMediaCommandHandling {
 
     func cache(_ track: BaMusicTrack) {
         guard let audioURL = track.audioURL else { return }
-        cacheStates[audioURL] = .caching
+        guard cacheState(for: track).canStartCaching else { return }
+        cacheAudio(for: track, audioURL: audioURL)
+    }
+
+    func cacheAll(_ tracks: [BaMusicTrack]) {
+        let targets = tracks.filter { track in
+            track.audioURL != nil && cacheState(for: track).canStartCaching
+        }
+        guard targets.isEmpty == false else { return }
         Task {
-            do {
-                _ = try await audioCache.localURL(for: audioURL, refererPath: "/ba")
+            for track in targets {
+                guard Task.isCancelled == false,
+                      let audioURL = track.audioURL
+                else {
+                    return
+                }
+                cacheStates[audioURL] = .caching
+                await cacheAudio(audioURL)
+            }
+        }
+    }
+
+    func clearCache(for track: BaMusicTrack) {
+        guard let audioURL = track.audioURL else { return }
+        Task {
+            await removeCachedAudio(audioURL)
+        }
+    }
+
+    func clearCachedTracks(_ tracks: [BaMusicTrack]) {
+        let audioURLs = tracks.compactMap(\.audioURL)
+        guard audioURLs.isEmpty == false else { return }
+        Task {
+            for audioURL in audioURLs {
                 guard Task.isCancelled == false else { return }
-                cacheStates[audioURL] = .cached
-            } catch {
-                guard Task.isCancelled == false else { return }
-                cacheStates[audioURL] = .failed(error.localizedDescription)
+                await removeCachedAudio(audioURL)
             }
         }
     }
@@ -349,6 +385,9 @@ final class BaMusicPlaybackSession: BaMusicSystemMediaCommandHandling {
             playPrevious()
         case .next:
             playNext()
+        case .stop:
+            stop()
+            return true
         }
         syncSystemMediaState()
         return true
@@ -391,6 +430,33 @@ final class BaMusicPlaybackSession: BaMusicSystemMediaCommandHandling {
         } else {
             start(selectedTrack)
         }
+    }
+
+    private func cacheAudio(for _: BaMusicTrack, audioURL: URL) {
+        cacheStates[audioURL] = .caching
+        Task {
+            await cacheAudio(audioURL)
+        }
+    }
+
+    private func cacheAudio(_ audioURL: URL) async {
+        do {
+            _ = try await audioCache.localURL(for: audioURL, refererPath: "/ba")
+            guard Task.isCancelled == false else { return }
+            cacheStates[audioURL] = .cached
+        } catch {
+            guard Task.isCancelled == false else { return }
+            cacheStates[audioURL] = .failed(error.localizedDescription)
+        }
+    }
+
+    private func removeCachedAudio(_ audioURL: URL) async {
+        if let cachedURL = await audioCache.cachedURL(for: audioURL) {
+            BaOggAudioPlayer.removeDecodedAudioFile(forCachedAudioURL: cachedURL)
+        }
+        await audioCache.removeCachedAudio(for: audioURL)
+        guard Task.isCancelled == false else { return }
+        cacheStates[audioURL] = .notCached
     }
 
     private func syncSystemMediaState() {

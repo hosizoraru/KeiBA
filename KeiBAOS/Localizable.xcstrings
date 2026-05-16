@@ -2239,6 +2239,54 @@
         }
       }
     },
+    "ba.music.action.cacheAll" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache All"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部缓存"
+          }
+        }
+      }
+    },
+    "ba.music.action.clearAllCache" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear All Cached Tracks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清理全部缓存"
+          }
+        }
+      }
+    },
+    "ba.music.action.clearCache" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Cached Track"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清理缓存"
+          }
+        }
+      }
+    },
     "ba.music.action.loadDetail" : {
       "localizations" : {
         "en" : {
@@ -2251,6 +2299,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "读取 BGM"
+          }
+        }
+      }
+    },
+    "ba.music.action.moreNowPlaying" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Now Playing Actions"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在播放操作"
+          }
+        }
+      }
+    },
+    "ba.music.action.moreQueue" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Music List Actions"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音乐列表操作"
+          }
+        }
+      }
+    },
+    "ba.music.action.moreTrack" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Track Actions"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "曲目操作"
           }
         }
       }
@@ -2283,6 +2379,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "打开学生详情"
+          }
+        }
+      }
+    },
+    "ba.music.action.openNowPlaying" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Now Playing"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开正在播放"
           }
         }
       }
@@ -2379,6 +2491,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "单曲循环"
+          }
+        }
+      }
+    },
+    "ba.music.action.stop" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop Playback"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止播放"
           }
         }
       }
