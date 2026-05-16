@@ -96,43 +96,74 @@ struct BaOverviewMetricTile: View {
     }
 }
 
-struct BaOverviewAPReadout: View {
-    let currentAP: String
-    let remaining: String
-    let onEdit: () -> Void
+struct BaOverviewResourceReadout<Actions: View>: View {
+    let title: String
+    let value: String
+    let detail: String
+    let asset: BaGameAsset
+    let tint: Color
+    let actions: Actions
+
+    init(
+        title: String,
+        value: String,
+        detail: String,
+        asset: BaGameAsset,
+        tint: Color,
+        @ViewBuilder actions: () -> Actions
+    ) {
+        self.title = title
+        self.value = value
+        self.detail = detail
+        self.asset = asset
+        self.tint = tint
+        self.actions = actions()
+    }
 
     var body: some View {
-        HStack(spacing: 12) {
-            BaGameAssetIcon(.actionPoint, size: BaOverviewMetricStyle.mainIcon)
+        HStack(alignment: .center, spacing: 12) {
+            BaGameAssetIcon(asset, size: BaOverviewMetricStyle.mainIcon)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(String(localized: "ba.office.ap.current.title"))
+                Text(title)
                     .font(BaOverviewTextToken.caption)
                     .foregroundStyle(.secondary)
-                Text(currentAP)
+
+                Text(value)
                     .font(.largeTitle.monospacedDigit().weight(.semibold))
-                    .foregroundStyle(BaDesign.green)
+                    .foregroundStyle(tint)
                     .lineLimit(1)
                     .minimumScaleFactor(0.72)
                     .contentTransition(.numericText())
-                Text(remaining)
+
+                Text(detail)
                     .font(BaOverviewTextToken.timeDetail)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.82)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
-            Spacer(minLength: 10)
-
-            Button(action: onEdit) {
-                Label(String(localized: "ba.overview.ap.edit.title"), systemImage: "pencil")
-                    .labelStyle(.iconOnly)
-            }
-            .buttonStyle(.glass)
-            .accessibilityLabel(String(localized: "ba.overview.ap.edit.title"))
+            actions
         }
         .padding(12)
-        .liquidGlassSurface(cornerRadius: 18, tint: BaDesign.green.opacity(0.045), isInteractive: false)
+        .liquidGlassSurface(cornerRadius: 18, tint: tint.opacity(0.045), isInteractive: false)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+struct BaOverviewIconGlassButton: View {
+    let title: String
+    let systemImage: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label(title, systemImage: systemImage)
+                .labelStyle(.iconOnly)
+        }
+        .buttonStyle(.glass)
+        .accessibilityLabel(title)
     }
 }
 

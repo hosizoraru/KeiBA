@@ -96,11 +96,19 @@ struct BaOverviewAPCard: View {
             VStack(alignment: .leading, spacing: BaOverviewMetricStyle.cardSpacing) {
                 BaOverviewSectionTitle(title: String(localized: "ba.office.ap.label"), asset: .actionPoint)
 
-                BaOverviewAPReadout(
-                    currentAP: office.apCurrentLimit,
-                    remaining: office.apRemaining,
-                    onEdit: { isEditorPresented = true }
-                )
+                BaOverviewResourceReadout(
+                    title: String(localized: "ba.office.ap.current.title"),
+                    value: office.apCurrentLimit,
+                    detail: office.apRemaining,
+                    asset: .actionPoint,
+                    tint: BaDesign.green
+                ) {
+                    BaOverviewIconGlassButton(
+                        title: String(localized: "ba.overview.ap.edit.title"),
+                        systemImage: "pencil",
+                        action: presentEditor
+                    )
+                }
 
                 LazyVGrid(columns: metrics.overviewInnerGridColumns, spacing: 10) {
                     BaOverviewMetricTile(
@@ -125,7 +133,7 @@ struct BaOverviewAPCard: View {
                         tint: BaDesign.blue
                     )
                     Button {
-                        isEditorPresented = true
+                        presentEditor()
                     } label: {
                         BaOverviewMetricTile(
                             title: String(localized: "ba.settings.ap.threshold.title"),
@@ -150,6 +158,10 @@ struct BaOverviewAPCard: View {
             }
         }
     }
+
+    private func presentEditor() {
+        isEditorPresented = true
+    }
 }
 
 struct BaOverviewCafeCard: View {
@@ -167,43 +179,27 @@ struct BaOverviewCafeCard: View {
     var body: some View {
         BaGlassCard(tint: BaDesign.pink) {
             VStack(alignment: .leading, spacing: BaOverviewMetricStyle.cardSpacing) {
-                HStack(spacing: 10) {
-                    BaOverviewSectionTitle(title: String(localized: "ba.cafe.title"), asset: .cafeAP)
-                    Spacer()
-                    Button {
-                        isEditorPresented = true
-                    } label: {
-                        Label(String(localized: "ba.overview.cafe.edit.title"), systemImage: "slider.horizontal.3")
-                            .labelStyle(.iconOnly)
-                    }
-                    .buttonStyle(.glass)
-                    .accessibilityLabel(String(localized: "ba.overview.cafe.edit.title"))
+                BaOverviewSectionTitle(title: String(localized: "ba.cafe.title"), asset: .cafeAP)
 
-                    Button(action: onClaimCafeAP) {
-                        Label(String(localized: "ba.cafe.action.claimAp"), systemImage: "tray.and.arrow.down.fill")
-                            .labelStyle(.iconOnly)
-                    }
-                    .buttonStyle(.glass)
-                    .accessibilityLabel(String(localized: "ba.cafe.action.claimAp"))
-                }
+                BaOverviewResourceReadout(
+                    title: String(localized: "ba.cafe.storage.title"),
+                    value: "\(office.cafeApCurrent)/\(office.cafeApLimit)",
+                    detail: cafeStorageDetail,
+                    asset: .cafeAP,
+                    tint: BaDesign.pink
+                ) {
+                    HStack(spacing: 8) {
+                        BaOverviewIconGlassButton(
+                            title: String(localized: "ba.overview.cafe.edit.title"),
+                            systemImage: "slider.horizontal.3",
+                            action: presentEditor
+                        )
 
-                HStack(spacing: 12) {
-                    BaGameAssetIcon(.cafeAP, size: BaOverviewMetricStyle.mainIcon)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(String(localized: "ba.cafe.storage.title"))
-                            .font(BaOverviewTextToken.rowTitle)
-                        Text(String(localized: "ba.overview.cafe.shared.detail"))
-                            .font(BaOverviewTextToken.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer(minLength: 10)
-                    VStack(alignment: .trailing, spacing: 3) {
-                        Text("\(office.cafeApCurrent)/\(office.cafeApLimit)")
-                            .font(BaOverviewTextToken.primaryNumber)
-                            .foregroundStyle(BaDesign.pink)
-                        Text(office.cafeLevel)
-                            .font(BaOverviewTextToken.timeDetail)
-                            .foregroundStyle(.secondary)
+                        BaOverviewIconGlassButton(
+                            title: String(localized: "ba.cafe.action.claimAp"),
+                            systemImage: "tray.and.arrow.down.fill",
+                            action: onClaimCafeAP
+                        )
                     }
                 }
 
@@ -261,10 +257,22 @@ struct BaOverviewCafeCard: View {
         office.cafeActions.first { $0.kind == .headpat }
     }
 
+    private var cafeStorageDetail: String {
+        String.localizedStringWithFormat(
+            String(localized: "ba.overview.cafe.storage.detail.format"),
+            String(localized: "ba.overview.cafe.shared.detail"),
+            office.cafeLevel
+        )
+    }
+
     private var inviteActions: [BaCafeActionSnapshot] {
         [.inviteTicket1, .inviteTicket2].compactMap { kind in
             office.cafeActions.first { $0.kind == kind }
         }
+    }
+
+    private func presentEditor() {
+        isEditorPresented = true
     }
 }
 

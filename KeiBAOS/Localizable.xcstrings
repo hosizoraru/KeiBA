@@ -2679,6 +2679,22 @@
         }
       }
     },
+    "ba.overview.cafe.storage.detail.format" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
     "ba.overview.detail" : {
       "localizations" : {
         "en" : {
