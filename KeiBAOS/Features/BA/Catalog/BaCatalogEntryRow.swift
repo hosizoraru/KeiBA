@@ -66,13 +66,21 @@ struct BaCatalogEntryRowDisplayModel: Identifiable, Equatable {
 
 struct BaCatalogEntryRow: View, Equatable {
     let row: BaCatalogEntryRowDisplayModel
+    var thumbnailMaxPixelDimension = 900
+    var usesThumbnailGlassSurface = true
 
     init(entry: BaGuideCatalogEntry, isFavorite: Bool) {
         row = BaCatalogEntryRowDisplayModel(entry: entry, isFavorite: isFavorite)
     }
 
-    init(row: BaCatalogEntryRowDisplayModel) {
+    init(
+        row: BaCatalogEntryRowDisplayModel,
+        thumbnailMaxPixelDimension: Int = 900,
+        usesThumbnailGlassSurface: Bool = true
+    ) {
         self.row = row
+        self.thumbnailMaxPixelDimension = thumbnailMaxPixelDimension
+        self.usesThumbnailGlassSurface = usesThumbnailGlassSurface
     }
 
     var body: some View {
@@ -80,7 +88,9 @@ struct BaCatalogEntryRow: View, Equatable {
             BaRowThumbnail(
                 url: row.entry.iconURL,
                 fallbackSystemImage: row.entry.category == .studentBgm ? "music.note" : "person.crop.circle",
-                tint: row.tint
+                tint: row.tint,
+                maxPixelDimension: thumbnailMaxPixelDimension,
+                usesGlassSurface: usesThumbnailGlassSurface
             )
 
             VStack(alignment: .leading, spacing: 4) {

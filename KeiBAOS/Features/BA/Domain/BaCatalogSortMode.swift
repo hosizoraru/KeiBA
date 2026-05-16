@@ -37,8 +37,17 @@ nonisolated extension Array where Element == BaGuideCatalogEntry {
 
         guard favoriteContentIDs.isEmpty == false else { return sortedBase }
 
-        let favoriteEntries = sortedBase.filter { favoriteContentIDs.contains($0.contentId) }
-        let regularEntries = sortedBase.filter { favoriteContentIDs.contains($0.contentId) == false }
+        var favoriteEntries: [BaGuideCatalogEntry] = []
+        var regularEntries: [BaGuideCatalogEntry] = []
+        favoriteEntries.reserveCapacity(favoriteContentIDs.count)
+        regularEntries.reserveCapacity(Swift.max(sortedBase.count - favoriteContentIDs.count, 0))
+        for entry in sortedBase {
+            if favoriteContentIDs.contains(entry.contentId) {
+                favoriteEntries.append(entry)
+            } else {
+                regularEntries.append(entry)
+            }
+        }
         return favoriteEntries + regularEntries
     }
 }

@@ -101,6 +101,14 @@ struct BaAdaptiveMetrics: Equatable {
         widthClass == .compact ? 1 : 2
     }
 
+    var overviewAPRefreshInterval: TimeInterval {
+        #if os(macOS)
+            10
+        #else
+            widthClass == .compact ? 1 : 5
+        #endif
+    }
+
     var overviewInnerGridColumns: [GridItem] {
         let count = overviewColumnCount > 1 ? 2 : (containerWidth >= 760 ? 3 : 2)
         return Array(
@@ -130,6 +138,29 @@ struct BaAdaptiveMetrics: Equatable {
         }
     }
 
+    var timelineImageMaxPixelDimension: Int {
+        #if os(macOS)
+            640
+        #else
+            switch widthClass {
+            case .compact:
+                512
+            case .regular:
+                640
+            case .expanded:
+                768
+            }
+        #endif
+    }
+
+    var usesTimelineImageBackdrop: Bool {
+        #if os(macOS)
+            false
+        #else
+            widthClass != .compact
+        #endif
+    }
+
     var timelineCardHorizontalPadding: CGFloat {
         widthClass == .expanded ? 16 : 14
     }
@@ -145,6 +176,126 @@ struct BaAdaptiveMetrics: Equatable {
     var poolCardThumbnailSize: CGFloat {
         guard timelineColumnCount > 1 else { return 88 }
         return containerWidth < 760 ? 84 : 92
+    }
+
+    var poolCardThumbnailMaxPixelDimension: Int {
+        #if os(macOS)
+            192
+        #else
+            widthClass == .compact ? 192 : 224
+        #endif
+    }
+
+    var detailImageMaxPixelDimension: Int {
+        #if os(macOS)
+            900
+        #else
+            switch widthClass {
+            case .compact:
+                640
+            case .regular:
+                768
+            case .expanded:
+                900
+            }
+        #endif
+    }
+
+    var catalogColumnCount: Int {
+        #if os(macOS)
+            if containerWidth >= 1280 {
+                return 4
+            }
+            if containerWidth >= 840 {
+                return 3
+            }
+            if containerWidth >= 560 {
+                return 2
+            }
+            return 1
+        #else
+            if widthClass == .compact {
+                return 1
+            }
+            return containerWidth >= 1180 ? 3 : 2
+        #endif
+    }
+
+    var catalogGridSpacing: CGFloat {
+        #if os(macOS)
+            12
+        #else
+            14
+        #endif
+    }
+
+    var catalogColumnMinWidth: CGFloat {
+        #if os(macOS)
+            230
+        #else
+            280
+        #endif
+    }
+
+    var catalogCardMaxWidth: CGFloat {
+        #if os(macOS)
+            286
+        #else
+            catalogColumnCount == 3 ? 384 : 433
+        #endif
+    }
+
+    var catalogContentMaxWidth: CGFloat {
+        let columns = CGFloat(max(catalogColumnCount, 1))
+        return columns * catalogCardMaxWidth + CGFloat(max(catalogColumnCount - 1, 0)) * catalogGridSpacing
+    }
+
+    var catalogThumbnailSize: CGFloat {
+        #if os(macOS)
+            46
+        #else
+            widthClass == .compact ? BaIconToken.rowThumbnail : 54
+        #endif
+    }
+
+    var catalogThumbnailMaxPixelDimension: Int {
+        #if os(macOS)
+            128
+        #else
+            widthClass == .compact ? 160 : 176
+        #endif
+    }
+
+    var catalogCardMinHeight: CGFloat {
+        #if os(macOS)
+            74
+        #else
+            86
+        #endif
+    }
+
+    var catalogCardCornerRadius: CGFloat {
+        #if os(macOS)
+            16
+        #else
+            20
+        #endif
+    }
+
+    var catalogCardHorizontalPadding: CGFloat {
+        #if os(macOS)
+            12
+        #else
+            14
+        #endif
+    }
+
+    var catalogCardVerticalPadding: CGFloat {
+        #if os(macOS)
+            10
+        #else
+            12
+        #endif
     }
 
     var usesFullWidthPageRail: Bool {

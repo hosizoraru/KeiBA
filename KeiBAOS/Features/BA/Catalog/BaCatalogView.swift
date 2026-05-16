@@ -55,7 +55,7 @@ struct BaCatalogView: View {
     private func catalogLayout(snapshot: BaCatalogViewSnapshot, metrics: BaAdaptiveMetrics) -> some View {
         switch metrics.widthClass {
         case .compact:
-            compactCatalogList(snapshot: snapshot)
+            compactCatalogList(snapshot: snapshot, metrics: metrics)
         case .regular, .expanded:
             BaCatalogGridView(
                 rows: snapshot.rows,
@@ -70,10 +70,10 @@ struct BaCatalogView: View {
         }
     }
 
-    private func compactCatalogList(snapshot: BaCatalogViewSnapshot) -> some View {
+    private func compactCatalogList(snapshot: BaCatalogViewSnapshot, metrics: BaAdaptiveMetrics) -> some View {
         List {
             Section {
-                compactCatalogContent(snapshot: snapshot)
+                compactCatalogContent(snapshot: snapshot, metrics: metrics)
             } footer: {
                 Text(footerText)
             }
@@ -85,7 +85,7 @@ struct BaCatalogView: View {
     }
 
     @ViewBuilder
-    private func compactCatalogContent(snapshot: BaCatalogViewSnapshot) -> some View {
+    private func compactCatalogContent(snapshot: BaCatalogViewSnapshot, metrics: BaAdaptiveMetrics) -> some View {
         if model.catalogState.isLoading, snapshot.rows.isEmpty {
             ProgressView()
                 .frame(maxWidth: .infinity, alignment: .center)
@@ -101,7 +101,11 @@ struct BaCatalogView: View {
                 NavigationLink {
                     BaStudentDetailView(entry: row.entry)
                 } label: {
-                    BaCatalogEntryRow(row: row)
+                    BaCatalogEntryRow(
+                        row: row,
+                        thumbnailMaxPixelDimension: metrics.catalogThumbnailMaxPixelDimension,
+                        usesThumbnailGlassSurface: false
+                    )
                         .equatable()
                 }
                 .swipeActions(edge: .trailing) {

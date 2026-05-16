@@ -348,6 +348,7 @@ struct BaRemoteImageSurface: View {
     var usesImageBackdrop = false
     var fallbackFont: Font = .title3.weight(.semibold)
     var maxPixelDimension = 900
+    var usesGlassSurface = true
 
     @State private var phase: BaRemoteImagePhase = .placeholder
 
@@ -376,7 +377,11 @@ struct BaRemoteImageSurface: View {
         .frame(width: width, height: height)
         .clipped()
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-        .liquidGlassSurface(cornerRadius: cornerRadius, tint: tint.opacity(0.08), isInteractive: false)
+        .baRemoteImageSurfaceChrome(
+            cornerRadius: cornerRadius,
+            tint: tint,
+            usesGlassSurface: usesGlassSurface
+        )
         .task(id: cacheTaskID) {
             await loadImage()
         }
@@ -528,6 +533,8 @@ struct BaRowThumbnail: View {
     var fallbackSystemImage: String
     var tint: Color
     var size: CGFloat = BaIconToken.rowThumbnail
+    var maxPixelDimension = 900
+    var usesGlassSurface = true
 
     var body: some View {
         BaRemoteImageSurface(
@@ -536,12 +543,16 @@ struct BaRowThumbnail: View {
             tint: tint,
             width: size,
             height: size,
-            cornerRadius: 16
+            cornerRadius: 16,
+            maxPixelDimension: maxPixelDimension,
+            usesGlassSurface: usesGlassSurface
         )
     }
 }
 
 struct BaDetailRemoteImage: View {
+    @Environment(\.baAdaptiveMetrics) private var metrics
+
     let url: URL?
     var fallbackSystemImage: String
     var tint: Color
@@ -554,7 +565,8 @@ struct BaDetailRemoteImage: View {
             width: nil,
             height: BaIconToken.detailImageHeight,
             cornerRadius: 24,
-            fallbackFont: .system(size: 52, weight: .semibold)
+            fallbackFont: .system(size: 52, weight: .semibold),
+            maxPixelDimension: metrics.detailImageMaxPixelDimension
         )
     }
 }
@@ -612,5 +624,19 @@ private enum BaStillImageDecoder {
         ]
         return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
             ?? CGImageSourceCreateImageAtIndex(source, 0, nil)
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func baRemoteImageSurfaceChrome(cornerRadius: CGFloat, tint: Color, usesGlassSurface: Bool) -> some View {
+        if usesGlassSurface {
+            liquidGlassSurface(cornerRadius: cornerRadius, tint: tint.opacity(0.08), isInteractive: false)
+        } else {
+            background(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(tint.opacity(0.08))
+            )
+        }
     }
 }

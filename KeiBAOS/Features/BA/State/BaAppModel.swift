@@ -278,15 +278,22 @@ final class BaAppModel {
         officeRepository.apSnapshot(settings: settings, now: now)
     }
 
-    func loadActivitiesIfNeeded() async {
+    func loadActivitiesIfNeeded(now: Date = Date()) async {
         if activityState.value == nil {
             await loadCachedActivities()
-            await refreshActivities(force: false)
         }
+        guard settings.refreshInterval.shouldRefresh(lastSyncAt: activityState.lastSyncAt, now: now) else { return }
+        await refreshActivities(force: false)
     }
 
-    func refreshActivities(force _: Bool) async {
+    func refreshActivities(force: Bool) async {
         if activityState.isLoading { return }
+        if force == false,
+           activityState.value != nil,
+           settings.refreshInterval.shouldRefresh(lastSyncAt: activityState.lastSyncAt) == false
+        {
+            return
+        }
         let server = settings.server
         activityState.isLoading = true
         activityState.errorMessage = nil
@@ -311,15 +318,22 @@ final class BaAppModel {
         }
     }
 
-    func loadPoolsIfNeeded() async {
+    func loadPoolsIfNeeded(now: Date = Date()) async {
         if poolState.value == nil {
             await loadCachedPools()
-            await refreshPools(force: false)
         }
+        guard settings.refreshInterval.shouldRefresh(lastSyncAt: poolState.lastSyncAt, now: now) else { return }
+        await refreshPools(force: false)
     }
 
-    func refreshPools(force _: Bool) async {
+    func refreshPools(force: Bool) async {
         if poolState.isLoading { return }
+        if force == false,
+           poolState.value != nil,
+           settings.refreshInterval.shouldRefresh(lastSyncAt: poolState.lastSyncAt) == false
+        {
+            return
+        }
         let server = settings.server
         poolState.isLoading = true
         poolState.errorMessage = nil
@@ -349,15 +363,22 @@ final class BaAppModel {
         }
     }
 
-    func loadCatalogIfNeeded() async {
+    func loadCatalogIfNeeded(now: Date = Date()) async {
         if catalogState.value == nil {
             await loadCachedCatalog()
-            await refreshCatalog(force: false)
         }
+        guard settings.refreshInterval.shouldRefresh(lastSyncAt: catalogState.lastSyncAt, now: now) else { return }
+        await refreshCatalog(force: false)
     }
 
-    func refreshCatalog(force _: Bool) async {
+    func refreshCatalog(force: Bool) async {
         if catalogState.isLoading { return }
+        if force == false,
+           catalogState.value != nil,
+           settings.refreshInterval.shouldRefresh(lastSyncAt: catalogState.lastSyncAt) == false
+        {
+            return
+        }
         catalogState.isLoading = true
         catalogState.errorMessage = nil
         do {
@@ -370,7 +391,11 @@ final class BaAppModel {
                 isShowingCache: false
             )
             await cacheStore.save(snapshot.value, for: .catalog, schemaVersion: 2, syncedAt: snapshot.syncedAt)
-            let hydrated = await catalogReleaseDateHydrator.hydrate(bundle: snapshot.value)
+            let hydrated = await catalogReleaseDateHydrator.hydrate(
+                bundle: snapshot.value,
+                maxNetworkFetchPerPass: BaPlatformPerformanceProfile.catalogReleaseDateFetchLimit,
+                batchSize: BaPlatformPerformanceProfile.catalogReleaseDateBatchSize
+            )
             if hydrated != snapshot.value {
                 catalogState = BaLoadableState(
                     value: hydrated,
@@ -450,6 +475,7 @@ final class BaAppModel {
         sortMode: BaCatalogSortMode = .releaseDateDescending
     ) -> [BaGuideCatalogEntry] {
         guard let bundle = catalogState.value else { return [] }
+        let keyword = query.trimmingCharacters(in: .whitespacesAndNewlines)
         let source: [BaGuideCatalogEntry]
         switch category {
         case .students:
@@ -464,7 +490,7 @@ final class BaAppModel {
             source = bundle.entries.filter { settings.favoriteContentIDs.contains($0.contentId) }
         }
         return source
-            .filter { $0.matches(query: query) }
+            .filter { $0.matches(trimmedQuery: keyword) }
             .sorted(using: sortMode, favoriteContentIDs: settings.favoriteContentIDs)
     }
 

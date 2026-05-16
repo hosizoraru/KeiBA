@@ -10,9 +10,15 @@ import Foundation
 import os
 
 actor BaImageCache {
+    private struct RequestKey: Hashable {
+        let url: URL
+        let refererPath: String
+    }
+
     private let fileManager: FileManager
     private let client: GameKeeClient
     private let rootDirectory: URL
+    private var inFlightRequests: [RequestKey: Task<Data, Error>] = [:]
     private var deferredFailures: [URL: Date] = [:]
     private var hitCount = 0
     private var missCount = 0
@@ -44,12 +50,25 @@ actor BaImageCache {
             throw GameKeeError.invalidResponse("Image retry deferred")
         }
         deferredFailures[url] = nil
+        let requestKey = RequestKey(url: url, refererPath: refererPath)
+        if let inFlightRequest = inFlightRequests[requestKey] {
+            return try await inFlightRequest.value
+        }
+
         missCount += 1
+        let request = Task { [client] in
+            try await client.fetchImageData(url: url, refererPath: refererPath)
+        }
+        inFlightRequests[requestKey] = request
         let data: Data
         do {
-            data = try await client.fetchImageData(url: url, refererPath: refererPath)
+            data = try await request.value
+            inFlightRequests[requestKey] = nil
         } catch {
-            recordFailure(for: url)
+            inFlightRequests[requestKey] = nil
+            if Self.isCancellation(error) == false {
+                recordFailure(for: url)
+            }
             throw error
         }
         do {
@@ -70,6 +89,10 @@ actor BaImageCache {
     func clear() {
         try? fileManager.removeItem(at: rootDirectory)
         try? fileManager.createDirectory(at: rootDirectory, withIntermediateDirectories: true)
+        for request in inFlightRequests.values {
+            request.cancel()
+        }
+        inFlightRequests.removeAll()
         deferredFailures.removeAll()
         hitCount = 0
         missCount = 0
@@ -104,5 +127,13 @@ actor BaImageCache {
             return false
         }
         return head.trimmingCharacters(in: .whitespacesAndNewlines).lowercased().hasPrefix("<svg")
+    }
+
+    private nonisolated static func isCancellation(_ error: Error) -> Bool {
+        if error is CancellationError {
+            return true
+        }
+        let nsError = error as NSError
+        return nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled
     }
 }

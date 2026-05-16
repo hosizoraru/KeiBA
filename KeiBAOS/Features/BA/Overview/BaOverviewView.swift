@@ -20,13 +20,7 @@ struct BaOverviewView: View {
                     onServerSelected: selectServer
                 )
             } ap: {
-                TimelineView(.periodic(from: .now, by: 1)) { context in
-                    BaOverviewAPCard(
-                        office: model.officeAPSnapshot(now: context.date),
-                        settings: model.settings,
-                        onCommit: model.setAPEditorValues
-                    )
-                }
+                BaOverviewAPTimelineCard(onCommit: model.setAPEditorValues)
             } cafe: {
                 TimelineView(.periodic(from: .now, by: 60)) { context in
                     BaOverviewCafeCard(
@@ -72,6 +66,23 @@ struct BaOverviewView: View {
         model.updateCurrentProfile { profile in
             profile.cafeLevel = min(max(level, 1), 10)
             profile.cafeApNotifyThreshold = min(max(threshold, 0), BaTimeMath.apMax)
+        }
+    }
+}
+
+private struct BaOverviewAPTimelineCard: View {
+    @Environment(BaAppModel.self) private var model
+    @Environment(\.baAdaptiveMetrics) private var metrics
+
+    let onCommit: (Int, Int, Int) -> Void
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: metrics.overviewAPRefreshInterval)) { context in
+            BaOverviewAPCard(
+                office: model.officeAPSnapshot(now: context.date),
+                settings: model.settings,
+                onCommit: onCommit
+            )
         }
     }
 }

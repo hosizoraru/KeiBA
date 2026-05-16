@@ -78,6 +78,15 @@ nonisolated enum BaRefreshInterval: Int, CaseIterable, Codable, Identifiable, Ha
             String(localized: "ba.settings.refresh.interval.24h")
         }
     }
+
+    var timeInterval: TimeInterval {
+        TimeInterval(rawValue) * 60 * 60
+    }
+
+    func shouldRefresh(lastSyncAt: Date?, now: Date = Date()) -> Bool {
+        guard let lastSyncAt else { return true }
+        return now.timeIntervalSince(lastSyncAt) >= timeInterval
+    }
 }
 
 nonisolated enum BaCalendarPoolNotifyLead: Int, CaseIterable, Codable, Identifiable, Hashable {

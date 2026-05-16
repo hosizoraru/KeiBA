@@ -244,8 +244,9 @@ private struct BaActivityCard: View, Equatable {
                     height: metrics.timelineCardImageHeight,
                     cornerRadius: 18,
                     contentMode: .fit,
-                    usesImageBackdrop: true,
-                    fallbackFont: .system(size: 40, weight: .semibold)
+                    usesImageBackdrop: metrics.usesTimelineImageBackdrop,
+                    fallbackFont: .system(size: 40, weight: .semibold),
+                    maxPixelDimension: metrics.timelineImageMaxPixelDimension
                 )
 
                 BaTimelineDatePair(

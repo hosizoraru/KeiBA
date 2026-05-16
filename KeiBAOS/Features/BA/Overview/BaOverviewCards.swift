@@ -304,16 +304,36 @@ struct BaOverviewTimelineSummary: Equatable {
         start startKeyPath: KeyPath<Entry, Date>,
         end endKeyPath: KeyPath<Entry, Date>
     ) -> BaOverviewTimelineSummaryItem {
-        let activeEntries = entries.filter { $0[keyPath: endKeyPath] > now }
-        guard let earliestEnd = activeEntries.map({ $0[keyPath: endKeyPath] }).min() else {
-            return .empty
+        var earliestEnd: Date?
+        var earliestStart = now
+        var titles: [String] = []
+
+        for entry in entries {
+            let end = entry[keyPath: endKeyPath]
+            guard end > now else { continue }
+            let title = entry[keyPath: titleKeyPath]
+            let start = entry[keyPath: startKeyPath]
+
+            guard let currentEarliestEnd = earliestEnd else {
+                earliestEnd = end
+                earliestStart = start
+                titles = [title]
+                continue
+            }
+
+            if end < currentEarliestEnd {
+                earliestEnd = end
+                earliestStart = start
+                titles = [title]
+            } else if end == currentEarliestEnd {
+                earliestStart = min(earliestStart, start)
+                titles.append(title)
+            }
         }
 
-        let endingTogether = activeEntries.filter {
-            $0[keyPath: endKeyPath] == earliestEnd
+        guard let earliestEnd else {
+            return .empty
         }
-        let titles = endingTogether.map { $0[keyPath: titleKeyPath] }
-        let earliestStart = endingTogether.map { $0[keyPath: startKeyPath] }.min() ?? now
 
         return BaOverviewTimelineSummaryItem(
             titles: titles,

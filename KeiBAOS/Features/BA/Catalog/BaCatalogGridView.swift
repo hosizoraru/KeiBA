@@ -76,25 +76,24 @@ struct BaCatalogGridView: View {
 
     private var columns: [GridItem] {
         Array(
-            repeating: GridItem(.flexible(minimum: 280), spacing: 14, alignment: .top),
-            count: columnCount
+            repeating: GridItem(.flexible(minimum: metrics.catalogColumnMinWidth), spacing: metrics.catalogGridSpacing, alignment: .top),
+            count: metrics.catalogColumnCount
         )
     }
 
-    private var columnCount: Int {
-        if metrics.containerWidth >= 1180 {
-            return 3
-        }
-        return 2
-    }
-
     private var contentMaxWidth: CGFloat {
-        columnCount == 3 ? 1180 : 880
+        metrics.catalogContentMaxWidth
     }
 }
 
 private struct BaCatalogEntryGridCard: View, Equatable {
+    @Environment(\.baAdaptiveMetrics) private var metrics
+
     let row: BaCatalogEntryRowDisplayModel
+
+    static func == (lhs: BaCatalogEntryGridCard, rhs: BaCatalogEntryGridCard) -> Bool {
+        lhs.row == rhs.row
+    }
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
@@ -102,7 +101,9 @@ private struct BaCatalogEntryGridCard: View, Equatable {
                 url: row.entry.iconURL,
                 fallbackSystemImage: row.entry.category == .studentBgm ? "music.note" : "person.crop.circle",
                 tint: row.tint,
-                size: 54
+                size: metrics.catalogThumbnailSize,
+                maxPixelDimension: metrics.catalogThumbnailMaxPixelDimension,
+                usesGlassSurface: false
             )
 
             VStack(alignment: .leading, spacing: 4) {
@@ -136,10 +137,10 @@ private struct BaCatalogEntryGridCard: View, Equatable {
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.tertiary)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .frame(maxWidth: .infinity, minHeight: 86, alignment: .leading)
-        .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .liquidGlassSurface(cornerRadius: 20, tint: row.tint.opacity(0.035), isInteractive: true)
+        .padding(.horizontal, metrics.catalogCardHorizontalPadding)
+        .padding(.vertical, metrics.catalogCardVerticalPadding)
+        .frame(maxWidth: .infinity, minHeight: metrics.catalogCardMinHeight, alignment: .leading)
+        .contentShape(RoundedRectangle(cornerRadius: metrics.catalogCardCornerRadius, style: .continuous))
+        .liquidGlassSurface(cornerRadius: metrics.catalogCardCornerRadius, tint: row.tint.opacity(0.035), isInteractive: true)
     }
 }

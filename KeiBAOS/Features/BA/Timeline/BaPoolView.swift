@@ -244,8 +244,9 @@ private struct BaPoolNavigationCard: View, Equatable {
                     height: metrics.poolCardThumbnailSize,
                     cornerRadius: 20,
                     contentMode: .fit,
-                    usesImageBackdrop: true,
-                    fallbackFont: .system(size: 30, weight: .semibold)
+                    usesImageBackdrop: metrics.usesTimelineImageBackdrop,
+                    fallbackFont: .system(size: 30, weight: .semibold),
+                    maxPixelDimension: metrics.poolCardThumbnailMaxPixelDimension
                 )
 
                 VStack(alignment: .leading, spacing: 7) {

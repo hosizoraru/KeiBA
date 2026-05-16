@@ -405,6 +405,14 @@ final class BaOverviewSettingsTests: XCTestCase {
         XCTAssertEqual(loaded.profile(for: .cn).cafeApNotifyThreshold, 330)
     }
 
+    func testRefreshIntervalControlsCacheStaleness() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        XCTAssertEqual(BaRefreshInterval.threeHours.timeInterval, 10_800)
+        XCTAssertFalse(BaRefreshInterval.threeHours.shouldRefresh(lastSyncAt: now.addingTimeInterval(-10_799), now: now))
+        XCTAssertTrue(BaRefreshInterval.threeHours.shouldRefresh(lastSyncAt: now.addingTimeInterval(-10_800), now: now))
+        XCTAssertTrue(BaRefreshInterval.threeHours.shouldRefresh(lastSyncAt: nil, now: now))
+    }
+
     private func makeIsolatedDefaults() throws -> UserDefaults {
         let suiteName = "KeiBAOSTests.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))

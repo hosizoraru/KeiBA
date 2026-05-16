@@ -68,6 +68,10 @@ nonisolated struct BaGuideCatalogEntry: Identifiable, Codable, Hashable {
 
     func matches(query: String) -> Bool {
         let keyword = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        return matches(trimmedQuery: keyword)
+    }
+
+    func matches(trimmedQuery keyword: String) -> Bool {
         guard keyword.isEmpty == false else { return true }
         return name.localizedCaseInsensitiveContains(keyword) ||
             alias.localizedCaseInsensitiveContains(keyword) ||

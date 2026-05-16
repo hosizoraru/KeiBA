@@ -24,7 +24,7 @@ struct BaLibraryView: View {
     var body: some View {
         let snapshot = snapshot
 
-        BaAdaptiveGeometry { _ in
+        BaAdaptiveGeometry { metrics in
             List {
                 Section {
                     Picker(String(localized: "ba.library.category.picker"), selection: $selectedCategory) {
@@ -39,7 +39,7 @@ struct BaLibraryView: View {
                 }
 
                 Section {
-                    libraryContent(snapshot: snapshot)
+                    libraryContent(snapshot: snapshot, metrics: metrics)
                 } header: {
                     Text(selectedCategory.title)
                 } footer: {
@@ -70,7 +70,7 @@ struct BaLibraryView: View {
     }
 
     @ViewBuilder
-    private func libraryContent(snapshot: BaLibraryViewSnapshot) -> some View {
+    private func libraryContent(snapshot: BaLibraryViewSnapshot, metrics: BaAdaptiveMetrics) -> some View {
         if model.catalogState.isLoading, snapshot.rows.isEmpty {
             ProgressView()
                 .frame(maxWidth: .infinity, alignment: .center)
@@ -86,7 +86,11 @@ struct BaLibraryView: View {
                 NavigationLink {
                     BaStudentDetailView(entry: row.entry)
                 } label: {
-                    BaCatalogEntryRow(row: row)
+                    BaCatalogEntryRow(
+                        row: row,
+                        thumbnailMaxPixelDimension: metrics.catalogThumbnailMaxPixelDimension,
+                        usesThumbnailGlassSurface: false
+                    )
                         .equatable()
                         .baAdaptiveReadableContent()
                 }
