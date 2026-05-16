@@ -77,7 +77,7 @@ struct BaLibraryView: View {
         HStack(alignment: .center, spacing: 8) {
             Image(systemName: "music.note")
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(BaDesign.pink)
+                .foregroundStyle(BaMusicAccentPalette.fallback)
 
             Text(status)
                 .font(.caption)
@@ -90,7 +90,7 @@ struct BaLibraryView: View {
     @ViewBuilder
     private func musicContent(snapshot: BaMusicLibrarySnapshot, metrics: BaAdaptiveMetrics) -> some View {
         if model.catalogState.isLoading, snapshot.tracks.isEmpty {
-            BaGlassCard(tint: BaDesign.pink) {
+            BaGlassCard(tint: BaMusicAccentPalette.fallback) {
                 ProgressView()
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 22)
@@ -155,7 +155,6 @@ struct BaLibraryView: View {
             onPrimaryAction: playTrack,
             onCache: cacheTrack,
             onClearCache: { playbackSession.clearCache(for: $0) },
-            onStop: { playbackSession.stop() },
             onCacheAll: cacheTracks,
             onClearAllCache: { playbackSession.clearCachedTracks($0) },
             onLoadDetail: loadDetail,

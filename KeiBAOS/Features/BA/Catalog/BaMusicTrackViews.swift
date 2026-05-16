@@ -17,19 +17,42 @@ struct BaMusicTrackRow: View {
     let onPrimaryAction: () -> Void
     let onCache: () -> Void
     let onClearCache: () -> Void
-    let onStop: () -> Void
     let onLoadDetail: () -> Void
+
+    @State private var isDetailPresented = false
 
     var body: some View {
         HStack(spacing: 12) {
+            Button(action: onPrimaryAction) {
+                rowContent
+            }
+            .buttonStyle(.plain)
+
+            trackMenu
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .liquidGlassSurface(
+            cornerRadius: 18,
+            tint: isCurrent ? accent.opacity(0.065) : Color.white.opacity(0.024),
+            isInteractive: true
+        )
+        .navigationDestination(isPresented: $isDetailPresented) {
+            BaStudentDetailView(entry: track.entry)
+        }
+    }
+
+    private var rowContent: some View {
+        HStack(spacing: 12) {
             Capsule()
-                .fill(isCurrent ? BaDesign.pink : Color.clear)
+                .fill(isCurrent ? accent : Color.clear)
                 .frame(width: 3, height: 36)
 
             BaRowThumbnail(
                 url: track.artworkURL,
                 fallbackSystemImage: "music.note",
-                tint: BaDesign.pink,
+                tint: accent,
                 size: thumbnailSize,
                 maxPixelDimension: thumbnailMaxPixelDimension,
                 usesGlassSurface: false
@@ -45,91 +68,61 @@ struct BaMusicTrackRow: View {
                     if isCurrent {
                         Image(systemName: "waveform")
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(BaDesign.pink)
+                            .foregroundStyle(accent)
                             .accessibilityHidden(true)
                     }
                 }
 
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 6) {
-                        statusLabel
-                        cacheStatusLabel
-                    }
-
-                    VStack(alignment: .leading, spacing: 3) {
-                        statusLabel
-                        cacheStatusLabel
-                    }
-                }
+                secondaryContent
             }
 
             Spacer(minLength: 8)
 
-            trailingControl
-            trackMenu
-
-            NavigationLink {
-                BaStudentDetailView(entry: track.entry)
-            } label: {
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.tertiary)
-                    .frame(width: 26, height: 32)
+            if track.availability == .loadingDetail {
+                ProgressView()
+                    .controlSize(.small)
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel(Text(String(localized: "ba.music.action.openDetail")))
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .liquidGlassSurface(
-            cornerRadius: 18,
-            tint: isCurrent ? BaDesign.pink.opacity(0.055) : Color.white.opacity(0.024),
-            isInteractive: true
-        )
+        .contentShape(Rectangle())
     }
 
     @ViewBuilder
-    private var trailingControl: some View {
+    private var secondaryContent: some View {
         switch track.availability {
         case .ready:
-            Button(action: onPrimaryAction) {
-                Image(systemName: isCurrent && isPlaying ? "pause.fill" : "play.fill")
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(isCurrent ? BaDesign.pink : .primary)
-                    .frame(width: 36, height: 36)
-            }
-            .buttonStyle(BaMusicControlButtonStyle())
-            .accessibilityLabel(Text(isCurrent && isPlaying ? String(localized: "ba.music.action.pause") : String(localized: "ba.music.action.play")))
-        case .loadingDetail:
-            ProgressView()
-                .controlSize(.small)
-                .frame(width: 36, height: 36)
+            cacheStatusLabel
         case .needsDetail, .failed, .missing:
-            Button(action: onLoadDetail) {
-                Image(systemName: "arrow.clockwise")
-                    .font(.headline.weight(.semibold))
-                    .frame(width: 36, height: 36)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 6) {
+                    statusLabel
+                    cacheStatusLabel
+                }
+
+                VStack(alignment: .leading, spacing: 3) {
+                    statusLabel
+                    cacheStatusLabel
+                }
             }
-            .buttonStyle(BaMusicControlButtonStyle())
-            .accessibilityLabel(Text(String(localized: "ba.music.action.loadDetail")))
+        case .loadingDetail:
+            statusLabel
         }
     }
 
     private var trackMenu: some View {
         Menu {
+            Button {
+                isDetailPresented = true
+            } label: {
+                Label(String(localized: "ba.music.action.openDetail"), systemImage: "person.crop.circle")
+            }
+
             if track.availability == .ready {
                 Button(action: onPrimaryAction) {
                     Label(
                         isCurrent && isPlaying ? String(localized: "ba.music.action.pause") : String(localized: "ba.music.action.play"),
                         systemImage: isCurrent && isPlaying ? "pause.fill" : "play.fill"
                     )
-                }
-
-                if isCurrent {
-                    Button(action: onStop) {
-                        Label(String(localized: "ba.music.action.stop"), systemImage: "stop.fill")
-                    }
                 }
             } else {
                 Button(action: onLoadDetail) {
@@ -195,19 +188,28 @@ struct BaMusicTrackRow: View {
 
     @ViewBuilder
     private var cacheStatusLabel: some View {
-        if let cacheStatusText = cacheState.statusText {
+        if let cacheStatusText = visibleCacheStatusText {
             Label(cacheStatusText, systemImage: cacheState.systemImage)
                 .font(.caption)
                 .labelStyle(.titleAndIcon)
-                .foregroundStyle(cacheState.isCached ? BaDesign.pink : .secondary)
+                .foregroundStyle(cacheState.isCached ? accent : .secondary)
                 .lineLimit(1)
+        }
+    }
+
+    private var visibleCacheStatusText: String? {
+        switch cacheState {
+        case .cached, .caching, .failed:
+            cacheState.statusText
+        case .unknown, .notCached:
+            nil
         }
     }
 
     private var statusText: String {
         switch track.availability {
         case .ready:
-            track.galleryTitle.isEmpty ? track.subtitle : "\(track.subtitle) · \(track.galleryTitle)"
+            ""
         case .needsDetail:
             String(localized: "ba.music.status.needsDetail")
         case .loadingDetail:
@@ -222,12 +224,16 @@ struct BaMusicTrackRow: View {
     private var statusColor: Color {
         switch track.availability {
         case .ready:
-            isCurrent ? BaDesign.pink : .secondary
+            isCurrent ? accent : .secondary
         case .failed, .missing:
             .orange
         case .needsDetail, .loadingDetail:
             .secondary
         }
+    }
+
+    private var accent: Color {
+        track.musicAccentColor
     }
 }
 
@@ -242,7 +248,6 @@ struct BaMusicQueueSection: View {
     let onPrimaryAction: (BaMusicTrack) -> Void
     let onCache: (BaMusicTrack) -> Void
     let onClearCache: (BaMusicTrack) -> Void
-    let onStop: () -> Void
     let onCacheAll: ([BaMusicTrack]) -> Void
     let onClearAllCache: ([BaMusicTrack]) -> Void
     let onLoadDetail: (BaMusicTrack) -> Void
@@ -301,7 +306,6 @@ struct BaMusicQueueSection: View {
                         onPrimaryAction: { onPrimaryAction(track) },
                         onCache: { onCache(track) },
                         onClearCache: { onClearCache(track) },
-                        onStop: onStop,
                         onLoadDetail: { onLoadDetail(track) }
                     )
                     .task(id: track.id) {

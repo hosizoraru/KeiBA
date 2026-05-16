@@ -8,7 +8,6 @@
 import SwiftUI
 
 private enum BaMusicVisualToken {
-    static let accent = BaDesign.pink
     static let compactControlSize: CGFloat = 42
     static let regularControlSize: CGFloat = 48
     static let primaryControlSize: CGFloat = 64
@@ -53,7 +52,6 @@ struct BaMusicMiniNowPlayingBar: View {
 
             miniPlayButton
             miniNextButton
-            miniMoreMenu
         }
         .padding(.horizontal, 4)
         .padding(.vertical, 2)
@@ -65,7 +63,6 @@ struct BaMusicMiniNowPlayingBar: View {
 
             miniPlayButton
             miniNextButton
-            miniMoreMenu
         }
         .padding(.horizontal, 4)
         .padding(.vertical, 2)
@@ -79,7 +76,7 @@ struct BaMusicMiniNowPlayingBar: View {
                 BaRowThumbnail(
                     url: track.artworkURL,
                     fallbackSystemImage: "music.note",
-                    tint: BaMusicVisualToken.accent,
+                    tint: track.musicAccentColor,
                     size: 38,
                     maxPixelDimension: 144,
                     usesGlassSurface: false
@@ -95,7 +92,7 @@ struct BaMusicMiniNowPlayingBar: View {
                         if session.player.isPlaying {
                             Image(systemName: "waveform")
                                 .font(.caption2.weight(.semibold))
-                                .foregroundStyle(BaMusicVisualToken.accent)
+                                .foregroundStyle(track.musicAccentColor)
                                 .accessibilityHidden(true)
                         }
                     }
@@ -145,30 +142,6 @@ struct BaMusicMiniNowPlayingBar: View {
         .accessibilityLabel(Text(String(localized: "ba.music.action.next")))
     }
 
-    private var miniMoreMenu: some View {
-        Menu {
-            Button {
-                session.isExpanded = true
-            } label: {
-                Label(String(localized: "ba.music.action.openNowPlaying"), systemImage: "music.note")
-            }
-
-            Button {
-                session.stop()
-            } label: {
-                Label(String(localized: "ba.music.action.stop"), systemImage: "stop.fill")
-            }
-        } label: {
-            Image(systemName: "ellipsis.circle")
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(.primary)
-                .frame(width: 40, height: 40)
-                .contentShape(Circle())
-        }
-        .buttonStyle(BaMusicControlButtonStyle())
-        .accessibilityLabel(Text(String(localized: "ba.music.action.moreNowPlaying")))
-    }
-
     private var displayMode: BaMusicMiniNowPlayingDisplayMode {
         #if os(iOS)
             BaMusicMiniNowPlayingDisplayMode.resolved(
@@ -211,8 +184,13 @@ struct BaMusicNowPlayingHero: View {
 
                 VStack(spacing: 16) {
                     trackInfo(track)
-                    BaMusicProgressControl(session: session)
-                    BaMusicTransportControls(track: track, session: session)
+                    BaMusicProgressControl(session: session, accent: track.musicAccentColor)
+                    BaMusicTransportControls(
+                        track: track,
+                        session: session,
+                        accent: track.musicAccentColor,
+                        showsStop: true
+                    )
                     playbackError
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
@@ -221,8 +199,13 @@ struct BaMusicNowPlayingHero: View {
             VStack(spacing: 14) {
                 artwork(track, size: artworkSize)
                 trackInfo(track)
-                BaMusicProgressControl(session: session)
-                BaMusicTransportControls(track: track, session: session)
+                BaMusicProgressControl(session: session, accent: track.musicAccentColor)
+                BaMusicTransportControls(
+                    track: track,
+                    session: session,
+                    accent: track.musicAccentColor,
+                    showsStop: true
+                )
                 playbackError
             }
         }
@@ -232,7 +215,7 @@ struct BaMusicNowPlayingHero: View {
         VStack(spacing: 12) {
             Image(systemName: "music.note")
                 .font(.title.weight(.semibold))
-                .foregroundStyle(BaMusicVisualToken.accent)
+                .foregroundStyle(BaMusicAccentPalette.fallback)
                 .frame(width: 58, height: 58)
                 .baMusicGlassSurface(cornerRadius: 18, isInteractive: false)
 
@@ -254,7 +237,7 @@ struct BaMusicNowPlayingHero: View {
         BaRemoteImageSurface(
             url: track.artworkURL,
             fallbackSystemImage: "music.note",
-            tint: BaMusicVisualToken.accent,
+            tint: track.musicAccentColor,
             width: size,
             height: size,
             cornerRadius: 26,
@@ -271,7 +254,7 @@ struct BaMusicNowPlayingHero: View {
             if showsPlayingLabel, session.selectedTrack?.id == track.id, session.player.isPlaying {
                 Label(String(localized: "ba.music.nowPlaying.title"), systemImage: "waveform")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(BaMusicVisualToken.accent)
+                    .foregroundStyle(track.musicAccentColor)
                     .labelStyle(.titleAndIcon)
             }
 
@@ -338,6 +321,8 @@ private struct BaMusicTransportControls: View {
 
     let track: BaMusicTrack
     let session: BaMusicPlaybackSession
+    let accent: Color
+    let showsStop: Bool
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
@@ -354,6 +339,7 @@ private struct BaMusicTransportControls: View {
                 BaMusicTransportButton(
                     systemImage: session.repeatMode.systemImage,
                     size: compactSize * scale,
+                    accent: accent,
                     isActive: session.repeatMode.isActive,
                     accessibilityLabel: session.repeatMode.accessibilityTitle
                 ) {
@@ -363,6 +349,7 @@ private struct BaMusicTransportControls: View {
                 BaMusicTransportButton(
                     systemImage: "backward.fill",
                     size: regularSize * scale,
+                    accent: accent,
                     isDisabled: session.canPlayPrevious == false,
                     accessibilityLabel: String(localized: "ba.music.action.previous")
                 ) {
@@ -373,6 +360,7 @@ private struct BaMusicTransportControls: View {
                     systemImage: isCurrentPlaying ? "pause.fill" : "play.fill",
                     size: primarySize * scale,
                     fontSize: 24 * scale,
+                    accent: accent,
                     isProminent: true,
                     isDisabled: track.isPlayable == false,
                     accessibilityLabel: isCurrentPlaying ? String(localized: "ba.music.action.pause") : String(localized: "ba.music.action.play")
@@ -383,22 +371,26 @@ private struct BaMusicTransportControls: View {
                 BaMusicTransportButton(
                     systemImage: "forward.fill",
                     size: regularSize * scale,
+                    accent: accent,
                     isDisabled: session.queue.count < 2,
                     accessibilityLabel: String(localized: "ba.music.action.next")
                 ) {
                     session.playNext()
                 }
 
-                BaMusicTransportButton(
-                    systemImage: "stop.fill",
-                    size: compactSize * scale,
-                    isDisabled: session.hasCurrentTrack == false,
-                    accessibilityLabel: String(localized: "ba.music.action.stop")
-                ) {
-                    session.stop()
+                if showsStop {
+                    BaMusicTransportButton(
+                        systemImage: "stop.fill",
+                        size: compactSize * scale,
+                        accent: accent,
+                        isDisabled: session.hasCurrentTrack == false,
+                        accessibilityLabel: String(localized: "ba.music.action.stop")
+                    ) {
+                        session.stop()
+                    }
                 }
 
-                BaMusicCacheButton(track: track, session: session, size: compactSize * scale)
+                BaMusicCacheButton(track: track, session: session, size: compactSize * scale, accent: accent)
             }
         }
     }
@@ -428,6 +420,7 @@ private struct BaMusicTransportButton: View {
     let systemImage: String
     let size: CGFloat
     var fontSize: CGFloat = 18
+    var accent: Color
     var isProminent = false
     var isActive = false
     var isDisabled = false
@@ -454,7 +447,7 @@ private struct BaMusicTransportButton: View {
 
     private var foregroundStyle: Color {
         if isProminent || isActive {
-            return BaMusicVisualToken.accent
+            return accent
         }
         return .primary
     }
@@ -464,6 +457,7 @@ private struct BaMusicCacheButton: View {
     let track: BaMusicTrack
     let session: BaMusicPlaybackSession
     let size: CGFloat
+    let accent: Color
 
     var body: some View {
         let state = session.cacheState(for: track)
@@ -479,14 +473,14 @@ private struct BaMusicCacheButton: View {
                 } else {
                     Image(systemName: state.systemImage)
                         .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(state.isCached ? BaMusicVisualToken.accent : .primary)
+                        .foregroundStyle(state.isCached ? accent : .primary)
                 }
             }
             .frame(width: size, height: size)
             .contentShape(Circle())
             .overlay {
                 Circle()
-                    .strokeBorder(BaMusicVisualToken.accent.opacity(state.isCached ? 0.28 : 0), lineWidth: 1)
+                    .strokeBorder(accent.opacity(state.isCached ? 0.28 : 0), lineWidth: 1)
             }
         }
         .buttonStyle(BaMusicControlButtonStyle())
@@ -534,7 +528,6 @@ struct BaMusicNowPlayingSheet: View {
                                 onPrimaryAction: { session.play($0) },
                                 onCache: { session.cache($0) },
                                 onClearCache: { session.clearCache(for: $0) },
-                                onStop: { session.stop() },
                                 onCacheAll: { session.cacheAll($0) },
                                 onClearAllCache: { session.clearCachedTracks($0) },
                                 onLoadDetail: { _ in },
@@ -567,6 +560,7 @@ struct BaMusicNowPlayingSheet: View {
 
 private struct BaMusicProgressControl: View {
     let session: BaMusicPlaybackSession
+    let accent: Color
     @State private var editingProgress = 0.0
     @State private var isEditing = false
 
@@ -579,7 +573,7 @@ private struct BaMusicProgressControl: View {
             in: 0 ... 1,
             onEditingChanged: handleEditingChanged
         )
-        .tint(BaMusicVisualToken.accent)
+        .tint(accent)
         .accessibilityLabel(Text(String(localized: "ba.music.progress.accessibility")))
     }
 

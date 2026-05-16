@@ -150,7 +150,6 @@
       }
     },
     "ba.action.dismiss" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2303,22 +2302,6 @@
         }
       }
     },
-    "ba.music.action.moreNowPlaying" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Now Playing Actions"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在播放操作"
-          }
-        }
-      }
-    },
     "ba.music.action.moreQueue" : {
       "localizations" : {
         "en" : {
@@ -2379,22 +2362,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "打开学生详情"
-          }
-        }
-      }
-    },
-    "ba.music.action.openNowPlaying" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Now Playing"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "打开正在播放"
           }
         }
       }
