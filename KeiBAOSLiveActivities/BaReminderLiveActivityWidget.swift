@@ -35,8 +35,7 @@ struct BaReminderLiveActivityWidget: Widget {
                     BaReminderIslandDetails(context: context)
                 }
             } compactLeading: {
-                Image(systemName: context.primarySymbolName)
-                    .foregroundStyle(context.attributes.kind.tint)
+                BaReminderCompactIcon(context: context, size: 20)
             } compactTrailing: {
                 Text(context.primaryCompactValue)
                     .font(.caption2)
@@ -45,45 +44,56 @@ struct BaReminderLiveActivityWidget: Widget {
                     .minimumScaleFactor(0.7)
                     .lineLimit(1)
             } minimal: {
-                Image(systemName: context.primarySymbolName)
-                    .foregroundStyle(context.attributes.kind.tint)
+                BaReminderCompactIcon(context: context, size: 18)
             }
             .keylineTint(context.attributes.kind.tint)
         }
+        .supplementalActivityFamilies([.small, .medium])
     }
 }
 
 private struct BaReminderLockScreenLiveActivityView: View {
     let context: ActivityViewContext<BaReminderLiveActivityAttributes>
+    @Environment(\.activityFamily) private var activityFamily
 
     var body: some View {
-        if context.resourceRows.isEmpty {
-            fallbackBody
-        } else {
-            resourceBody
+        switch activityFamily {
+        case .small:
+            BaReminderSmallLiveActivityView(context: context)
+        default:
+            if context.resourceRows.isEmpty {
+                fallbackBody
+            } else {
+                resourceBody
+            }
         }
     }
 
     private var resourceBody: some View {
         HStack(alignment: .center, spacing: 10) {
+            KeiBAOSLiveActivityIcon(size: 34)
+
             BaReminderResourceRows(
                 resources: context.resourceRows,
                 presentation: .lockScreen
             )
             .layoutPriority(1)
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             BaReminderAcknowledgeButton(
                 title: context.markReadTitle,
                 presentation: .lockScreen
             )
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, context.resourceRows.count > 1 ? 1 : 5)
     }
 
     private var fallbackBody: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 12) {
+                KeiBAOSLiveActivityIcon(size: 28)
+
                 Image(systemName: context.attributes.kind.symbolName)
                     .font(.headline)
                     .foregroundStyle(context.attributes.kind.tint)
@@ -115,11 +125,140 @@ private struct BaReminderLockScreenLiveActivityView: View {
     }
 }
 
+private struct BaReminderSmallLiveActivityView: View {
+    let context: ActivityViewContext<BaReminderLiveActivityAttributes>
+
+    var body: some View {
+        if let primaryResource = context.primaryResource {
+            resourceBody(primaryResource)
+        } else {
+            fallbackBody
+        }
+    }
+
+    private func resourceBody(_ primaryResource: BaReminderLiveActivityAttributes.ContentState.Resource) -> some View {
+        VStack(alignment: .leading, spacing: 7) {
+            HStack(alignment: .center, spacing: 7) {
+                KeiBAOSLiveActivityIcon(size: 22)
+
+                Image(systemName: primaryResource.symbolName)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(primaryResource.tint)
+                    .frame(width: 14)
+
+                Text(primaryResource.title)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.76)
+
+                Spacer(minLength: 4)
+
+                Text(primaryResource.valueText)
+                    .font(.caption.monospacedDigit().weight(.bold))
+                    .foregroundStyle(primaryResource.tint)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+            }
+
+            if let secondaryResource = context.resourceRows.dropFirst().first {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Image(systemName: secondaryResource.symbolName)
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(secondaryResource.tint)
+                        .frame(width: 14)
+
+                    Text(secondaryResource.title)
+                        .font(.caption2.weight(.semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.76)
+
+                    Spacer(minLength: 4)
+
+                    Text(secondaryResource.valueText)
+                        .font(.caption2.monospacedDigit().weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.72)
+                }
+            }
+
+            BaReminderProgressTimeline(
+                startDate: primaryResource.startDate,
+                endDate: primaryResource.endDate,
+                tint: primaryResource.tint,
+                height: 3
+            )
+        }
+        .padding(.vertical, 2)
+    }
+
+    private var fallbackBody: some View {
+        HStack(spacing: 8) {
+            KeiBAOSLiveActivityIcon(size: 22)
+
+            Image(systemName: context.attributes.kind.symbolName)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(context.attributes.kind.tint)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(context.attributes.title)
+                    .font(.caption.weight(.semibold))
+                    .lineLimit(1)
+
+                Text(context.primaryCompactValue)
+                    .font(.caption2.monospacedDigit().weight(.semibold))
+                    .foregroundStyle(context.attributes.kind.tint)
+                    .lineLimit(1)
+            }
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+private struct KeiBAOSLiveActivityIcon: View {
+    var size: CGFloat
+
+    var body: some View {
+        Image("KeiBAOSLiveActivityIcon")
+            .resizable()
+            .scaledToFill()
+            .frame(width: size, height: size)
+            .clipShape(RoundedRectangle(cornerRadius: size * 0.22, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
+                    .stroke(.white.opacity(0.18), lineWidth: 0.5)
+            }
+            .accessibilityHidden(true)
+    }
+}
+
+private struct BaReminderCompactIcon: View {
+    let context: ActivityViewContext<BaReminderLiveActivityAttributes>
+    var size: CGFloat
+
+    var body: some View {
+        ZStack(alignment: .bottomTrailing) {
+            KeiBAOSLiveActivityIcon(size: size)
+
+            Image(systemName: context.primarySymbolName)
+                .font(.system(size: max(size * 0.43, 8), weight: .bold))
+                .foregroundStyle(context.attributes.kind.tint)
+                .frame(width: size * 0.58, height: size * 0.58)
+                .background(.black, in: Circle())
+                .offset(x: size * 0.14, y: size * 0.14)
+        }
+        .frame(width: size + 2, height: size + 2)
+    }
+}
+
 private struct BaReminderIslandSymbol: View {
     let context: ActivityViewContext<BaReminderLiveActivityAttributes>
 
     var body: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: 6) {
+            KeiBAOSLiveActivityIcon(size: 18)
+
             Image(systemName: context.primarySymbolName)
                 .font(.headline)
                 .foregroundStyle(context.attributes.kind.tint)
@@ -231,33 +370,48 @@ private struct BaReminderResourceRow: View {
     let presentation: BaReminderResourcePresentation
 
     var body: some View {
+        if presentation.usesFlexibleWidth {
+            flexibleBody
+        } else {
+            compactBody
+        }
+    }
+
+    private var flexibleBody: some View {
+        VStack(alignment: .leading, spacing: presentation.progressSpacing) {
+            HStack(alignment: .firstTextBaseline, spacing: presentation.horizontalSpacing) {
+                resourceIcon
+
+                resourceTitle
+
+                Spacer(minLength: 6)
+
+                resourceValue
+
+                resourceTimer
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            BaReminderProgressTimeline(
+                startDate: resource.startDate,
+                endDate: resource.endDate,
+                tint: resource.tint,
+                height: presentation.progressHeight
+            )
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    private var compactBody: some View {
         VStack(alignment: .center, spacing: presentation.progressSpacing) {
             HStack(alignment: .firstTextBaseline, spacing: presentation.horizontalSpacing) {
-                Image(systemName: resource.symbolName)
-                    .font(presentation.iconFont)
-                    .foregroundStyle(resource.tint)
-                    .frame(width: presentation.iconWidth)
+                resourceIcon
 
-                Text(resource.title)
-                    .font(presentation.titleFont)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.72)
-                    .frame(width: presentation.titleWidth, alignment: .leading)
+                resourceTitle
 
-                Text(resource.valueText)
-                    .font(presentation.valueFont)
-                    .foregroundStyle(presentation.valueStyle)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.72)
-                    .frame(width: presentation.valueWidth, alignment: .leading)
+                resourceValue
 
-                Text(resource.endDate, style: .timer)
-                    .font(presentation.timerFont)
-                    .foregroundStyle(resource.tint)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.78)
-                    .contentTransition(.numericText())
-                    .frame(width: presentation.timerWidth, alignment: .trailing)
+                resourceTimer
             }
             .frame(maxWidth: presentation.maximumContentWidth, alignment: .center)
 
@@ -269,6 +423,40 @@ private struct BaReminderResourceRow: View {
             )
             .frame(width: presentation.progressWidth)
         }
+    }
+
+    private var resourceIcon: some View {
+        Image(systemName: resource.symbolName)
+            .font(presentation.iconFont)
+            .foregroundStyle(resource.tint)
+            .frame(width: presentation.iconWidth)
+    }
+
+    private var resourceTitle: some View {
+        Text(resource.title)
+            .font(presentation.titleFont)
+            .lineLimit(1)
+            .minimumScaleFactor(0.72)
+            .frame(width: presentation.titleWidth, alignment: .leading)
+    }
+
+    private var resourceValue: some View {
+        Text(resource.valueText)
+            .font(presentation.valueFont)
+            .foregroundStyle(presentation.valueStyle)
+            .lineLimit(1)
+            .minimumScaleFactor(0.72)
+            .frame(width: presentation.valueWidth, alignment: .leading)
+    }
+
+    private var resourceTimer: some View {
+        Text(resource.endDate, style: .timer)
+            .font(presentation.timerFont)
+            .foregroundStyle(resource.tint)
+            .lineLimit(1)
+            .minimumScaleFactor(0.78)
+            .contentTransition(.numericText())
+            .frame(width: presentation.timerWidth, alignment: .trailing)
     }
 }
 
@@ -291,8 +479,8 @@ private struct BaReminderAcknowledgeButton: View {
             .contentShape(.rect)
         }
         .font(presentation.acknowledgeFont)
-        .foregroundStyle(.secondary)
-        .background(.secondary.opacity(0.16), in: Capsule())
+        .foregroundStyle(presentation.acknowledgeForegroundColor)
+        .background(presentation.acknowledgeBackgroundColor, in: Capsule())
         .buttonStyle(.plain)
         .accessibilityLabel(title)
     }
@@ -455,13 +643,30 @@ private enum BaReminderResourcePresentation {
         }
     }
 
-    var valueStyle: HierarchicalShapeStyle {
+    var acknowledgeForegroundColor: Color {
         switch self {
         case .dynamicIsland:
-            .secondary
+            .white
         case .lockScreen:
             .primary
         }
+    }
+
+    var acknowledgeBackgroundColor: Color {
+        switch self {
+        case .dynamicIsland:
+            .white.opacity(0.16)
+        case .lockScreen:
+            .primary.opacity(0.12)
+        }
+    }
+
+    var valueStyle: HierarchicalShapeStyle {
+        .primary
+    }
+
+    var usesFlexibleWidth: Bool {
+        self == .lockScreen
     }
 }
 
