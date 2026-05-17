@@ -50,9 +50,14 @@ struct BaOverviewView: View {
         .task(id: model.settings.server) {
             model.refreshOfficeSnapshot()
             await Task.yield()
-            async let activities: Void = model.loadActivitiesIfNeeded()
-            async let pools: Void = model.loadPoolsIfNeeded()
-            _ = await (activities, pools)
+            let cacheSignpost = BaStartupInstrumentation.begin("Overview Startup Cache")
+            await model.loadTimelineCachesIfNeeded()
+            BaStartupInstrumentation.end("Overview Startup Cache", cacheSignpost)
+            try? await Task.sleep(for: BaPlatformPerformanceProfile.overviewStartupNetworkDelay)
+            guard Task.isCancelled == false else { return }
+            let refreshSignpost = BaStartupInstrumentation.begin("Overview Startup Refresh")
+            await model.refreshTimelineIfNeeded()
+            BaStartupInstrumentation.end("Overview Startup Refresh", refreshSignpost)
         }
     }
 

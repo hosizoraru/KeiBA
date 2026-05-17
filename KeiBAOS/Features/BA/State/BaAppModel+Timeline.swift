@@ -8,6 +8,21 @@
 import Foundation
 
 extension BaAppModel {
+    func loadTimelineCachesIfNeeded() async {
+        if activityState.value == nil {
+            await loadCachedActivities()
+        }
+        if poolState.value == nil {
+            await loadCachedPools()
+        }
+    }
+
+    func refreshTimelineIfNeeded(now: Date = Date()) async {
+        async let activities: Void = loadActivitiesIfNeeded(now: now)
+        async let pools: Void = loadPoolsIfNeeded(now: now)
+        _ = await (activities, pools)
+    }
+
     func loadActivitiesIfNeeded(now: Date = Date()) async {
         if activityState.value == nil {
             await loadCachedActivities()

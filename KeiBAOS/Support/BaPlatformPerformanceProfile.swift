@@ -58,6 +58,10 @@ enum BaPlatformPerformanceProfile {
         musicProgressUpdateInterval(for: currentClass)
     }
 
+    nonisolated static var overviewStartupNetworkDelay: Duration {
+        overviewStartupNetworkDelay(for: currentClass)
+    }
+
     nonisolated static var musicSamplesRowAvatarAccent: Bool {
         musicSamplesRowAvatarAccent(for: currentClass)
     }
@@ -148,6 +152,19 @@ enum BaPlatformPerformanceProfile {
             0.5
         case .watch:
             1
+        }
+    }
+
+    nonisolated static func overviewStartupNetworkDelay(for platformClass: BaPlatformPerformanceClass) -> Duration {
+        switch platformClass {
+        case .desktop:
+            .milliseconds(350)
+        case .pad:
+            .milliseconds(550)
+        case .phone:
+            .milliseconds(850)
+        case .watch:
+            .seconds(1)
         }
     }
 

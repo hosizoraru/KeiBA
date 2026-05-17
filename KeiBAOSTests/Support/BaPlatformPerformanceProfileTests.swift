@@ -23,6 +23,10 @@ final class BaPlatformPerformanceProfileTests: XCTestCase {
             BaPlatformPerformanceProfile.musicProgressUpdateInterval(for: .desktop),
             BaPlatformPerformanceProfile.musicProgressUpdateInterval(for: .phone)
         )
+        XCTAssertLessThan(
+            BaPlatformPerformanceProfile.overviewStartupNetworkDelay(for: .desktop),
+            BaPlatformPerformanceProfile.overviewStartupNetworkDelay(for: .phone)
+        )
         XCTAssertFalse(BaPlatformPerformanceProfile.musicSamplesRowAvatarAccent(for: .phone))
         XCTAssertTrue(BaPlatformPerformanceProfile.musicSamplesRowAvatarAccent(for: .pad))
     }
