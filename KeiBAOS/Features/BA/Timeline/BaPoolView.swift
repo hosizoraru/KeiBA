@@ -233,6 +233,7 @@ private struct BaPoolNavigationCard: View, Equatable {
                     .foregroundStyle(row.status.tint)
                     .lineLimit(1)
                     .minimumScaleFactor(0.78)
+                    .layoutPriority(1)
             }
 
             HStack(alignment: .top, spacing: 13) {
@@ -242,12 +243,21 @@ private struct BaPoolNavigationCard: View, Equatable {
                     tint: row.status.tint,
                     width: metrics.poolCardThumbnailSize,
                     height: metrics.poolCardThumbnailSize,
-                    cornerRadius: 20,
-                    contentMode: .fit,
-                    usesImageBackdrop: metrics.usesTimelineImageBackdrop,
+                    cornerRadius: metrics.poolCardThumbnailCornerRadius,
+                    contentMode: .fill,
+                    usesImageBackdrop: false,
                     fallbackFont: .system(size: 30, weight: .semibold),
-                    maxPixelDimension: metrics.poolCardThumbnailMaxPixelDimension
+                    maxPixelDimension: metrics.poolCardThumbnailMaxPixelDimension,
+                    usesGlassSurface: false
                 )
+                .background(
+                    row.status.tint.opacity(0.07),
+                    in: RoundedRectangle(cornerRadius: metrics.poolCardThumbnailCornerRadius, style: .continuous)
+                )
+                .overlay {
+                    RoundedRectangle(cornerRadius: metrics.poolCardThumbnailCornerRadius, style: .continuous)
+                        .strokeBorder(.white.opacity(0.14), lineWidth: 1)
+                }
 
                 VStack(alignment: .leading, spacing: 7) {
                     Text(row.pool.name)
@@ -263,6 +273,7 @@ private struct BaPoolNavigationCard: View, Equatable {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .layoutPriority(1)
             }
 
             BaTimelineDatePair(

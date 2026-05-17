@@ -180,8 +180,16 @@ struct BaAdaptiveMetrics: Equatable {
     }
 
     var poolCardThumbnailSize: CGFloat {
-        guard timelineColumnCount > 1 else { return 88 }
-        return containerWidth < 760 ? 84 : 92
+        if timelineColumnCount == 1 {
+            let target = (timelineCardColumnWidth * 0.24).rounded(.toNearestOrAwayFromZero)
+            return min(max(target, 76), 88)
+        }
+        let target = (timelineCardColumnWidth * 0.28).rounded(.toNearestOrAwayFromZero)
+        return min(max(target, 82), 92)
+    }
+
+    var poolCardThumbnailCornerRadius: CGFloat {
+        min(max(poolCardThumbnailSize * 0.22, 16), 20)
     }
 
     var poolCardThumbnailMaxPixelDimension: Int {
