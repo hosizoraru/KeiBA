@@ -29,7 +29,7 @@ struct BaReminderLiveActivityWidget: Widget {
                     BaReminderIslandSymbol(context: context)
                 }
                 DynamicIslandExpandedRegion(.trailing, priority: 2) {
-                    BaReminderExpandedTrailing(context: context)
+                    BaReminderCompactValue(context: context)
                 }
                 DynamicIslandExpandedRegion(.bottom, priority: 3) {
                     BaReminderIslandDetails(context: context)
@@ -65,20 +65,20 @@ private struct BaReminderLockScreenLiveActivityView: View {
     }
 
     private var resourceBody: some View {
-        VStack(spacing: 8) {
+        HStack(alignment: .center, spacing: 10) {
             BaReminderResourceRows(
                 resources: context.resourceRows,
                 presentation: .lockScreen
             )
+            .layoutPriority(1)
 
             BaReminderAcknowledgeButton(
                 title: context.markReadTitle,
                 presentation: .lockScreen
             )
-                .frame(maxWidth: BaReminderResourcePresentation.lockScreen.maximumContentWidth, alignment: .trailing)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, context.resourceRows.count > 1 ? 0 : 3)
+        .padding(.vertical, context.resourceRows.count > 1 ? 1 : 5)
     }
 
     private var fallbackBody: some View {
@@ -150,20 +150,6 @@ private struct BaReminderCompactValue: View {
     }
 }
 
-private struct BaReminderExpandedTrailing: View {
-    let context: ActivityViewContext<BaReminderLiveActivityAttributes>
-
-    var body: some View {
-        HStack(spacing: 9) {
-            BaReminderCompactValue(context: context)
-            BaReminderAcknowledgeButton(
-                title: context.markReadTitle,
-                presentation: .dynamicIsland
-            )
-        }
-    }
-}
-
 private struct BaReminderIslandDetails: View {
     let context: ActivityViewContext<BaReminderLiveActivityAttributes>
 
@@ -171,10 +157,19 @@ private struct BaReminderIslandDetails: View {
         if context.resourceRows.isEmpty {
             BaReminderFallbackIslandDetails(context: context)
         } else {
-            BaReminderResourceRows(
-                resources: context.resourceRows,
-                presentation: .dynamicIsland
-            )
+            HStack(alignment: .center, spacing: 8) {
+                BaReminderResourceRows(
+                    resources: context.resourceRows,
+                    presentation: .dynamicIsland
+                )
+                .layoutPriority(1)
+
+                BaReminderAcknowledgeButton(
+                    title: context.markReadTitle,
+                    presentation: .dynamicIsland
+                )
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
             .padding(.top, 1)
         }
     }
@@ -272,7 +267,7 @@ private struct BaReminderResourceRow: View {
                 tint: resource.tint,
                 height: presentation.progressHeight
             )
-            .frame(maxWidth: presentation.maximumContentWidth)
+            .frame(width: presentation.progressWidth)
         }
     }
 }
@@ -283,17 +278,23 @@ private struct BaReminderAcknowledgeButton: View {
 
     var body: some View {
         Button(intent: AcknowledgeBaReminderLiveActivityIntent()) {
-            Label {
+            HStack(spacing: 4) {
+                Image(systemName: "checkmark.circle.fill")
                 Text(title)
                     .lineLimit(1)
-            } icon: {
-                Image(systemName: "checkmark.circle.fill")
+                    .minimumScaleFactor(0.78)
             }
+            .frame(
+                width: presentation.acknowledgeButtonWidth,
+                height: presentation.acknowledgeButtonHeight
+            )
+            .contentShape(.rect)
         }
         .font(presentation.acknowledgeFont)
         .foregroundStyle(.secondary)
+        .background(.secondary.opacity(0.16), in: Capsule())
         .buttonStyle(.plain)
-        .minimumScaleFactor(0.8)
+        .accessibilityLabel(title)
     }
 }
 
@@ -304,9 +305,9 @@ private enum BaReminderResourcePresentation {
     var rowSpacing: CGFloat {
         switch self {
         case .dynamicIsland:
-            5
+            4
         case .lockScreen:
-            7
+            6
         }
     }
 
@@ -324,7 +325,7 @@ private enum BaReminderResourcePresentation {
         case .dynamicIsland:
             6
         case .lockScreen:
-            8
+            6
         }
     }
 
@@ -333,43 +334,70 @@ private enum BaReminderResourcePresentation {
         case .dynamicIsland:
             16
         case .lockScreen:
-            22
+            20
         }
     }
 
     var titleWidth: CGFloat {
         switch self {
         case .dynamicIsland:
-            70
+            58
         case .lockScreen:
-            108
+            80
         }
     }
 
     var valueWidth: CGFloat {
         switch self {
         case .dynamicIsland:
-            64
+            56
         case .lockScreen:
-            78
+            66
         }
     }
 
     var timerWidth: CGFloat {
         switch self {
         case .dynamicIsland:
-            50
+            46
         case .lockScreen:
-            58
+            50
         }
     }
 
     var maximumContentWidth: CGFloat {
         switch self {
         case .dynamicIsland:
-            230
+            194
         case .lockScreen:
-            294
+            234
+        }
+    }
+
+    var progressWidth: CGFloat {
+        switch self {
+        case .dynamicIsland:
+            194
+        case .lockScreen:
+            218
+        }
+    }
+
+    var acknowledgeButtonWidth: CGFloat {
+        switch self {
+        case .dynamicIsland:
+            56
+        case .lockScreen:
+            64
+        }
+    }
+
+    var acknowledgeButtonHeight: CGFloat {
+        switch self {
+        case .dynamicIsland:
+            30
+        case .lockScreen:
+            42
         }
     }
 
