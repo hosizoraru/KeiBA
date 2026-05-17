@@ -48,22 +48,15 @@ final class BaLiveActivityController {
 
         let candidate = testCandidate(kind: kind, now: now)
 
-        for activity in Activity<BaReminderLiveActivityAttributes>.activities
-            where activity.attributes.id != candidate.id
-        {
+        for activity in Activity<BaReminderLiveActivityAttributes>.activities {
             await end(activity)
         }
 
-        if let activity = Activity<BaReminderLiveActivityAttributes>.activities.first(where: { $0.attributes.id == candidate.id }) {
-            await update(activity, with: candidate)
-            return true
-        } else {
-            return (try? Activity.request(
-                attributes: candidate.attributes,
-                content: candidate.content,
-                pushType: nil
-            )) != nil
-        }
+        return (try? Activity.request(
+            attributes: candidate.attributes,
+            content: candidate.content,
+            pushType: nil
+        )) != nil
     }
 
     func endTestActivities() async {

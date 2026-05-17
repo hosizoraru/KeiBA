@@ -18,8 +18,7 @@ struct BaMusicTrackRow: View {
     let onCache: () -> Void
     let onClearCache: () -> Void
     let onLoadDetail: () -> Void
-
-    @State private var isDetailPresented = false
+    let onOpenDetail: () -> Void
 
     var body: some View {
         BaMusicAccentReader(track: accentSourceTrack) { accent in
@@ -39,9 +38,6 @@ struct BaMusicTrackRow: View {
                 tint: isCurrent ? accent.opacity(0.065) : Color.white.opacity(0.024),
                 isInteractive: true
             )
-            .navigationDestination(isPresented: $isDetailPresented) {
-                BaStudentDetailView(entry: track.entry)
-            }
         }
         .id(track.id)
     }
@@ -121,9 +117,7 @@ struct BaMusicTrackRow: View {
 
     private var trackMenu: some View {
         Menu {
-            Button {
-                isDetailPresented = true
-            } label: {
+            Button(action: onOpenDetail) {
                 Label(BaL10n.string("ba.music.action.openDetail"), systemImage: "person.crop.circle")
             }
 
@@ -259,6 +253,8 @@ struct BaMusicQueueSection: View {
     let onLoadDetail: (BaMusicTrack) -> Void
     let onRefreshCacheState: (BaMusicTrack) async -> Void
 
+    @State private var selectedDetailEntry: BaGuideCatalogEntry?
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 10) {
@@ -312,13 +308,17 @@ struct BaMusicQueueSection: View {
                         onPrimaryAction: { onPrimaryAction(track) },
                         onCache: { onCache(track) },
                         onClearCache: { onClearCache(track) },
-                        onLoadDetail: { onLoadDetail(track) }
+                        onLoadDetail: { onLoadDetail(track) },
+                        onOpenDetail: { selectedDetailEntry = track.entry }
                     )
                     .task(id: track.id) {
                         await onRefreshCacheState(track)
                     }
                 }
             }
+        }
+        .navigationDestination(item: $selectedDetailEntry) { entry in
+            BaStudentDetailView(entry: entry)
         }
     }
 
