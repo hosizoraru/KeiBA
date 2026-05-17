@@ -9,11 +9,13 @@ import SwiftUI
 
 struct BaLibraryView: View {
     @Environment(BaAppModel.self) private var model
+    #if os(iOS)
+        @Environment(\.tabBarPlacement) private var tabBarPlacement
+    #endif
 
     let playbackSession: BaMusicPlaybackSession
 
     @State private var searchText = ""
-    @State private var visibleTrackID: Int64?
 
     @MainActor
     init() {
@@ -40,31 +42,15 @@ struct BaLibraryView: View {
         let snapshot = snapshot
 
         BaAdaptiveGeometry { metrics in
-            ScrollView {
-                VStack(alignment: .leading, spacing: metrics.cardSpacing) {
-                    if let status = libraryStatusText(snapshot: snapshot) {
-                        musicStatus(status)
+            musicPage(snapshot: snapshot, metrics: metrics)
+                .background(AppBackground())
+                #if os(macOS)
+                    .safeAreaInset(edge: .bottom, spacing: 10) {
+                        BaMusicMiniNowPlayingBar(session: playbackSession)
+                            .padding(.horizontal, metrics.screenHorizontalPadding)
+                            .padding(.bottom, 10)
                     }
-                    musicContent(snapshot: snapshot, metrics: metrics)
-                }
-                .baAdaptiveReadableContent(maxWidth: metrics.dashboardContentMaxWidth)
-                .padding(.horizontal, metrics.screenHorizontalPadding)
-                .padding(.vertical, metrics.screenVerticalPadding)
-                .safeAreaPadding(.bottom, 16)
-            }
-            .scrollPosition(id: $visibleTrackID, anchor: .top)
-            .refreshable {
-                await refreshMusicLibrary()
-            }
-            .scrollDismissesKeyboard(.interactively)
-            .background(AppBackground())
-            #if os(macOS)
-                .safeAreaInset(edge: .bottom, spacing: 10) {
-                    BaMusicMiniNowPlayingBar(session: playbackSession)
-                        .padding(.horizontal, metrics.screenHorizontalPadding)
-                        .padding(.bottom, 10)
-                }
-            #endif
+                #endif
         }
         .searchable(text: $searchText, prompt: Text(String(localized: "ba.music.search.prompt")))
         .task {
@@ -73,6 +59,79 @@ struct BaLibraryView: View {
         .task(id: snapshot.queueSignature) {
             playbackSession.updateQueue(snapshot.playableTracks)
         }
+    }
+
+    @ViewBuilder
+    private func musicPage(snapshot: BaMusicLibrarySnapshot, metrics: BaAdaptiveMetrics) -> some View {
+        if usesSplitPage(snapshot: snapshot, metrics: metrics) {
+            splitMusicPage(snapshot: snapshot, metrics: metrics)
+        } else {
+            stackedMusicPage(snapshot: snapshot, metrics: metrics)
+        }
+    }
+
+    private func stackedMusicPage(snapshot: BaMusicLibrarySnapshot, metrics: BaAdaptiveMetrics) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: metrics.cardSpacing) {
+                if let status = libraryStatusText(snapshot: snapshot) {
+                    musicStatus(status)
+                }
+                musicContent(snapshot: snapshot, metrics: metrics)
+            }
+            .baAdaptiveReadableContent(
+                maxWidth: BaMusicLibraryLayoutPolicy.contentMaxWidth(
+                    for: metrics,
+                    navigationChrome: navigationChrome
+                )
+            )
+            .padding(.horizontal, metrics.screenHorizontalPadding)
+            .padding(.vertical, metrics.screenVerticalPadding)
+            .safeAreaPadding(.bottom, 16)
+        }
+        .refreshable {
+            await refreshMusicLibrary()
+        }
+        .scrollDismissesKeyboard(.interactively)
+    }
+
+    private func splitMusicPage(snapshot: BaMusicLibrarySnapshot, metrics: BaAdaptiveMetrics) -> some View {
+        HStack(alignment: .top, spacing: metrics.cardSpacing) {
+            ScrollView {
+                BaMusicNowPlayingHero(
+                    track: playbackSession.selectedTrack ?? snapshot.firstPlayableTrack,
+                    session: playbackSession,
+                    metrics: metrics,
+                    layout: .stacked
+                )
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, 2)
+            }
+            .scrollIndicators(.hidden)
+            .frame(width: BaMusicLibraryLayoutPolicy.heroColumnWidth(for: metrics))
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: metrics.cardSpacing) {
+                    if let status = libraryStatusText(snapshot: snapshot) {
+                        musicStatus(status)
+                    }
+                    trackSection(snapshot: snapshot, metrics: metrics)
+                }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+            }
+            .refreshable {
+                await refreshMusicLibrary()
+            }
+            .scrollDismissesKeyboard(.interactively)
+        }
+        .baAdaptiveReadableContent(
+            maxWidth: BaMusicLibraryLayoutPolicy.contentMaxWidth(
+                for: metrics,
+                navigationChrome: navigationChrome
+            )
+        )
+        .padding(.horizontal, metrics.screenHorizontalPadding)
+        .padding(.vertical, metrics.screenVerticalPadding)
+        .safeAreaPadding(.bottom, 16)
     }
 
     private func musicStatus(_ status: String) -> some View {
@@ -122,27 +181,20 @@ struct BaLibraryView: View {
     private func musicLayout(snapshot: BaMusicLibrarySnapshot, metrics: BaAdaptiveMetrics) -> some View {
         let displayTrack = playbackSession.selectedTrack ?? snapshot.firstPlayableTrack
 
-        if metrics.widthClass == .expanded {
-            HStack(alignment: .top, spacing: metrics.cardSpacing) {
-                BaMusicNowPlayingHero(
-                    track: displayTrack,
-                    session: playbackSession,
-                    metrics: metrics
-                )
-                .frame(width: 420)
-
-                trackSection(snapshot: snapshot, metrics: metrics)
-            }
-        } else {
-            VStack(alignment: .leading, spacing: metrics.cardSpacing) {
-                BaMusicNowPlayingHero(
-                    track: displayTrack,
-                    session: playbackSession,
-                    metrics: metrics
-                )
-                trackSection(snapshot: snapshot, metrics: metrics)
-            }
+        VStack(alignment: .leading, spacing: metrics.cardSpacing) {
+            BaMusicNowPlayingHero(
+                track: displayTrack,
+                session: playbackSession,
+                metrics: metrics,
+                layout: .stacked
+            )
+            trackSection(snapshot: snapshot, metrics: metrics)
         }
+    }
+
+    private func usesSplitPage(snapshot: BaMusicLibrarySnapshot, metrics: BaAdaptiveMetrics) -> Bool {
+        snapshot.visibleTracks.isEmpty == false &&
+            BaMusicLibraryLayoutPolicy.layoutStyle(for: metrics, navigationChrome: navigationChrome) == .split
     }
 
     private func trackSection(snapshot: BaMusicLibrarySnapshot, metrics: BaAdaptiveMetrics) -> some View {
@@ -220,6 +272,21 @@ struct BaLibraryView: View {
         for track in snapshot.visibleTracks.prefix(BaPlatformPerformanceProfile.musicInitialDetailFetchLimit) {
             await model.loadStudentDetail(entry: track.entry, force: true)
         }
+    }
+
+    private var navigationChrome: BaMusicLibraryNavigationChrome {
+        #if os(iOS)
+            switch tabBarPlacement {
+            case .sidebar:
+                .sidebar
+            case .topBar:
+                .topBar
+            default:
+                .other
+            }
+        #else
+            .other
+        #endif
     }
 }
 

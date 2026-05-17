@@ -75,6 +75,90 @@ final class BaMusicPlaybackSessionTests: XCTestCase {
         )
     }
 
+    func testTouchMusicLibraryKeepsStackedLayoutForSidebarWidths() {
+        XCTAssertEqual(
+            BaMusicLibraryLayoutPolicy.layoutStyle(
+                for: BaAdaptiveMetrics(containerWidth: 1_024),
+                platform: .touch,
+                navigationChrome: .sidebar
+            ),
+            .stacked
+        )
+        XCTAssertEqual(
+            BaMusicLibraryLayoutPolicy.layoutStyle(
+                for: BaAdaptiveMetrics(containerWidth: 1_366),
+                platform: .touch,
+                navigationChrome: .sidebar
+            ),
+            .stacked
+        )
+    }
+
+    func testTouchMusicLibraryUsesSplitForWideTopBarPlacement() {
+        XCTAssertEqual(
+            BaMusicLibraryLayoutPolicy.layoutStyle(
+                for: BaAdaptiveMetrics(containerWidth: 1_024),
+                platform: .touch,
+                navigationChrome: .topBar
+            ),
+            .split
+        )
+        XCTAssertEqual(
+            BaMusicLibraryLayoutPolicy.contentMaxWidth(
+                for: BaAdaptiveMetrics(containerWidth: 1_366),
+                platform: .touch,
+                navigationChrome: .topBar
+            ),
+            1_180
+        )
+    }
+
+    func testDesktopMusicLibraryUsesSplitOnlyWhenThereIsRoom() {
+        XCTAssertEqual(
+            BaMusicLibraryLayoutPolicy.layoutStyle(
+                for: BaAdaptiveMetrics(containerWidth: 960),
+                platform: .desktop
+            ),
+            .stacked
+        )
+        XCTAssertEqual(
+            BaMusicLibraryLayoutPolicy.layoutStyle(
+                for: BaAdaptiveMetrics(containerWidth: 1_180),
+                platform: .desktop
+            ),
+            .split
+        )
+        XCTAssertEqual(
+            BaMusicLibraryLayoutPolicy.heroColumnWidth(for: BaAdaptiveMetrics(containerWidth: 1_180)),
+            401.2,
+            accuracy: 0.01
+        )
+    }
+
+    func testFullNowPlayingHeroUsesSideBySideOnlyWhenThereIsRoom() {
+        XCTAssertEqual(
+            BaMusicLibraryLayoutPolicy.automaticHeroLayout(
+                for: BaAdaptiveMetrics(containerWidth: 740),
+                presentation: .full
+            ),
+            .stacked
+        )
+        XCTAssertEqual(
+            BaMusicLibraryLayoutPolicy.automaticHeroLayout(
+                for: BaAdaptiveMetrics(containerWidth: 820),
+                presentation: .full
+            ),
+            .sideBySide
+        )
+        XCTAssertEqual(
+            BaMusicLibraryLayoutPolicy.automaticHeroLayout(
+                for: BaAdaptiveMetrics(containerWidth: 1_180),
+                presentation: .inline
+            ),
+            .stacked
+        )
+    }
+
     func testNowPlayingMetadataKeepsTrackAndQueueContext() throws {
         let track = try musicTrack(contentId: 1001, title: "日奈(礼服)", audioFileName: "hina.ogg")
         let metadata = BaMusicNowPlayingMetadata(

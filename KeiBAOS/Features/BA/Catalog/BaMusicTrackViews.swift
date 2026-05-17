@@ -322,7 +322,6 @@ struct BaMusicQueueSection: View {
                     }
                 }
             }
-            .scrollTargetLayout()
         }
     }
 

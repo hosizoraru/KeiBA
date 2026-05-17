@@ -161,6 +161,7 @@ struct BaMusicNowPlayingHero: View {
     let session: BaMusicPlaybackSession
     let metrics: BaAdaptiveMetrics
     var presentation: BaMusicNowPlayingPresentation = .inline
+    var layout: BaMusicNowPlayingHeroLayout = .automatic
 
     var body: some View {
         BaMusicAccentReader(track: track) { accent in
@@ -182,7 +183,7 @@ struct BaMusicNowPlayingHero: View {
 
     @ViewBuilder
     private func heroContent(_ track: BaMusicTrack, accent: Color) -> some View {
-        if metrics.widthClass == .expanded {
+        if resolvedLayout == .sideBySide {
             HStack(alignment: .center, spacing: 30) {
                 artwork(track, accent: accent, size: artworkSize)
 
@@ -296,7 +297,10 @@ struct BaMusicNowPlayingHero: View {
     }
 
     private var artworkSize: CGFloat {
-        switch metrics.widthClass {
+        if resolvedLayout == .sideBySide {
+            return min(max(metrics.containerWidth * 0.24, 260), 320)
+        }
+        return switch metrics.widthClass {
         case .compact:
             switch presentation {
             case .inline:
@@ -317,6 +321,15 @@ struct BaMusicNowPlayingHero: View {
 
     private var showsGalleryTitle: Bool {
         presentation == .full || metrics.widthClass != .compact
+    }
+
+    private var resolvedLayout: BaMusicNowPlayingHeroLayout {
+        switch layout {
+        case .automatic:
+            BaMusicLibraryLayoutPolicy.automaticHeroLayout(for: metrics, presentation: presentation)
+        case .stacked, .sideBySide:
+            layout
+        }
     }
 }
 
