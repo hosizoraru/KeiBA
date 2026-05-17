@@ -27,6 +27,8 @@ final class BaAppModel {
     private let catalogReleaseDateHydrator: BaCatalogReleaseDateHydrator
     private let studentRepository: BaStudentGuideRepository
     private let officeRepository: BaOfficeRepository
+    private let notificationCoordinator: any BaNotificationCoordinating
+    @ObservationIgnored private var notificationSyncTask: Task<Void, Never>?
     @ObservationIgnored private var studentDetailRequests: [Int64: StudentDetailRequest] = [:]
 
     init(
@@ -37,7 +39,8 @@ final class BaAppModel {
         catalogRepository: BaGuideCatalogRepository,
         catalogReleaseDateHydrator: BaCatalogReleaseDateHydrator,
         studentRepository: BaStudentGuideRepository,
-        officeRepository: BaOfficeRepository
+        officeRepository: BaOfficeRepository,
+        notificationCoordinator: (any BaNotificationCoordinating)? = nil
     ) {
         self.settingsStore = settingsStore
         self.cacheStore = cacheStore
@@ -47,6 +50,7 @@ final class BaAppModel {
         self.catalogReleaseDateHydrator = catalogReleaseDateHydrator
         self.studentRepository = studentRepository
         self.officeRepository = officeRepository
+        self.notificationCoordinator = notificationCoordinator ?? BaNoopNotificationCoordinator()
         let loadedEnvelope = settingsStore.loadEnvelope()
         let loadedSettings = loadedEnvelope.flattenedSettings()
         envelope = loadedEnvelope
@@ -69,7 +73,8 @@ final class BaAppModel {
                 studentRepository: BaStudentGuideRepository(client: client)
             ),
             studentRepository: BaStudentGuideRepository(client: client),
-            officeRepository: BaOfficeRepository()
+            officeRepository: BaOfficeRepository(),
+            notificationCoordinator: BaNotificationCoordinator()
         )
     }
 
@@ -87,39 +92,44 @@ final class BaAppModel {
 
     func applyUserData(_ userData: BaUserDataEnvelope) {
         let previousServer = settings.server
+        let previousEnvelope = envelope
         envelope = userData.settingsEnvelope()
-        persistEnvelope(previousServer: previousServer, updatedAt: userData.updatedAt)
+        persistEnvelope(previousServer: previousServer, updatedAt: userData.updatedAt, previousEnvelope: previousEnvelope)
     }
 
     func selectServer(_ server: BaServer) {
         let previousServer = settings.server
+        let previousEnvelope = envelope
         envelope.selectedServer = server
-        persistEnvelope(previousServer: previousServer)
+        persistEnvelope(previousServer: previousServer, previousEnvelope: previousEnvelope)
     }
 
     func updateSettings(_ transform: (inout BaAppSettings) -> Void) {
         let previous = settings
         let previousServer = settings.server
+        let previousEnvelope = envelope
         var next = settings
         transform(&next)
         applyFlattenedSettings(next, previous: previous)
-        persistEnvelope(previousServer: previousServer)
+        persistEnvelope(previousServer: previousServer, previousEnvelope: previousEnvelope)
     }
 
     func updateCurrentProfile(_ transform: (inout BaServerProfile) -> Void) {
         let previousServer = settings.server
+        let previousEnvelope = envelope
         var profile = currentProfile
         transform(&profile)
         envelope.setProfile(profile, for: envelope.selectedServer)
         synchronizeSharedIdentityIfNeeded(from: envelope.selectedServer)
-        persistEnvelope(previousServer: previousServer)
+        persistEnvelope(previousServer: previousServer, previousEnvelope: previousEnvelope)
     }
 
     func updateGlobalSettings(_ transform: (inout BaGlobalSettings) -> Void) {
         let previousServer = settings.server
+        let previousEnvelope = envelope
         transform(&envelope.globalSettings)
         synchronizeSharedIdentityIfNeeded(from: envelope.selectedServer)
-        persistEnvelope(previousServer: previousServer)
+        persistEnvelope(previousServer: previousServer, previousEnvelope: previousEnvelope)
     }
 
     func setCurrentAP(_ value: Int) {
@@ -211,7 +221,8 @@ final class BaAppModel {
 
     private func persistEnvelope(
         previousServer: BaServer,
-        updatedAt: Date = Date()
+        updatedAt: Date = Date(),
+        previousEnvelope: BaSettingsEnvelope? = nil
     ) {
         envelope = envelope.normalized()
         settings = envelope.flattenedSettings()
@@ -221,6 +232,11 @@ final class BaAppModel {
             poolState = BaLoadableState()
         }
         refreshOfficeSnapshot()
+        let shouldRequestAuthorization = previousEnvelope.map {
+            BaNotificationPreferenceSnapshot(envelope: envelope)
+                .becameEnabled(from: BaNotificationPreferenceSnapshot(envelope: $0))
+        } ?? false
+        scheduleNotificationRefresh(requestAuthorizationIfNeeded: shouldRequestAuthorization)
     }
 
     private func applyFlattenedSettings(_ next: BaAppSettings, previous: BaAppSettings) {
@@ -298,6 +314,43 @@ final class BaAppModel {
         officeRepository.apSnapshot(settings: settings, now: now)
     }
 
+    func scheduleNotificationRefresh(
+        requestAuthorizationIfNeeded: Bool = false,
+        now: Date = Date()
+    ) {
+        let settings = settings
+        let activities = activityState.value ?? []
+        let pools = poolState.value ?? []
+        notificationSyncTask?.cancel()
+        notificationSyncTask = Task { [notificationCoordinator] in
+            await notificationCoordinator.synchronize(
+                settings: settings,
+                activities: activities,
+                pools: pools,
+                requestAuthorizationIfNeeded: requestAuthorizationIfNeeded,
+                now: now
+            )
+        }
+    }
+
+    func requestNotificationAuthorizationAndRefreshSchedule(
+        forceRequest: Bool = false,
+        now: Date = Date()
+    ) async {
+        let hasEnabledReminder = BaNotificationPreferenceSnapshot(envelope: envelope).hasEnabledReminder
+        let settings = settings
+        let activities = activityState.value ?? []
+        let pools = poolState.value ?? []
+        notificationSyncTask?.cancel()
+        await notificationCoordinator.synchronize(
+            settings: settings,
+            activities: activities,
+            pools: pools,
+            requestAuthorizationIfNeeded: forceRequest || hasEnabledReminder,
+            now: now
+        )
+    }
+
     func loadActivitiesIfNeeded(now: Date = Date()) async {
         if activityState.value == nil {
             await loadCachedActivities()
@@ -328,6 +381,7 @@ final class BaAppModel {
                 isShowingCache: false
             )
             await cacheStore.save(snapshot.value, for: .activities(server), schemaVersion: 3, syncedAt: snapshot.syncedAt)
+            scheduleNotificationRefresh()
         } catch {
             guard settings.server == server else { return }
             guard Self.isCancellation(error) == false else {
@@ -373,6 +427,7 @@ final class BaAppModel {
                 isShowingCache: false
             )
             await cacheStore.save(entries, for: .pools(server), schemaVersion: Self.poolCacheSchemaVersion, syncedAt: snapshot.syncedAt)
+            scheduleNotificationRefresh()
         } catch {
             guard settings.server == server else { return }
             guard Self.isCancellation(error) == false else {
@@ -834,6 +889,7 @@ final class BaAppModel {
             lastSyncAt: cached.syncedAt,
             isShowingCache: true
         )
+        scheduleNotificationRefresh()
     }
 
     private func loadCachedPools() async {
@@ -851,6 +907,7 @@ final class BaAppModel {
             lastSyncAt: cached.syncedAt,
             isShowingCache: true
         )
+        scheduleNotificationRefresh()
         if entries != cached.value {
             await cacheStore.save(entries, for: .pools(server), schemaVersion: Self.poolCacheSchemaVersion, syncedAt: cached.syncedAt)
         }

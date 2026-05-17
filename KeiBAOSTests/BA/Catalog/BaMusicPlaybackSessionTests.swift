@@ -264,12 +264,13 @@ final class BaMusicPlaybackSessionTests: XCTestCase {
         let nextTrack = try musicTrack(contentId: 4002, title: "爱丽丝(临战)", audioFileName: "alice.ogg")
 
         session.cacheAll([firstTrack, nextTrack])
-        try await Task.sleep(for: .milliseconds(60))
+        let expectedAudioURLs = Set([try XCTUnwrap(firstTrack.audioURL), try XCTUnwrap(nextTrack.audioURL)])
+        await waitForCachedAudioURLs(expectedAudioURLs, in: audioCache)
 
         XCTAssertTrue(session.cacheState(for: firstTrack).isCached)
         XCTAssertTrue(session.cacheState(for: nextTrack).isCached)
         let cachedAudioURLs = await audioCache.cachedAudioURLs()
-        XCTAssertEqual(cachedAudioURLs, Set([try XCTUnwrap(firstTrack.audioURL), try XCTUnwrap(nextTrack.audioURL)]))
+        XCTAssertEqual(cachedAudioURLs, expectedAudioURLs)
     }
 
     func testCacheAllUsesBoundedConcurrency() async throws {
@@ -288,7 +289,7 @@ final class BaMusicPlaybackSessionTests: XCTestCase {
         }
 
         session.cacheAll(tracks)
-        try await Task.sleep(for: .milliseconds(180))
+        await waitForCachedAudioURLs(Set(tracks.compactMap(\.audioURL)), in: audioCache)
 
         let cachedAudioURLs = await audioCache.cachedAudioURLs()
         let maxActiveRequestCount = await audioCache.maxActiveRequestCount()
@@ -305,9 +306,9 @@ final class BaMusicPlaybackSessionTests: XCTestCase {
         let track = try musicTrack(contentId: 5001, title: "柯伊", audioFileName: "kei.ogg")
 
         session.cache(track)
-        try await Task.sleep(for: .milliseconds(60))
+        await waitForCachedAudioURLs(Set([try XCTUnwrap(track.audioURL)]), in: audioCache)
         session.clearCache(for: track)
-        try await Task.sleep(for: .milliseconds(60))
+        await waitForCachedAudioURLs([], in: audioCache)
 
         XCTAssertFalse(session.cacheState(for: track).isCached)
         let cachedAudioURLs = await audioCache.cachedAudioURLs()
@@ -347,6 +348,23 @@ final class BaMusicPlaybackSessionTests: XCTestCase {
             galleryTitle: "BGM",
             availability: .ready
         )
+    }
+
+    private func waitForCachedAudioURLs(
+        _ expected: Set<URL>,
+        in audioCache: FakeAudioCache,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) async {
+        for _ in 0..<100 {
+            let cachedAudioURLs = await audioCache.cachedAudioURLs()
+            if cachedAudioURLs == expected {
+                return
+            }
+            try? await Task.sleep(for: .milliseconds(10))
+        }
+        let cachedAudioURLs = await audioCache.cachedAudioURLs()
+        XCTFail("Expected cached audio URLs \(expected), got \(cachedAudioURLs).", file: file, line: line)
     }
 }
 

@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct AppShell: View {
+    @Environment(BaAppModel.self) private var model
+    @Environment(\.scenePhase) private var scenePhase
     @SceneStorage("AppShell.selectedTab") private var selectedTabRawValue = AppTab.overview.rawValue
     @State private var musicPlaybackSession: BaMusicPlaybackSession?
 
@@ -21,6 +23,11 @@ struct AppShell: View {
             .onChange(of: selectedTab, initial: true) { _, tab in
                 if tab == .library {
                     prepareMusicPlaybackSession()
+                }
+            }
+            .onChange(of: scenePhase, initial: true) { _, phase in
+                if phase == .active {
+                    model.scheduleNotificationRefresh()
                 }
             }
     }

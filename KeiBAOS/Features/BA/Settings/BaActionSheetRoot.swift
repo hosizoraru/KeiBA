@@ -6,6 +6,15 @@
 //
 
 import SwiftUI
+#if canImport(AppKit)
+import AppKit
+#endif
+#if canImport(UIKit)
+import UIKit
+#endif
+#if canImport(UserNotifications)
+import UserNotifications
+#endif
 
 struct BaActionSheetRoot: View {
     let sheet: BaPresentedSheet
@@ -25,10 +34,34 @@ struct BaActionSheetRoot: View {
 private struct BaNotificationSettingsSheet: View {
     @Environment(BaAppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var authorizationStatus = BaNotificationAuthorizationStatus.checking
 
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    Label(
+                        authorizationStatus.title,
+                        systemImage: authorizationStatus.systemImage
+                    )
+                    .foregroundStyle(authorizationStatus.foregroundStyle)
+
+                    if authorizationStatus.canRequestAuthorization {
+                        Button(String(localized: "ba.sheet.notifications.permission.request")) {
+                            Task {
+                                await requestAuthorizationAndRefresh(forceRequest: true)
+                            }
+                        }
+                    } else if authorizationStatus.canOpenSystemSettings {
+                        Button(String(localized: "ba.sheet.notifications.permission.openSettings")) {
+                            openSystemNotificationSettings()
+                        }
+                    }
+                } footer: {
+                    Text(String(localized: "ba.sheet.notifications.footer"))
+                }
+
                 Section {
                     Toggle(String(localized: "ba.sheet.notifications.ap.title"), isOn: profileBinding(\.apNotificationsEnabled))
                     Toggle(String(localized: "ba.sheet.notifications.cafeAp.title"), isOn: profileBinding(\.cafeApNotificationsEnabled))
@@ -77,6 +110,22 @@ private struct BaNotificationSettingsSheet: View {
                 }
             }
             .navigationTitle(BaPresentedSheet.notifications.title)
+            .task {
+                await refreshAuthorizationStatus()
+                if authorizationStatus.canRequestAuthorization {
+                    await requestAuthorizationAndRefresh()
+                } else {
+                    await model.requestNotificationAuthorizationAndRefreshSchedule()
+                    await refreshAuthorizationStatus()
+                }
+            }
+            .onChange(of: scenePhase) { _, phase in
+                guard phase == .active else { return }
+                Task {
+                    await refreshAuthorizationStatus()
+                    await model.requestNotificationAuthorizationAndRefreshSchedule()
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button(String(localized: "ba.common.done")) {
@@ -101,6 +150,12 @@ private struct BaNotificationSettingsSheet: View {
             get: { model.envelope.globalSettings[keyPath: keyPath] },
             set: { value in
                 model.updateGlobalSettings { $0[keyPath: keyPath] = value }
+                Task {
+                    if value {
+                        await model.requestNotificationAuthorizationAndRefreshSchedule()
+                    }
+                    await refreshAuthorizationStatus()
+                }
             }
         )
     }
@@ -110,8 +165,119 @@ private struct BaNotificationSettingsSheet: View {
             get: { model.currentProfile[keyPath: keyPath] },
             set: { value in
                 model.updateCurrentProfile { $0[keyPath: keyPath] = value }
+                Task {
+                    if value {
+                        await model.requestNotificationAuthorizationAndRefreshSchedule()
+                    }
+                    await refreshAuthorizationStatus()
+                }
             }
         )
+    }
+
+    private func refreshAuthorizationStatus() async {
+        #if canImport(UserNotifications)
+        let status = await withCheckedContinuation { continuation in
+            UNUserNotificationCenter.current().getNotificationSettings { settings in
+                continuation.resume(returning: settings.authorizationStatus)
+            }
+        }
+        authorizationStatus = BaNotificationAuthorizationStatus(status)
+        #else
+        authorizationStatus = .allowed
+        #endif
+    }
+
+    private func requestAuthorizationAndRefresh(forceRequest: Bool = false) async {
+        await model.requestNotificationAuthorizationAndRefreshSchedule(forceRequest: forceRequest)
+        await refreshAuthorizationStatus()
+    }
+
+    private func openSystemNotificationSettings() {
+        #if os(iOS) && canImport(UIKit)
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        UIApplication.shared.open(url)
+        #elseif os(macOS) && canImport(AppKit)
+        NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+        #endif
+    }
+}
+
+private enum BaNotificationAuthorizationStatus: Equatable {
+    case checking
+    case allowed
+    case provisional
+    case denied
+    case notDetermined
+    case unknown
+
+    #if canImport(UserNotifications)
+    init(_ status: UNAuthorizationStatus) {
+        switch status {
+        case .authorized:
+            self = .allowed
+        case .provisional, .ephemeral:
+            self = .provisional
+        case .denied:
+            self = .denied
+        case .notDetermined:
+            self = .notDetermined
+        @unknown default:
+            self = .unknown
+        }
+    }
+    #endif
+
+    var title: String {
+        switch self {
+        case .checking:
+            String(localized: "ba.sheet.notifications.permission.checking")
+        case .allowed:
+            String(localized: "ba.sheet.notifications.permission.allowed")
+        case .provisional:
+            String(localized: "ba.sheet.notifications.permission.provisional")
+        case .denied:
+            String(localized: "ba.sheet.notifications.permission.denied")
+        case .notDetermined:
+            String(localized: "ba.sheet.notifications.permission.notDetermined")
+        case .unknown:
+            String(localized: "ba.sheet.notifications.permission.unknown")
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .allowed, .provisional:
+            "bell.badge.fill"
+        case .denied:
+            "bell.slash.fill"
+        case .checking, .notDetermined, .unknown:
+            "bell.badge"
+        }
+    }
+
+    var foregroundStyle: Color {
+        switch self {
+        case .allowed, .provisional:
+            .green
+        case .denied:
+            .red
+        case .checking, .notDetermined, .unknown:
+            .secondary
+        }
+    }
+
+    var canRequestAuthorization: Bool {
+        switch self {
+        case .checking, .notDetermined:
+            true
+        case .allowed, .provisional, .denied, .unknown:
+            false
+        }
+    }
+
+    var canOpenSystemSettings: Bool {
+        self == .denied
     }
 }
 
