@@ -30,7 +30,7 @@ struct AppShell: View {
             }
             .onChange(of: scenePhase, initial: true) { _, phase in
                 if phase == .active {
-                    model.scheduleNotificationRefresh(delay: .milliseconds(700))
+                    model.scheduleNotificationRefresh(delay: BaPlatformPerformanceProfile.notificationStartupRefreshDelay)
                 }
             }
     }

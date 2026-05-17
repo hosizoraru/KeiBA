@@ -9,37 +9,43 @@ import SwiftUI
 
 struct BaOverviewView: View {
     @Environment(BaAppModel.self) private var model
+    @Environment(\.baAdaptiveMetrics) private var metrics
 
     var onOpenTab: (AppTab) -> Void = { _ in }
 
     var body: some View {
         BaScreenScaffold {
-            BaOverviewAdaptiveCards {
-                BaOverviewIdentityCard(
-                    settings: model.settings,
-                    onServerSelected: selectServer
+            TimelineView(.periodic(from: .now, by: metrics.overviewDashboardRefreshInterval)) { context in
+                let office = model.officeSnapshot(now: context.date)
+                let summary = BaOverviewTimelineSummary(
+                    activities: model.activityState.value ?? [],
+                    pools: model.poolState.value ?? [],
+                    now: context.date
                 )
-            } ap: {
-                BaOverviewAPTimelineCard(onCommit: model.setAPEditorValues)
-            } cafe: {
-                TimelineView(.periodic(from: .now, by: 60)) { context in
+
+                BaOverviewAdaptiveCards {
+                    BaOverviewIdentityCard(
+                        settings: model.settings,
+                        onServerSelected: selectServer
+                    )
+                } ap: {
+                    BaOverviewAPCard(
+                        office: office,
+                        settings: model.settings,
+                        onCommit: model.setAPEditorValues
+                    )
+                } cafe: {
                     BaOverviewCafeCard(
-                        office: model.officeSnapshot(now: context.date),
+                        office: office,
                         settings: model.settings,
                         onClaimCafeAP: model.claimCafeAP,
                         onPerformAction: model.performCafeAction,
                         onResetAction: model.resetCafeAction,
                         onCafeSettingsCommit: setCafeSettings
                     )
-                }
-            } timeline: {
-                TimelineView(.periodic(from: .now, by: 60)) { context in
+                } timeline: {
                     BaOverviewTimelineSummaryCard(
-                        summary: BaOverviewTimelineSummary(
-                            activities: model.activityState.value ?? [],
-                            pools: model.poolState.value ?? [],
-                            now: context.date
-                        ),
+                        summary: summary,
                         activitySyncAt: model.activityState.lastSyncAt,
                         poolSyncAt: model.poolState.lastSyncAt,
                         onOpenTab: onOpenTab
@@ -74,23 +80,6 @@ struct BaOverviewView: View {
         model.updateCurrentProfile { profile in
             profile.cafeLevel = min(max(level, 1), 10)
             profile.cafeApNotifyThreshold = min(max(threshold, 0), BaTimeMath.apMax)
-        }
-    }
-}
-
-private struct BaOverviewAPTimelineCard: View {
-    @Environment(BaAppModel.self) private var model
-    @Environment(\.baAdaptiveMetrics) private var metrics
-
-    let onCommit: (Int, Int, Int) -> Void
-
-    var body: some View {
-        TimelineView(.periodic(from: .now, by: metrics.overviewAPRefreshInterval)) { context in
-            BaOverviewAPCard(
-                office: model.officeAPSnapshot(now: context.date),
-                settings: model.settings,
-                onCommit: onCommit
-            )
         }
     }
 }

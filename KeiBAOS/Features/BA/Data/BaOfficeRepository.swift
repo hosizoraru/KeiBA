@@ -112,7 +112,7 @@ struct BaOfficeRepository {
             ),
             apRemaining: apRemainingText(currentAP: currentAP, apLimit: apLimit),
             apNext: isAPRecovering
-                ? BaDisplayFormatters.compactRemaining(until: nextAP, now: now)
+                ? BaDisplayFormatters.compactRemaining(until: nextAP, now: now, includingSeconds: false)
                 : BaL10n.string("ba.office.ap.paused.value"),
             apFullRemain: isAPRecovering
                 ? BaDisplayFormatters.compactRemaining(until: fullAP, now: now, includingSeconds: false)

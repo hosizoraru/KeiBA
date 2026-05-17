@@ -27,6 +27,14 @@ final class BaPlatformPerformanceProfileTests: XCTestCase {
             BaPlatformPerformanceProfile.overviewStartupNetworkDelay(for: .desktop),
             BaPlatformPerformanceProfile.overviewStartupNetworkDelay(for: .phone)
         )
+        XCTAssertLessThan(
+            BaPlatformPerformanceProfile.notificationStartupRefreshDelay(for: .desktop),
+            BaPlatformPerformanceProfile.notificationStartupRefreshDelay(for: .phone)
+        )
+        XCTAssertLessThan(
+            BaPlatformPerformanceProfile.notificationTimelineRefreshDelay(for: .desktop),
+            BaPlatformPerformanceProfile.notificationTimelineRefreshDelay(for: .phone)
+        )
         XCTAssertFalse(BaPlatformPerformanceProfile.musicSamplesRowAvatarAccent(for: .phone))
         XCTAssertTrue(BaPlatformPerformanceProfile.musicSamplesRowAvatarAccent(for: .pad))
     }

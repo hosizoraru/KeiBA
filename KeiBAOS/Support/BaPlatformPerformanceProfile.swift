@@ -62,6 +62,14 @@ enum BaPlatformPerformanceProfile {
         overviewStartupNetworkDelay(for: currentClass)
     }
 
+    nonisolated static var notificationStartupRefreshDelay: Duration {
+        notificationStartupRefreshDelay(for: currentClass)
+    }
+
+    nonisolated static var notificationTimelineRefreshDelay: Duration {
+        notificationTimelineRefreshDelay(for: currentClass)
+    }
+
     nonisolated static var musicSamplesRowAvatarAccent: Bool {
         musicSamplesRowAvatarAccent(for: currentClass)
     }
@@ -165,6 +173,32 @@ enum BaPlatformPerformanceProfile {
             .milliseconds(850)
         case .watch:
             .seconds(1)
+        }
+    }
+
+    nonisolated static func notificationStartupRefreshDelay(for platformClass: BaPlatformPerformanceClass) -> Duration {
+        switch platformClass {
+        case .desktop:
+            .milliseconds(1_200)
+        case .pad:
+            .milliseconds(3_000)
+        case .phone:
+            .seconds(5)
+        case .watch:
+            .seconds(6)
+        }
+    }
+
+    nonisolated static func notificationTimelineRefreshDelay(for platformClass: BaPlatformPerformanceClass) -> Duration {
+        switch platformClass {
+        case .desktop:
+            .milliseconds(1_200)
+        case .pad:
+            .milliseconds(3_000)
+        case .phone:
+            .seconds(5)
+        case .watch:
+            .seconds(6)
         }
     }
 

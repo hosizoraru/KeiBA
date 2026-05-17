@@ -256,7 +256,7 @@ private struct BaOverviewIdentityAvatar: View {
 struct BaOverviewAPCard: View {
     @Environment(\.baAdaptiveMetrics) private var metrics
 
-    let office: BaOfficeAPSnapshot
+    let office: BaOfficeSnapshot
     let settings: BaAppSettings
     let onCommit: (Int, Int, Int) -> Void
 
@@ -281,41 +281,21 @@ struct BaOverviewAPCard: View {
                     )
                 }
 
-                LazyVGrid(columns: metrics.overviewInnerGridColumns, spacing: 10) {
-                    BaOverviewMetricTile(
-                        title: BaL10n.string("ba.office.ap.next.title"),
-                        value: office.apNext,
-                        detail: BaL10n.string("ba.office.ap.next.detail"),
-                        asset: .actionPointTight,
-                        tint: BaDesign.green
-                    )
-                    BaOverviewMetricTile(
-                        title: BaL10n.string("ba.office.ap.full.label"),
-                        value: office.apFullAt,
-                        detail: office.apFullRemain,
-                        systemImage: "calendar.badge.checkmark",
-                        tint: BaDesign.cyan
-                    )
-                    BaOverviewMetricTile(
-                        title: BaL10n.string("ba.office.ap.sync.label"),
-                        value: office.apSyncAt,
-                        detail: BaL10n.string("ba.overview.sync.detail"),
-                        systemImage: "clock.arrow.circlepath",
-                        tint: BaDesign.blue
-                    )
-                    Button {
-                        presentEditor()
-                    } label: {
-                        BaOverviewMetricTile(
-                            title: BaL10n.string("ba.settings.ap.threshold.title"),
-                            value: "\(settings.apNotifyThreshold)",
-                            detail: BaL10n.string("ba.settings.threshold.edit.detail"),
-                            systemImage: "bell.badge",
-                            tint: BaDesign.amber
-                        )
+                BaOverviewFixedGrid(
+                    items: apMetricTiles,
+                    columnCount: metrics.overviewInnerGridColumnCount
+                ) { tile in
+                    if tile.isAction {
+                        Button {
+                            presentEditor()
+                        } label: {
+                            metricTile(tile)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(BaL10n.string("ba.overview.ap.edit.title"))
+                    } else {
+                        metricTile(tile)
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(BaL10n.string("ba.overview.ap.edit.title"))
                 }
             }
         }
@@ -333,6 +313,66 @@ struct BaOverviewAPCard: View {
     private func presentEditor() {
         isEditorPresented = true
     }
+
+    private var apMetricTiles: [BaOverviewMetricTileModel] {
+        [
+            BaOverviewMetricTileModel(
+                id: "next",
+                title: BaL10n.string("ba.office.ap.next.title"),
+                value: office.apNext,
+                detail: BaL10n.string("ba.office.ap.next.detail"),
+                asset: .actionPointTight,
+                tint: BaDesign.green
+            ),
+            BaOverviewMetricTileModel(
+                id: "full",
+                title: BaL10n.string("ba.office.ap.full.label"),
+                value: office.apFullAt,
+                detail: office.apFullRemain,
+                systemImage: "calendar.badge.checkmark",
+                tint: BaDesign.cyan
+            ),
+            BaOverviewMetricTileModel(
+                id: "sync",
+                title: BaL10n.string("ba.office.ap.sync.label"),
+                value: office.apSyncAt,
+                detail: BaL10n.string("ba.overview.sync.detail"),
+                systemImage: "clock.arrow.circlepath",
+                tint: BaDesign.blue
+            ),
+            BaOverviewMetricTileModel(
+                id: "threshold",
+                title: BaL10n.string("ba.settings.ap.threshold.title"),
+                value: "\(settings.apNotifyThreshold)",
+                detail: BaL10n.string("ba.settings.threshold.edit.detail"),
+                systemImage: "bell.badge",
+                tint: BaDesign.amber,
+                isAction: true
+            ),
+        ]
+    }
+
+    private func metricTile(_ tile: BaOverviewMetricTileModel) -> some View {
+        BaOverviewMetricTile(
+            title: tile.title,
+            value: tile.value,
+            detail: tile.detail,
+            asset: tile.asset,
+            systemImage: tile.systemImage,
+            tint: tile.tint
+        )
+    }
+}
+
+private struct BaOverviewMetricTileModel: Identifiable {
+    let id: String
+    let title: String
+    let value: String
+    let detail: String
+    var asset: BaGameAsset?
+    var systemImage: String?
+    let tint: Color
+    var isAction = false
 }
 
 struct BaOverviewCafeCard: View {
@@ -374,28 +414,33 @@ struct BaOverviewCafeCard: View {
                     }
                 }
 
-                LazyVGrid(columns: metrics.overviewInnerGridColumns, spacing: 10) {
-                    ForEach(office.cafeVisitSlots) { slot in
-                        BaOverviewMetricTile(
-                            title: slot.title,
-                            value: slot.value,
-                            detail: slot.detail,
-                            asset: .lobbyWork,
-                            tint: BaDesign.pink
-                        )
-                    }
+                BaOverviewFixedGrid(
+                    items: office.cafeVisitSlots,
+                    columnCount: metrics.overviewInnerGridColumnCount
+                ) { slot in
+                    BaOverviewMetricTile(
+                        title: slot.title,
+                        value: slot.value,
+                        detail: slot.detail,
+                        asset: .lobbyWork,
+                        tint: BaDesign.pink
+                    )
                 }
 
-                LazyVGrid(columns: metrics.overviewInnerGridColumns, spacing: 10) {
-                    BaOverviewMetricTile(
-                        title: BaL10n.string("ba.cafe.metric.tactical"),
-                        value: office.tacticalRefresh,
-                        detail: office.tacticalRefreshDetail,
-                        asset: .arenaCoin,
-                        tint: BaDesign.amber
-                    )
-
-                    if let headpatAction {
+                BaOverviewFixedGrid(
+                    items: tacticalAndHeadpatItems,
+                    columnCount: metrics.overviewInnerGridColumnCount
+                ) { item in
+                    switch item {
+                    case .tactical:
+                        BaOverviewMetricTile(
+                            title: BaL10n.string("ba.cafe.metric.tactical"),
+                            value: office.tacticalRefresh,
+                            detail: office.tacticalRefreshDetail,
+                            asset: .arenaCoin,
+                            tint: BaDesign.amber
+                        )
+                    case .headpat(let headpatAction):
                         BaOverviewActionTile(
                             action: headpatAction,
                             onTap: { onPerformAction(headpatAction.kind) },
@@ -404,14 +449,15 @@ struct BaOverviewCafeCard: View {
                     }
                 }
 
-                LazyVGrid(columns: metrics.overviewInnerGridColumns, spacing: 10) {
-                    ForEach(inviteActions) { action in
-                        BaOverviewActionTile(
-                            action: action,
-                            onTap: { onPerformAction(action.kind) },
-                            onReset: { onResetAction(action.kind) }
-                        )
-                    }
+                BaOverviewFixedGrid(
+                    items: inviteActions,
+                    columnCount: metrics.overviewInnerGridColumnCount
+                ) { action in
+                    BaOverviewActionTile(
+                        action: action,
+                        onTap: { onPerformAction(action.kind) },
+                        onReset: { onResetAction(action.kind) }
+                    )
                 }
             }
         }
@@ -426,6 +472,13 @@ struct BaOverviewCafeCard: View {
 
     private var headpatAction: BaCafeActionSnapshot? {
         office.cafeActions.first { $0.kind == .headpat }
+    }
+
+    private var tacticalAndHeadpatItems: [BaOverviewCafeSecondaryItem] {
+        if let headpatAction {
+            return [.tactical, .headpat(headpatAction)]
+        }
+        return [.tactical]
     }
 
     private var cafeStorageDetail: String {
@@ -444,6 +497,20 @@ struct BaOverviewCafeCard: View {
 
     private func presentEditor() {
         isEditorPresented = true
+    }
+}
+
+private enum BaOverviewCafeSecondaryItem: Identifiable {
+    case tactical
+    case headpat(BaCafeActionSnapshot)
+
+    var id: String {
+        switch self {
+        case .tactical:
+            "tactical"
+        case .headpat(let action):
+            action.id.rawValue
+        }
     }
 }
 
@@ -581,36 +648,99 @@ struct BaOverviewTimelineSummaryCard: View {
             VStack(alignment: .leading, spacing: BaOverviewMetricStyle.cardSpacing) {
                 BaOverviewSectionTitle(title: BaL10n.string("ba.overview.timeline.title"), asset: .guideMission)
 
-                LazyVGrid(columns: metrics.overviewSummaryGridColumns, spacing: 10) {
+                BaOverviewFixedGrid(
+                    items: BaOverviewTimelineDestination.allCases,
+                    columnCount: metrics.overviewSummaryGridColumnCount
+                ) { destination in
                     Button {
-                        onOpenTab(.activity)
+                        onOpenTab(destination.tab)
                     } label: {
-                        BaOverviewTimelineTile(
-                            title: BaL10n.string("ba.tab.activity"),
-                            item: summary.activity,
-                            syncAt: activitySyncAt,
-                            systemImage: "calendar",
-                            tint: BaDesign.blue
-                        )
+                        timelineTile(for: destination)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(BaL10n.string("ba.overview.timeline.openActivity"))
-
-                    Button {
-                        onOpenTab(.pool)
-                    } label: {
-                        BaOverviewTimelineTile(
-                            title: BaL10n.string("ba.tab.pool"),
-                            item: summary.pool,
-                            syncAt: poolSyncAt,
-                            systemImage: "sparkles",
-                            tint: BaDesign.violet
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(BaL10n.string("ba.overview.timeline.openPool"))
+                    .accessibilityLabel(destination.accessibilityLabel)
                 }
             }
+        }
+    }
+
+    private func timelineTile(for destination: BaOverviewTimelineDestination) -> some View {
+        BaOverviewTimelineTile(
+            title: destination.title,
+            item: destination.item(in: summary),
+            syncAt: destination.syncAt(activitySyncAt: activitySyncAt, poolSyncAt: poolSyncAt),
+            systemImage: destination.systemImage,
+            tint: destination.tint
+        )
+    }
+}
+
+private enum BaOverviewTimelineDestination: CaseIterable, Identifiable {
+    case activity
+    case pool
+
+    var id: AppTab { tab }
+
+    var tab: AppTab {
+        switch self {
+        case .activity:
+            .activity
+        case .pool:
+            .pool
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .activity:
+            BaL10n.string("ba.tab.activity")
+        case .pool:
+            BaL10n.string("ba.tab.pool")
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .activity:
+            "calendar"
+        case .pool:
+            "sparkles"
+        }
+    }
+
+    var tint: Color {
+        switch self {
+        case .activity:
+            BaDesign.blue
+        case .pool:
+            BaDesign.violet
+        }
+    }
+
+    var accessibilityLabel: String {
+        switch self {
+        case .activity:
+            BaL10n.string("ba.overview.timeline.openActivity")
+        case .pool:
+            BaL10n.string("ba.overview.timeline.openPool")
+        }
+    }
+
+    func item(in summary: BaOverviewTimelineSummary) -> BaOverviewTimelineSummaryItem {
+        switch self {
+        case .activity:
+            summary.activity
+        case .pool:
+            summary.pool
+        }
+    }
+
+    func syncAt(activitySyncAt: Date?, poolSyncAt: Date?) -> Date? {
+        switch self {
+        case .activity:
+            activitySyncAt
+        case .pool:
+            poolSyncAt
         }
     }
 }

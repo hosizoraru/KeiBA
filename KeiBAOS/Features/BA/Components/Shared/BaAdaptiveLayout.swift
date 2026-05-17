@@ -101,19 +101,18 @@ struct BaAdaptiveMetrics: Equatable {
         widthClass == .compact ? 1 : 2
     }
 
-    var overviewAPRefreshInterval: TimeInterval {
-        #if os(macOS)
-            10
-        #else
-            widthClass == .compact ? 1 : 5
-        #endif
+    var overviewDashboardRefreshInterval: TimeInterval {
+        60
+    }
+
+    var overviewInnerGridColumnCount: Int {
+        overviewColumnCount > 1 ? 2 : (containerWidth >= 760 ? 3 : 2)
     }
 
     var overviewInnerGridColumns: [GridItem] {
-        let count = overviewColumnCount > 1 ? 2 : (containerWidth >= 760 ? 3 : 2)
         return Array(
             repeating: GridItem(.flexible(), spacing: 10, alignment: .top),
-            count: count
+            count: overviewInnerGridColumnCount
         )
     }
 
@@ -121,11 +120,14 @@ struct BaAdaptiveMetrics: Equatable {
         overviewCardInnerWidth < 370
     }
 
+    var overviewSummaryGridColumnCount: Int {
+        widthClass == .compact ? 1 : 2
+    }
+
     var overviewSummaryGridColumns: [GridItem] {
-        let count = widthClass == .compact ? 1 : 2
         return Array(
             repeating: GridItem(.flexible(), spacing: 10, alignment: .top),
-            count: count
+            count: overviewSummaryGridColumnCount
         )
     }
 

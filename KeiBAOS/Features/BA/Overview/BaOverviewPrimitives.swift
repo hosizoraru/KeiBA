@@ -98,6 +98,52 @@ struct BaOverviewSymbolIcon: View {
     }
 }
 
+struct BaOverviewFixedGrid<Item: Identifiable, Content: View>: View {
+    let items: [Item]
+    let columnCount: Int
+    let spacing: CGFloat
+    let content: (Item) -> Content
+
+    init(
+        items: [Item],
+        columnCount: Int,
+        spacing: CGFloat = 10,
+        @ViewBuilder content: @escaping (Item) -> Content
+    ) {
+        self.items = items
+        self.columnCount = max(columnCount, 1)
+        self.spacing = spacing
+        self.content = content
+    }
+
+    var body: some View {
+        VStack(spacing: spacing) {
+            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                HStack(alignment: .top, spacing: spacing) {
+                    ForEach(row) { item in
+                        content(item)
+                            .frame(maxWidth: .infinity)
+                    }
+
+                    ForEach(0 ..< placeholderCount(for: row), id: \.self) { _ in
+                        Color.clear
+                            .frame(maxWidth: .infinity)
+                            .accessibilityHidden(true)
+                    }
+                }
+            }
+        }
+    }
+
+    private var rows: [[Item]] {
+        items.baChunked(into: columnCount)
+    }
+
+    private func placeholderCount(for row: [Item]) -> Int {
+        max(columnCount - row.count, 0)
+    }
+}
+
 struct BaOverviewMetricTile: View {
     let title: String
     let value: String

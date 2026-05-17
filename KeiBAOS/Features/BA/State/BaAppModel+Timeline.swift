@@ -53,7 +53,7 @@ extension BaAppModel {
                 isShowingCache: false
             )
             await cacheStore.save(snapshot.value, for: .activities(server), schemaVersion: 3, syncedAt: snapshot.syncedAt)
-            scheduleNotificationRefresh()
+            scheduleNotificationRefresh(delay: BaPlatformPerformanceProfile.notificationTimelineRefreshDelay)
         } catch {
             guard settings.server == server else { return }
             guard Self.isCancellation(error) == false else {
@@ -99,7 +99,7 @@ extension BaAppModel {
                 isShowingCache: false
             )
             await cacheStore.save(entries, for: .pools(server), schemaVersion: Self.poolCacheSchemaVersion, syncedAt: snapshot.syncedAt)
-            scheduleNotificationRefresh()
+            scheduleNotificationRefresh(delay: BaPlatformPerformanceProfile.notificationTimelineRefreshDelay)
         } catch {
             guard settings.server == server else { return }
             guard Self.isCancellation(error) == false else {
@@ -119,7 +119,7 @@ extension BaAppModel {
             lastSyncAt: cached.syncedAt,
             isShowingCache: true
         )
-        scheduleNotificationRefresh()
+        scheduleNotificationRefresh(delay: BaPlatformPerformanceProfile.notificationTimelineRefreshDelay)
     }
 
     private func loadCachedPools() async {
@@ -137,7 +137,7 @@ extension BaAppModel {
             lastSyncAt: cached.syncedAt,
             isShowingCache: true
         )
-        scheduleNotificationRefresh()
+        scheduleNotificationRefresh(delay: BaPlatformPerformanceProfile.notificationTimelineRefreshDelay)
         if entries != cached.value {
             await cacheStore.save(entries, for: .pools(server), schemaVersion: Self.poolCacheSchemaVersion, syncedAt: cached.syncedAt)
         }
