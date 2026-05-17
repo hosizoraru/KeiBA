@@ -31,14 +31,17 @@ final class BaLiveActivityController {
         }
 
         for candidate in selected {
+            let attributes = candidate.attributes
+            let content = candidate.content
             if let activity = Activity<BaReminderLiveActivityAttributes>.activities.first(where: { $0.attributes.id == candidate.id }) {
-                await update(activity, with: candidate)
+                if activity.attributes.matches(attributes) == false {
+                    await end(activity)
+                    await request(attributes: attributes, content: content)
+                } else if activity.content.state.hasDisplayChanges(comparedWith: content.state) {
+                    await update(activity, content: content)
+                }
             } else {
-                _ = try? Activity.request(
-                    attributes: candidate.attributes,
-                    content: candidate.content,
-                    pushType: nil
-                )
+                await request(attributes: attributes, content: content)
             }
         }
     }
@@ -120,11 +123,22 @@ final class BaLiveActivityController {
         }
     }
 
+    private func request(
+        attributes: BaReminderLiveActivityAttributes,
+        content: ActivityContent<BaReminderLiveActivityAttributes.ContentState>
+    ) async {
+        _ = try? Activity.request(
+            attributes: attributes,
+            content: content,
+            pushType: nil
+        )
+    }
+
     private func update(
         _ activity: Activity<BaReminderLiveActivityAttributes>,
-        with candidate: BaLiveActivityCandidate
+        content: ActivityContent<BaReminderLiveActivityAttributes.ContentState>
     ) async {
-        await activity.update(candidate.content)
+        await activity.update(content)
     }
 
     private func endAllActivities() async {
@@ -202,6 +216,24 @@ private extension BaLiveActivityCandidate.Resource {
         case .cafeAP:
             .cafeAP
         }
+    }
+}
+
+private extension BaReminderLiveActivityAttributes {
+    func matches(_ other: BaReminderLiveActivityAttributes) -> Bool {
+        id == other.id &&
+            kind == other.kind &&
+            title == other.title
+    }
+}
+
+private extension BaReminderLiveActivityAttributes.ContentState {
+    func hasDisplayChanges(comparedWith other: BaReminderLiveActivityAttributes.ContentState) -> Bool {
+        subtitle != other.subtitle ||
+            startDate != other.startDate ||
+            endDate != other.endDate ||
+            markReadTitle != other.markReadTitle ||
+            resources != other.resources
     }
 }
 #endif
