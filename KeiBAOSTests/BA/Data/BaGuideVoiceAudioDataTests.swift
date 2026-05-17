@@ -217,9 +217,9 @@ final class BaGuideVoiceAudioDataTests: XCTestCase {
         XCTAssertTrue(BaVoicePlaybackController.supportsOggPlayback(oggURL))
         XCTAssertEqual(BaVoicePlaybackController.preferredBackendNameForTesting(oggURL), "decodedOgg")
         XCTAssertTrue(BaVoicePlaybackController.supportsPlayback(oggURL))
-        XCTAssertTrue(BaVoicePlaybackController.supportsOggPlayback(opusURL))
-        XCTAssertEqual(BaVoicePlaybackController.preferredBackendNameForTesting(opusURL), "audioStreaming")
-        XCTAssertTrue(BaVoicePlaybackController.supportsPlayback(opusURL))
+        XCTAssertFalse(BaVoicePlaybackController.supportsOggPlayback(opusURL))
+        XCTAssertEqual(BaVoicePlaybackController.preferredBackendNameForTesting(opusURL), "avFoundation")
+        XCTAssertFalse(BaVoicePlaybackController.supportsPlayback(opusURL))
         XCTAssertTrue(BaVoicePlaybackController.supportsNativePlayback(flacURL))
         XCTAssertEqual(BaVoicePlaybackController.preferredBackendNameForTesting(flacURL), "avFoundation")
         XCTAssertTrue(BaVoicePlaybackController.supportsPlayback(flacURL))
@@ -233,7 +233,7 @@ final class BaGuideVoiceAudioDataTests: XCTestCase {
         let mp3URL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/bgm/memory.mp3"))
 
         XCTAssertEqual(BaVoicePlaybackController.preferredMusicBackendNameForTesting(oggURL), "decodedOgg")
-        XCTAssertEqual(BaVoicePlaybackController.preferredMusicBackendNameForTesting(opusURL), "audioStreaming")
+        XCTAssertEqual(BaVoicePlaybackController.preferredMusicBackendNameForTesting(opusURL), "avFoundation")
         XCTAssertEqual(BaVoicePlaybackController.preferredMusicBackendNameForTesting(mp3URL), "avFoundation")
         XCTAssertEqual(
             BaVoicePlaybackController.preferredOggPlaybackModeNameForTesting(oggURL, profile: .music),
@@ -241,7 +241,7 @@ final class BaGuideVoiceAudioDataTests: XCTestCase {
         )
         XCTAssertEqual(
             BaVoicePlaybackController.preferredOggPlaybackModeNameForTesting(opusURL, profile: .music),
-            "streaming"
+            "decodedPreferred"
         )
         XCTAssertEqual(
             BaVoicePlaybackController.preferredOggPlaybackModeNameForTesting(oggURL, profile: .voice),

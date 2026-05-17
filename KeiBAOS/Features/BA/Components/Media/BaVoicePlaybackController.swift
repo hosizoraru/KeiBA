@@ -40,9 +40,6 @@ final class BaAudioPlaybackController {
         "3gp 3gpp aac aif aifc aiff amr caf flac m4a m4b m4p mp3 mp4 wav".split(separator: " ")
             .map(String.init)
     )
-    private nonisolated static let oggPlaybackExtensions = Set(
-        "oga ogg opus".split(separator: " ").map(String.init)
-    )
     private nonisolated static let decodedOggExtensions = Set(
         "oga ogg".split(separator: " ").map(String.init)
     )
@@ -65,7 +62,7 @@ final class BaAudioPlaybackController {
             return duration.isFinite && duration > 0
         case .avPlayer:
             return avPlayerDuration?.isFinite == true && (avPlayerDuration ?? 0) > 0
-        case .decodedOgg, .audioStreaming:
+        case .decodedOgg:
             return oggPlayer.canSeek
         case nil:
             return false
@@ -79,7 +76,7 @@ final class BaAudioPlaybackController {
             return duration
         case .avPlayer:
             return avPlayerDuration
-        case .decodedOgg, .audioStreaming:
+        case .decodedOgg:
             return oggPlayer.duration
         case nil:
             return nil
@@ -92,7 +89,7 @@ final class BaAudioPlaybackController {
             return player?.currentTime ?? 0
         case .avPlayer:
             return avPlayer?.currentTime().seconds ?? 0
-        case .decodedOgg, .audioStreaming:
+        case .decodedOgg:
             return oggPlayer.currentTime
         case nil:
             guard let duration else { return 0 }
@@ -150,13 +147,15 @@ final class BaAudioPlaybackController {
     nonisolated static func supportsOggPlayback(_ url: URL) -> Bool {
         let ext = url.pathExtension.lowercased()
         guard ext.isEmpty == false else { return false }
-        return oggPlaybackExtensions.contains(ext)
+        return decodedOggExtensions.contains(ext)
     }
 
     nonisolated static func supportsPlayback(_ url: URL) -> Bool {
-        supportsNativePlayback(url) ||
-            supportsOggPlayback(url) ||
-            looksLikeAudioSource(url)
+        let ext = url.pathExtension.lowercased()
+        if ext.isEmpty == false {
+            return supportsNativePlayback(url) || supportsOggPlayback(url)
+        }
+        return looksLikeAudioSource(url)
     }
 
     func toggle(remoteURL: URL) {
@@ -199,7 +198,7 @@ final class BaAudioPlaybackController {
             guard let duration = avPlayerDuration, duration.isFinite, duration > 0 else { return }
             avPlayer?.seek(to: CMTime(seconds: duration * clampedProgress, preferredTimescale: 600))
             updateProgress()
-        case .decodedOgg, .audioStreaming:
+        case .decodedOgg:
             oggPlayer.seek(to: clampedProgress)
         case nil:
             break
@@ -240,7 +239,7 @@ final class BaAudioPlaybackController {
     private func resume() {
         BaMediaPlaybackCoordinator.notifyWillStartPlayback(sender: self)
         errorMessage = nil
-        if playbackBackend == .decodedOgg || playbackBackend == .audioStreaming {
+        if playbackBackend == .decodedOgg {
             resumeOggPlayer()
             return
         }
@@ -261,7 +260,7 @@ final class BaAudioPlaybackController {
     }
 
     private func pause() {
-        if playbackBackend == .decodedOgg || playbackBackend == .audioStreaming {
+        if playbackBackend == .decodedOgg {
             pauseOggPlayer()
             isPlaying = false
             notifyPlaybackStateChanged()
@@ -281,7 +280,7 @@ final class BaAudioPlaybackController {
     }
 
     private func startPlayer(localURL: URL, backend: PlaybackBackend?) {
-        if backend == .decodedOgg || backend == .audioStreaming {
+        if backend == .decodedOgg {
             startOggPlayer(localURL: localURL)
             return
         }
@@ -398,15 +397,9 @@ final class BaAudioPlaybackController {
         case avFoundation
         case avPlayer
         case decodedOgg
-        case audioStreaming
 
         nonisolated var oggPlaybackMode: BaOggPlaybackMode {
-            switch self {
-            case .audioStreaming:
-                .streaming
-            case .decodedOgg, .avFoundation, .avPlayer:
-                .decodedPreferred
-            }
+            .decodedPreferred
         }
     }
 
@@ -418,7 +411,7 @@ final class BaAudioPlaybackController {
         if avPlayerPlaybackExtensions.contains(ext) {
             return .avPlayer
         }
-        return supportsOggPlayback(url) ? .audioStreaming : .avFoundation
+        return .avFoundation
     }
 
     nonisolated static func preferredBackendNameForTesting(_ url: URL) -> String {
