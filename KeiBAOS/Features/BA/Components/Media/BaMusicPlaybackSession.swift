@@ -54,6 +54,12 @@ nonisolated enum BaMusicPreviousPlaybackAction: Equatable {
     case moveToPreviousTrack
 }
 
+nonisolated struct BaMusicPlaybackProgressIdentity: Equatable, Hashable {
+    let trackID: Int64?
+    let audioURL: URL?
+    let remoteURL: URL?
+}
+
 nonisolated enum BaMusicPlaybackNavigationPolicy {
     static let previousRestartThreshold: TimeInterval = 3
 
@@ -211,6 +217,14 @@ final class BaMusicPlaybackSession: BaMusicSystemMediaCommandHandling {
 
     var canPlayPrevious: Bool {
         selectedTrack != nil
+    }
+
+    var playbackProgressIdentity: BaMusicPlaybackProgressIdentity {
+        BaMusicPlaybackProgressIdentity(
+            trackID: selectedTrack?.id,
+            audioURL: selectedTrack?.audioURL,
+            remoteURL: player.currentRemoteURL
+        )
     }
 
     func updateQueue(_ tracks: [BaMusicTrack]) {
@@ -407,6 +421,17 @@ final class BaMusicPlaybackSession: BaMusicSystemMediaCommandHandling {
     func handleSystemMediaSeek(to elapsedTime: TimeInterval) -> Bool {
         guard let duration = player.duration, duration > 0 else { return false }
         player.seek(to: elapsedTime / duration)
+        syncSystemMediaState()
+        return true
+    }
+
+    func seekCurrent(to progress: Double, for identity: BaMusicPlaybackProgressIdentity) -> Bool {
+        guard playbackProgressIdentity == identity,
+              player.canSeek
+        else {
+            return false
+        }
+        player.seek(to: progress)
         syncSystemMediaState()
         return true
     }

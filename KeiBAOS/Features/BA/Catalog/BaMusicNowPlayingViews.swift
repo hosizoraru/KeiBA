@@ -659,13 +659,14 @@ private struct BaMusicProgressControl: View {
     let accent: Color
     @State private var editingProgress = 0.0
     @State private var isEditing = false
+    @State private var editingIdentity: BaMusicPlaybackProgressIdentity?
 
     var body: some View {
         VStack(spacing: 6) {
             Slider(
                 value: Binding(
                     get: { currentProgress },
-                    set: { editingProgress = $0 }
+                    set: { editingProgress = Self.clampedProgress($0) }
                 ),
                 in: 0 ... 1,
                 onEditingChanged: handleEditingChanged
@@ -673,6 +674,14 @@ private struct BaMusicProgressControl: View {
             .tint(accent)
             .accessibilityLabel(Text(BaL10n.string("ba.music.progress.accessibility")))
             .accessibilityValue(Text("\(elapsedText) / \(durationText)"))
+            .onAppear(perform: syncEditingProgress)
+            .onChange(of: session.playbackProgressIdentity) { _, _ in
+                resetEditingState()
+            }
+            .onChange(of: session.player.progress) { _, progress in
+                guard isEditing == false else { return }
+                editingProgress = Self.clampedProgress(progress)
+            }
 
             HStack {
                 Text(elapsedText)
@@ -689,20 +698,22 @@ private struct BaMusicProgressControl: View {
 
     private func handleEditingChanged(_ editing: Bool) {
         if editing {
-            editingProgress = session.player.progress
+            editingIdentity = session.playbackProgressIdentity
+            editingProgress = Self.clampedProgress(session.player.progress)
             isEditing = true
         } else {
+            let identity = editingIdentity
             isEditing = false
-            if session.player.canSeek {
-                session.player.seek(to: editingProgress)
-            } else {
-                editingProgress = session.player.progress
+            editingIdentity = nil
+            if let identity {
+                _ = session.seekCurrent(to: editingProgress, for: identity)
             }
+            syncEditingProgress()
         }
     }
 
     private var currentProgress: Double {
-        isEditing ? editingProgress : session.player.progress
+        isEditing ? editingProgress : Self.clampedProgress(session.player.progress)
     }
 
     private var elapsedText: String {
@@ -717,6 +728,20 @@ private struct BaMusicProgressControl: View {
             return BaMusicPlaybackTimeFormatter.placeholder
         }
         return BaMusicPlaybackTimeFormatter.string(from: duration)
+    }
+
+    private func syncEditingProgress() {
+        editingProgress = Self.clampedProgress(session.player.progress)
+    }
+
+    private func resetEditingState() {
+        isEditing = false
+        editingIdentity = nil
+        syncEditingProgress()
+    }
+
+    private static func clampedProgress(_ progress: Double) -> Double {
+        min(max(progress, 0), 1)
     }
 }
 

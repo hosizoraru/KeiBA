@@ -205,6 +205,45 @@ final class BaMusicPlaybackSessionTests: XCTestCase {
         XCTAssertEqual(BaMusicPlaybackTimeFormatter.string(from: .infinity), BaMusicPlaybackTimeFormatter.placeholder)
     }
 
+    func testPlaybackProgressIdentityTracksSelectedTrackAndAudioURL() throws {
+        let session = BaMusicPlaybackSession(
+            audioCache: FakeAudioCache(),
+            systemMediaController: RecordingSystemMediaController()
+        )
+        let firstTrack = try musicTrack(contentId: 1_501, title: "日奈", audioFileName: "hina.ogg")
+        let secondTrack = try musicTrack(contentId: 1_502, title: "爱丽丝", audioFileName: "alice.ogg")
+        let refreshedFirstTrack = try musicTrack(contentId: 1_501, title: "日奈", audioFileName: "hina-v2.ogg")
+        let emptyIdentity = session.playbackProgressIdentity
+
+        session.selectedTrack = firstTrack
+        let firstIdentity = session.playbackProgressIdentity
+        session.selectedTrack = refreshedFirstTrack
+        let refreshedIdentity = session.playbackProgressIdentity
+        session.selectedTrack = secondTrack
+        let secondIdentity = session.playbackProgressIdentity
+        session.stop()
+
+        XCTAssertNotEqual(firstIdentity, emptyIdentity)
+        XCTAssertNotEqual(firstIdentity, refreshedIdentity)
+        XCTAssertNotEqual(refreshedIdentity, secondIdentity)
+        XCTAssertEqual(session.playbackProgressIdentity, emptyIdentity)
+    }
+
+    func testSeekCurrentRejectsStaleProgressIdentity() throws {
+        let session = BaMusicPlaybackSession(
+            audioCache: FakeAudioCache(),
+            systemMediaController: RecordingSystemMediaController()
+        )
+        let firstTrack = try musicTrack(contentId: 1_601, title: "日奈", audioFileName: "hina.ogg")
+        let secondTrack = try musicTrack(contentId: 1_602, title: "爱丽丝", audioFileName: "alice.ogg")
+
+        session.selectedTrack = firstTrack
+        let firstIdentity = session.playbackProgressIdentity
+        session.selectedTrack = secondTrack
+
+        XCTAssertFalse(session.seekCurrent(to: 0.75, for: firstIdentity))
+    }
+
     func testRemoteNextCommandUpdatesSelectedTrackAndSystemMetadata() throws {
         let audioCache = FakeAudioCache()
         let systemMediaController = RecordingSystemMediaController()
