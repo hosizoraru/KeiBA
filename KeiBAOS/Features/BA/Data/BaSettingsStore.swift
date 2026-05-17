@@ -11,6 +11,7 @@ struct BaSettingsStore {
     private let defaults: UserDefaults
     private let legacyKey = "ba.app.settings.v1"
     private let envelopeKey = "ba.app.settings.v2"
+    private let userDataUpdatedAtKey = "ba.app.userData.updatedAt.v1"
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -40,17 +41,19 @@ struct BaSettingsStore {
         saveEnvelope(BaSettingsEnvelope.migrated(from: settings))
     }
 
-    func saveEnvelope(_ envelope: BaSettingsEnvelope) {
+    func saveEnvelope(_ envelope: BaSettingsEnvelope, updatedAt: Date = Date()) {
         guard let data = try? JSONEncoder.ba.encode(envelope.normalized()) else { return }
         defaults.set(data, forKey: envelopeKey)
+        defaults.set(updatedAt, forKey: userDataUpdatedAtKey)
     }
 
-    func loadUserData(updatedAt: Date = Date()) -> BaUserDataEnvelope {
-        loadEnvelope().userData(updatedAt: updatedAt)
+    func loadUserData(updatedAt fallbackUpdatedAt: Date = .distantPast) -> BaUserDataEnvelope {
+        loadEnvelope().userData(updatedAt: userDataUpdatedAt(fallback: fallbackUpdatedAt))
     }
 
     func saveUserData(_ userData: BaUserDataEnvelope) {
-        saveEnvelope(userData.normalized().settingsEnvelope())
+        let normalized = userData.normalized()
+        saveEnvelope(normalized.settingsEnvelope(), updatedAt: normalized.updatedAt)
     }
 
     func exportUserData(updatedAt: Date = Date()) throws -> Data {
@@ -62,5 +65,9 @@ struct BaSettingsStore {
         let userData = try JSONDecoder.ba.decode(BaUserDataEnvelope.self, from: data).normalized()
         saveUserData(userData)
         return userData
+    }
+
+    private func userDataUpdatedAt(fallback: Date) -> Date {
+        defaults.object(forKey: userDataUpdatedAtKey) as? Date ?? fallback
     }
 }

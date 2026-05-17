@@ -77,17 +77,17 @@ final class BaAppModel {
     }
 
     var userData: BaUserDataEnvelope {
-        envelope.userData()
+        settingsStore.loadUserData()
     }
 
     var watchUserSnapshot: BaWatchUserSnapshot {
-        envelope.watchUserSnapshot()
+        userData.watchSnapshot()
     }
 
     func applyUserData(_ userData: BaUserDataEnvelope) {
         let previousServer = settings.server
         envelope = userData.settingsEnvelope()
-        persistEnvelope(previousServer: previousServer)
+        persistEnvelope(previousServer: previousServer, updatedAt: userData.updatedAt)
     }
 
     func selectServer(_ server: BaServer) {
@@ -208,10 +208,13 @@ final class BaAppModel {
         }
     }
 
-    private func persistEnvelope(previousServer: BaServer) {
+    private func persistEnvelope(
+        previousServer: BaServer,
+        updatedAt: Date = Date()
+    ) {
         envelope = envelope.normalized()
         settings = envelope.flattenedSettings()
-        settingsStore.saveEnvelope(envelope)
+        settingsStore.saveEnvelope(envelope, updatedAt: updatedAt)
         if previousServer != settings.server {
             activityState = BaLoadableState()
             poolState = BaLoadableState()

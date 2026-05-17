@@ -9,7 +9,7 @@ import Foundation
 
 nonisolated struct BaUserDataEnvelope: Codable, Equatable, Sendable {
     static let currentSchemaVersion = 1
-    static let iCloudKeyValueStoreKey = "ba.userData.v1"
+    static let keyValueSyncStoreKey = "ba.userData.v1"
 
     var schemaVersion: Int
     var updatedAt: Date

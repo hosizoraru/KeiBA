@@ -29,7 +29,7 @@
 		98BA02012FB9000000000201 /* Exceptions for "KeiBAOS" folder in "KeiBAOS" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Support/KeiBAOS-iOS-Info.plist,
+				"Support/KeiBAOS-iOS-Info.plist",
 			);
 			target = 9893E4722FB52F57001F2D43 /* KeiBAOS */;
 		};

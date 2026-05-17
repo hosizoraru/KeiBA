@@ -43,8 +43,10 @@ final class BaUserDataSyncTests: XCTestCase {
 
         let imported = try BaSettingsStore(defaults: destinationDefaults).importUserData(from: data)
         let loaded = BaSettingsStore(defaults: destinationDefaults).loadEnvelope()
+        let loadedUserData = BaSettingsStore(defaults: destinationDefaults).loadUserData()
 
         XCTAssertEqual(imported.updatedAt, base.addingTimeInterval(60))
+        XCTAssertEqual(loadedUserData.updatedAt, imported.updatedAt)
         XCTAssertEqual(loaded.selectedServer, .global)
         XCTAssertTrue(loaded.globalSettings.identityIndependentByServer)
         XCTAssertFalse(loaded.globalSettings.showEndedActivities)
@@ -148,6 +150,20 @@ final class BaUserDataSyncTests: XCTestCase {
         XCTAssertNil(model.poolState.value)
         XCTAssertEqual(model.catalogState.value?.entries.first?.contentId, 702_789)
         XCTAssertEqual(BaSettingsStore(defaults: defaults).loadEnvelope().selectedServer, .global)
+    }
+
+    func testUserDataMergePolicyPrefersNewerPayload() {
+        let olderDate = Date(timeIntervalSince1970: 1_800_000_000)
+        let newerDate = olderDate.addingTimeInterval(60)
+        let local = BaSettingsEnvelope.defaults(now: olderDate).userData(updatedAt: olderDate)
+        var remoteEnvelope = BaSettingsEnvelope.defaults(now: olderDate)
+        remoteEnvelope.selectedServer = .global
+        let remote = remoteEnvelope.userData(updatedAt: newerDate)
+
+        XCTAssertEqual(BaUserDataMergePolicy.decision(local: local, remote: nil), .uploadLocal)
+        XCTAssertEqual(BaUserDataMergePolicy.decision(local: local, remote: remote), .applyRemote)
+        XCTAssertEqual(BaUserDataMergePolicy.decision(local: remote, remote: local), .uploadLocal)
+        XCTAssertEqual(BaUserDataMergePolicy.decision(local: local, remote: local), .keepLocal)
     }
 
     private func makeIsolatedDefaults() throws -> UserDefaults {
