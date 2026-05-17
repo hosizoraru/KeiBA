@@ -21,8 +21,8 @@ struct BaSettingsView: View {
     private var touchSettingsBody: some View {
         BaAdaptiveGeometry { _ in
             Form {
+                appPreferencesSection
                 serverIdentitySection
-                languageSection
                 resourcesSection
                 activityPoolSection
                 notificationSection
@@ -39,6 +39,35 @@ struct BaSettingsView: View {
     private var macSettingsBody: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
+                macSettingsGroup(
+                    title: BaL10n.string("ba.settings.app.section"),
+                    footer: BaL10n.string("ba.settings.app.footer")
+                ) {
+                    macSettingsRow(BaL10n.string("ba.settings.language.title")) {
+                        Picker(BaL10n.string("ba.settings.language.title"), selection: appLanguageBinding) {
+                            ForEach(BaAppLanguage.allCases) { language in
+                                Text(language.titleResource)
+                                    .tag(language)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .frame(width: 180, alignment: .leading)
+                    }
+
+                    macSettingsRow(BaL10n.string("ba.settings.appearance.title")) {
+                        Picker(BaL10n.string("ba.settings.appearance.title"), selection: appAppearanceBinding) {
+                            ForEach(BaAppAppearance.allCases) { appearance in
+                                Text(appearance.titleResource)
+                                    .tag(appearance)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .frame(width: 180, alignment: .leading)
+                    }
+                }
+
                 macSettingsGroup(
                     title: BaL10n.string("ba.settings.identity.section"),
                     footer: BaL10n.string("ba.settings.identity.footer")
@@ -82,23 +111,6 @@ struct BaSettingsView: View {
                         .monospaced()
                         .autocorrectionDisabled()
                         .frame(width: 180)
-                    }
-                }
-
-                macSettingsGroup(
-                    title: BaL10n.string("ba.settings.language.section"),
-                    footer: BaL10n.string("ba.settings.language.footer")
-                ) {
-                    macSettingsRow(BaL10n.string("ba.settings.language.title")) {
-                        Picker(BaL10n.string("ba.settings.language.title"), selection: appLanguageBinding) {
-                            ForEach(BaAppLanguage.allCases) { language in
-                                Text(language.titleResource)
-                                    .tag(language)
-                            }
-                        }
-                        .labelsHidden()
-                        .pickerStyle(.menu)
-                        .frame(width: 180, alignment: .leading)
                     }
                 }
 
@@ -497,7 +509,7 @@ struct BaSettingsView: View {
         }
     }
 
-    private var languageSection: some View {
+    private var appPreferencesSection: some View {
         Section {
             Picker(BaL10n.string("ba.settings.language.title"), selection: appLanguageBinding) {
                 ForEach(BaAppLanguage.allCases) { language in
@@ -505,13 +517,20 @@ struct BaSettingsView: View {
                         .tag(language)
                 }
             }
+
+            Picker(BaL10n.string("ba.settings.appearance.title"), selection: appAppearanceBinding) {
+                ForEach(BaAppAppearance.allCases) { appearance in
+                    Text(appearance.titleResource)
+                        .tag(appearance)
+                }
+            }
             #if os(macOS)
                 .pickerStyle(.menu)
             #endif
         } header: {
-            Text(BaL10n.string("ba.settings.language.section"))
+            Text(BaL10n.string("ba.settings.app.section"))
         } footer: {
-            Text(BaL10n.string("ba.settings.language.footer"))
+            Text(BaL10n.string("ba.settings.app.footer"))
         }
     }
 
@@ -565,6 +584,15 @@ struct BaSettingsView: View {
             get: { model.envelope.globalSettings.appLanguage },
             set: { language in
                 model.updateGlobalSettings { $0.appLanguage = language }
+            }
+        )
+    }
+
+    private var appAppearanceBinding: Binding<BaAppAppearance> {
+        Binding(
+            get: { model.envelope.globalSettings.appAppearance },
+            set: { appearance in
+                model.updateGlobalSettings { $0.appAppearance = appearance }
             }
         )
     }

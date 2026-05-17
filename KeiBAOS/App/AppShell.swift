@@ -16,6 +16,7 @@ struct AppShell: View {
     var body: some View {
         shellContent
             .environment(\.locale, model.envelope.globalSettings.appLanguage.locale)
+            .preferredColorScheme(model.envelope.globalSettings.appAppearance.preferredColorScheme)
             .sheet(isPresented: musicNowPlayingExpandedBinding) {
                 if let musicPlaybackSession {
                     BaMusicNowPlayingSheet(session: musicPlaybackSession)
@@ -127,9 +128,6 @@ struct AppShell: View {
 
 private struct BaNavigationRoot: View {
     @Environment(BaAppModel.self) private var model
-    #if os(iOS)
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    #endif
 
     let tab: AppTab
     let musicPlaybackSession: BaMusicPlaybackSession?
@@ -147,10 +145,6 @@ private struct BaNavigationRoot: View {
                 .toolbar {
                     ToolbarItemGroup(placement: .primaryAction) {
                         pageRefreshButton
-                        notificationButton
-                        if showsStandaloneSettingsButton {
-                            settingsButton
-                        }
                         moreMenu
                     }
                 }
@@ -230,33 +224,10 @@ private struct BaNavigationRoot: View {
         }
     }
 
-    private var notificationButton: some View {
-        Button {
-            presentedSheet = .notifications
-        } label: {
-            Label(BaPresentedSheet.notifications.title, systemImage: BaPresentedSheet.notifications.systemImage)
-        }
-        .labelStyle(.iconOnly)
-        .accessibilityLabel(Text(BaPresentedSheet.notifications.title))
-    }
-
-    private var settingsButton: some View {
-        Button {
-            presentedSheet = .settings
-        } label: {
-            Label(BaPresentedSheet.settings.title, systemImage: BaPresentedSheet.settings.systemImage)
-        }
-        .labelStyle(.iconOnly)
-        .accessibilityLabel(Text(BaPresentedSheet.settings.title))
-    }
-
     private var moreMenu: some View {
         Menu {
-            timelineOptionsMenu
-            if showsStandaloneSettingsButton == false {
-                appSettingsMenuItem
-            }
-            officeActionsMenu
+            appSettingsMenuItem
+            pageSettingsMenu
         } label: {
             Label(BaL10n.string("ba.action.more.title"), systemImage: "ellipsis.circle")
         }
@@ -275,7 +246,6 @@ private struct BaNavigationRoot: View {
                 showsEnded: globalBoolBinding(\.showEndedActivities),
                 refreshInterval: refreshIntervalBinding
             )
-            Divider()
         case .pool:
             BaTimelineOptionsMenu(
                 scope: .pool,
@@ -283,7 +253,6 @@ private struct BaNavigationRoot: View {
                 showsEnded: globalBoolBinding(\.showEndedPools),
                 refreshInterval: refreshIntervalBinding
             )
-            Divider()
         case .overview, .catalog, .library:
             EmptyView()
         }
@@ -301,18 +270,64 @@ private struct BaNavigationRoot: View {
     }
 
     @ViewBuilder
-    private var officeActionsMenu: some View {
-        Section {
-            Button {
-                presentedSheet = .editOffice
-            } label: {
-                Label(BaPresentedSheet.editOffice.menuTitle, systemImage: BaPresentedSheet.editOffice.systemImage)
-            }
+    private var pageSettingsMenu: some View {
+        switch tab {
+        case .overview:
+            Section {
+                Button {
+                    presentedSheet = .editOffice
+                } label: {
+                    Label(BaPresentedSheet.editOffice.menuTitle, systemImage: BaPresentedSheet.editOffice.systemImage)
+                }
 
-            Button {
-                presentedSheet = .debugTools
-            } label: {
-                Label(BaPresentedSheet.debugTools.menuTitle, systemImage: BaPresentedSheet.debugTools.systemImage)
+                Button {
+                    presentedSheet = .notifications
+                } label: {
+                    Label(BaPresentedSheet.notifications.title, systemImage: BaPresentedSheet.notifications.systemImage)
+                }
+
+                Button {
+                    presentedSheet = .debugTools
+                } label: {
+                    Label(BaPresentedSheet.debugTools.menuTitle, systemImage: BaPresentedSheet.debugTools.systemImage)
+                }
+            }
+        case .activity:
+            timelineOptionsMenu
+            Section {
+                Button {
+                    presentedSheet = .notifications
+                } label: {
+                    Label(BaPresentedSheet.notifications.title, systemImage: BaPresentedSheet.notifications.systemImage)
+                }
+            }
+        case .pool:
+            timelineOptionsMenu
+            Section {
+                Button {
+                    presentedSheet = .notifications
+                } label: {
+                    Label(BaPresentedSheet.notifications.title, systemImage: BaPresentedSheet.notifications.systemImage)
+                }
+            }
+        case .catalog:
+            Section(BaL10n.string("ba.settings.media.title")) {
+                Toggle(
+                    BaL10n.string("ba.settings.media.images.title"),
+                    isOn: globalBoolBinding(\.showPreviewImages)
+                )
+            }
+        case .library:
+            Section(BaL10n.string("ba.settings.media.title")) {
+                Toggle(
+                    BaL10n.string("ba.settings.media.autoplay.title"),
+                    isOn: globalBoolBinding(\.mediaAutoplayEnabled)
+                )
+
+                Toggle(
+                    BaL10n.string("ba.settings.media.download.title"),
+                    isOn: globalBoolBinding(\.mediaDownloadEnabled)
+                )
             }
         }
     }
@@ -333,14 +348,6 @@ private struct BaNavigationRoot: View {
                 model.updateGlobalSettings { $0[keyPath: keyPath] = value }
             }
         )
-    }
-
-    private var showsStandaloneSettingsButton: Bool {
-        #if os(macOS)
-        false
-        #else
-        horizontalSizeClass == .regular
-        #endif
     }
 }
 

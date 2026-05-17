@@ -30,6 +30,7 @@ struct KeiBAOSApp: App {
             }
             .environment(baModel)
             .environment(\.locale, baModel.envelope.globalSettings.appLanguage.locale)
+            .preferredColorScheme(baModel.envelope.globalSettings.appAppearance.preferredColorScheme)
             .frame(minWidth: 640, minHeight: 680)
         }
         #else

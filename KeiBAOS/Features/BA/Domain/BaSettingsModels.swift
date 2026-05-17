@@ -163,6 +163,7 @@ nonisolated struct BaGlobalSettings: Codable, Equatable, Sendable {
     var mediaDownloadEnabled: Bool
     var refreshInterval: BaRefreshInterval
     var appLanguage: BaAppLanguage
+    var appAppearance: BaAppAppearance
     var favoriteContentIDs: Set<Int64>
     var favoriteCatalogEntries: [BaGuideCatalogEntry]
     var dutyStudent: BaDutyStudent?
@@ -185,6 +186,7 @@ nonisolated struct BaGlobalSettings: Codable, Equatable, Sendable {
             mediaDownloadEnabled: false,
             refreshInterval: .threeHours,
             appLanguage: .system,
+            appAppearance: .system,
             favoriteContentIDs: [],
             favoriteCatalogEntries: [],
             dutyStudent: nil
@@ -210,6 +212,7 @@ nonisolated extension BaGlobalSettings {
         case mediaDownloadEnabled
         case refreshInterval
         case appLanguage
+        case appAppearance
         case favoriteContentIDs
         case favoriteCatalogEntries
         case dutyStudent
@@ -234,6 +237,7 @@ nonisolated extension BaGlobalSettings {
         mediaDownloadEnabled = try container.decodeIfPresent(Bool.self, forKey: .mediaDownloadEnabled) ?? defaults.mediaDownloadEnabled
         refreshInterval = try container.decodeIfPresent(BaRefreshInterval.self, forKey: .refreshInterval) ?? defaults.refreshInterval
         appLanguage = try container.decodeIfPresent(BaAppLanguage.self, forKey: .appLanguage) ?? defaults.appLanguage
+        appAppearance = try container.decodeIfPresent(BaAppAppearance.self, forKey: .appAppearance) ?? defaults.appAppearance
         favoriteContentIDs = try container.decodeIfPresent(Set<Int64>.self, forKey: .favoriteContentIDs) ?? defaults.favoriteContentIDs
         favoriteCatalogEntries = try container.decodeIfPresent([BaGuideCatalogEntry].self, forKey: .favoriteCatalogEntries) ?? defaults.favoriteCatalogEntries
         dutyStudent = try container.decodeIfPresent(BaDutyStudent.self, forKey: .dutyStudent)
@@ -257,6 +261,7 @@ nonisolated extension BaGlobalSettings {
         try container.encode(mediaDownloadEnabled, forKey: .mediaDownloadEnabled)
         try container.encode(refreshInterval, forKey: .refreshInterval)
         try container.encode(appLanguage, forKey: .appLanguage)
+        try container.encode(appAppearance, forKey: .appAppearance)
         try container.encode(favoriteContentIDs, forKey: .favoriteContentIDs)
         try container.encode(favoriteCatalogEntries, forKey: .favoriteCatalogEntries)
         try container.encodeIfPresent(dutyStudent, forKey: .dutyStudent)
@@ -360,6 +365,7 @@ nonisolated struct BaSettingsEnvelope: Codable, Equatable, Sendable {
             mediaDownloadEnabled: settings.mediaDownloadEnabled,
             refreshInterval: settings.refreshInterval,
             appLanguage: settings.appLanguage,
+            appAppearance: settings.appAppearance,
             favoriteContentIDs: settings.favoriteContentIDs,
             favoriteCatalogEntries: settings.favoriteCatalogEntries,
             dutyStudent: settings.dutyStudent
@@ -440,6 +446,7 @@ nonisolated struct BaSettingsEnvelope: Codable, Equatable, Sendable {
             mediaDownloadEnabled: globalSettings.mediaDownloadEnabled,
             refreshInterval: globalSettings.refreshInterval,
             appLanguage: globalSettings.appLanguage,
+            appAppearance: globalSettings.appAppearance,
             favoriteContentIDs: globalSettings.favoriteContentIDs,
             favoriteCatalogEntries: globalSettings.favoriteCatalogEntries,
             dutyStudent: globalSettings.dutyStudent,
@@ -502,6 +509,7 @@ nonisolated struct BaAppSettings: Codable, Equatable, Sendable {
     var mediaDownloadEnabled: Bool
     var refreshInterval: BaRefreshInterval
     var appLanguage: BaAppLanguage
+    var appAppearance: BaAppAppearance
     var favoriteContentIDs: Set<Int64>
     var favoriteCatalogEntries: [BaGuideCatalogEntry]
     var dutyStudent: BaDutyStudent?
@@ -546,6 +554,7 @@ nonisolated struct BaAppSettings: Codable, Equatable, Sendable {
             mediaDownloadEnabled: false,
             refreshInterval: .threeHours,
             appLanguage: .system,
+            appAppearance: .system,
             favoriteContentIDs: [],
             favoriteCatalogEntries: [],
             dutyStudent: nil,
@@ -593,6 +602,7 @@ nonisolated extension BaAppSettings {
         case mediaDownloadEnabled
         case refreshInterval
         case appLanguage
+        case appAppearance
         case favoriteContentIDs
         case favoriteCatalogEntries
         case dutyStudent
@@ -639,6 +649,7 @@ nonisolated extension BaAppSettings {
         mediaDownloadEnabled = try container.decodeIfPresent(Bool.self, forKey: .mediaDownloadEnabled) ?? defaults.mediaDownloadEnabled
         refreshInterval = try container.decodeIfPresent(BaRefreshInterval.self, forKey: .refreshInterval) ?? defaults.refreshInterval
         appLanguage = try container.decodeIfPresent(BaAppLanguage.self, forKey: .appLanguage) ?? defaults.appLanguage
+        appAppearance = try container.decodeIfPresent(BaAppAppearance.self, forKey: .appAppearance) ?? defaults.appAppearance
         favoriteContentIDs = try container.decodeIfPresent(Set<Int64>.self, forKey: .favoriteContentIDs) ?? defaults.favoriteContentIDs
         favoriteCatalogEntries = try container.decodeIfPresent([BaGuideCatalogEntry].self, forKey: .favoriteCatalogEntries) ?? defaults.favoriteCatalogEntries
         dutyStudent = try container.decodeIfPresent(BaDutyStudent.self, forKey: .dutyStudent)

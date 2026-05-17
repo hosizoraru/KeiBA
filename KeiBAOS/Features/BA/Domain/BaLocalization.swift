@@ -53,6 +53,38 @@ nonisolated enum BaAppLanguage: String, CaseIterable, Codable, Identifiable, Has
     }
 }
 
+nonisolated enum BaAppAppearance: String, CaseIterable, Codable, Identifiable, Hashable, Sendable {
+    case system
+    case light
+    case dark
+
+    var id: Self {
+        self
+    }
+
+    var titleResource: LocalizedStringResource {
+        switch self {
+        case .system:
+            "ba.settings.appearance.system"
+        case .light:
+            "ba.settings.appearance.light"
+        case .dark:
+            "ba.settings.appearance.dark"
+        }
+    }
+
+    var preferredColorScheme: ColorScheme? {
+        switch self {
+        case .system:
+            nil
+        case .light:
+            .light
+        case .dark:
+            .dark
+        }
+    }
+}
+
 nonisolated enum BaL10n {
     private static let appLanguageOverrideKey = "ba.app.localization.language.v1"
 

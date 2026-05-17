@@ -258,6 +258,7 @@ final class BaAppModel {
         envelope.globalSettings.mediaDownloadEnabled = next.mediaDownloadEnabled
         envelope.globalSettings.refreshInterval = next.refreshInterval
         envelope.globalSettings.appLanguage = next.appLanguage
+        envelope.globalSettings.appAppearance = next.appAppearance
         envelope.globalSettings.favoriteContentIDs = next.favoriteContentIDs
         envelope.globalSettings.favoriteCatalogEntries = next.favoriteCatalogEntries
         envelope.globalSettings.dutyStudent = next.dutyStudent
