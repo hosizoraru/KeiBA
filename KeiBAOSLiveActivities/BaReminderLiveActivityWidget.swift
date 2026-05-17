@@ -113,6 +113,8 @@ private struct BaReminderLockScreenLiveActivityView: View {
                 height: 4
             )
         }
+        .frame(maxWidth: 320, alignment: .center)
+        .frame(maxWidth: .infinity, alignment: .center)
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
     }
@@ -139,7 +141,8 @@ private struct BaReminderMediumLiveActivityView: View {
                 presentation: .lockScreen
             )
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: 320, alignment: .center)
+        .frame(maxWidth: .infinity, alignment: .center)
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
     }
@@ -160,6 +163,8 @@ private struct BaReminderSmallLiveActivityView: View {
                     .minimumScaleFactor(0.78)
 
                 Spacer(minLength: 4)
+
+                BaReminderSmallAcknowledgeButton(title: context.markReadTitle)
             }
 
             if context.resourceRows.isEmpty {
@@ -170,11 +175,12 @@ private struct BaReminderSmallLiveActivityView: View {
                 }
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .background(
-            Color.black.opacity(0.72),
-            in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+            ContainerRelativeShape()
+                .fill(Color.black.opacity(0.82))
         )
     }
 
@@ -217,6 +223,29 @@ private struct BaReminderSmallResourceLine: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
         }
+    }
+}
+
+private struct BaReminderSmallAcknowledgeButton: View {
+    let title: String
+
+    var body: some View {
+        Button(intent: AcknowledgeBaReminderLiveActivityIntent()) {
+            HStack(spacing: 3) {
+                Image(systemName: "checkmark.circle.fill")
+                Text(title)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.76)
+            }
+            .frame(height: 21)
+            .padding(.horizontal, 6)
+            .contentShape(.rect)
+        }
+        .font(.caption2.weight(.semibold))
+        .foregroundStyle(.white)
+        .background(.white.opacity(0.16), in: Capsule())
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
     }
 }
 
