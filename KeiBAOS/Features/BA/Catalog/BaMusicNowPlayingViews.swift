@@ -569,16 +569,30 @@ private struct BaMusicProgressControl: View {
     @State private var isEditing = false
 
     var body: some View {
-        Slider(
-            value: Binding(
-                get: { isEditing ? editingProgress : session.player.progress },
-                set: { editingProgress = $0 }
-            ),
-            in: 0 ... 1,
-            onEditingChanged: handleEditingChanged
-        )
-        .tint(accent)
-        .accessibilityLabel(Text(String(localized: "ba.music.progress.accessibility")))
+        VStack(spacing: 6) {
+            Slider(
+                value: Binding(
+                    get: { currentProgress },
+                    set: { editingProgress = $0 }
+                ),
+                in: 0 ... 1,
+                onEditingChanged: handleEditingChanged
+            )
+            .tint(accent)
+            .accessibilityLabel(Text(String(localized: "ba.music.progress.accessibility")))
+            .accessibilityValue(Text("\(elapsedText) / \(durationText)"))
+
+            HStack {
+                Text(elapsedText)
+
+                Spacer(minLength: 12)
+
+                Text(durationText)
+            }
+            .font(.caption.monospacedDigit())
+            .foregroundStyle(.secondary)
+            .accessibilityHidden(true)
+        }
     }
 
     private func handleEditingChanged(_ editing: Bool) {
@@ -593,6 +607,40 @@ private struct BaMusicProgressControl: View {
                 editingProgress = session.player.progress
             }
         }
+    }
+
+    private var currentProgress: Double {
+        isEditing ? editingProgress : session.player.progress
+    }
+
+    private var elapsedText: String {
+        if let duration = session.player.duration {
+            return BaMusicPlaybackTimeFormatter.string(from: duration * currentProgress)
+        }
+        return BaMusicPlaybackTimeFormatter.string(from: session.player.currentTime)
+    }
+
+    private var durationText: String {
+        guard let duration = session.player.duration else {
+            return BaMusicPlaybackTimeFormatter.placeholder
+        }
+        return BaMusicPlaybackTimeFormatter.string(from: duration)
+    }
+}
+
+nonisolated enum BaMusicPlaybackTimeFormatter {
+    static let placeholder = "--:--"
+
+    static func string(from seconds: TimeInterval) -> String {
+        guard seconds.isFinite, seconds >= 0 else { return placeholder }
+        let totalSeconds = Int(seconds.rounded(.down))
+        let minutes = totalSeconds / 60
+        let seconds = totalSeconds % 60
+        return "\(minutes):\(padded(seconds))"
+    }
+
+    private static func padded(_ value: Int) -> String {
+        value < 10 ? "0\(value)" : "\(value)"
     }
 }
 

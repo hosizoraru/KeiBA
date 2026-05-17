@@ -113,6 +113,13 @@ final class BaMusicPlaybackSessionTests: XCTestCase {
         XCTAssertEqual(metadata.queueCount, 0)
     }
 
+    func testPlaybackTimeFormatterUsesMusicTimeStyle() {
+        XCTAssertEqual(BaMusicPlaybackTimeFormatter.string(from: 0), "0:00")
+        XCTAssertEqual(BaMusicPlaybackTimeFormatter.string(from: 65.8), "1:05")
+        XCTAssertEqual(BaMusicPlaybackTimeFormatter.string(from: 601), "10:01")
+        XCTAssertEqual(BaMusicPlaybackTimeFormatter.string(from: .infinity), BaMusicPlaybackTimeFormatter.placeholder)
+    }
+
     func testRemoteNextCommandUpdatesSelectedTrackAndSystemMetadata() throws {
         let audioCache = FakeAudioCache()
         let systemMediaController = RecordingSystemMediaController()
