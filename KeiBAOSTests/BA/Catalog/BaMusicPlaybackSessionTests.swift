@@ -172,6 +172,7 @@ final class BaMusicPlaybackSessionTests: XCTestCase {
 
         XCTAssertEqual(metadata.title, "日奈(礼服)")
         XCTAssertEqual(metadata.subtitle, "回忆大厅 BGM")
+        XCTAssertEqual(metadata.artworkURL, track.artworkURL)
         XCTAssertEqual(metadata.elapsedTime, 42)
         XCTAssertEqual(metadata.duration, 186)
         XCTAssertEqual(metadata.playbackRate, 1)

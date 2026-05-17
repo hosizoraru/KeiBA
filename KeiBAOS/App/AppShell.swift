@@ -9,29 +9,50 @@ import SwiftUI
 
 struct AppShell: View {
     @State private var selectedTab: AppTab = .overview
-    @State private var musicPlaybackSession = BaMusicPlaybackSession()
+    @State private var musicPlaybackSession: BaMusicPlaybackSession?
 
     var body: some View {
         TabView(selection: $selectedTab) {
             ForEach(AppTab.allCases) { tab in
                 Tab(tab.titleResource, systemImage: tab.systemImage, value: tab) {
-                    BaNavigationRoot(tab: tab, musicPlaybackSession: musicPlaybackSession) { selectedTab = $0 }
-                        .accessibilityIdentifier(tab.accessibilityIdentifier)
+                    BaNavigationRoot(
+                        tab: tab,
+                        musicPlaybackSession: musicPlaybackSession,
+                        onPrepareMusicPlaybackSession: prepareMusicPlaybackSession
+                    ) { selectedTab = $0 }
+                    .accessibilityIdentifier(tab.accessibilityIdentifier)
                 }
             }
         }
         .platformAdaptiveTabViewStyle()
         .baMusicMiniPlayerAccessory(session: musicPlaybackSession, selectedTab: selectedTab)
         .sheet(isPresented: musicNowPlayingExpandedBinding) {
-            BaMusicNowPlayingSheet(session: musicPlaybackSession)
+            if let musicPlaybackSession {
+                BaMusicNowPlayingSheet(session: musicPlaybackSession)
+            }
+        }
+        .onChange(of: selectedTab, initial: true) { _, tab in
+            if tab == .library {
+                prepareMusicPlaybackSession()
+            }
         }
     }
 
     private var musicNowPlayingExpandedBinding: Binding<Bool> {
         Binding(
-            get: { musicPlaybackSession.isExpanded },
-            set: { musicPlaybackSession.isExpanded = $0 }
+            get: { musicPlaybackSession?.isExpanded ?? false },
+            set: { musicPlaybackSession?.isExpanded = $0 }
         )
+    }
+
+    @discardableResult
+    private func prepareMusicPlaybackSession() -> BaMusicPlaybackSession {
+        if let musicPlaybackSession {
+            return musicPlaybackSession
+        }
+        let session = BaMusicPlaybackSession()
+        musicPlaybackSession = session
+        return session
     }
 }
 
@@ -39,7 +60,8 @@ private struct BaNavigationRoot: View {
     @Environment(BaAppModel.self) private var model
 
     let tab: AppTab
-    let musicPlaybackSession: BaMusicPlaybackSession
+    let musicPlaybackSession: BaMusicPlaybackSession?
+    let onPrepareMusicPlaybackSession: () -> BaMusicPlaybackSession
     let onSelectTab: (AppTab) -> Void
     @State private var presentedSheet: BaPresentedSheet?
     @State private var activityFilter: BaTimelineStatus?
@@ -80,8 +102,16 @@ private struct BaNavigationRoot: View {
             BaCatalogView()
                 .environment(\.baShowPreviewImages, model.settings.showPreviewImages)
         case .library:
-            BaLibraryView(playbackSession: musicPlaybackSession)
-                .environment(\.baShowPreviewImages, model.settings.showPreviewImages)
+            if let musicPlaybackSession {
+                BaLibraryView(playbackSession: musicPlaybackSession)
+                    .environment(\.baShowPreviewImages, model.settings.showPreviewImages)
+            } else {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .task {
+                        _ = onPrepareMusicPlaybackSession()
+                    }
+            }
         }
     }
 
@@ -209,9 +239,9 @@ private struct BaNavigationRoot: View {
 
 private extension View {
     @ViewBuilder
-    func baMusicMiniPlayerAccessory(session: BaMusicPlaybackSession, selectedTab: AppTab) -> some View {
+    func baMusicMiniPlayerAccessory(session: BaMusicPlaybackSession?, selectedTab: AppTab) -> some View {
         #if os(iOS)
-            if session.hasCurrentTrack {
+            if let session, session.hasCurrentTrack {
                 tabViewBottomAccessory {
                     BaMusicMiniNowPlayingBar(
                         session: session,

@@ -32,7 +32,6 @@ actor BaImageCache {
         let base = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first
             ?? fileManager.temporaryDirectory
         rootDirectory = base.appendingPathComponent("BAImages", isDirectory: true)
-        try? fileManager.createDirectory(at: rootDirectory, withIntermediateDirectories: true)
     }
 
     func data(for url: URL, refererPath: String = "/ba") async throws -> Data {
@@ -72,6 +71,7 @@ actor BaImageCache {
             throw error
         }
         do {
+            try? fileManager.createDirectory(at: rootDirectory, withIntermediateDirectories: true)
             try data.write(to: fileURL, options: [.atomic])
             logger.debug("image cache stored \(url.host ?? "unknown", privacy: .public) bytes=\(data.count, privacy: .public)")
         } catch {

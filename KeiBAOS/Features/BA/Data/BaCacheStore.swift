@@ -36,7 +36,6 @@ actor BaCacheStore {
         let base = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? fileManager.temporaryDirectory
         rootDirectory = base.appendingPathComponent("BA", isDirectory: true)
-        try? fileManager.createDirectory(at: rootDirectory, withIntermediateDirectories: true)
     }
 
     func load<Value: Codable>(_: Value.Type, for key: CacheKey) -> BaCacheEnvelope<Value>? {
@@ -48,6 +47,7 @@ actor BaCacheStore {
     func save<Value: Codable>(_ value: Value, for key: CacheKey, schemaVersion: Int, syncedAt: Date = Date()) {
         let envelope = BaCacheEnvelope(schemaVersion: schemaVersion, syncedAt: syncedAt, value: value)
         guard let data = try? JSONEncoder.ba.encode(envelope) else { return }
+        try? fileManager.createDirectory(at: rootDirectory, withIntermediateDirectories: true)
         let url = rootDirectory.appendingPathComponent(key.filename)
         try? data.write(to: url, options: [.atomic])
     }

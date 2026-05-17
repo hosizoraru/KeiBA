@@ -49,16 +49,19 @@ struct BaOverviewView: View {
         }
         .task(id: model.settings.server) {
             model.refreshOfficeSnapshot()
-            await model.loadActivitiesIfNeeded()
-            await model.loadPoolsIfNeeded()
+            await Task.yield()
+            async let activities: Void = model.loadActivitiesIfNeeded()
+            async let pools: Void = model.loadPoolsIfNeeded()
+            _ = await (activities, pools)
         }
     }
 
     private func selectServer(_ server: BaServer) {
         model.selectServer(server)
         Task {
-            await model.loadActivitiesIfNeeded()
-            await model.loadPoolsIfNeeded()
+            async let activities: Void = model.loadActivitiesIfNeeded()
+            async let pools: Void = model.loadPoolsIfNeeded()
+            _ = await (activities, pools)
         }
     }
 
