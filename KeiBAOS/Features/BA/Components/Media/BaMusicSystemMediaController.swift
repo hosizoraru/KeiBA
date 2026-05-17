@@ -252,6 +252,7 @@ private extension BaMusicNowPlayingMetadata {
             MPMediaItemPropertyTitle: title,
             MPMediaItemPropertyArtist: subtitle,
             MPNowPlayingInfoPropertyElapsedPlaybackTime: elapsedTime,
+            MPNowPlayingInfoPropertyMediaType: MPNowPlayingInfoMediaType.audio.rawValue,
             MPNowPlayingInfoPropertyPlaybackRate: playbackRate,
             MPNowPlayingInfoPropertyPlaybackQueueCount: queueCount,
         ]
