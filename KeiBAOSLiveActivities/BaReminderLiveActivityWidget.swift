@@ -50,6 +50,9 @@ struct BaReminderLiveActivityWidget: Widget {
                     .font(.caption.weight(.bold))
                     .foregroundStyle(context.attributes.kind.tint)
             }
+            .contentMargins(.horizontal, 18, for: .expanded)
+            .contentMargins(.top, 12, for: .expanded)
+            .contentMargins(.bottom, 16, for: .expanded)
             .keylineTint(context.attributes.kind.tint)
         }
         .supplementalActivityFamilies([.small, .medium])
@@ -110,7 +113,8 @@ private struct BaReminderLockScreenLiveActivityView: View {
                 height: 4
             )
         }
-        .padding(.vertical, 2)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 4)
     }
 }
 
@@ -136,7 +140,8 @@ private struct BaReminderMediumLiveActivityView: View {
             )
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, 2)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 4)
     }
 }
 
@@ -165,7 +170,8 @@ private struct BaReminderSmallLiveActivityView: View {
                 }
             }
         }
-        .padding(.vertical, 2)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
     }
 
     private var fallbackBody: some View {
@@ -212,13 +218,14 @@ private struct BaReminderSmallResourceLine: View {
 
 private struct BaReminderBrandChip: View {
     var iconSize: CGFloat
+    var textFont: Font = .caption.weight(.semibold)
 
     var body: some View {
         HStack(spacing: 6) {
             KeiBAOSLiveActivityIcon(size: iconSize)
 
             Text("KeiBAOS")
-                .font(.caption.weight(.semibold))
+                .font(textFont)
                 .foregroundStyle(.primary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
@@ -247,21 +254,30 @@ private struct BaReminderIslandHeader: View {
     let context: ActivityViewContext<BaReminderLiveActivityAttributes>
 
     var body: some View {
-        HStack(spacing: 7) {
-            Image(systemName: context.primarySymbolName)
-                .font(.headline.weight(.bold))
-                .foregroundStyle(context.attributes.kind.tint)
-                .frame(width: 20, height: 20)
-                .accessibilityHidden(true)
+        if context.resourceRows.isEmpty {
+            HStack(spacing: 7) {
+                Image(systemName: context.primarySymbolName)
+                    .font(.headline.weight(.bold))
+                    .foregroundStyle(context.attributes.kind.tint)
+                    .frame(width: 20, height: 20)
+                    .accessibilityHidden(true)
 
-            if let title = context.primaryResource?.title {
                 Text(title)
                     .font(.headline.weight(.semibold))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
+        } else {
+            BaReminderBrandChip(
+                iconSize: 18,
+                textFont: .headline.weight(.semibold)
+            )
         }
+    }
+
+    private var title: String {
+        context.primaryResource?.title ?? context.attributes.title
     }
 }
 
@@ -269,19 +285,17 @@ private struct BaReminderIslandStatus: View {
     let context: ActivityViewContext<BaReminderLiveActivityAttributes>
 
     var body: some View {
-        VStack(alignment: .trailing, spacing: context.resourceRows.isEmpty ? 0 : 5) {
+        if context.resourceRows.isEmpty {
             Text(context.primaryCompactValue)
                 .font(.headline.monospacedDigit().weight(.bold))
                 .foregroundStyle(context.attributes.kind.tint)
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
-
-            if context.resourceRows.isEmpty == false {
-                BaReminderAcknowledgeButton(
-                    title: context.markReadTitle,
-                    presentation: .dynamicIslandHeader
-                )
-            }
+        } else {
+            BaReminderAcknowledgeButton(
+                title: context.markReadTitle,
+                presentation: .dynamicIslandHeader
+            )
         }
     }
 }
@@ -298,7 +312,7 @@ private struct BaReminderIslandDetails: View {
                 presentation: .dynamicIsland
             )
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.top, 3)
+            .padding(.top, 7)
         }
     }
 }
@@ -434,10 +448,9 @@ private struct BaReminderAcknowledgeButton: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.78)
             }
-            .frame(
-                width: presentation.acknowledgeButtonWidth,
-                height: presentation.acknowledgeButtonHeight
-            )
+            .frame(minWidth: presentation.acknowledgeButtonMinimumWidth)
+            .frame(height: presentation.acknowledgeButtonHeight)
+            .padding(.horizontal, presentation.acknowledgeHorizontalPadding)
             .contentShape(.rect)
         }
         .font(presentation.acknowledgeFont)
@@ -541,14 +554,25 @@ private enum BaReminderResourcePresentation {
         }
     }
 
-    var acknowledgeButtonWidth: CGFloat {
+    var acknowledgeButtonMinimumWidth: CGFloat {
         switch self {
         case .dynamicIsland:
-            54
+            48
         case .dynamicIslandHeader:
-            58
+            48
         case .lockScreen:
-            58
+            52
+        }
+    }
+
+    var acknowledgeHorizontalPadding: CGFloat {
+        switch self {
+        case .dynamicIsland:
+            8
+        case .dynamicIslandHeader:
+            9
+        case .lockScreen:
+            8
         }
     }
 
