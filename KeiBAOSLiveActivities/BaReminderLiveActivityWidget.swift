@@ -113,8 +113,7 @@ private struct BaReminderLockScreenLiveActivityView: View {
                 height: 4
             )
         }
-        .frame(maxWidth: 320, alignment: .center)
-        .frame(maxWidth: .infinity, alignment: .center)
+        .modifier(BaReminderReadableLiveActivityWidth())
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
     }
@@ -141,10 +140,19 @@ private struct BaReminderMediumLiveActivityView: View {
                 presentation: .lockScreen
             )
         }
-        .frame(maxWidth: 320, alignment: .center)
-        .frame(maxWidth: .infinity, alignment: .center)
+        .modifier(BaReminderReadableLiveActivityWidth())
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
+    }
+}
+
+private struct BaReminderReadableLiveActivityWidth: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .containerRelativeFrame(.horizontal) { length, _ in
+                min(max(length * 0.88, 280), 340)
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
     }
 }
 
@@ -493,6 +501,7 @@ private struct BaReminderAcknowledgeButton: View {
         .background(presentation.acknowledgeBackgroundColor, in: Capsule())
         .buttonStyle(.plain)
         .accessibilityLabel(title)
+        .offset(y: presentation.acknowledgeVerticalOffset)
     }
 }
 
@@ -619,6 +628,15 @@ private enum BaReminderResourcePresentation {
             26
         case .lockScreen:
             30
+        }
+    }
+
+    var acknowledgeVerticalOffset: CGFloat {
+        switch self {
+        case .lockScreen:
+            4
+        case .dynamicIsland, .dynamicIslandHeader:
+            0
         }
     }
 
