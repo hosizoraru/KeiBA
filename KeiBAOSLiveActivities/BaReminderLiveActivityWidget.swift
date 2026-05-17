@@ -6,6 +6,7 @@
 //
 
 import ActivityKit
+import AppIntents
 import SwiftUI
 import WidgetKit
 
@@ -28,7 +29,7 @@ struct BaReminderLiveActivityWidget: Widget {
                     BaReminderIslandSymbol(context: context)
                 }
                 DynamicIslandExpandedRegion(.trailing, priority: 2) {
-                    BaReminderCompactValue(context: context)
+                    BaReminderExpandedTrailing(context: context)
                 }
                 DynamicIslandExpandedRegion(.bottom, priority: 3) {
                     BaReminderIslandDetails(context: context)
@@ -64,11 +65,20 @@ private struct BaReminderLockScreenLiveActivityView: View {
     }
 
     private var resourceBody: some View {
-        BaReminderResourceRows(
-            resources: context.resourceRows,
-            presentation: .lockScreen
-        )
-        .padding(.vertical, context.resourceRows.count > 1 ? 1 : 4)
+        VStack(spacing: 8) {
+            BaReminderResourceRows(
+                resources: context.resourceRows,
+                presentation: .lockScreen
+            )
+
+            BaReminderAcknowledgeButton(
+                title: context.markReadTitle,
+                presentation: .lockScreen
+            )
+                .frame(maxWidth: BaReminderResourcePresentation.lockScreen.maximumContentWidth, alignment: .trailing)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, context.resourceRows.count > 1 ? 0 : 3)
     }
 
     private var fallbackBody: some View {
@@ -137,6 +147,20 @@ private struct BaReminderCompactValue: View {
             .monospacedDigit()
             .lineLimit(1)
             .minimumScaleFactor(0.72)
+    }
+}
+
+private struct BaReminderExpandedTrailing: View {
+    let context: ActivityViewContext<BaReminderLiveActivityAttributes>
+
+    var body: some View {
+        HStack(spacing: 9) {
+            BaReminderCompactValue(context: context)
+            BaReminderAcknowledgeButton(
+                title: context.markReadTitle,
+                presentation: .dynamicIsland
+            )
+        }
     }
 }
 
@@ -212,8 +236,8 @@ private struct BaReminderResourceRow: View {
     let presentation: BaReminderResourcePresentation
 
     var body: some View {
-        VStack(spacing: presentation.progressSpacing) {
-            HStack(spacing: presentation.horizontalSpacing) {
+        VStack(alignment: .center, spacing: presentation.progressSpacing) {
+            HStack(alignment: .firstTextBaseline, spacing: presentation.horizontalSpacing) {
                 Image(systemName: resource.symbolName)
                     .font(presentation.iconFont)
                     .foregroundStyle(resource.tint)
@@ -222,23 +246,25 @@ private struct BaReminderResourceRow: View {
                 Text(resource.title)
                     .font(presentation.titleFont)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                    .minimumScaleFactor(0.72)
+                    .frame(width: presentation.titleWidth, alignment: .leading)
 
                 Text(resource.valueText)
                     .font(presentation.valueFont)
                     .foregroundStyle(presentation.valueStyle)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.78)
-
-                Spacer(minLength: presentation.minimumSpacer)
+                    .minimumScaleFactor(0.72)
+                    .frame(width: presentation.valueWidth, alignment: .leading)
 
                 Text(resource.endDate, style: .timer)
                     .font(presentation.timerFont)
                     .foregroundStyle(resource.tint)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                    .minimumScaleFactor(0.78)
                     .contentTransition(.numericText())
+                    .frame(width: presentation.timerWidth, alignment: .trailing)
             }
+            .frame(maxWidth: presentation.maximumContentWidth, alignment: .center)
 
             BaReminderProgressTimeline(
                 startDate: resource.startDate,
@@ -246,7 +272,28 @@ private struct BaReminderResourceRow: View {
                 tint: resource.tint,
                 height: presentation.progressHeight
             )
+            .frame(maxWidth: presentation.maximumContentWidth)
         }
+    }
+}
+
+private struct BaReminderAcknowledgeButton: View {
+    let title: String
+    let presentation: BaReminderResourcePresentation
+
+    var body: some View {
+        Button(intent: AcknowledgeBaReminderLiveActivityIntent()) {
+            Label {
+                Text(title)
+                    .lineLimit(1)
+            } icon: {
+                Image(systemName: "checkmark.circle.fill")
+            }
+        }
+        .font(presentation.acknowledgeFont)
+        .foregroundStyle(.secondary)
+        .buttonStyle(.plain)
+        .minimumScaleFactor(0.8)
     }
 }
 
@@ -275,27 +322,54 @@ private enum BaReminderResourcePresentation {
     var horizontalSpacing: CGFloat {
         switch self {
         case .dynamicIsland:
-            7
+            6
         case .lockScreen:
-            9
+            8
         }
     }
 
     var iconWidth: CGFloat {
         switch self {
         case .dynamicIsland:
-            15
+            16
         case .lockScreen:
-            20
+            22
         }
     }
 
-    var minimumSpacer: CGFloat {
+    var titleWidth: CGFloat {
         switch self {
         case .dynamicIsland:
-            5
+            70
         case .lockScreen:
-            8
+            108
+        }
+    }
+
+    var valueWidth: CGFloat {
+        switch self {
+        case .dynamicIsland:
+            64
+        case .lockScreen:
+            78
+        }
+    }
+
+    var timerWidth: CGFloat {
+        switch self {
+        case .dynamicIsland:
+            50
+        case .lockScreen:
+            58
+        }
+    }
+
+    var maximumContentWidth: CGFloat {
+        switch self {
+        case .dynamicIsland:
+            230
+        case .lockScreen:
+            294
         }
     }
 
@@ -311,9 +385,9 @@ private enum BaReminderResourcePresentation {
     var iconFont: Font {
         switch self {
         case .dynamicIsland:
-            .caption.weight(.semibold)
+            .caption.weight(.bold)
         case .lockScreen:
-            .headline.weight(.semibold)
+            .callout.weight(.bold)
         }
     }
 
@@ -322,7 +396,7 @@ private enum BaReminderResourcePresentation {
         case .dynamicIsland:
             .caption.weight(.semibold)
         case .lockScreen:
-            .headline.weight(.semibold)
+            .callout.weight(.semibold)
         }
     }
 
@@ -331,7 +405,7 @@ private enum BaReminderResourcePresentation {
         case .dynamicIsland:
             .caption.monospacedDigit().weight(.semibold)
         case .lockScreen:
-            .headline.monospacedDigit().weight(.semibold)
+            .callout.monospacedDigit().weight(.semibold)
         }
     }
 
@@ -340,7 +414,16 @@ private enum BaReminderResourcePresentation {
         case .dynamicIsland:
             .caption.monospacedDigit().weight(.semibold)
         case .lockScreen:
-            .subheadline.monospacedDigit().weight(.semibold)
+            .callout.monospacedDigit().weight(.semibold)
+        }
+    }
+
+    var acknowledgeFont: Font {
+        switch self {
+        case .dynamicIsland:
+            .caption2.weight(.semibold)
+        case .lockScreen:
+            .caption.weight(.semibold)
         }
     }
 
@@ -413,6 +496,10 @@ private extension ActivityViewContext where Attributes == BaReminderLiveActivity
         primaryResource?.valueText ?? fallbackTimerText
     }
 
+    var markReadTitle: String {
+        state.markReadTitle ?? "Read"
+    }
+
     private var fallbackTimerText: String {
         let remaining = max(state.endDate.timeIntervalSince(.now), 0)
         let minutes = Int(ceil(remaining / 60))
@@ -437,9 +524,9 @@ private extension BaReminderLiveActivityAttributes.ContentState.Resource {
     var tint: Color {
         switch kind {
         case .ap:
-            .cyan
+            Color(red: 0.20, green: 0.90, blue: 0.24)
         case .cafeAP:
-            .mint
+            Color(red: 1.00, green: 0.42, blue: 0.74)
         }
     }
 }
@@ -461,9 +548,9 @@ private extension BaReminderLiveActivityAttributes.Kind {
     var tint: Color {
         switch self {
         case .ap:
-            .cyan
+            Color(red: 0.20, green: 0.90, blue: 0.24)
         case .cafeAP:
-            .mint
+            Color(red: 1.00, green: 0.42, blue: 0.74)
         case .activity:
             .orange
         case .pool:

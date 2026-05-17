@@ -10,10 +10,10 @@ import Foundation
 #if os(iOS) && canImport(ActivityKit)
 import ActivityKit
 
-struct BaReminderLiveActivityAttributes: ActivityAttributes {
-    struct ContentState: Codable, Hashable {
-        struct Resource: Codable, Hashable {
-            enum Kind: String, Codable, Hashable {
+nonisolated struct BaReminderLiveActivityAttributes: ActivityAttributes {
+    nonisolated struct ContentState: Codable, Hashable {
+        nonisolated struct Resource: Codable, Hashable {
+            nonisolated enum Kind: String, Codable, Hashable {
                 case ap
                 case cafeAP
             }
@@ -30,10 +30,11 @@ struct BaReminderLiveActivityAttributes: ActivityAttributes {
         var startDate: Date
         var endDate: Date
         var updatedAt: Date
+        var markReadTitle: String?
         var resources: [Resource]?
     }
 
-    enum Kind: String, Codable, Hashable {
+    nonisolated enum Kind: String, Codable, Hashable {
         case ap
         case cafeAP
         case activity

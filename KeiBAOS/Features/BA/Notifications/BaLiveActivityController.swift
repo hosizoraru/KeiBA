@@ -141,6 +141,7 @@ private extension BaLiveActivityCandidate {
                 startDate: startDate,
                 endDate: endDate,
                 updatedAt: Date(),
+                markReadTitle: NSLocalizedString("ba.notification.live.markRead", bundle: .main, comment: ""),
                 resources: resources.map(\.contentResource)
             ),
             staleDate: endDate.addingTimeInterval(60),
