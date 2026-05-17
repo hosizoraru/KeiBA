@@ -50,9 +50,9 @@ struct BaReminderLiveActivityWidget: Widget {
                     .font(.caption.weight(.bold))
                     .foregroundStyle(context.attributes.kind.tint)
             }
-            .contentMargins(.horizontal, 18, for: .expanded)
-            .contentMargins(.top, 12, for: .expanded)
-            .contentMargins(.bottom, 16, for: .expanded)
+            .contentMargins(.horizontal, 24, for: .expanded)
+            .contentMargins(.top, 16, for: .expanded)
+            .contentMargins(.bottom, 18, for: .expanded)
             .keylineTint(context.attributes.kind.tint)
         }
         .supplementalActivityFamilies([.small, .medium])
@@ -172,6 +172,10 @@ private struct BaReminderSmallLiveActivityView: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
+        .background(
+            Color.black.opacity(0.72),
+            in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+        )
     }
 
     private var fallbackBody: some View {
@@ -273,6 +277,7 @@ private struct BaReminderIslandHeader: View {
                 iconSize: 18,
                 textFont: .headline.weight(.semibold)
             )
+            .padding(.leading, 4)
         }
     }
 
@@ -313,6 +318,7 @@ private struct BaReminderIslandDetails: View {
             )
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.top, 7)
+            .padding(.leading, 4)
         }
     }
 }
