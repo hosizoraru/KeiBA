@@ -87,6 +87,8 @@ nonisolated enum BaAppAppearance: String, CaseIterable, Codable, Identifiable, H
 
 nonisolated enum BaL10n {
     private static let appLanguageOverrideKey = "ba.app.localization.language.v1"
+    private static let appLanguageLock = NSLock()
+    nonisolated(unsafe) private static var cachedAppLanguage: BaAppLanguage?
 
     static func configure(appLanguage: BaAppLanguage) {
         switch appLanguage {
@@ -95,6 +97,7 @@ nonisolated enum BaL10n {
         default:
             UserDefaults.standard.set(appLanguage.rawValue, forKey: appLanguageOverrideKey)
         }
+        setCachedAppLanguage(appLanguage)
     }
 
     static func string(_ key: String, table: String? = nil, bundle: Bundle = .main) -> String {
@@ -119,11 +122,28 @@ nonisolated enum BaL10n {
     }
 
     private static var configuredAppLanguage: BaAppLanguage {
+        if let cached = cachedAppLanguageValue() {
+            return cached
+        }
         guard let rawValue = UserDefaults.standard.string(forKey: appLanguageOverrideKey),
               let language = BaAppLanguage(rawValue: rawValue)
         else {
+            setCachedAppLanguage(.system)
             return .system
         }
+        setCachedAppLanguage(language)
         return language
+    }
+
+    private static func cachedAppLanguageValue() -> BaAppLanguage? {
+        appLanguageLock.lock()
+        defer { appLanguageLock.unlock() }
+        return cachedAppLanguage
+    }
+
+    private static func setCachedAppLanguage(_ language: BaAppLanguage) {
+        appLanguageLock.lock()
+        cachedAppLanguage = language
+        appLanguageLock.unlock()
     }
 }

@@ -594,6 +594,7 @@ struct BaMusicNowPlayingSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     let session: BaMusicPlaybackSession
+    @State private var selectedDetailEntry: BaGuideCatalogEntry?
 
     var body: some View {
         NavigationStack {
@@ -622,6 +623,7 @@ struct BaMusicNowPlayingSheet: View {
                                 onCacheAll: { session.cacheAll($0) },
                                 onClearAllCache: { session.clearCachedTracks($0) },
                                 onLoadDetail: { _ in },
+                                onOpenDetail: { selectedDetailEntry = $0 },
                                 onRefreshCacheState: session.refreshCacheState(for:)
                             )
                         }
@@ -636,6 +638,9 @@ struct BaMusicNowPlayingSheet: View {
             }
             .navigationTitle(BaL10n.string("ba.music.nowPlaying.title"))
             .platformInlineNavigationTitle()
+            .navigationDestination(item: $selectedDetailEntry) { entry in
+                BaStudentDetailView(entry: entry)
+            }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button(BaL10n.string("ba.action.dismiss")) {

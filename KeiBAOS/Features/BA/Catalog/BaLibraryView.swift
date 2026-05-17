@@ -16,6 +16,7 @@ struct BaLibraryView: View {
     let playbackSession: BaMusicPlaybackSession
 
     @State private var searchText = ""
+    @State private var selectedDetailEntry: BaGuideCatalogEntry?
 
     @MainActor
     init() {
@@ -46,6 +47,9 @@ struct BaLibraryView: View {
                 .background(AppBackground())
         }
         .searchable(text: $searchText, prompt: Text(BaL10n.string("ba.music.search.prompt")))
+        .navigationDestination(item: $selectedDetailEntry) { entry in
+            BaStudentDetailView(entry: entry)
+        }
         .task {
             await model.loadCatalogIfNeeded()
         }
@@ -208,6 +212,7 @@ struct BaLibraryView: View {
             onCacheAll: cacheTracks,
             onClearAllCache: { playbackSession.clearCachedTracks($0) },
             onLoadDetail: loadDetail,
+            onOpenDetail: { selectedDetailEntry = $0 },
             onRefreshCacheState: playbackSession.refreshCacheState(for:)
         )
     }

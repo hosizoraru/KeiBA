@@ -60,6 +60,7 @@ struct BaCatalogGridView: View {
                         BaStudentDetailView(entry: row.entry)
                     } label: {
                         BaCatalogEntryGridCard(row: row)
+                            .equatable()
                     }
                     .buttonStyle(.plain)
                     .contextMenu {

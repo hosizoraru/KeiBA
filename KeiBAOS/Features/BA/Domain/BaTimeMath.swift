@@ -198,6 +198,8 @@ nonisolated struct BaCafeRefreshSlot: Identifiable, Equatable, Hashable {
 }
 
 nonisolated enum BaDisplayFormatters {
+    private static let formatterLock = NSLock()
+
     private static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MM-dd HH:mm"
@@ -223,23 +225,23 @@ nonisolated enum BaDisplayFormatters {
     }()
 
     static func dateTime(_ date: Date, server: BaServer? = nil) -> String {
-        if let server {
-            dateFormatter.timeZone = server.timeZone
-        } else {
-            dateFormatter.timeZone = .current
-        }
-        return dateFormatter.string(from: date)
+        format(date, using: dateFormatter, timeZone: server?.timeZone ?? .current)
     }
 
     static func syncTime(_ date: Date, includingSeconds: Bool = true) -> String {
         let formatter = includingSeconds ? syncFormatter : syncMinuteFormatter
-        formatter.timeZone = .current
-        return formatter.string(from: date)
+        return format(date, using: formatter, timeZone: .current)
     }
 
     static func clockTime(_ date: Date, timeZone: TimeZone = .current) -> String {
-        clockFormatter.timeZone = timeZone
-        return clockFormatter.string(from: date)
+        format(date, using: clockFormatter, timeZone: timeZone)
+    }
+
+    private static func format(_ date: Date, using formatter: DateFormatter, timeZone: TimeZone) -> String {
+        formatterLock.lock()
+        defer { formatterLock.unlock() }
+        formatter.timeZone = timeZone
+        return formatter.string(from: date)
     }
 
     static func compactRemaining(

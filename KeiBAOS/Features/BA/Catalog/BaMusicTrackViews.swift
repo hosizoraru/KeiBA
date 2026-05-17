@@ -251,9 +251,8 @@ struct BaMusicQueueSection: View {
     let onCacheAll: ([BaMusicTrack]) -> Void
     let onClearAllCache: ([BaMusicTrack]) -> Void
     let onLoadDetail: (BaMusicTrack) -> Void
+    let onOpenDetail: (BaGuideCatalogEntry) -> Void
     let onRefreshCacheState: (BaMusicTrack) async -> Void
-
-    @State private var selectedDetailEntry: BaGuideCatalogEntry?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -309,16 +308,13 @@ struct BaMusicQueueSection: View {
                         onCache: { onCache(track) },
                         onClearCache: { onClearCache(track) },
                         onLoadDetail: { onLoadDetail(track) },
-                        onOpenDetail: { selectedDetailEntry = track.entry }
+                        onOpenDetail: { onOpenDetail(track.entry) }
                     )
                     .task(id: track.id) {
                         await onRefreshCacheState(track)
                     }
                 }
             }
-        }
-        .navigationDestination(item: $selectedDetailEntry) { entry in
-            BaStudentDetailView(entry: entry)
         }
     }
 

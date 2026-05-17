@@ -59,22 +59,33 @@ final class BaNotificationCoordinator: BaNotificationCoordinating {
         requestAuthorizationIfNeeded: Bool,
         now: Date = Date()
     ) async {
-        let plan = BaNotificationPlanner.makePlan(
-            settings: settings,
-            activities: activities,
-            pools: pools,
-            now: now
-        )
-        await scheduler.apply(plan: plan, requestAuthorizationIfNeeded: requestAuthorizationIfNeeded, now: now)
+        let planning = await Task.detached(priority: .utility) {
+            #if os(iOS) && canImport(ActivityKit)
+            let liveActivityCandidates = BaNotificationPlanner.liveActivityCandidates(
+                settings: settings,
+                activities: activities,
+                pools: pools,
+                now: now
+            )
+            #else
+            let liveActivityCandidates: [BaLiveActivityCandidate] = []
+            #endif
+
+            return BaNotificationPlanningResult(
+                plan: BaNotificationPlanner.makePlan(
+                    settings: settings,
+                    activities: activities,
+                    pools: pools,
+                    now: now
+                ),
+                liveActivityCandidates: liveActivityCandidates
+            )
+        }.value
+
+        await scheduler.apply(plan: planning.plan, requestAuthorizationIfNeeded: requestAuthorizationIfNeeded, now: now)
 
         #if os(iOS) && canImport(ActivityKit)
-        let candidates = BaNotificationPlanner.liveActivityCandidates(
-            settings: settings,
-            activities: activities,
-            pools: pools,
-            now: now
-        )
-        await liveActivityController.synchronize(candidates: candidates)
+        await liveActivityController.synchronize(candidates: planning.liveActivityCandidates)
         #endif
     }
 
@@ -95,6 +106,11 @@ final class BaNotificationCoordinator: BaNotificationCoordinating {
         await liveActivityController.endTestActivities()
         #endif
     }
+}
+
+private struct BaNotificationPlanningResult: Sendable {
+    let plan: BaNotificationPlan
+    let liveActivityCandidates: [BaLiveActivityCandidate]
 }
 
 @MainActor

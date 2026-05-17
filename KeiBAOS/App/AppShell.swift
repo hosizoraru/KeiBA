@@ -16,6 +16,7 @@ struct AppShell: View {
     var body: some View {
         shellContent
             .environment(\.locale, model.envelope.globalSettings.appLanguage.locale)
+            .environment(\.baShowPreviewImages, model.settings.showPreviewImages)
             .preferredColorScheme(model.envelope.globalSettings.appAppearance.preferredColorScheme)
             .sheet(isPresented: musicNowPlayingExpandedBinding) {
                 if let musicPlaybackSession {
@@ -29,7 +30,7 @@ struct AppShell: View {
             }
             .onChange(of: scenePhase, initial: true) { _, phase in
                 if phase == .active {
-                    model.scheduleNotificationRefresh()
+                    model.scheduleNotificationRefresh(delay: .milliseconds(700))
                 }
             }
     }
@@ -160,20 +161,15 @@ private struct BaNavigationRoot: View {
         switch tab {
         case .overview:
             BaOverviewView(onOpenTab: onSelectTab)
-                .environment(\.baShowPreviewImages, model.settings.showPreviewImages)
         case .activity:
             BaActivityView(statusFilter: $activityFilter)
-                .environment(\.baShowPreviewImages, model.settings.showPreviewImages)
         case .pool:
             BaPoolView(statusFilter: $poolFilter)
-                .environment(\.baShowPreviewImages, model.settings.showPreviewImages)
         case .catalog:
             BaCatalogView()
-                .environment(\.baShowPreviewImages, model.settings.showPreviewImages)
         case .library:
             if let musicPlaybackSession {
                 BaLibraryView(playbackSession: musicPlaybackSession)
-                    .environment(\.baShowPreviewImages, model.settings.showPreviewImages)
             } else {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-enum BaTimelineStatus: String, CaseIterable, Codable, Identifiable, Hashable {
+enum BaTimelineStatus: String, CaseIterable, Codable, Identifiable, Hashable, Sendable {
     case running
     case upcoming
     case ended
@@ -40,7 +40,7 @@ enum BaTimelineStatus: String, CaseIterable, Codable, Identifiable, Hashable {
     }
 }
 
-nonisolated struct BaActivityEntry: Identifiable, Codable, Hashable {
+nonisolated struct BaActivityEntry: Identifiable, Codable, Hashable, Sendable {
     let id: Int
     let title: String
     let kindId: Int
@@ -68,7 +68,7 @@ nonisolated struct BaActivityEntry: Identifiable, Codable, Hashable {
     }
 }
 
-nonisolated struct BaPoolEntry: Identifiable, Codable, Hashable {
+nonisolated struct BaPoolEntry: Identifiable, Codable, Hashable, Sendable {
     let id: Int
     let name: String
     let tagId: Int
