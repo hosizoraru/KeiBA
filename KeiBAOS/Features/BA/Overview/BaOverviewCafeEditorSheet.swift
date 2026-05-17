@@ -35,7 +35,7 @@ struct BaOverviewCafeEditorSheet: View {
                     LabeledContent(BaL10n.string("ba.settings.cafe.threshold.title")) {
                         TextField("\(cafeThreshold)", text: $thresholdText)
                             .multilineTextAlignment(.trailing)
-                            .monospacedDigit()
+                            .baNumberTextInput()
                             .onChange(of: thresholdText) { _, value in
                                 let filtered = value.filter(\.isNumber).prefix(3)
                                 let next = String(filtered)
@@ -43,9 +43,6 @@ struct BaOverviewCafeEditorSheet: View {
                                     thresholdText = next
                                 }
                             }
-                        #if os(iOS)
-                            .keyboardType(.numberPad)
-                        #endif
                     }
                 } footer: {
                     Text(BaL10n.string("ba.overview.cafe.editor.threshold.footer"))

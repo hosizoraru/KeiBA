@@ -79,7 +79,7 @@ struct BaOverviewAPEditorSheet: View {
         LabeledContent(title) {
             TextField(fallback, text: text)
                 .multilineTextAlignment(.trailing)
-                .monospacedDigit()
+                .baNumberTextInput()
                 .onChange(of: text.wrappedValue) { _, value in
                     let filtered = value.filter(\.isNumber).prefix(3)
                     let next = String(filtered)
@@ -87,9 +87,6 @@ struct BaOverviewAPEditorSheet: View {
                         text.wrappedValue = next
                     }
                 }
-            #if os(iOS)
-                .keyboardType(.numberPad)
-            #endif
         }
     }
 

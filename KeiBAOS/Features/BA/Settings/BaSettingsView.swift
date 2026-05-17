@@ -108,8 +108,7 @@ struct BaSettingsView: View {
                             prompt: Text(BaL10n.string("ba.office.friendCode.prompt"))
                         )
                         .textFieldStyle(.roundedBorder)
-                        .monospaced()
-                        .autocorrectionDisabled()
+                        .baFriendCodeTextInput()
                         .frame(width: 180)
                     }
                 }
@@ -314,7 +313,7 @@ struct BaSettingsView: View {
             TextField(placeholder, value: value, format: .number)
                 .textFieldStyle(.roundedBorder)
                 .multilineTextAlignment(.trailing)
-                .monospacedDigit()
+                .baNumberTextInput()
                 .frame(width: 96)
         }
     }
@@ -352,11 +351,7 @@ struct BaSettingsView: View {
                 text: friendCodeBinding,
                 prompt: Text(BaL10n.string("ba.office.friendCode.prompt"))
             )
-            .monospaced()
-            .autocorrectionDisabled()
-            #if os(iOS)
-                .textInputAutocapitalization(.characters)
-            #endif
+            .baFriendCodeTextInput()
         } header: {
             Text(BaL10n.string("ba.settings.identity.section"))
         } footer: {
@@ -373,9 +368,7 @@ struct BaSettingsView: View {
                     format: .number
                 )
                 .multilineTextAlignment(.trailing)
-                #if os(iOS)
-                    .keyboardType(.numberPad)
-                #endif
+                .baNumberTextInput()
             }
 
             Stepper(value: profileIntBinding(\.cafeLevel, range: 1 ... 10), in: 1 ... 10) {
@@ -391,9 +384,7 @@ struct BaSettingsView: View {
                     format: .number
                 )
                 .multilineTextAlignment(.trailing)
-                #if os(iOS)
-                    .keyboardType(.numberPad)
-                #endif
+                .baNumberTextInput()
             }
 
             LabeledContent(BaL10n.string("ba.settings.cafe.threshold.title")) {
@@ -403,9 +394,7 @@ struct BaSettingsView: View {
                     format: .number
                 )
                 .multilineTextAlignment(.trailing)
-                #if os(iOS)
-                    .keyboardType(.numberPad)
-                #endif
+                .baNumberTextInput()
             }
         } header: {
             Text(BaL10n.string("ba.settings.resources.section"))

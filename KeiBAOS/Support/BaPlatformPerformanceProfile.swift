@@ -7,7 +7,7 @@
 
 import Foundation
 #if os(iOS)
-    import UIKit
+    import Darwin
 #endif
 
 nonisolated enum BaPlatformPerformanceClass: Equatable, Sendable {
@@ -161,8 +161,24 @@ enum BaPlatformPerformanceProfile {
     }
 
     #if os(iOS)
-        private static var isPad: Bool {
-            UIDevice.current.userInterfaceIdiom == .pad
+        nonisolated private static var isPad: Bool {
+            let simulatorModelIdentifier = ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] ?? ""
+            if simulatorModelIdentifier.hasPrefix("iPad") {
+                return true
+            }
+
+            return deviceModelIdentifier.hasPrefix("iPad")
+        }
+
+        nonisolated private static var deviceModelIdentifier: String {
+            var systemInfo = utsname()
+            _ = uname(&systemInfo)
+
+            return withUnsafePointer(to: &systemInfo.machine) { pointer in
+                pointer.withMemoryRebound(to: CChar.self, capacity: 1) { reboundPointer in
+                    String(validatingUTF8: reboundPointer) ?? ""
+                }
+            }
         }
     #endif
 }

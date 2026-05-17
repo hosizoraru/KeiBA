@@ -54,6 +54,7 @@ private struct BaSettingsSheet: View {
 private struct BaNotificationSettingsSheet: View {
     @Environment(BaAppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
     @State private var authorizationStatus = BaNotificationAuthorizationStatus.checking
     @State private var testStatus: String?
@@ -467,8 +468,8 @@ private struct BaNotificationSettingsSheet: View {
 
     private func openSystemNotificationSettings() {
         #if os(iOS) && canImport(UIKit)
-        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
-        UIApplication.shared.open(url)
+        guard let url = URL(string: UIApplication.openNotificationSettingsURLString) else { return }
+        openURL(url)
         #elseif os(macOS) && canImport(AppKit)
         NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
         #endif
@@ -633,8 +634,7 @@ private struct BaEditOfficeSheet: View {
                                 prompt: Text(BaL10n.string("ba.office.friendCode.prompt"))
                             )
                             .textFieldStyle(.roundedBorder)
-                            .monospaced()
-                            .autocorrectionDisabled()
+                            .baFriendCodeTextInput()
                             .frame(width: 180)
                         }
 
@@ -659,7 +659,7 @@ private struct BaEditOfficeSheet: View {
                             TextField("240", value: $draft.apLimit, format: .number)
                                 .textFieldStyle(.roundedBorder)
                                 .multilineTextAlignment(.trailing)
-                                .monospacedDigit()
+                                .baNumberTextInput()
                                 .frame(width: 96)
                         }
 
@@ -761,11 +761,7 @@ private struct BaEditOfficeSheet: View {
                         text: $draft.friendCode,
                         prompt: Text(BaL10n.string("ba.office.friendCode.prompt"))
                     )
-                    .monospaced()
-                    .autocorrectionDisabled()
-                    #if os(iOS)
-                        .textInputAutocapitalization(.characters)
-                    #endif
+                    .baFriendCodeTextInput()
                     Picker(BaL10n.string("ba.office.server.label"), selection: $draft.server) {
                         ForEach(BaServer.allCases) { server in
                             Text(server.title)
@@ -782,10 +778,7 @@ private struct BaEditOfficeSheet: View {
                     LabeledContent(BaL10n.string("ba.office.ap.limit.title")) {
                         TextField("240", value: $draft.apLimit, format: .number)
                             .multilineTextAlignment(.trailing)
-                            .monospacedDigit()
-                        #if os(iOS)
-                            .keyboardType(.numberPad)
-                        #endif
+                            .baNumberTextInput()
                     }
                     Stepper(value: $draft.cafeLevel, in: 1 ... 10) {
                         LabeledContent(BaL10n.string("ba.cafe.level.title")) {
