@@ -36,8 +36,41 @@ private struct BaNotificationSettingsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @State private var authorizationStatus = BaNotificationAuthorizationStatus.checking
+    @State private var testStatus: String?
 
     var body: some View {
+        #if os(macOS)
+        VStack(spacing: 0) {
+            HStack {
+                Text(BaPresentedSheet.notifications.title)
+                    .font(.title3.weight(.semibold))
+
+                Spacer()
+
+                Button(String(localized: "ba.common.done")) {
+                    dismiss()
+                }
+                .keyboardShortcut(.defaultAction)
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 16)
+
+            Divider()
+
+            macNotificationSettingsContent
+        }
+        .frame(minWidth: 680, minHeight: 660)
+        .task {
+            await prepareNotificationSettings()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .active else { return }
+            Task {
+                await refreshAuthorizationStatus()
+                await model.requestNotificationAuthorizationAndRefreshSchedule()
+            }
+        }
+        #else
         NavigationStack {
             Form {
                 Section {
@@ -59,7 +92,7 @@ private struct BaNotificationSettingsSheet: View {
                         }
                     }
                 } footer: {
-                    Text(String(localized: "ba.sheet.notifications.footer"))
+                    notificationFooterText("ba.sheet.notifications.footer")
                 }
 
                 Section {
@@ -73,7 +106,7 @@ private struct BaNotificationSettingsSheet: View {
                 } header: {
                     Text(String(localized: "ba.settings.resources.section"))
                 } footer: {
-                    Text(String(localized: "ba.sheet.notifications.resources.footer"))
+                    notificationFooterText("ba.sheet.notifications.resources.footer")
                 }
 
                 Section {
@@ -106,18 +139,14 @@ private struct BaNotificationSettingsSheet: View {
                 } header: {
                     Text(String(localized: "ba.settings.activityPool.title"))
                 } footer: {
-                    Text(String(localized: "ba.sheet.notifications.activityPool.footer"))
+                    notificationFooterText("ba.sheet.notifications.activityPool.footer")
                 }
+
+                testActionsSection
             }
             .navigationTitle(BaPresentedSheet.notifications.title)
             .task {
-                await refreshAuthorizationStatus()
-                if authorizationStatus.canRequestAuthorization {
-                    await requestAuthorizationAndRefresh()
-                } else {
-                    await model.requestNotificationAuthorizationAndRefreshSchedule()
-                    await refreshAuthorizationStatus()
-                }
+                await prepareNotificationSettings()
             }
             .onChange(of: scenePhase) { _, phase in
                 guard phase == .active else { return }
@@ -134,6 +163,183 @@ private struct BaNotificationSettingsSheet: View {
                 }
             }
         }
+        #endif
+    }
+
+    #if os(macOS)
+    private var macNotificationSettingsContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                macSettingsGroup {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Label(
+                            authorizationStatus.title,
+                            systemImage: authorizationStatus.systemImage
+                        )
+                        .foregroundStyle(authorizationStatus.foregroundStyle)
+                        .font(.headline)
+
+                        if authorizationStatus.canRequestAuthorization {
+                            Button(String(localized: "ba.sheet.notifications.permission.request")) {
+                                Task {
+                                    await requestAuthorizationAndRefresh(forceRequest: true)
+                                }
+                            }
+                        } else if authorizationStatus.canOpenSystemSettings {
+                            Button(String(localized: "ba.sheet.notifications.permission.openSettings")) {
+                                openSystemNotificationSettings()
+                            }
+                        }
+
+                        notificationFooterText("ba.sheet.notifications.footer")
+                    }
+                }
+
+                macSettingsGroup(String(localized: "ba.settings.resources.section")) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Toggle(String(localized: "ba.sheet.notifications.ap.title"), isOn: profileBinding(\.apNotificationsEnabled))
+                        Toggle(String(localized: "ba.sheet.notifications.cafeAp.title"), isOn: profileBinding(\.cafeApNotificationsEnabled))
+                        Toggle(String(localized: "ba.sheet.notifications.visit.title"), isOn: profileBinding(\.visitNotificationsEnabled))
+                        Toggle(
+                            String(localized: "ba.settings.arena.notifications.title"),
+                            isOn: profileBinding(\.arenaRefreshNotificationsEnabled)
+                        )
+                        notificationFooterText("ba.sheet.notifications.resources.footer")
+                    }
+                }
+
+                macSettingsGroup(String(localized: "ba.settings.activityPool.title")) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Toggle(
+                            String(localized: "ba.settings.activity.start.notifications.title"),
+                            isOn: globalBoolBinding(\.calendarUpcomingNotificationsEnabled)
+                        )
+                        Toggle(
+                            String(localized: "ba.settings.activity.end.notifications.title"),
+                            isOn: globalBoolBinding(\.calendarEndingNotificationsEnabled)
+                        )
+                        Toggle(
+                            String(localized: "ba.settings.pool.start.notifications.title"),
+                            isOn: globalBoolBinding(\.poolUpcomingNotificationsEnabled)
+                        )
+                        Toggle(
+                            String(localized: "ba.settings.pool.end.notifications.title"),
+                            isOn: globalBoolBinding(\.poolEndingNotificationsEnabled)
+                        )
+                        Toggle(
+                            String(localized: "ba.settings.calendarPool.change.notifications.title"),
+                            isOn: globalBoolBinding(\.calendarPoolChangeNotificationsEnabled)
+                        )
+
+                        HStack {
+                            Text(String(localized: "ba.settings.notifyLead.title"))
+                            Spacer()
+                            Picker(String(localized: "ba.settings.notifyLead.title"), selection: notifyLeadBinding) {
+                                ForEach(BaCalendarPoolNotifyLead.allCases) { lead in
+                                    Text(lead.title)
+                                        .tag(lead)
+                                }
+                            }
+                            .labelsHidden()
+                            .frame(width: 140)
+                        }
+
+                        notificationFooterText("ba.sheet.notifications.activityPool.footer")
+                    }
+                }
+
+                macSettingsGroup(String(localized: "ba.sheet.notifications.test.title")) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        testActionButtons
+                        testStatusText
+                        notificationFooterText("ba.sheet.notifications.test.footer")
+                    }
+                }
+            }
+            .padding(24)
+            .padding(.bottom, 24)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func macSettingsGroup<Content: View>(
+        _ title: String? = nil,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let title {
+                Text(title)
+                    .font(.headline)
+            }
+            content()
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+    #endif
+
+    private var testActionsSection: some View {
+        Section {
+            testActionButtons
+            testStatusText
+        } header: {
+            Text(String(localized: "ba.sheet.notifications.test.title"))
+        } footer: {
+            notificationFooterText("ba.sheet.notifications.test.footer")
+        }
+    }
+
+    @ViewBuilder
+    private var testActionButtons: some View {
+        Button {
+            Task {
+                await sendTestNotification()
+            }
+        } label: {
+            Label(String(localized: "ba.sheet.notifications.test.local"), systemImage: "bell.badge")
+        }
+
+        #if os(iOS)
+        Button {
+            Task {
+                await startTestLiveActivity()
+            }
+        } label: {
+            Label(String(localized: "ba.sheet.notifications.test.live"), systemImage: "timer")
+        }
+
+        Button(role: .destructive) {
+            Task {
+                await endTestLiveActivities()
+            }
+        } label: {
+            Label(String(localized: "ba.sheet.notifications.test.live.end"), systemImage: "xmark.circle")
+        }
+        #else
+        Text(String(localized: "ba.sheet.notifications.test.live.unavailable"))
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+        #endif
+    }
+
+    @ViewBuilder
+    private var testStatusText: some View {
+        if let testStatus {
+            Text(testStatus)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func notificationFooterText(_ key: LocalizedStringResource) -> some View {
+        Text(String(localized: key))
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .lineLimit(nil)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     private var notifyLeadBinding: Binding<BaCalendarPoolNotifyLead> {
@@ -191,6 +397,36 @@ private struct BaNotificationSettingsSheet: View {
     private func requestAuthorizationAndRefresh(forceRequest: Bool = false) async {
         await model.requestNotificationAuthorizationAndRefreshSchedule(forceRequest: forceRequest)
         await refreshAuthorizationStatus()
+    }
+
+    private func prepareNotificationSettings() async {
+        await refreshAuthorizationStatus()
+        if authorizationStatus.canRequestAuthorization {
+            await requestAuthorizationAndRefresh()
+        } else {
+            await model.requestNotificationAuthorizationAndRefreshSchedule()
+            await refreshAuthorizationStatus()
+        }
+    }
+
+    private func sendTestNotification() async {
+        await model.sendTestNotification()
+        await refreshAuthorizationStatus()
+        testStatus = authorizationStatus.allowsDelivery
+            ? String(localized: "ba.sheet.notifications.test.local.sent")
+            : String(localized: "ba.sheet.notifications.test.permissionNeeded")
+    }
+
+    private func startTestLiveActivity() async {
+        let started = await model.startTestLiveActivity()
+        testStatus = started
+            ? String(localized: "ba.sheet.notifications.test.live.started")
+            : String(localized: "ba.sheet.notifications.test.live.permissionNeeded")
+    }
+
+    private func endTestLiveActivities() async {
+        await model.endTestLiveActivities()
+        testStatus = String(localized: "ba.sheet.notifications.test.live.ended")
     }
 
     private func openSystemNotificationSettings() {
@@ -278,6 +514,15 @@ private enum BaNotificationAuthorizationStatus: Equatable {
 
     var canOpenSystemSettings: Bool {
         self == .denied
+    }
+
+    var allowsDelivery: Bool {
+        switch self {
+        case .allowed, .provisional:
+            true
+        case .checking, .denied, .notDetermined, .unknown:
+            false
+        }
     }
 }
 
@@ -440,12 +685,37 @@ private struct BaDebugToolsSheet: View {
 
 extension View {
     @ViewBuilder
-    func baActionSheetPresentation() -> some View {
+    func baActionSheetPresentation(for sheet: BaPresentedSheet) -> some View {
         #if os(iOS)
             presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
         #else
-            frame(minWidth: 420, minHeight: 360)
+            frame(
+                minWidth: sheet.macMinimumSheetWidth,
+                minHeight: sheet.macMinimumSheetHeight
+            )
         #endif
     }
 }
+
+#if os(macOS)
+private extension BaPresentedSheet {
+    var macMinimumSheetWidth: CGFloat {
+        switch self {
+        case .notifications:
+            680
+        case .editOffice, .debugTools:
+            520
+        }
+    }
+
+    var macMinimumSheetHeight: CGFloat {
+        switch self {
+        case .notifications:
+            660
+        case .editOffice, .debugTools:
+            360
+        }
+    }
+}
+#endif

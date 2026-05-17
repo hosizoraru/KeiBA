@@ -13,6 +13,7 @@ import ActivityKit
 @MainActor
 final class BaLiveActivityController {
     private let maximumActivities = 2
+    private let testActivityID = BaNotificationPlan.debugIdentifierPrefix + "live"
 
     func synchronize(candidates: [BaLiveActivityCandidate]) async {
         let enabled = ActivityAuthorizationInfo().areActivitiesEnabled
@@ -34,12 +35,45 @@ final class BaLiveActivityController {
             if let activity = Activity<BaReminderLiveActivityAttributes>.activities.first(where: { $0.attributes.id == candidate.id }) {
                 await update(activity, with: candidate)
             } else {
-                try? Activity.request(
+                _ = try? Activity.request(
                     attributes: candidate.attributes,
                     content: candidate.content,
                     pushType: nil
                 )
             }
+        }
+    }
+
+    func startTestActivity(now: Date = Date()) async -> Bool {
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return false }
+
+        let candidate = BaLiveActivityCandidate(
+            id: testActivityID,
+            kind: .ap,
+            title: NSLocalizedString("ba.notification.debug.live.title", bundle: .main, comment: ""),
+            subtitle: NSLocalizedString("ba.notification.debug.live.subtitle", bundle: .main, comment: ""),
+            startDate: now,
+            endDate: now.addingTimeInterval(10 * 60),
+            relevance: 1
+        )
+
+        if let activity = Activity<BaReminderLiveActivityAttributes>.activities.first(where: { $0.attributes.id == candidate.id }) {
+            await update(activity, with: candidate)
+            return true
+        } else {
+            return (try? Activity.request(
+                attributes: candidate.attributes,
+                content: candidate.content,
+                pushType: nil
+            )) != nil
+        }
+    }
+
+    func endTestActivities() async {
+        for activity in Activity<BaReminderLiveActivityAttributes>.activities
+            where activity.attributes.id == testActivityID
+        {
+            await end(activity)
         }
     }
 

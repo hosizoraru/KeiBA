@@ -91,6 +91,22 @@ final class BaNotificationAppModelTests: XCTestCase {
         XCTAssertTrue(coordinator.calls[0].requestAuthorizationIfNeeded)
     }
 
+    func testDebugNotificationActionsForwardToCoordinator() async throws {
+        let defaults = try makeIsolatedDefaults()
+        let coordinator = RecordingNotificationCoordinator()
+        let model = makeAppModel(defaults: defaults, coordinator: coordinator) { _ in }
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+
+        await model.sendTestNotification(now: now)
+        let liveActivityStarted = await model.startTestLiveActivity(now: now)
+        await model.endTestLiveActivities()
+
+        XCTAssertEqual(coordinator.testNotificationDates, [now])
+        XCTAssertEqual(coordinator.testLiveActivityDates, [now])
+        XCTAssertTrue(liveActivityStarted)
+        XCTAssertEqual(coordinator.endTestLiveActivityCount, 1)
+    }
+
     private func makeIsolatedDefaults() throws -> UserDefaults {
         let suiteName = "KeiBAOSTests.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
@@ -152,6 +168,9 @@ private final class RecordingNotificationCoordinator: BaNotificationCoordinating
     }
 
     var calls: [Call] = []
+    var testNotificationDates: [Date] = []
+    var testLiveActivityDates: [Date] = []
+    var endTestLiveActivityCount = 0
 
     func synchronize(
         settings: BaAppSettings,
@@ -169,5 +188,18 @@ private final class RecordingNotificationCoordinator: BaNotificationCoordinating
                 now: now
             )
         )
+    }
+
+    func sendTestNotification(now: Date) async {
+        testNotificationDates.append(now)
+    }
+
+    func startTestLiveActivity(now: Date) async -> Bool {
+        testLiveActivityDates.append(now)
+        return true
+    }
+
+    func endTestLiveActivities() async {
+        endTestLiveActivityCount += 1
     }
 }

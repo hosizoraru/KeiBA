@@ -5529,6 +5529,70 @@
         }
       }
     },
+    "ba.notification.debug.live.subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Activity and Dynamic Island preview"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实时活动与灵动岛预览"
+          }
+        }
+      }
+    },
+    "ba.notification.debug.live.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AP Test Countdown"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AP 测试倒计时"
+          }
+        }
+      }
+    },
+    "ba.notification.debug.local.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KeiBAOS notification delivery is ready."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KeiBAOS 通知送达链路已就绪。"
+          }
+        }
+      }
+    },
+    "ba.notification.debug.local.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test Notification"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "测试通知"
+          }
+        }
+      }
+    },
     "ba.notification.live.activity.subtitle" : {
       "localizations" : {
         "en" : {
@@ -5941,6 +6005,182 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "AP、咖啡厅 AP、咖啡厅学生来访和战术对抗刷新都属于日常游玩提醒。"
+          }
+        }
+      }
+    },
+    "ba.sheet.notifications.test.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use these actions to verify local notification delivery and Live Activity presentation on supported iPhone models."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这些操作用于验证本地通知送达，以及在支持机型上的实时活动与灵动岛展示。"
+          }
+        }
+      }
+    },
+    "ba.sheet.notifications.test.live" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Live Activity / Dynamic Island Test"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动实时活动 / 灵动岛测试"
+          }
+        }
+      }
+    },
+    "ba.sheet.notifications.test.live.ended" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test Live Activity ended."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "测试实时活动已结束。"
+          }
+        }
+      }
+    },
+    "ba.sheet.notifications.test.live.end" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End Test Live Activity"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "结束测试实时活动"
+          }
+        }
+      }
+    },
+    "ba.sheet.notifications.test.live.started" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test Live Activity start requested."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已请求启动测试实时活动。"
+          }
+        }
+      }
+    },
+    "ba.sheet.notifications.test.live.permissionNeeded" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable Live Activities in system settings to show this test."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在系统设置中开启实时活动后可以显示这个测试。"
+          }
+        }
+      }
+    },
+    "ba.sheet.notifications.test.live.unavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Activity and Dynamic Island tests are available on iPhone."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实时活动与灵动岛测试适用于 iPhone。"
+          }
+        }
+      }
+    },
+    "ba.sheet.notifications.test.local" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send Test Notification"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发送测试通知"
+          }
+        }
+      }
+    },
+    "ba.sheet.notifications.test.local.sent" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test notification sent."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "测试通知已发送。"
+          }
+        }
+      }
+    },
+    "ba.sheet.notifications.test.permissionNeeded" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable system notification permission to receive the test notification."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开启系统通知权限后可以收到测试通知。"
+          }
+        }
+      }
+    },
+    "ba.sheet.notifications.test.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tests"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "测试"
           }
         }
       }

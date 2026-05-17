@@ -9,6 +9,7 @@ import Foundation
 
 nonisolated struct BaNotificationPlan: Equatable, Sendable {
     static let managedIdentifierPrefix = "os.kei.KeiBAOS.ba.notification."
+    static let debugIdentifierPrefix = "os.kei.KeiBAOS.ba.notification.debug."
 
     var reminders: [BaNotificationReminder]
 

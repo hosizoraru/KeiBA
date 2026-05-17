@@ -92,6 +92,23 @@ final class BaUserNotificationSchedulerTests: XCTestCase {
         XCTAssertEqual(center.removedIdentifiers, [BaNotificationPlan.managedIdentifierPrefix + "cn.ap.threshold"])
         XCTAssertTrue(center.addedRequests.isEmpty)
     }
+
+    func testSchedulerSendsStandaloneDebugNotification() async {
+        let center = RecordingNotificationCenter()
+        center.status = .notDetermined
+        center.statusAfterAuthorization = .authorized
+        let scheduler = BaUserNotificationScheduler(center: center)
+
+        await scheduler.sendTestNotification(
+            requestAuthorizationIfNeeded: true,
+            now: Date(timeIntervalSince1970: 1_800_000_000)
+        )
+
+        XCTAssertEqual(center.authorizationRequestCount, 1)
+        XCTAssertEqual(center.removedIdentifiers, [BaNotificationPlan.debugIdentifierPrefix + "local"])
+        XCTAssertEqual(center.addedRequests.map(\.identifier), [BaNotificationPlan.debugIdentifierPrefix + "local"])
+        XCTAssertEqual(center.addedRequests.first?.content.categoryIdentifier, "ba.debug")
+    }
 }
 
 private final class RecordingNotificationCenter: BaUserNotificationCenterClient {

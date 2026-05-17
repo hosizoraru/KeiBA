@@ -351,6 +351,18 @@ final class BaAppModel {
         )
     }
 
+    func sendTestNotification(now: Date = Date()) async {
+        await notificationCoordinator.sendTestNotification(now: now)
+    }
+
+    func startTestLiveActivity(now: Date = Date()) async -> Bool {
+        await notificationCoordinator.startTestLiveActivity(now: now)
+    }
+
+    func endTestLiveActivities() async {
+        await notificationCoordinator.endTestLiveActivities()
+    }
+
     func loadActivitiesIfNeeded(now: Date = Date()) async {
         if activityState.value == nil {
             await loadCachedActivities()

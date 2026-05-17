@@ -19,6 +19,10 @@ protocol BaNotificationCoordinating: AnyObject {
         requestAuthorizationIfNeeded: Bool,
         now: Date
     ) async
+
+    func sendTestNotification(now: Date) async
+    func startTestLiveActivity(now: Date) async -> Bool
+    func endTestLiveActivities() async
 }
 
 @MainActor
@@ -30,6 +34,10 @@ final class BaNoopNotificationCoordinator: BaNotificationCoordinating {
         requestAuthorizationIfNeeded: Bool,
         now: Date
     ) async {}
+
+    func sendTestNotification(now: Date) async {}
+    func startTestLiveActivity(now: Date) async -> Bool { false }
+    func endTestLiveActivities() async {}
 }
 
 @MainActor
@@ -69,6 +77,24 @@ final class BaNotificationCoordinator: BaNotificationCoordinating {
         await liveActivityController.synchronize(candidates: candidates)
         #endif
     }
+
+    func sendTestNotification(now: Date = Date()) async {
+        await scheduler.sendTestNotification(requestAuthorizationIfNeeded: true, now: now)
+    }
+
+    func startTestLiveActivity(now: Date = Date()) async -> Bool {
+        #if os(iOS) && canImport(ActivityKit)
+        await liveActivityController.startTestActivity(now: now)
+        #else
+        false
+        #endif
+    }
+
+    func endTestLiveActivities() async {
+        #if os(iOS) && canImport(ActivityKit)
+        await liveActivityController.endTestActivities()
+        #endif
+    }
 }
 
 @MainActor
@@ -101,6 +127,32 @@ final class BaUserNotificationScheduler {
             let request = makeRequest(reminder: reminder, now: now)
             try? await center.add(request)
         }
+    }
+
+    func sendTestNotification(
+        requestAuthorizationIfNeeded: Bool,
+        now: Date = Date()
+    ) async {
+        if requestAuthorizationIfNeeded {
+            _ = try? await center.requestAuthorization(options: [.alert, .sound, .badge])
+        }
+
+        let status = await center.authorizationStatus()
+        guard status.allowsScheduling else { return }
+
+        let identifier = BaNotificationPlan.debugIdentifierPrefix + "local"
+        center.removePendingNotificationRequests(withIdentifiers: [identifier])
+
+        let content = UNMutableNotificationContent()
+        content.title = localized("ba.notification.debug.local.title")
+        content.body = localized("ba.notification.debug.local.body")
+        content.sound = .default
+        content.threadIdentifier = "os.kei.KeiBAOS.ba.debug"
+        content.categoryIdentifier = "ba.debug"
+
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+        try? await center.add(request)
     }
 
     private func removeManagedRequests() async {
@@ -228,6 +280,10 @@ protocol BaNotificationCoordinating: AnyObject {
         requestAuthorizationIfNeeded: Bool,
         now: Date
     ) async
+
+    func sendTestNotification(now: Date) async
+    func startTestLiveActivity(now: Date) async -> Bool
+    func endTestLiveActivities() async
 }
 
 @MainActor
@@ -239,5 +295,9 @@ final class BaNoopNotificationCoordinator: BaNotificationCoordinating {
         requestAuthorizationIfNeeded: Bool,
         now: Date
     ) async {}
+
+    func sendTestNotification(now: Date) async {}
+    func startTestLiveActivity(now: Date) async -> Bool { false }
+    func endTestLiveActivities() async {}
 }
 #endif
