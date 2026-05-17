@@ -25,9 +25,22 @@
 		98BA00012FB6000000000001 /* KeiBAOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KeiBAOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		98BA02012FB9000000000201 /* Exceptions for "KeiBAOS" folder in "KeiBAOS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Support/KeiBAOS-iOS-Info.plist,
+			);
+			target = 9893E4722FB52F57001F2D43 /* KeiBAOS */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		9893E4752FB52F57001F2D43 /* KeiBAOS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				98BA02012FB9000000000201 /* Exceptions for "KeiBAOS" folder in "KeiBAOS" target */,
+			);
 			path = KeiBAOS;
 			sourceTree = "<group>";
 		};

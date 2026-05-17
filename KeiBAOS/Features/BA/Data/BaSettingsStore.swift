@@ -44,29 +44,23 @@ struct BaSettingsStore {
         guard let data = try? JSONEncoder.ba.encode(envelope.normalized()) else { return }
         defaults.set(data, forKey: envelopeKey)
     }
-}
 
-nonisolated extension BaSettingsEnvelope {
-    func normalized() -> BaSettingsEnvelope {
-        var copy = self
-        copy.schemaVersion = Self.currentSchemaVersion
-        if BaServer.allCases.contains(copy.selectedServer) == false {
-            copy.selectedServer = .cn
-        }
-        copy.globalSettings = copy.globalSettings.normalized()
-        for server in BaServer.allCases where copy.serverProfiles[server] == nil {
-            copy.serverProfiles[server] = .defaults()
-        }
-        for server in BaServer.allCases {
-            copy.serverProfiles[server] = copy.serverProfiles[server]?.normalized()
-        }
-        if copy.globalSettings.identityIndependentByServer == false {
-            let shared = copy.profile(for: copy.selectedServer)
-            for server in BaServer.allCases {
-                copy.serverProfiles[server]?.nickname = shared.nickname
-                copy.serverProfiles[server]?.friendCode = shared.friendCode
-            }
-        }
-        return copy
+    func loadUserData(updatedAt: Date = Date()) -> BaUserDataEnvelope {
+        loadEnvelope().userData(updatedAt: updatedAt)
+    }
+
+    func saveUserData(_ userData: BaUserDataEnvelope) {
+        saveEnvelope(userData.normalized().settingsEnvelope())
+    }
+
+    func exportUserData(updatedAt: Date = Date()) throws -> Data {
+        try JSONEncoder.ba.encode(loadUserData(updatedAt: updatedAt).normalized(updatedAt: updatedAt))
+    }
+
+    @discardableResult
+    func importUserData(from data: Data) throws -> BaUserDataEnvelope {
+        let userData = try JSONDecoder.ba.decode(BaUserDataEnvelope.self, from: data).normalized()
+        saveUserData(userData)
+        return userData
     }
 }

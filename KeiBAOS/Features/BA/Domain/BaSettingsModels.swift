@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-nonisolated enum BaServer: String, CaseIterable, Codable, Identifiable, Hashable {
+nonisolated enum BaServer: String, CaseIterable, Codable, Identifiable, Hashable, Sendable {
     case cn
     case global
     case jp
@@ -53,7 +53,7 @@ nonisolated enum BaServer: String, CaseIterable, Codable, Identifiable, Hashable
     }
 }
 
-nonisolated enum BaRefreshInterval: Int, CaseIterable, Codable, Identifiable, Hashable {
+nonisolated enum BaRefreshInterval: Int, CaseIterable, Codable, Identifiable, Hashable, Sendable {
     case oneHour = 1
     case threeHours = 3
     case sixHours = 6
@@ -89,7 +89,7 @@ nonisolated enum BaRefreshInterval: Int, CaseIterable, Codable, Identifiable, Ha
     }
 }
 
-nonisolated enum BaCalendarPoolNotifyLead: Int, CaseIterable, Codable, Identifiable, Hashable {
+nonisolated enum BaCalendarPoolNotifyLead: Int, CaseIterable, Codable, Identifiable, Hashable, Sendable {
     case oneHour = 1
     case threeHours = 3
     case sixHours = 6
@@ -116,13 +116,13 @@ nonisolated enum BaCalendarPoolNotifyLead: Int, CaseIterable, Codable, Identifia
     }
 }
 
-nonisolated struct BaDutyStudent: Codable, Equatable, Hashable {
+nonisolated struct BaDutyStudent: Codable, Equatable, Hashable, Sendable {
     var contentId: Int64
     var name: String
     var avatarURL: URL?
 }
 
-nonisolated struct BaGlobalSettings: Codable, Equatable {
+nonisolated struct BaGlobalSettings: Codable, Equatable, Sendable {
     var identityIndependentByServer: Bool
     var showEndedActivities: Bool
     var showEndedPools: Bool
@@ -245,7 +245,7 @@ nonisolated extension BaGlobalSettings {
     }
 }
 
-nonisolated struct BaServerProfile: Codable, Equatable {
+nonisolated struct BaServerProfile: Codable, Equatable, Sendable {
     var nickname: String
     var friendCode: String
     var apCurrent: Double
@@ -293,7 +293,7 @@ nonisolated struct BaServerProfile: Codable, Equatable {
     }
 }
 
-nonisolated struct BaSettingsEnvelope: Codable, Equatable {
+nonisolated struct BaSettingsEnvelope: Codable, Equatable, Sendable {
     var schemaVersion: Int
     var selectedServer: BaServer
     var globalSettings: BaGlobalSettings
@@ -437,7 +437,7 @@ nonisolated extension BaServerProfile {
     }
 }
 
-nonisolated struct BaAppSettings: Codable, Equatable {
+nonisolated struct BaAppSettings: Codable, Equatable, Sendable {
     var server: BaServer
     var nickname: String
     var friendCode: String

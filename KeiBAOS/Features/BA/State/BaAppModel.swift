@@ -76,6 +76,20 @@ final class BaAppModel {
         envelope.profile(for: envelope.selectedServer)
     }
 
+    var userData: BaUserDataEnvelope {
+        envelope.userData()
+    }
+
+    var watchUserSnapshot: BaWatchUserSnapshot {
+        envelope.watchUserSnapshot()
+    }
+
+    func applyUserData(_ userData: BaUserDataEnvelope) {
+        let previousServer = settings.server
+        envelope = userData.settingsEnvelope()
+        persistEnvelope(previousServer: previousServer)
+    }
+
     func selectServer(_ server: BaServer) {
         let previousServer = settings.server
         envelope.selectedServer = server

@@ -7,7 +7,7 @@
 
 import Foundation
 
-nonisolated enum BaCatalogCategory: String, CaseIterable, Codable, Identifiable, Hashable {
+nonisolated enum BaCatalogCategory: String, CaseIterable, Codable, Identifiable, Hashable, Sendable {
     case students
     case npcSatellite
     case studentBgm
@@ -60,7 +60,7 @@ nonisolated enum BaCatalogCategory: String, CaseIterable, Codable, Identifiable,
     static let gameKeeSecondPageID = 23_941
 }
 
-nonisolated struct BaGuideCatalogEntry: Identifiable, Codable, Hashable {
+nonisolated struct BaGuideCatalogEntry: Identifiable, Codable, Hashable, Sendable {
     let entryId: Int
     let pid: Int
     let contentId: Int64
@@ -128,7 +128,7 @@ nonisolated struct BaGuideCatalogEntry: Identifiable, Codable, Hashable {
     }
 }
 
-nonisolated struct BaGuideCatalogBundle: Codable, Hashable {
+nonisolated struct BaGuideCatalogBundle: Codable, Hashable, Sendable {
     let entries: [BaGuideCatalogEntry]
     let syncedAt: Date
 
