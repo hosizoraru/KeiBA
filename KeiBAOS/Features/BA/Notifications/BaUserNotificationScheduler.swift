@@ -21,7 +21,7 @@ protocol BaNotificationCoordinating: AnyObject {
     ) async
 
     func sendTestNotification(now: Date) async
-    func startTestLiveActivity(now: Date) async -> Bool
+    func startTestLiveActivity(kind: BaDebugLiveActivityKind, now: Date) async -> Bool
     func endTestLiveActivities() async
 }
 
@@ -36,7 +36,7 @@ final class BaNoopNotificationCoordinator: BaNotificationCoordinating {
     ) async {}
 
     func sendTestNotification(now: Date) async {}
-    func startTestLiveActivity(now: Date) async -> Bool { false }
+    func startTestLiveActivity(kind: BaDebugLiveActivityKind, now: Date) async -> Bool { false }
     func endTestLiveActivities() async {}
 }
 
@@ -82,9 +82,9 @@ final class BaNotificationCoordinator: BaNotificationCoordinating {
         await scheduler.sendTestNotification(requestAuthorizationIfNeeded: true, now: now)
     }
 
-    func startTestLiveActivity(now: Date = Date()) async -> Bool {
+    func startTestLiveActivity(kind: BaDebugLiveActivityKind = .resource, now: Date = Date()) async -> Bool {
         #if os(iOS) && canImport(ActivityKit)
-        await liveActivityController.startTestActivity(now: now)
+        await liveActivityController.startTestActivity(kind: kind, now: now)
         #else
         false
         #endif
@@ -282,7 +282,7 @@ protocol BaNotificationCoordinating: AnyObject {
     ) async
 
     func sendTestNotification(now: Date) async
-    func startTestLiveActivity(now: Date) async -> Bool
+    func startTestLiveActivity(kind: BaDebugLiveActivityKind, now: Date) async -> Bool
     func endTestLiveActivities() async
 }
 
@@ -297,7 +297,7 @@ final class BaNoopNotificationCoordinator: BaNotificationCoordinating {
     ) async {}
 
     func sendTestNotification(now: Date) async {}
-    func startTestLiveActivity(now: Date) async -> Bool { false }
+    func startTestLiveActivity(kind: BaDebugLiveActivityKind, now: Date) async -> Bool { false }
     func endTestLiveActivities() async {}
 }
 #endif

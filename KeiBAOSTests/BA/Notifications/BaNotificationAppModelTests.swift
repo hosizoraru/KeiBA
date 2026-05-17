@@ -99,11 +99,25 @@ final class BaNotificationAppModelTests: XCTestCase {
 
         await model.sendTestNotification(now: now)
         let liveActivityStarted = await model.startTestLiveActivity(now: now)
+        let activityLiveActivityStarted = await model.startTestLiveActivity(
+            kind: .activity,
+            now: now.addingTimeInterval(60)
+        )
+        let poolLiveActivityStarted = await model.startTestLiveActivity(
+            kind: .pool,
+            now: now.addingTimeInterval(120)
+        )
         await model.endTestLiveActivities()
 
         XCTAssertEqual(coordinator.testNotificationDates, [now])
-        XCTAssertEqual(coordinator.testLiveActivityDates, [now])
+        XCTAssertEqual(coordinator.testLiveActivities.map(\.kind), [.resource, .activity, .pool])
+        XCTAssertEqual(
+            coordinator.testLiveActivities.map(\.now),
+            [now, now.addingTimeInterval(60), now.addingTimeInterval(120)]
+        )
         XCTAssertTrue(liveActivityStarted)
+        XCTAssertTrue(activityLiveActivityStarted)
+        XCTAssertTrue(poolLiveActivityStarted)
         XCTAssertEqual(coordinator.endTestLiveActivityCount, 1)
     }
 
@@ -169,7 +183,7 @@ private final class RecordingNotificationCoordinator: BaNotificationCoordinating
 
     var calls: [Call] = []
     var testNotificationDates: [Date] = []
-    var testLiveActivityDates: [Date] = []
+    var testLiveActivities: [(kind: BaDebugLiveActivityKind, now: Date)] = []
     var endTestLiveActivityCount = 0
 
     func synchronize(
@@ -194,8 +208,8 @@ private final class RecordingNotificationCoordinator: BaNotificationCoordinating
         testNotificationDates.append(now)
     }
 
-    func startTestLiveActivity(now: Date) async -> Bool {
-        testLiveActivityDates.append(now)
+    func startTestLiveActivity(kind: BaDebugLiveActivityKind, now: Date) async -> Bool {
+        testLiveActivities.append((kind, now))
         return true
     }
 

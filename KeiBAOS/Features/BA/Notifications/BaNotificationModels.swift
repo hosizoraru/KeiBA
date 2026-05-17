@@ -121,3 +121,9 @@ nonisolated struct BaLiveActivityCandidate: Equatable, Sendable {
     var relevance: Double
     var resources: [Resource] = []
 }
+
+nonisolated enum BaDebugLiveActivityKind: String, Equatable, Sendable, CaseIterable {
+    case resource
+    case activity
+    case pool
+}

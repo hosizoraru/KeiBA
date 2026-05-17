@@ -69,36 +69,23 @@ private struct BaReminderLockScreenLiveActivityView: View {
             BaReminderSmallLiveActivityView(context: context)
         default:
             if context.resourceRows.isEmpty {
-                fallbackBody
+                BaReminderTimelineLiveActivityView(context: context)
             } else {
                 BaReminderMediumLiveActivityView(context: context)
             }
         }
     }
+}
 
-    private var fallbackBody: some View {
+private struct BaReminderTimelineLiveActivityView: View {
+    let context: ActivityViewContext<BaReminderLiveActivityAttributes>
+
+    var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 12) {
+            HStack(alignment: .center, spacing: 8) {
                 BaReminderBrandChip(iconSize: 20)
 
-                Image(systemName: context.attributes.kind.symbolName)
-                    .font(.headline)
-                    .foregroundStyle(context.attributes.kind.tint)
-                    .frame(width: 18, height: 18)
-
-                Text(context.attributes.title)
-                    .font(.subheadline.weight(.semibold))
-                    .lineLimit(1)
-
                 Spacer(minLength: 8)
-
-                Text(context.state.endDate, style: .timer)
-                    .monospacedDigit()
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(context.attributes.kind.tint)
-                    .contentTransition(.numericText())
-                    .minimumScaleFactor(0.78)
-                    .lineLimit(1)
 
                 BaReminderAcknowledgeButton(
                     title: context.markReadTitle,
@@ -106,12 +93,45 @@ private struct BaReminderLockScreenLiveActivityView: View {
                 )
             }
 
-            BaReminderProgressTimeline(
-                startDate: context.state.startDate,
-                endDate: context.state.endDate,
-                tint: context.attributes.kind.tint,
-                height: 4
-            )
+            HStack(alignment: .center, spacing: 10) {
+                Image(systemName: context.attributes.kind.symbolName)
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(context.attributes.kind.tint)
+                    .frame(width: 24)
+                    .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(context.attributes.title)
+                        .font(.headline.weight(.semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.72)
+
+                    Text(context.state.subtitle)
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.78)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text(context.state.endDate, style: .timer)
+                        .monospacedDigit()
+                        .font(.headline.weight(.semibold))
+                        .foregroundStyle(context.attributes.kind.tint)
+                        .contentTransition(.numericText())
+                        .minimumScaleFactor(0.78)
+                        .lineLimit(1)
+
+                    BaReminderProgressTimeline(
+                        startDate: context.state.startDate,
+                        endDate: context.state.endDate,
+                        tint: context.attributes.kind.tint,
+                        width: 50,
+                        height: 4
+                    )
+                }
+            }
         }
         .modifier(BaReminderReadableLiveActivityWidth())
         .padding(.horizontal, 12)
@@ -193,16 +213,26 @@ private struct BaReminderSmallLiveActivityView: View {
     }
 
     private var fallbackBody: some View {
-        HStack(spacing: 6) {
+        HStack(alignment: .center, spacing: 6) {
             Image(systemName: context.attributes.kind.symbolName)
                 .font(.caption.weight(.bold))
                 .foregroundStyle(context.attributes.kind.tint)
+                .frame(width: 14)
 
-            Text(context.primaryCompactValue)
-                .font(.caption2.monospacedDigit().weight(.semibold))
-                .foregroundStyle(context.attributes.kind.tint)
-                .lineLimit(1)
-                .minimumScaleFactor(0.72)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(context.attributes.title)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+
+                Text(context.primaryCompactValue)
+                    .font(.caption2.monospacedDigit().weight(.semibold))
+                    .foregroundStyle(context.attributes.kind.tint)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
@@ -295,31 +325,11 @@ private struct BaReminderIslandHeader: View {
     let context: ActivityViewContext<BaReminderLiveActivityAttributes>
 
     var body: some View {
-        if context.resourceRows.isEmpty {
-            HStack(spacing: 7) {
-                Image(systemName: context.primarySymbolName)
-                    .font(.headline.weight(.bold))
-                    .foregroundStyle(context.attributes.kind.tint)
-                    .frame(width: 20, height: 20)
-                    .accessibilityHidden(true)
-
-                Text(title)
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-            }
-        } else {
-            BaReminderBrandChip(
-                iconSize: 18,
-                textFont: .headline.weight(.semibold)
-            )
-            .padding(.leading, 4)
-        }
-    }
-
-    private var title: String {
-        context.primaryResource?.title ?? context.attributes.title
+        BaReminderBrandChip(
+            iconSize: 18,
+            textFont: .headline.weight(.semibold)
+        )
+        .padding(.leading, 4)
     }
 }
 
@@ -327,18 +337,10 @@ private struct BaReminderIslandStatus: View {
     let context: ActivityViewContext<BaReminderLiveActivityAttributes>
 
     var body: some View {
-        if context.resourceRows.isEmpty {
-            Text(context.primaryCompactValue)
-                .font(.headline.monospacedDigit().weight(.bold))
-                .foregroundStyle(context.attributes.kind.tint)
-                .lineLimit(1)
-                .minimumScaleFactor(0.72)
-        } else {
-            BaReminderAcknowledgeButton(
-                title: context.markReadTitle,
-                presentation: .dynamicIslandHeader
-            )
-        }
+        BaReminderAcknowledgeButton(
+            title: context.markReadTitle,
+            presentation: .dynamicIslandHeader
+        )
     }
 }
 
@@ -364,34 +366,47 @@ private struct BaReminderFallbackIslandDetails: View {
     let context: ActivityViewContext<BaReminderLiveActivityAttributes>
 
     var body: some View {
-        VStack(spacing: 5) {
-            HStack(spacing: 8) {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(context.attributes.title)
-                        .font(.caption.weight(.semibold))
-                        .lineLimit(1)
-                    Text(context.state.subtitle)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
+        HStack(alignment: .center, spacing: 9) {
+            Image(systemName: context.attributes.kind.symbolName)
+                .font(.title3.weight(.bold))
+                .foregroundStyle(context.attributes.kind.tint)
+                .frame(width: 24)
+                .accessibilityHidden(true)
 
-                Spacer(minLength: 8)
-
-                Text(context.state.endDate, style: .timer)
-                    .monospacedDigit()
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(context.attributes.kind.tint)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(context.attributes.title)
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(.primary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+
+                HStack(spacing: 6) {
+                    Text(context.state.subtitle)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.74))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.78)
+
+                    Text(context.state.endDate, style: .timer)
+                        .font(.caption.monospacedDigit().weight(.semibold))
+                        .foregroundStyle(context.attributes.kind.tint)
+                        .lineLimit(1)
+                        .contentTransition(.numericText())
+                }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .layoutPriority(1)
 
             BaReminderProgressTimeline(
                 startDate: context.state.startDate,
                 endDate: context.state.endDate,
                 tint: context.attributes.kind.tint,
-                height: 3
+                width: 48,
+                height: 4
             )
         }
+        .padding(.top, 7)
+        .padding(.leading, 4)
     }
 }
 

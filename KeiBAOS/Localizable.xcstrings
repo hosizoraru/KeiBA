@@ -4244,6 +4244,94 @@
         }
       }
     },
+    "ba.notification.debug.live.activity.subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Event ending soon"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "イベント終了間近"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "活动即将结束"
+          }
+        }
+      }
+    },
+    "ba.notification.debug.live.activity.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tactical Challenge"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "総力戦"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "综合战术考试"
+          }
+        }
+      }
+    },
+    "ba.notification.debug.live.pool.subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recruitment ending soon"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "募集終了間近"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "招募即将结束"
+          }
+        }
+      }
+    },
+    "ba.notification.debug.live.pool.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limited Recruitment"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "限定募集"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "限定招募"
+          }
+        }
+      }
+    },
     "ba.notification.debug.live.subtitle" : {
       "localizations" : {
         "en" : {
@@ -8694,6 +8782,28 @@
         }
       }
     },
+    "ba.sheet.notifications.test.live.activity" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Event Live Activity Test"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "イベントのライブアクティビティテストを開始"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动活动实时活动测试"
+          }
+        }
+      }
+    },
     "ba.sheet.notifications.test.live.end" : {
       "localizations" : {
         "en" : {
@@ -8738,6 +8848,28 @@
         }
       }
     },
+    "ba.sheet.notifications.test.live.pool" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Recruitment Live Activity Test"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "募集のライブアクティビティテストを開始"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动招募实时活动测试"
+          }
+        }
+      }
+    },
     "ba.sheet.notifications.test.live.permissionNeeded" : {
       "localizations" : {
         "en" : {
@@ -8756,6 +8888,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在系统设置中开启实时活动后可以显示这个测试。"
+          }
+        }
+      }
+    },
+    "ba.sheet.notifications.test.live.resource" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start AP Live Activity Test"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "APのライブアクティビティテストを開始"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动 AP 实时活动测试"
           }
         }
       }

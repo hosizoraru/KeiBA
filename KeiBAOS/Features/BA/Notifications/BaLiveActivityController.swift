@@ -12,7 +12,7 @@ import ActivityKit
 
 @MainActor
 final class BaLiveActivityController {
-    private let testActivityID = BaNotificationPlan.debugIdentifierPrefix + "live"
+    private let testActivityIDPrefix = BaNotificationPlan.debugIdentifierPrefix + "live."
 
     func synchronize(candidates: [BaLiveActivityCandidate]) async {
         let enabled = ActivityAuthorizationInfo().areActivitiesEnabled
@@ -43,36 +43,10 @@ final class BaLiveActivityController {
         }
     }
 
-    func startTestActivity(now: Date = Date()) async -> Bool {
+    func startTestActivity(kind: BaDebugLiveActivityKind = .resource, now: Date = Date()) async -> Bool {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return false }
 
-        let candidate = BaLiveActivityCandidate(
-            id: testActivityID,
-            kind: .ap,
-            title: NSLocalizedString("ba.notification.debug.live.title", bundle: .main, comment: ""),
-            subtitle: NSLocalizedString("ba.notification.debug.live.subtitle", bundle: .main, comment: ""),
-            startDate: now,
-            endDate: now.addingTimeInterval(10 * 60),
-            relevance: 1,
-            resources: [
-                BaLiveActivityCandidate.Resource(
-                    kind: .ap,
-                    title: NSLocalizedString("ba.notification.live.ap.title", bundle: .main, comment: ""),
-                    currentValue: 236,
-                    limitValue: 240,
-                    startDate: now,
-                    endDate: now.addingTimeInterval(10 * 60)
-                ),
-                BaLiveActivityCandidate.Resource(
-                    kind: .cafeAP,
-                    title: NSLocalizedString("ba.notification.live.cafeAp.title", bundle: .main, comment: ""),
-                    currentValue: 690,
-                    limitValue: 740,
-                    startDate: now,
-                    endDate: now.addingTimeInterval(47 * 60)
-                ),
-            ]
-        )
+        let candidate = testCandidate(kind: kind, now: now)
 
         for activity in Activity<BaReminderLiveActivityAttributes>.activities
             where activity.attributes.id != candidate.id
@@ -94,9 +68,62 @@ final class BaLiveActivityController {
 
     func endTestActivities() async {
         for activity in Activity<BaReminderLiveActivityAttributes>.activities
-            where activity.attributes.id == testActivityID
+            where activity.attributes.id.hasPrefix(testActivityIDPrefix)
         {
             await end(activity)
+        }
+    }
+
+    private func testCandidate(kind: BaDebugLiveActivityKind, now: Date) -> BaLiveActivityCandidate {
+        switch kind {
+        case .resource:
+            BaLiveActivityCandidate(
+                id: testActivityIDPrefix + kind.rawValue,
+                kind: .ap,
+                title: NSLocalizedString("ba.notification.debug.live.title", bundle: .main, comment: ""),
+                subtitle: NSLocalizedString("ba.notification.debug.live.subtitle", bundle: .main, comment: ""),
+                startDate: now,
+                endDate: now.addingTimeInterval(10 * 60),
+                relevance: 1,
+                resources: [
+                    BaLiveActivityCandidate.Resource(
+                        kind: .ap,
+                        title: NSLocalizedString("ba.notification.live.ap.title", bundle: .main, comment: ""),
+                        currentValue: 236,
+                        limitValue: 240,
+                        startDate: now,
+                        endDate: now.addingTimeInterval(10 * 60)
+                    ),
+                    BaLiveActivityCandidate.Resource(
+                        kind: .cafeAP,
+                        title: NSLocalizedString("ba.notification.live.cafeAp.title", bundle: .main, comment: ""),
+                        currentValue: 690,
+                        limitValue: 740,
+                        startDate: now,
+                        endDate: now.addingTimeInterval(47 * 60)
+                    ),
+                ]
+            )
+        case .activity:
+            BaLiveActivityCandidate(
+                id: testActivityIDPrefix + kind.rawValue,
+                kind: .activity,
+                title: NSLocalizedString("ba.notification.debug.live.activity.title", bundle: .main, comment: ""),
+                subtitle: NSLocalizedString("ba.notification.debug.live.activity.subtitle", bundle: .main, comment: ""),
+                startDate: now.addingTimeInterval(-50 * 60),
+                endDate: now.addingTimeInterval(42 * 60),
+                relevance: 0.96
+            )
+        case .pool:
+            BaLiveActivityCandidate(
+                id: testActivityIDPrefix + kind.rawValue,
+                kind: .pool,
+                title: NSLocalizedString("ba.notification.debug.live.pool.title", bundle: .main, comment: ""),
+                subtitle: NSLocalizedString("ba.notification.debug.live.pool.subtitle", bundle: .main, comment: ""),
+                startDate: now.addingTimeInterval(-80 * 60),
+                endDate: now.addingTimeInterval(58 * 60),
+                relevance: 0.95
+            )
         }
     }
 

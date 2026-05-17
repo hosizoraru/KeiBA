@@ -359,8 +359,8 @@ final class BaAppModel {
         await notificationCoordinator.sendTestNotification(now: now)
     }
 
-    func startTestLiveActivity(now: Date = Date()) async -> Bool {
-        await notificationCoordinator.startTestLiveActivity(now: now)
+    func startTestLiveActivity(kind: BaDebugLiveActivityKind = .resource, now: Date = Date()) async -> Bool {
+        await notificationCoordinator.startTestLiveActivity(kind: kind, now: now)
     }
 
     func endTestLiveActivities() async {

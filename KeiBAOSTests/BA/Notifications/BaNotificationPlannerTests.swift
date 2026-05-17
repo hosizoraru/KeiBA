@@ -216,6 +216,49 @@ final class BaNotificationPlannerTests: XCTestCase {
         XCTAssertEqual(candidates.first?.endDate, now.addingTimeInterval(2 * 60 * 60))
     }
 
+    func testLiveActivityCandidatesExposeRunningActivityAndPoolDetails() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        var settings = quietSettings(now: now)
+        settings.calendarEndingNotificationsEnabled = true
+        settings.poolEndingNotificationsEnabled = true
+        let activity = BaActivityEntry(
+            id: 21,
+            title: "综合战术考试",
+            kindId: 1,
+            kindName: "活动",
+            beginAt: now.addingTimeInterval(-60 * 60),
+            endAt: now.addingTimeInterval(90 * 60),
+            linkURL: nil,
+            imageURL: nil
+        )
+        let pool = BaPoolEntry(
+            id: 31,
+            name: "限定招募",
+            tagId: 6,
+            tagName: "招募",
+            alias: "",
+            startAt: now.addingTimeInterval(-2 * 60 * 60),
+            endAt: now.addingTimeInterval(45 * 60),
+            linkURL: nil,
+            imageURL: nil,
+            contentId: nil,
+            studentGuideURL: nil
+        )
+
+        let candidates = BaNotificationPlanner.liveActivityCandidates(
+            settings: settings,
+            activities: [activity],
+            pools: [pool],
+            now: now
+        )
+
+        XCTAssertEqual(candidates.map(\.kind), [.pool, .activity])
+        XCTAssertEqual(candidates.map(\.title), ["限定招募", "综合战术考试"])
+        XCTAssertEqual(candidates.map(\.startDate), [now, now])
+        XCTAssertEqual(candidates.map(\.endDate), [pool.endAt, activity.endAt])
+        XCTAssertTrue(candidates.allSatisfy(\.resources.isEmpty))
+    }
+
     func testLiveActivitySelectionUsesEarlierEndDateWhenRelevanceMatches() {
         let now = Date(timeIntervalSince1970: 1_800_000_000)
         let candidates = [

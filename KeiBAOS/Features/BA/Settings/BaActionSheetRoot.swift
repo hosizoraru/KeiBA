@@ -323,10 +323,26 @@ private struct BaNotificationSettingsSheet: View {
         #if os(iOS)
         Button {
             Task {
-                await startTestLiveActivity()
+                await startTestLiveActivity(.resource)
             }
         } label: {
-            Label(BaL10n.string("ba.sheet.notifications.test.live"), systemImage: "timer")
+            Label(BaL10n.string("ba.sheet.notifications.test.live.resource"), systemImage: "bolt.fill")
+        }
+
+        Button {
+            Task {
+                await startTestLiveActivity(.activity)
+            }
+        } label: {
+            Label(BaL10n.string("ba.sheet.notifications.test.live.activity"), systemImage: "calendar.badge.clock")
+        }
+
+        Button {
+            Task {
+                await startTestLiveActivity(.pool)
+            }
+        } label: {
+            Label(BaL10n.string("ba.sheet.notifications.test.live.pool"), systemImage: "sparkles")
         }
 
         Button(role: .destructive) {
@@ -437,8 +453,8 @@ private struct BaNotificationSettingsSheet: View {
             : BaL10n.string("ba.sheet.notifications.test.permissionNeeded")
     }
 
-    private func startTestLiveActivity() async {
-        let started = await model.startTestLiveActivity()
+    private func startTestLiveActivity(_ kind: BaDebugLiveActivityKind) async {
+        let started = await model.startTestLiveActivity(kind: kind)
         testStatus = started
             ? BaL10n.string("ba.sheet.notifications.test.live.started")
             : BaL10n.string("ba.sheet.notifications.test.live.permissionNeeded")
