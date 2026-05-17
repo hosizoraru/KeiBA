@@ -164,6 +164,7 @@ nonisolated struct BaGlobalSettings: Codable, Equatable, Sendable {
     var refreshInterval: BaRefreshInterval
     var appLanguage: BaAppLanguage
     var appAppearance: BaAppAppearance
+    var appIcon: BaAppIconChoice
     var favoriteContentIDs: Set<Int64>
     var favoriteCatalogEntries: [BaGuideCatalogEntry]
     var dutyStudent: BaDutyStudent?
@@ -187,6 +188,7 @@ nonisolated struct BaGlobalSettings: Codable, Equatable, Sendable {
             refreshInterval: .threeHours,
             appLanguage: .system,
             appAppearance: .system,
+            appIcon: .modern,
             favoriteContentIDs: [],
             favoriteCatalogEntries: [],
             dutyStudent: nil
@@ -213,6 +215,7 @@ nonisolated extension BaGlobalSettings {
         case refreshInterval
         case appLanguage
         case appAppearance
+        case appIcon
         case favoriteContentIDs
         case favoriteCatalogEntries
         case dutyStudent
@@ -238,6 +241,7 @@ nonisolated extension BaGlobalSettings {
         refreshInterval = try container.decodeIfPresent(BaRefreshInterval.self, forKey: .refreshInterval) ?? defaults.refreshInterval
         appLanguage = try container.decodeIfPresent(BaAppLanguage.self, forKey: .appLanguage) ?? defaults.appLanguage
         appAppearance = try container.decodeIfPresent(BaAppAppearance.self, forKey: .appAppearance) ?? defaults.appAppearance
+        appIcon = try container.decodeIfPresent(BaAppIconChoice.self, forKey: .appIcon) ?? defaults.appIcon
         favoriteContentIDs = try container.decodeIfPresent(Set<Int64>.self, forKey: .favoriteContentIDs) ?? defaults.favoriteContentIDs
         favoriteCatalogEntries = try container.decodeIfPresent([BaGuideCatalogEntry].self, forKey: .favoriteCatalogEntries) ?? defaults.favoriteCatalogEntries
         dutyStudent = try container.decodeIfPresent(BaDutyStudent.self, forKey: .dutyStudent)
@@ -262,6 +266,7 @@ nonisolated extension BaGlobalSettings {
         try container.encode(refreshInterval, forKey: .refreshInterval)
         try container.encode(appLanguage, forKey: .appLanguage)
         try container.encode(appAppearance, forKey: .appAppearance)
+        try container.encode(appIcon, forKey: .appIcon)
         try container.encode(favoriteContentIDs, forKey: .favoriteContentIDs)
         try container.encode(favoriteCatalogEntries, forKey: .favoriteCatalogEntries)
         try container.encodeIfPresent(dutyStudent, forKey: .dutyStudent)
@@ -333,7 +338,7 @@ nonisolated struct BaSettingsEnvelope: Codable, Equatable, Sendable {
     var globalSettings: BaGlobalSettings
     var serverProfiles: [BaServer: BaServerProfile]
 
-    static let currentSchemaVersion = 5
+    static let currentSchemaVersion = 6
 
     static func defaults(now: Date = Date()) -> BaSettingsEnvelope {
         let profile = BaServerProfile.defaults(now: now)
@@ -366,6 +371,7 @@ nonisolated struct BaSettingsEnvelope: Codable, Equatable, Sendable {
             refreshInterval: settings.refreshInterval,
             appLanguage: settings.appLanguage,
             appAppearance: settings.appAppearance,
+            appIcon: .modern,
             favoriteContentIDs: settings.favoriteContentIDs,
             favoriteCatalogEntries: settings.favoriteCatalogEntries,
             dutyStudent: settings.dutyStudent

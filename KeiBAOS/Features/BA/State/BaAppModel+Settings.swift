@@ -62,6 +62,31 @@ extension BaAppModel {
         persistEnvelope(previousServer: previousServer, previousEnvelope: previousEnvelope)
     }
 
+    func setAppIconChoice(_ choice: BaAppIconChoice) {
+        let previousChoice = envelope.globalSettings.appIcon
+        guard previousChoice != choice else { return }
+
+        persistAppIconChoice(choice)
+        Task { [weak self] in
+            let didApply = await BaAppIconController.apply(choice)
+            guard
+                let self,
+                didApply == false,
+                self.envelope.globalSettings.appIcon == choice
+            else {
+                return
+            }
+            self.persistAppIconChoice(previousChoice)
+        }
+    }
+
+    func applyPreferredAppIcon() async {
+        let choice = envelope.globalSettings.appIcon
+        let didApply = await BaAppIconController.apply(choice)
+        guard didApply == false, choice != .modern, envelope.globalSettings.appIcon == choice else { return }
+        persistAppIconChoice(.modern)
+    }
+
     func setCurrentAP(_ value: Int) {
         updateCurrentProfile { profile in
             let currentFraction = BaTimeMath.normalizedAP(profile.apCurrent) -
@@ -152,7 +177,8 @@ extension BaAppModel {
     func persistEnvelope(
         previousServer: BaServer,
         updatedAt: Date = Date(),
-        previousEnvelope: BaSettingsEnvelope? = nil
+        previousEnvelope: BaSettingsEnvelope? = nil,
+        refreshNotifications: Bool = true
     ) {
         envelope = envelope.normalized()
         settings = envelope.flattenedSettings()
@@ -163,11 +189,18 @@ extension BaAppModel {
             poolState = BaLoadableState()
         }
         refreshOfficeSnapshot()
+        guard refreshNotifications else { return }
         let shouldRequestAuthorization = previousEnvelope.map {
             BaNotificationPreferenceSnapshot(envelope: envelope)
                 .becameEnabled(from: BaNotificationPreferenceSnapshot(envelope: $0))
         } ?? false
         scheduleNotificationRefresh(requestAuthorizationIfNeeded: shouldRequestAuthorization)
+    }
+
+    private func persistAppIconChoice(_ choice: BaAppIconChoice) {
+        let previousServer = settings.server
+        envelope.globalSettings.appIcon = choice
+        persistEnvelope(previousServer: previousServer, refreshNotifications: false)
     }
 
     private func applyFlattenedSettings(_ next: BaAppSettings, previous: BaAppSettings) {

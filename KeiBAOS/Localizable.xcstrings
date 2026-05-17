@@ -7005,6 +7005,28 @@
         }
       }
     },
+    "ba.settings.app.footer.touch" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Follow System keeps KeiBAOS aligned with the device. Language updates interface text, appearance switches color mode, and App Icon changes the Home Screen icon."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "システムに従うとKeiBAOSはデバイス設定に合わせます。言語は画面文言、外観はカラーモード、アプリアイコンはホーム画面のアイコンを切り替えます。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "默认跟随系统，让 KeiBAOS 与设备保持一致。语言会切换界面文本；外观会切换颜色模式；应用图标会切换主屏幕图标。"
+          }
+        }
+      }
+    },
     "ba.settings.app.section" : {
       "localizations" : {
         "en" : {
@@ -7023,6 +7045,72 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "应用"
+          }
+        }
+      }
+    },
+    "ba.settings.appIcon.classic" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Classic"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クラシック"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "经典"
+          }
+        }
+      }
+    },
+    "ba.settings.appIcon.modern" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KeiOS"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KeiOS"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KeiOS"
+          }
+        }
+      }
+    },
+    "ba.settings.appIcon.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App Icon"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アプリアイコン"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "应用图标"
           }
         }
       }

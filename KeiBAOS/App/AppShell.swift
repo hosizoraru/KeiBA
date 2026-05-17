@@ -28,6 +28,9 @@ struct AppShell: View {
                     prepareMusicPlaybackSession()
                 }
             }
+            .task {
+                await model.applyPreferredAppIcon()
+            }
             .onChange(of: scenePhase, initial: true) { _, phase in
                 if phase == .active {
                     model.scheduleNotificationRefresh(delay: BaPlatformPerformanceProfile.notificationStartupRefreshDelay)

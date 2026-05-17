@@ -20,6 +20,7 @@ final class BaUserDataSyncTests: XCTestCase {
         envelope.globalSettings.mediaAutoplayEnabled = true
         envelope.globalSettings.appLanguage = .japanese
         envelope.globalSettings.appAppearance = .dark
+        envelope.globalSettings.appIcon = .classic
         envelope.globalSettings.favoriteContentIDs = [647_097, 702_789]
         envelope.globalSettings.favoriteCatalogEntries = [
             makeCatalogEntry(contentId: 647_097, name: "爱丽丝（冬装）", category: .npcSatellite),
@@ -55,6 +56,7 @@ final class BaUserDataSyncTests: XCTestCase {
         XCTAssertTrue(loaded.globalSettings.mediaAutoplayEnabled)
         XCTAssertEqual(loaded.globalSettings.appLanguage, .japanese)
         XCTAssertEqual(loaded.globalSettings.appAppearance, .dark)
+        XCTAssertEqual(loaded.globalSettings.appIcon, .classic)
         XCTAssertEqual(loaded.globalSettings.favoriteContentIDs, [647_097, 702_789])
         XCTAssertEqual(loaded.globalSettings.favoriteCatalogEntries.map(\.contentId), [647_097, 702_789])
         XCTAssertEqual(loaded.globalSettings.dutyStudent?.contentId, 647_097)

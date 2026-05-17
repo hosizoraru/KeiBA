@@ -101,18 +101,23 @@ final class BaOverviewSettingsTests: XCTestCase {
         var envelope = BaSettingsEnvelope.defaults(now: Date(timeIntervalSince1970: 1_700_000_000))
         XCTAssertEqual(envelope.globalSettings.appLanguage, .system)
         XCTAssertEqual(envelope.globalSettings.appAppearance, .system)
+        XCTAssertEqual(envelope.globalSettings.appIcon, .modern)
         XCTAssertEqual(BaL10n.string("ba.settings.language.title", language: .japanese), "アプリの言語")
         XCTAssertEqual(BaL10n.string("ba.settings.language.title", language: .simplifiedChinese), "应用语言")
         XCTAssertEqual(BaL10n.string("ba.settings.appearance.title", language: .japanese), "外観")
         XCTAssertEqual(BaL10n.string("ba.settings.appearance.title", language: .simplifiedChinese), "外观")
+        XCTAssertEqual(BaL10n.string("ba.settings.appIcon.title", language: .japanese), "アプリアイコン")
+        XCTAssertEqual(BaL10n.string("ba.settings.appIcon.classic", language: .simplifiedChinese), "经典")
 
         envelope.globalSettings.appLanguage = .japanese
         envelope.globalSettings.appAppearance = .dark
+        envelope.globalSettings.appIcon = .classic
         let store = BaSettingsStore(defaults: defaults)
         store.saveEnvelope(envelope)
 
         XCTAssertEqual(store.loadEnvelope().globalSettings.appLanguage, .japanese)
         XCTAssertEqual(store.loadEnvelope().globalSettings.appAppearance, .dark)
+        XCTAssertEqual(store.loadEnvelope().globalSettings.appIcon, .classic)
     }
 
     func testCafeAPStorageUsesSingleSharedCafeBucket() {

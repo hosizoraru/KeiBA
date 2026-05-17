@@ -516,10 +516,23 @@ struct BaSettingsView: View {
             #if os(macOS)
                 .pickerStyle(.menu)
             #endif
+
+            #if os(iOS)
+                Picker(BaL10n.string("ba.settings.appIcon.title"), selection: appIconBinding) {
+                    ForEach(BaAppIconChoice.allCases) { choice in
+                        Text(choice.titleResource)
+                            .tag(choice)
+                    }
+                }
+            #endif
         } header: {
             Text(BaL10n.string("ba.settings.app.section"))
         } footer: {
-            Text(BaL10n.string("ba.settings.app.footer"))
+            #if os(iOS)
+                Text(BaL10n.string("ba.settings.app.footer.touch"))
+            #else
+                Text(BaL10n.string("ba.settings.app.footer"))
+            #endif
         }
     }
 
@@ -582,6 +595,15 @@ struct BaSettingsView: View {
             get: { model.envelope.globalSettings.appAppearance },
             set: { appearance in
                 model.updateGlobalSettings { $0.appAppearance = appearance }
+            }
+        )
+    }
+
+    private var appIconBinding: Binding<BaAppIconChoice> {
+        Binding(
+            get: { model.envelope.globalSettings.appIcon },
+            set: { choice in
+                model.setAppIconChoice(choice)
             }
         )
     }
