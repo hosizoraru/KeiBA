@@ -8761,6 +8761,7 @@
       }
     },
     "ba.sheet.notifications.test.live" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -8848,28 +8849,6 @@
         }
       }
     },
-    "ba.sheet.notifications.test.live.pool" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start Recruitment Live Activity Test"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "募集のライブアクティビティテストを開始"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "启动招募实时活动测试"
-          }
-        }
-      }
-    },
     "ba.sheet.notifications.test.live.permissionNeeded" : {
       "localizations" : {
         "en" : {
@@ -8888,6 +8867,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在系统设置中开启实时活动后可以显示这个测试。"
+          }
+        }
+      }
+    },
+    "ba.sheet.notifications.test.live.pool" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Recruitment Live Activity Test"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "募集のライブアクティビティテストを開始"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动招募实时活动测试"
           }
         }
       }
