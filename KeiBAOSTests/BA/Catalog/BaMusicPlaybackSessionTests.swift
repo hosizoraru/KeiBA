@@ -167,7 +167,8 @@ final class BaMusicPlaybackSessionTests: XCTestCase {
             duration: 186,
             isPlaying: true,
             queueIndex: 1,
-            queueCount: 3
+            queueCount: 3,
+            repeatMode: .all
         )
 
         XCTAssertEqual(metadata.title, "日奈(礼服)")
@@ -178,6 +179,7 @@ final class BaMusicPlaybackSessionTests: XCTestCase {
         XCTAssertEqual(metadata.playbackRate, 1)
         XCTAssertEqual(metadata.queueIndex, 1)
         XCTAssertEqual(metadata.queueCount, 3)
+        XCTAssertEqual(metadata.repeatMode, .all)
     }
 
     func testNowPlayingMetadataDropsInvalidTimingValues() throws {
@@ -196,6 +198,7 @@ final class BaMusicPlaybackSessionTests: XCTestCase {
         XCTAssertEqual(metadata.playbackRate, 0)
         XCTAssertNil(metadata.queueIndex)
         XCTAssertEqual(metadata.queueCount, 0)
+        XCTAssertEqual(metadata.repeatMode, .off)
     }
 
     func testPlaybackTimeFormatterUsesMusicTimeStyle() {
@@ -263,6 +266,20 @@ final class BaMusicPlaybackSessionTests: XCTestCase {
         XCTAssertEqual(systemMediaController.updates.last?.title, "爱丽丝(临战)")
         XCTAssertEqual(systemMediaController.updates.last?.queueIndex, 1)
         XCTAssertEqual(systemMediaController.updates.last?.queueCount, 2)
+    }
+
+    func testRemoteRepeatCommandUpdatesModeAndSystemMetadata() throws {
+        let systemMediaController = RecordingSystemMediaController()
+        let session = BaMusicPlaybackSession(
+            audioCache: FakeAudioCache(),
+            systemMediaController: systemMediaController
+        )
+        session.selectedTrack = try musicTrack(contentId: 2_101, title: "爱丽丝", audioFileName: "alice.ogg")
+
+        XCTAssertTrue(session.handleSystemMediaCommand(.changeRepeatMode(.one)))
+
+        XCTAssertEqual(session.repeatMode, .one)
+        XCTAssertEqual(systemMediaController.updates.last?.repeatMode, .one)
     }
 
     func testStopClearsSystemMediaState() throws {

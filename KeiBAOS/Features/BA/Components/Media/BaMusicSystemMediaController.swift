@@ -25,6 +25,7 @@ nonisolated struct BaMusicNowPlayingMetadata: Equatable {
     let playbackRate: Double
     let queueIndex: Int?
     let queueCount: Int
+    let repeatMode: BaMusicRepeatMode
 
     init(
         track: BaMusicTrack,
@@ -32,7 +33,8 @@ nonisolated struct BaMusicNowPlayingMetadata: Equatable {
         duration: TimeInterval?,
         isPlaying: Bool,
         queueIndex: Int?,
-        queueCount: Int
+        queueCount: Int,
+        repeatMode: BaMusicRepeatMode = .off
     ) {
         title = track.title
         subtitle = track.subtitle
@@ -42,6 +44,7 @@ nonisolated struct BaMusicNowPlayingMetadata: Equatable {
         playbackRate = isPlaying ? 1 : 0
         self.queueIndex = queueIndex
         self.queueCount = max(queueCount, 0)
+        self.repeatMode = repeatMode
     }
 }
 
@@ -52,6 +55,7 @@ enum BaMusicSystemMediaCommand {
     case previous
     case next
     case stop
+    case changeRepeatMode(BaMusicRepeatMode)
 }
 
 @MainActor
@@ -127,6 +131,7 @@ final class BaMusicSystemMediaController: BaMusicSystemMediaControlling {
             commandCenter.nextTrackCommand.isEnabled = true
             commandCenter.stopCommand.isEnabled = true
             commandCenter.changePlaybackPositionCommand.isEnabled = true
+            commandCenter.changeRepeatModeCommand.isEnabled = true
 
             addTarget(commandCenter.playCommand, command: .play)
             addTarget(commandCenter.pauseCommand, command: .pause)
@@ -134,6 +139,18 @@ final class BaMusicSystemMediaController: BaMusicSystemMediaControlling {
             addTarget(commandCenter.previousTrackCommand, command: .previous)
             addTarget(commandCenter.nextTrackCommand, command: .next)
             addTarget(commandCenter.stopCommand, command: .stop)
+
+            let repeatTarget = commandCenter.changeRepeatModeCommand.addTarget { [weak self] event in
+                guard let repeatEvent = event as? MPChangeRepeatModeCommandEvent else {
+                    return .commandFailed
+                }
+                let repeatMode = BaMusicRepeatMode(mpRepeatType: repeatEvent.repeatType)
+                DispatchQueue.main.async { [weak self] in
+                    _ = self?.commandHandler?.handleSystemMediaCommand(.changeRepeatMode(repeatMode))
+                }
+                return .success
+            }
+            remoteCommandTargets.append((commandCenter.changeRepeatModeCommand, repeatTarget))
 
             let seekTarget = commandCenter.changePlaybackPositionCommand.addTarget { [weak self] event in
                 guard let positionEvent = event as? MPChangePlaybackPositionCommandEvent else {
@@ -161,6 +178,7 @@ final class BaMusicSystemMediaController: BaMusicSystemMediaControlling {
 
         private func applyNowPlayingInfo(metadata: BaMusicNowPlayingMetadata) {
             let artwork = metadata.artworkURL == cachedArtworkURL ? cachedArtwork : nil
+            MPRemoteCommandCenter.shared().changeRepeatModeCommand.currentRepeatType = metadata.repeatMode.mpRepeatType
             MPNowPlayingInfoCenter.default().nowPlayingInfo = metadata.nowPlayingInfo(artwork: artwork)
         }
 
@@ -247,6 +265,32 @@ private extension BaMusicNowPlayingMetadata {
             info[MPMediaItemPropertyArtwork] = artwork
         }
         return info
+    }
+}
+
+private extension BaMusicRepeatMode {
+    init(mpRepeatType: MPRepeatType) {
+        switch mpRepeatType {
+        case .one:
+            self = .one
+        case .all:
+            self = .all
+        case .off:
+            self = .off
+        @unknown default:
+            self = .off
+        }
+    }
+
+    var mpRepeatType: MPRepeatType {
+        switch self {
+        case .off:
+            .off
+        case .all:
+            .all
+        case .one:
+            .one
+        }
     }
 }
 #endif

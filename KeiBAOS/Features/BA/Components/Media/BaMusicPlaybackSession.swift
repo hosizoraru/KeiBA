@@ -8,7 +8,7 @@
 import Foundation
 import Observation
 
-enum BaMusicRepeatMode: Hashable {
+nonisolated enum BaMusicRepeatMode: Hashable {
     case off
     case all
     case one
@@ -249,6 +249,7 @@ final class BaMusicPlaybackSession: BaMusicSystemMediaCommandHandling {
 
     func cycleRepeatMode() {
         repeatMode = repeatMode.next
+        syncSystemMediaState()
     }
 
     func cacheState(for track: BaMusicTrack) -> BaMusicCacheState {
@@ -413,6 +414,8 @@ final class BaMusicPlaybackSession: BaMusicSystemMediaCommandHandling {
         case .stop:
             stop()
             return true
+        case let .changeRepeatMode(mode):
+            repeatMode = mode
         }
         syncSystemMediaState()
         return true
@@ -444,7 +447,8 @@ final class BaMusicPlaybackSession: BaMusicSystemMediaCommandHandling {
             duration: player.duration,
             isPlaying: player.isPlaying,
             queueIndex: currentIndex,
-            queueCount: queue.count
+            queueCount: queue.count,
+            repeatMode: repeatMode
         )
     }
 
