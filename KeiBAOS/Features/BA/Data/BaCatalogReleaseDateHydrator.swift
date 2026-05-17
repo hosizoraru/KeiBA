@@ -55,13 +55,19 @@ struct BaCatalogReleaseDateHydrator {
 
     private func applyCachedReleaseDates(_ bundle: BaGuideCatalogBundle) async -> BaGuideCatalogBundle {
         var patches: [Int64: Date] = [:]
-        for entry in bundle.entries where entry.releaseDate == nil {
-            guard let cached = await cacheStore.load(BaStudentGuideInfo.self, for: .studentDetail(entry.contentId)),
-                  let date = releaseDate(from: cached.value)
-            else {
-                continue
+        let candidates = bundle.entries.filter { entry in
+            entry.category == .students && entry.releaseDate == nil
+        }
+        for batch in candidates.baChunked(into: BaPlatformPerformanceProfile.catalogCachedReleaseDateBatchSize) {
+            for entry in batch {
+                guard let cached = await cacheStore.load(BaStudentGuideInfo.self, for: .studentDetail(entry.contentId)),
+                      let date = releaseDate(from: cached.value)
+                else {
+                    continue
+                }
+                patches[entry.contentId] = date
             }
-            patches[entry.contentId] = date
+            await Task.yield()
         }
         return patches.isEmpty ? bundle : apply(patches: patches, to: bundle)
     }

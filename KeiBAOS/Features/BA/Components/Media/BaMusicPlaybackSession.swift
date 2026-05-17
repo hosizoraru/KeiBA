@@ -160,6 +160,7 @@ final class BaMusicPlaybackSession: BaMusicSystemMediaCommandHandling {
     let player: BaAudioPlaybackController
     @ObservationIgnored private let audioCache: any BaAudioCaching
     @ObservationIgnored private let systemMediaController: any BaMusicSystemMediaControlling
+    @ObservationIgnored private let cacheConcurrency: Int
     @ObservationIgnored private var systemMediaTimer: Timer?
 
     var selectedTrack: BaMusicTrack?
@@ -177,10 +178,12 @@ final class BaMusicPlaybackSession: BaMusicSystemMediaCommandHandling {
 
     init(
         audioCache: any BaAudioCaching,
-        systemMediaController: any BaMusicSystemMediaControlling
+        systemMediaController: any BaMusicSystemMediaControlling,
+        cacheConcurrency: Int = BaPlatformPerformanceProfile.musicCacheConcurrency
     ) {
         self.audioCache = audioCache
         self.systemMediaController = systemMediaController
+        self.cacheConcurrency = max(cacheConcurrency, 1)
         player = BaAudioPlaybackController(audioCache: audioCache, profile: .music)
         player.onPlaybackFinished = { [weak self] in
             self?.handlePlaybackFinished()
@@ -255,15 +258,23 @@ final class BaMusicPlaybackSession: BaMusicSystemMediaCommandHandling {
             track.audioURL != nil && cacheState(for: track).canStartCaching
         }
         guard targets.isEmpty == false else { return }
+        for track in targets {
+            if let audioURL = track.audioURL {
+                cacheStates[audioURL] = .caching
+            }
+        }
         Task {
-            for track in targets {
+            await BaBoundedTaskGroup.run(
+                targets,
+                maxConcurrentTasks: cacheConcurrency,
+                priority: .utility
+            ) { [weak self] track in
                 guard Task.isCancelled == false,
                       let audioURL = track.audioURL
                 else {
                     return
                 }
-                cacheStates[audioURL] = .caching
-                await cacheAudio(audioURL)
+                await self?.cacheAudio(audioURL)
             }
         }
     }

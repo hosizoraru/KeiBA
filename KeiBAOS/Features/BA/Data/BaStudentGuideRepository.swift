@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct BaStudentGuideRepository {
+struct BaStudentGuideRepository: Sendable {
     private let client: GameKeeClient
 
     init(client: GameKeeClient) {

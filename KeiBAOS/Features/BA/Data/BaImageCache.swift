@@ -55,7 +55,7 @@ actor BaImageCache {
         }
 
         missCount += 1
-        let request = Task { [client] in
+        let request = Task.detached(priority: .utility) { [client] in
             try await client.fetchImageData(url: url, refererPath: refererPath)
         }
         inFlightRequests[requestKey] = request

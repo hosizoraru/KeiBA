@@ -272,6 +272,30 @@ final class BaMusicPlaybackSessionTests: XCTestCase {
         XCTAssertEqual(cachedAudioURLs, Set([try XCTUnwrap(firstTrack.audioURL), try XCTUnwrap(nextTrack.audioURL)]))
     }
 
+    func testCacheAllUsesBoundedConcurrency() async throws {
+        let audioCache = FakeAudioCache(delay: .milliseconds(35))
+        let session = BaMusicPlaybackSession(
+            audioCache: audioCache,
+            systemMediaController: RecordingSystemMediaController(),
+            cacheConcurrency: 2
+        )
+        let tracks = try (0 ..< 5).map { index in
+            try musicTrack(
+                contentId: Int64(4_100 + index),
+                title: "学生\(index)",
+                audioFileName: "student-\(index).ogg"
+            )
+        }
+
+        session.cacheAll(tracks)
+        try await Task.sleep(for: .milliseconds(180))
+
+        let cachedAudioURLs = await audioCache.cachedAudioURLs()
+        let maxActiveRequestCount = await audioCache.maxActiveRequestCount()
+        XCTAssertEqual(cachedAudioURLs, Set(tracks.compactMap(\.audioURL)))
+        XCTAssertEqual(maxActiveRequestCount, 2)
+    }
+
     func testClearCacheRemovesCachedTrackState() async throws {
         let audioCache = FakeAudioCache()
         let session = BaMusicPlaybackSession(
@@ -347,8 +371,21 @@ private final class RecordingSystemMediaController: BaMusicSystemMediaControllin
 private actor FakeAudioCache: BaAudioCaching {
     private var cachedURLs: Set<URL> = []
     private var removedURLs: [URL] = []
+    private var activeRequestCount = 0
+    private var observedMaxActiveRequestCount = 0
+    private let delay: Duration
+
+    init(delay: Duration = .zero) {
+        self.delay = delay
+    }
 
     func localURL(for url: URL, refererPath _: String) async throws -> URL {
+        activeRequestCount += 1
+        observedMaxActiveRequestCount = max(observedMaxActiveRequestCount, activeRequestCount)
+        defer { activeRequestCount -= 1 }
+        if delay > .zero {
+            try? await Task.sleep(for: delay)
+        }
         cachedURLs.insert(url)
         return FileManager.default.temporaryDirectory.appendingPathComponent(url.lastPathComponent)
     }
@@ -373,5 +410,9 @@ private actor FakeAudioCache: BaAudioCaching {
 
     func removedAudioURLs() async -> [URL] {
         removedURLs
+    }
+
+    func maxActiveRequestCount() async -> Int {
+        observedMaxActiveRequestCount
     }
 }

@@ -7,13 +7,13 @@
 
 import Foundation
 
-struct GameKeeRequest: Hashable {
+struct GameKeeRequest: Hashable, Sendable {
     let pathOrURL: String
     let refererPath: String
     var extraHeaders: [String: String] = [:]
 }
 
-enum GameKeeError: LocalizedError {
+enum GameKeeError: LocalizedError, Sendable {
     case invalidURL(String)
     case invalidResponse(String)
     case httpStatus(Int)
@@ -36,7 +36,7 @@ enum GameKeeError: LocalizedError {
     }
 }
 
-struct GameKeeClient {
+struct GameKeeClient: @unchecked Sendable {
     static let baseURL = URL(string: "https://www.gamekee.com")!
     nonisolated static let safariUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1"
     nonisolated static let firefoxAndroidUserAgent = "Mozilla/5.0 (Android 15; Mobile; rv:140.0) Gecko/140.0 Firefox/140.0"

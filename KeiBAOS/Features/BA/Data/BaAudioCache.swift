@@ -19,9 +19,15 @@ nonisolated protocol BaAudioCaching: Sendable {
 actor BaAudioCache: BaAudioCaching {
     nonisolated static let shared = BaAudioCache(client: GameKeeClient())
 
+    private struct RequestKey: Hashable {
+        let url: URL
+        let refererPath: String
+    }
+
     private let fileManager: FileManager
     private let client: GameKeeClient
     private let rootDirectory: URL
+    private var inFlightRequests: [RequestKey: Task<Data, Error>] = [:]
     private var deferredFailures: [URL: Date] = [:]
     private let logger = Logger(subsystem: "os.kei.KeiBAOS", category: "BaAudioCache")
     private let failureTTL: TimeInterval = 45
@@ -32,35 +38,52 @@ actor BaAudioCache: BaAudioCaching {
         let base = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first
             ?? fileManager.temporaryDirectory
         rootDirectory = base.appendingPathComponent("BAVoiceAudio", isDirectory: true)
-        try? fileManager.createDirectory(at: rootDirectory, withIntermediateDirectories: true)
     }
 
     func localURL(for url: URL, refererPath: String = "/ba") async throws -> URL {
-        let fileURL = cachedFileURL(for: url)
-        if let data = try? Data(contentsOf: fileURL), data.isEmpty == false {
-            if Self.looksLikeAudioData(data, expectedExtension: url.pathExtension) {
-                logger.debug("audio cache hit \(url.host ?? "unknown", privacy: .public)")
-                return fileURL
-            }
-            try? fileManager.removeItem(at: fileURL)
-            logger.debug("audio cache invalidated \(url.host ?? "unknown", privacy: .public)")
+        if let cachedURL = validatedCachedFileURL(for: url) {
+            logger.debug("audio cache hit \(url.host ?? "unknown", privacy: .public)")
+            return cachedURL
         }
         if let retryAt = deferredFailures[url], retryAt > Date() {
             throw GameKeeError.invalidResponse("Audio retry deferred")
         }
         deferredFailures[url] = nil
-        let data: Data
+
+        let requestKey = RequestKey(url: url, refererPath: refererPath)
+        if let inFlightRequest = inFlightRequests[requestKey] {
+            let data = try await inFlightRequest.value
+            if let cachedURL = validatedCachedFileURL(for: url) {
+                return cachedURL
+            }
+            return try storeAudioData(data, for: url)
+        }
+
+        let request = Task.detached(priority: .utility) { [client] in
+            try await client.fetchAudioData(url: url, refererPath: refererPath)
+        }
+        inFlightRequests[requestKey] = request
         do {
-            data = try await client.fetchAudioData(url: url, refererPath: refererPath)
+            let data = try await request.value
+            inFlightRequests[requestKey] = nil
+            return try storeAudioData(data, for: url)
         } catch {
-            recordFailure(for: url)
+            inFlightRequests[requestKey] = nil
+            if Self.isCancellation(error) == false {
+                recordFailure(for: url)
+            }
             throw error
         }
+    }
+
+    private func storeAudioData(_ data: Data, for url: URL) throws -> URL {
+        let fileURL = cachedFileURL(for: url)
         do {
             guard Self.looksLikeAudioData(data, expectedExtension: url.pathExtension) else {
                 recordFailure(for: url)
                 throw GameKeeError.invalidResponse(String(decoding: data.prefix(120), as: UTF8.self))
             }
+            try? fileManager.createDirectory(at: rootDirectory, withIntermediateDirectories: true)
             try data.write(to: fileURL, options: [.atomic])
             logger.debug("audio cache stored \(url.host ?? "unknown", privacy: .public) bytes=\(data.count, privacy: .public)")
         } catch {
@@ -75,6 +98,10 @@ actor BaAudioCache: BaAudioCaching {
     }
 
     func cachedURL(for url: URL) async -> URL? {
+        validatedCachedFileURL(for: url)
+    }
+
+    private func validatedCachedFileURL(for url: URL) -> URL? {
         let fileURL = cachedFileURL(for: url)
         guard let data = try? Data(contentsOf: fileURL), data.isEmpty == false else {
             return nil
@@ -123,6 +150,14 @@ actor BaAudioCache: BaAudioCaching {
         if recognized { return true }
         if ["ogg", "oga", "opus"].contains(ext) { return false }
         return ext.isEmpty || ext == "audio"
+    }
+
+    private nonisolated static func isCancellation(_ error: Error) -> Bool {
+        if error is CancellationError {
+            return true
+        }
+        let nsError = error as NSError
+        return nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled
     }
 
     nonisolated static func recognizesAudioDataForTesting(_ data: Data, expectedExtension: String) -> Bool {

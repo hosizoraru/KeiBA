@@ -10,53 +10,137 @@ import Foundation
     import UIKit
 #endif
 
+nonisolated enum BaPlatformPerformanceClass: Equatable, Sendable {
+    case phone
+    case pad
+    case desktop
+    case watch
+}
+
 enum BaPlatformPerformanceProfile {
-    static var catalogReleaseDateFetchLimit: Int {
+    nonisolated static var currentClass: BaPlatformPerformanceClass {
         #if os(macOS)
+            .desktop
+        #elseif os(iOS)
+            isPad ? .pad : .phone
+        #elseif os(watchOS)
+            .watch
+        #else
+            .phone
+        #endif
+    }
+
+    nonisolated static var catalogReleaseDateFetchLimit: Int {
+        catalogReleaseDateFetchLimit(for: currentClass)
+    }
+
+    nonisolated static var catalogReleaseDateBatchSize: Int {
+        catalogReleaseDateBatchSize(for: currentClass)
+    }
+
+    nonisolated static var catalogCachedReleaseDateBatchSize: Int {
+        catalogCachedReleaseDateBatchSize(for: currentClass)
+    }
+
+    nonisolated static var musicInitialDetailFetchLimit: Int {
+        musicInitialDetailFetchLimit(for: currentClass)
+    }
+
+    nonisolated static var musicDetailPrefetchConcurrency: Int {
+        musicDetailPrefetchConcurrency(for: currentClass)
+    }
+
+    nonisolated static var musicCacheConcurrency: Int {
+        musicCacheConcurrency(for: currentClass)
+    }
+
+    nonisolated static var musicSamplesRowAvatarAccent: Bool {
+        musicSamplesRowAvatarAccent(for: currentClass)
+    }
+
+    nonisolated static func catalogReleaseDateFetchLimit(for platformClass: BaPlatformPerformanceClass) -> Int {
+        switch platformClass {
+        case .desktop:
             12
-        #elseif os(iOS)
-            isPad ? 8 : 4
-        #elseif os(watchOS)
-            2
-        #else
+        case .pad:
+            8
+        case .phone:
             4
-        #endif
+        case .watch:
+            2
+        }
     }
 
-    static var catalogReleaseDateBatchSize: Int {
-        #if os(macOS)
+    nonisolated static func catalogReleaseDateBatchSize(for platformClass: BaPlatformPerformanceClass) -> Int {
+        switch platformClass {
+        case .desktop:
             3
-        #elseif os(iOS)
-            isPad ? 2 : 1
-        #elseif os(watchOS)
+        case .pad:
+            2
+        case .phone, .watch:
             1
-        #else
-            1
-        #endif
+        }
     }
 
-    static var musicInitialDetailFetchLimit: Int {
-        #if os(macOS)
+    nonisolated static func catalogCachedReleaseDateBatchSize(for platformClass: BaPlatformPerformanceClass) -> Int {
+        switch platformClass {
+        case .desktop:
+            48
+        case .pad:
+            32
+        case .phone:
+            16
+        case .watch:
+            8
+        }
+    }
+
+    nonisolated static func musicInitialDetailFetchLimit(for platformClass: BaPlatformPerformanceClass) -> Int {
+        switch platformClass {
+        case .desktop:
             18
-        #elseif os(iOS)
-            isPad ? 12 : 7
-        #elseif os(watchOS)
-            3
-        #else
+        case .pad:
+            12
+        case .phone:
             7
-        #endif
+        case .watch:
+            3
+        }
     }
 
-    static var musicSamplesRowAvatarAccent: Bool {
-        #if os(macOS)
+    nonisolated static func musicDetailPrefetchConcurrency(for platformClass: BaPlatformPerformanceClass) -> Int {
+        switch platformClass {
+        case .desktop:
+            6
+        case .pad:
+            4
+        case .phone:
+            2
+        case .watch:
+            1
+        }
+    }
+
+    nonisolated static func musicCacheConcurrency(for platformClass: BaPlatformPerformanceClass) -> Int {
+        switch platformClass {
+        case .desktop:
+            5
+        case .pad:
+            3
+        case .phone:
+            2
+        case .watch:
+            1
+        }
+    }
+
+    nonisolated static func musicSamplesRowAvatarAccent(for platformClass: BaPlatformPerformanceClass) -> Bool {
+        switch platformClass {
+        case .desktop, .pad:
             true
-        #elseif os(iOS)
-            isPad
-        #elseif os(watchOS)
+        case .phone, .watch:
             false
-        #else
-            false
-        #endif
+        }
     }
 
     #if os(iOS)

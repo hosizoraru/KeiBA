@@ -256,9 +256,9 @@ struct BaLibraryView: View {
     private func cacheTracks(_ tracks: [BaMusicTrack]) {
         let requestedIDs = Set(tracks.map(\.id))
         Task {
-            for track in tracks where track.needsDetailForMusicCache {
-                await model.loadStudentDetail(entry: track.entry)
-            }
+            await model.loadStudentDetails(
+                entries: tracks.filter(\.needsDetailForMusicCache).map(\.entry)
+            )
             playbackSession.cacheAll(refreshedTracks(matching: requestedIDs, query: searchText))
         }
     }
@@ -269,9 +269,11 @@ struct BaLibraryView: View {
 
     private func refreshMusicLibrary() async {
         await model.refreshCatalog(force: true)
-        for track in snapshot.visibleTracks.prefix(BaPlatformPerformanceProfile.musicInitialDetailFetchLimit) {
-            await model.loadStudentDetail(entry: track.entry, force: true)
-        }
+        await model.loadStudentDetails(
+            entries: snapshot.visibleTracks.map(\.entry),
+            force: true,
+            limit: BaPlatformPerformanceProfile.musicInitialDetailFetchLimit
+        )
     }
 
     private var navigationChrome: BaMusicLibraryNavigationChrome {
