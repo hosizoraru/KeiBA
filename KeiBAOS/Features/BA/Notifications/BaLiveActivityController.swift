@@ -12,7 +12,6 @@ import ActivityKit
 
 @MainActor
 final class BaLiveActivityController {
-    private let maximumActivities = 2
     private let testActivityID = BaNotificationPlan.debugIdentifierPrefix + "live"
 
     func synchronize(candidates: [BaLiveActivityCandidate]) async {
@@ -22,7 +21,7 @@ final class BaLiveActivityController {
             return
         }
 
-        let selected = Array(candidates.prefix(maximumActivities))
+        let selected = BaLiveActivitySelection.selectedCandidates(from: candidates)
         let selectedIDs = Set(selected.map(\.id))
 
         for activity in Activity<BaReminderLiveActivityAttributes>.activities
@@ -54,8 +53,32 @@ final class BaLiveActivityController {
             subtitle: NSLocalizedString("ba.notification.debug.live.subtitle", bundle: .main, comment: ""),
             startDate: now,
             endDate: now.addingTimeInterval(10 * 60),
-            relevance: 1
+            relevance: 1,
+            resources: [
+                BaLiveActivityCandidate.Resource(
+                    kind: .ap,
+                    title: NSLocalizedString("ba.notification.live.ap.title", bundle: .main, comment: ""),
+                    currentValue: 236,
+                    limitValue: 240,
+                    startDate: now,
+                    endDate: now.addingTimeInterval(10 * 60)
+                ),
+                BaLiveActivityCandidate.Resource(
+                    kind: .cafeAP,
+                    title: NSLocalizedString("ba.notification.live.cafeAp.title", bundle: .main, comment: ""),
+                    currentValue: 690,
+                    limitValue: 740,
+                    startDate: now,
+                    endDate: now.addingTimeInterval(47 * 60)
+                ),
+            ]
         )
+
+        for activity in Activity<BaReminderLiveActivityAttributes>.activities
+            where activity.attributes.id != candidate.id
+        {
+            await end(activity)
+        }
 
         if let activity = Activity<BaReminderLiveActivityAttributes>.activities.first(where: { $0.attributes.id == candidate.id }) {
             await update(activity, with: candidate)
@@ -117,7 +140,8 @@ private extension BaLiveActivityCandidate {
                 subtitle: subtitle,
                 startDate: startDate,
                 endDate: endDate,
-                updatedAt: Date()
+                updatedAt: Date(),
+                resources: resources.map(\.contentResource)
             ),
             staleDate: endDate.addingTimeInterval(60),
             relevanceScore: relevance
@@ -134,6 +158,28 @@ private extension BaLiveActivityCandidate {
             .activity
         case .pool:
             .pool
+        }
+    }
+}
+
+private extension BaLiveActivityCandidate.Resource {
+    var contentResource: BaReminderLiveActivityAttributes.ContentState.Resource {
+        BaReminderLiveActivityAttributes.ContentState.Resource(
+            kind: contentKind,
+            title: title,
+            currentValue: currentValue,
+            limitValue: limitValue,
+            startDate: startDate,
+            endDate: endDate
+        )
+    }
+
+    private var contentKind: BaReminderLiveActivityAttributes.ContentState.Resource.Kind {
+        switch kind {
+        case .ap:
+            .ap
+        case .cafeAP:
+            .cafeAP
         }
     }
 }

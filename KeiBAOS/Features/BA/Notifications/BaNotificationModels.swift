@@ -98,6 +98,20 @@ nonisolated struct BaLiveActivityCandidate: Equatable, Sendable {
         case pool
     }
 
+    struct Resource: Equatable, Sendable {
+        enum Kind: String, Equatable, Sendable {
+            case ap
+            case cafeAP
+        }
+
+        var kind: Kind
+        var title: String
+        var currentValue: Int
+        var limitValue: Int
+        var startDate: Date
+        var endDate: Date
+    }
+
     var id: String
     var kind: Kind
     var title: String
@@ -105,4 +119,5 @@ nonisolated struct BaLiveActivityCandidate: Equatable, Sendable {
     var startDate: Date
     var endDate: Date
     var relevance: Double
+    var resources: [Resource] = []
 }

@@ -80,44 +80,8 @@ nonisolated enum BaNotificationPlanner {
     ) -> [BaLiveActivityCandidate] {
         var candidates: [BaLiveActivityCandidate] = []
 
-        if settings.apNotificationsEnabled,
-           let fullAt = apTargetDate(
-            current: BaTimeMath.currentAP(settings: settings, now: now),
-            target: settings.apLimit,
-            limit: settings.apLimit,
-            baseAt: settings.apRegenBaseAt,
-            now: now
-           ),
-           shouldStartLiveActivity(target: fullAt, now: now)
-        {
-            candidates.append(
-                BaLiveActivityCandidate(
-                    id: identifier(settings.server, "live", "ap"),
-                    kind: .ap,
-                    title: localized("ba.notification.live.ap.title"),
-                    subtitle: localized("ba.notification.live.ap.subtitle"),
-                    startDate: now,
-                    endDate: fullAt,
-                    relevance: 0.92
-                )
-            )
-        }
-
-        if settings.cafeApNotificationsEnabled,
-           let fullAt = cafeAPTargetDate(settings: settings, target: BaTimeMath.cafeDailyCapacity(level: settings.cafeLevel), now: now),
-           shouldStartLiveActivity(target: fullAt, now: now)
-        {
-            candidates.append(
-                BaLiveActivityCandidate(
-                    id: identifier(settings.server, "live", "cafeAP"),
-                    kind: .cafeAP,
-                    title: localized("ba.notification.live.cafeAp.title"),
-                    subtitle: localized("ba.notification.live.cafeAp.subtitle"),
-                    startDate: now,
-                    endDate: fullAt,
-                    relevance: 0.88
-                )
-            )
+        if let resourceCandidate = resourceLiveActivityCandidate(settings: settings, now: now) {
+            candidates.append(resourceCandidate)
         }
 
         candidates.append(
@@ -129,15 +93,74 @@ nonisolated enum BaNotificationPlanner {
             )
         )
 
-        return candidates
-            .sorted { lhs, rhs in
-                if lhs.endDate == rhs.endDate {
-                    return lhs.relevance > rhs.relevance
-                }
-                return lhs.endDate < rhs.endDate
+        return candidates.sorted { lhs, rhs in
+            if lhs.endDate == rhs.endDate {
+                return lhs.relevance > rhs.relevance
             }
-            .prefix(2)
-            .map { $0 }
+            return lhs.endDate < rhs.endDate
+        }
+    }
+
+    private static func resourceLiveActivityCandidate(settings: BaAppSettings, now: Date) -> BaLiveActivityCandidate? {
+        var resources: [BaLiveActivityCandidate.Resource] = []
+
+        if settings.apNotificationsEnabled {
+            let current = BaTimeMath.currentAP(settings: settings, now: now)
+            let limit = min(max(settings.apLimit, 0), BaTimeMath.apLimitMax)
+            if let fullAt = apTargetDate(
+                current: current,
+                target: limit,
+                limit: limit,
+                baseAt: settings.apRegenBaseAt,
+                now: now
+            ),
+                shouldStartLiveActivity(target: fullAt, now: now)
+            {
+                resources.append(
+                    BaLiveActivityCandidate.Resource(
+                        kind: .ap,
+                        title: localized("ba.notification.live.ap.title"),
+                        currentValue: BaTimeMath.displayAP(current),
+                        limitValue: limit,
+                        startDate: now,
+                        endDate: fullAt
+                    )
+                )
+            }
+        }
+
+        if settings.cafeApNotificationsEnabled {
+            let current = BaTimeMath.currentCafeAP(settings: settings, now: now)
+            let capacity = BaTimeMath.cafeDailyCapacity(level: settings.cafeLevel)
+            if let fullAt = cafeAPTargetDate(settings: settings, target: capacity, now: now),
+               shouldStartLiveActivity(target: fullAt, now: now)
+            {
+                resources.append(
+                    BaLiveActivityCandidate.Resource(
+                        kind: .cafeAP,
+                        title: localized("ba.notification.live.cafeAp.title"),
+                        currentValue: BaTimeMath.displayAP(current),
+                        limitValue: capacity,
+                        startDate: now,
+                        endDate: fullAt
+                    )
+                )
+            }
+        }
+
+        guard let primary = resources.first else { return nil }
+        let activityEndDate = resources.map(\.endDate).max() ?? primary.endDate
+
+        return BaLiveActivityCandidate(
+            id: identifier(settings.server, "live", "resource"),
+            kind: primary.kind.liveActivityKind,
+            title: primary.title,
+            subtitle: localized("ba.notification.live.resource.subtitle"),
+            startDate: primary.startDate,
+            endDate: activityEndDate,
+            relevance: resources.contains { $0.kind == .ap } ? 0.92 : 0.88,
+            resources: resources
+        )
     }
 
     private static func apReminder(settings: BaAppSettings, now: Date) -> BaNotificationReminder? {
@@ -526,6 +549,17 @@ nonisolated enum BaNotificationPlanner {
 
     private static func localized(_ key: String) -> String {
         NSLocalizedString(key, bundle: .main, comment: "")
+    }
+}
+
+private extension BaLiveActivityCandidate.Resource.Kind {
+    nonisolated var liveActivityKind: BaLiveActivityCandidate.Kind {
+        switch self {
+        case .ap:
+            .ap
+        case .cafeAP:
+            .cafeAP
+        }
     }
 }
 

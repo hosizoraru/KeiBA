@@ -162,6 +162,88 @@ final class BaNotificationPlannerTests: XCTestCase {
         XCTAssertTrue(candidates.isEmpty)
     }
 
+    func testLiveActivitySelectionKeepsSingleHighestPriorityCandidate() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let candidates = [
+            BaLiveActivityCandidate(
+                id: "activity",
+                kind: .activity,
+                title: "活动",
+                subtitle: "结束倒计时",
+                startDate: now,
+                endDate: now.addingTimeInterval(30 * 60),
+                relevance: 0.82
+            ),
+            BaLiveActivityCandidate(
+                id: "ap",
+                kind: .ap,
+                title: "AP",
+                subtitle: "恢复倒计时",
+                startDate: now,
+                endDate: now.addingTimeInterval(60 * 60),
+                relevance: 0.92
+            ),
+        ]
+
+        let selected = BaLiveActivitySelection.selectedCandidates(from: candidates)
+
+        XCTAssertEqual(selected.map(\.id), ["ap"])
+    }
+
+    func testLiveActivityResourceCandidateCombinesAPAndCafeAP() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        var settings = quietSettings(now: now)
+        settings.apNotificationsEnabled = true
+        settings.cafeApNotificationsEnabled = true
+        settings.apCurrent = 236
+        settings.apLimit = 240
+        settings.apRegenBaseAt = now
+        settings.cafeLevel = 10
+        settings.cafeApCurrent = 690
+        settings.cafeStorageBaseAt = now
+
+        let candidates = BaNotificationPlanner.liveActivityCandidates(
+            settings: settings,
+            activities: [],
+            pools: [],
+            now: now
+        )
+
+        XCTAssertEqual(candidates.map(\.kind), [.ap])
+        XCTAssertEqual(candidates.first?.resources.map(\.kind), [.ap, .cafeAP])
+        XCTAssertEqual(candidates.first?.resources.first?.currentValue, 236)
+        XCTAssertEqual(candidates.first?.resources.first?.limitValue, 240)
+        XCTAssertEqual(candidates.first?.endDate, now.addingTimeInterval(2 * 60 * 60))
+    }
+
+    func testLiveActivitySelectionUsesEarlierEndDateWhenRelevanceMatches() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let candidates = [
+            BaLiveActivityCandidate(
+                id: "later",
+                kind: .pool,
+                title: "卡池",
+                subtitle: "结束倒计时",
+                startDate: now,
+                endDate: now.addingTimeInterval(90 * 60),
+                relevance: 0.8
+            ),
+            BaLiveActivityCandidate(
+                id: "earlier",
+                kind: .activity,
+                title: "活动",
+                subtitle: "结束倒计时",
+                startDate: now,
+                endDate: now.addingTimeInterval(20 * 60),
+                relevance: 0.8
+            ),
+        ]
+
+        let selected = BaLiveActivitySelection.selectedCandidates(from: candidates)
+
+        XCTAssertEqual(selected.map(\.id), ["earlier"])
+    }
+
     private func quietSettings(now: Date) -> BaAppSettings {
         var settings = BaAppSettings.defaults(now: now)
         settings.apNotificationsEnabled = false
