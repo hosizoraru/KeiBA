@@ -54,7 +54,7 @@ private struct BaStudentSkillCard: View {
     }
 
     private var description: String {
-        card.description(for: displayLevel).ifBlank(String(localized: "ba.common.none"))
+        card.description(for: displayLevel).ifBlank(BaL10n.string("ba.common.none"))
     }
 
     var body: some View {

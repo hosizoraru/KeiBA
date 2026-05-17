@@ -73,7 +73,7 @@ struct BaStudentGalleryPreviewSheet: View {
             .platformInlineNavigationTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(String(localized: "ba.common.done")) {
+                    Button(BaL10n.string("ba.common.done")) {
                         dismiss()
                     }
                 }
@@ -82,7 +82,7 @@ struct BaStudentGalleryPreviewSheet: View {
                         ShareLink(item: shareURL) {
                             Image(systemName: "square.and.arrow.up")
                         }
-                        .accessibilityLabel(String(localized: "ba.action.share"))
+                        .accessibilityLabel(BaL10n.string("ba.action.share"))
                     }
 
                     BaGalleryMediaSaveButton(url: item.mediaURL ?? item.previewURL, title: item.title)

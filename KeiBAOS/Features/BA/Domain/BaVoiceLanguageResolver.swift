@@ -213,7 +213,7 @@ nonisolated enum BaVoiceLanguageResolver {
     }
 
     private static func localizedLanguageLabel(_ index: Int) -> String {
-        String(format: String(localized: "ba.student.detail.voice.language.format"), index + 1)
+        String(format: BaL10n.string("ba.student.detail.voice.language.format"), index + 1)
     }
 
     private static func voicePriority(_ label: String) -> Int {

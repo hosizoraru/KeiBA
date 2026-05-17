@@ -238,7 +238,7 @@ struct BaStudentGuideRepository: Sendable {
             return entry.aliasDisplay
         }
         if isNpcSatellite {
-            return String(localized: "ba.student.detail.npc.summary.empty")
+            return BaL10n.string("ba.student.detail.npc.summary.empty")
         }
         return ""
     }
@@ -291,7 +291,7 @@ struct BaStudentGuideRepository: Sendable {
         return [
             BaGuideRow(
                 id: "stat-content-id",
-                title: String(localized: "ba.student.detail.contentId.title"),
+                title: BaL10n.string("ba.student.detail.contentId.title"),
                 value: "\(fallback.contentId)",
                 imageURL: nil
             ),
@@ -310,7 +310,7 @@ struct BaStudentGuideRepository: Sendable {
         return [
             BaGuideRow(
                 id: "stat-content-id",
-                title: String(localized: "ba.student.detail.contentId.title"),
+                title: BaL10n.string("ba.student.detail.contentId.title"),
                 value: "\(fallback.contentId)",
                 imageURL: nil
             ),
@@ -351,20 +351,20 @@ struct BaStudentGuideRepository: Sendable {
         [
             BaGuideRow(
                 id: "profile-name",
-                title: String(localized: "ba.student.detail.name.title"),
+                title: BaL10n.string("ba.student.detail.name.title"),
                 value: entry.name,
                 imageURL: nil
             ),
             BaGuideRow(
                 id: "profile-alias",
-                title: String(localized: "ba.student.detail.alias.title"),
-                value: entry.aliasDisplay.isEmpty ? String(localized: "ba.common.none") : entry.aliasDisplay,
+                title: BaL10n.string("ba.student.detail.alias.title"),
+                value: entry.aliasDisplay.isEmpty ? BaL10n.string("ba.common.none") : entry.aliasDisplay,
                 imageURL: nil
             ),
             BaGuideRow(
                 id: "profile-summary",
-                title: String(localized: "ba.student.detail.summary.title"),
-                value: summary.isEmpty ? String(localized: "ba.student.detail.summary.empty") : summary,
+                title: BaL10n.string("ba.student.detail.summary.title"),
+                value: summary.isEmpty ? BaL10n.string("ba.student.detail.summary.empty") : summary,
                 imageURL: nil
             ),
         ]
@@ -392,7 +392,7 @@ struct BaStudentGuideRepository: Sendable {
             .map { index, url in
                 BaGuideGalleryItem(
                     id: "gallery-\(index)-\(abs(url.absoluteString.hashValue))",
-                    title: String(format: String(localized: "ba.student.detail.gallery.item.format"), index + 1),
+                    title: String(format: BaL10n.string("ba.student.detail.gallery.item.format"), index + 1),
                     detail: url.host ?? "GameKee",
                     imageURL: url,
                     mediaURL: nil

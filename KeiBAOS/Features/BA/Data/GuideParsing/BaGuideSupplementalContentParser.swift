@@ -164,7 +164,7 @@ struct BaGuideSupplementalContentParser {
         for tab in objectArray(data["tabList"]) {
             let title = text(from: tab["title"])
                 .ifBlank(tab.string("title") ?? "")
-                .ifBlank(String(localized: "ba.student.detail.media.gallery"))
+                .ifBlank(BaL10n.string("ba.student.detail.media.gallery"))
             let rawContent = tab["content"] ?? tab
             parsed.galleryItems.append(contentsOf: galleryItems(title: title, raw: rawContent, sourceURL: sourceURL))
 

@@ -87,7 +87,7 @@ private struct BaStudentGalleryItemCard: View, Equatable {
                                     )
                                 }
                                 .buttonStyle(.plain)
-                                .accessibilityLabel(String(localized: "ba.action.share"))
+                                .accessibilityLabel(BaL10n.string("ba.action.share"))
                             }
 
                             BaGalleryMediaSaveButton(
@@ -105,7 +105,7 @@ private struct BaStudentGalleryItemCard: View, Equatable {
                     }
                     .buttonStyle(.plain)
                     .contentShape(RoundedRectangle(cornerRadius: presentation.layout.cornerRadius, style: .continuous))
-                    .accessibilityLabel(String(localized: "ba.student.detail.media.preview"))
+                    .accessibilityLabel(BaL10n.string("ba.student.detail.media.preview"))
 
                     BaStudentGalleryPillRow(item: item)
                 }
@@ -131,14 +131,14 @@ private struct BaStudentGalleryExpressionCard: View {
         BaGlassCard(tint: BaDesign.pink) {
             VStack(alignment: .leading, spacing: BaStudentGalleryMetrics.cardSpacing) {
                 BaStudentGalleryGroupHeader(
-                    title: String(localized: "ba.student.detail.gallery.expression.title"),
-                    detail: String(format: String(localized: "ba.student.detail.gallery.expression.count.format"), items.count),
+                    title: BaL10n.string("ba.student.detail.gallery.expression.title"),
+                    detail: String(format: BaL10n.string("ba.student.detail.gallery.expression.count.format"), items.count),
                     systemImage: "face.smiling",
                     tint: BaDesign.pink
                 ) {
                     BaStudentGalleryHeaderActions {
                         BaGalleryMenuPicker(
-                            title: String(localized: "ba.student.detail.gallery.expression.variant"),
+                            title: BaL10n.string("ba.student.detail.gallery.expression.variant"),
                             selectionTitle: selectedItem?.galleryShortTitle ?? "",
                             tint: BaDesign.pink
                         ) {
@@ -151,7 +151,7 @@ private struct BaStudentGalleryExpressionCard: View {
 
                         BaGalleryMediaSaveButton(
                             url: selectedItem?.mediaURL ?? selectedItem?.imageURL,
-                            title: selectedItem?.galleryDisplayTitle ?? String(localized: "ba.student.detail.gallery.expression.title"),
+                            title: selectedItem?.galleryDisplayTitle ?? BaL10n.string("ba.student.detail.gallery.expression.title"),
                             tint: BaDesign.pink
                         )
                     }
@@ -166,7 +166,7 @@ private struct BaStudentGalleryExpressionCard: View {
                     }
                     .buttonStyle(.plain)
                     .contentShape(RoundedRectangle(cornerRadius: selectedPresentation.layout.cornerRadius, style: .continuous))
-                    .accessibilityLabel(String(localized: "ba.student.detail.media.preview"))
+                    .accessibilityLabel(BaL10n.string("ba.student.detail.media.preview"))
                 }
             }
         }
@@ -194,14 +194,14 @@ private struct BaStudentGalleryVideoGroupCard: View {
             VStack(alignment: .leading, spacing: BaStudentGalleryMetrics.cardSpacing) {
                 BaStudentGalleryGroupHeader(
                     title: group.title,
-                    detail: String(format: String(localized: "ba.student.detail.gallery.video.count.format"), group.items.count),
+                    detail: String(format: BaL10n.string("ba.student.detail.gallery.video.count.format"), group.items.count),
                     systemImage: "play.rectangle",
                     tint: BaDesign.violet
                 ) {
                     BaStudentGalleryHeaderActions {
                         if group.items.count > 1 {
                             BaGalleryMenuPicker(
-                                title: String(localized: "ba.student.detail.media.video"),
+                                title: BaL10n.string("ba.student.detail.media.video"),
                                 selectionTitle: selectedItem.map { videoVariantTitle(for: $0) } ?? "",
                                 tint: BaDesign.violet
                             ) {
@@ -215,7 +215,7 @@ private struct BaStudentGalleryVideoGroupCard: View {
 
                         if let selectedItem {
                             BaGalleryIconActionButton(
-                                title: String(localized: "ba.student.detail.media.preview"),
+                                title: BaL10n.string("ba.student.detail.media.preview"),
                                 systemImage: "arrow.up.left.and.arrow.down.right",
                                 tint: BaDesign.violet
                             ) {
@@ -243,7 +243,7 @@ private struct BaStudentGalleryVideoGroupCard: View {
                     }
                     .buttonStyle(.plain)
                     .contentShape(RoundedRectangle(cornerRadius: selectedPresentation.layout.cornerRadius, style: .continuous))
-                    .accessibilityLabel(String(localized: "ba.student.detail.media.preview"))
+                    .accessibilityLabel(BaL10n.string("ba.student.detail.media.preview"))
                 }
             }
         }
@@ -362,8 +362,8 @@ struct BaStudentGalleryAudioCard: View {
 
                 Text(
                     playback.isPlaying && isCurrentItem
-                        ? String(localized: "ba.student.detail.gallery.audio.pause")
-                        : String(localized: "ba.student.detail.gallery.audio.play")
+                        ? BaL10n.string("ba.student.detail.gallery.audio.pause")
+                        : BaL10n.string("ba.student.detail.gallery.audio.play")
                 )
                 .font(.callout.weight(.semibold))
             }
@@ -395,9 +395,9 @@ private struct BaStudentGalleryMemoryUnlockCard: View {
                     .frame(width: 34)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(String(localized: "ba.student.detail.gallery.memory.unlock.title"))
+                    Text(BaL10n.string("ba.student.detail.gallery.memory.unlock.title"))
                         .font(.headline.weight(.semibold))
-                    Text(String(format: String(localized: "ba.student.detail.memory.unlock.format"), level))
+                    Text(String(format: BaL10n.string("ba.student.detail.memory.unlock.format"), level))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -412,7 +412,7 @@ private struct BaStudentGalleryRelatedLinksCard: View {
     var body: some View {
         BaGlassCard(tint: BaDesign.green) {
             VStack(alignment: .leading, spacing: 12) {
-                Label(String(localized: "ba.student.detail.gallery.relatedLinks"), systemImage: "link")
+                Label(BaL10n.string("ba.student.detail.gallery.relatedLinks"), systemImage: "link")
                     .font(.headline.weight(.semibold))
                     .foregroundStyle(.primary)
 

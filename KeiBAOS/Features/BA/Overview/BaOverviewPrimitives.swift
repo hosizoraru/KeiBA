@@ -272,7 +272,7 @@ struct BaOverviewActionTile: View {
         .buttonStyle(.plain)
         .contextMenu {
             Button(
-                String(localized: "ba.overview.action.resetCooldown"),
+                BaL10n.string("ba.overview.action.resetCooldown"),
                 systemImage: "arrow.counterclockwise",
                 action: onReset
             )
@@ -374,10 +374,10 @@ struct BaOverviewTimelineTile: View {
 
     private var syncText: String {
         guard let syncAt else {
-            return String(localized: "ba.state.notSynced")
+            return BaL10n.string("ba.state.notSynced")
         }
         return String(
-            format: String(localized: "ba.state.syncedAt.format"),
+            format: BaL10n.string("ba.state.syncedAt.format"),
             BaDisplayFormatters.syncTime(syncAt, includingSeconds: false)
         )
     }

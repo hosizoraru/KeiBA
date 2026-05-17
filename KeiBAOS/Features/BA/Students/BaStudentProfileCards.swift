@@ -135,7 +135,7 @@ private struct BaStudentProfileFieldRowView: View {
     let tint: Color
 
     private var displayValue: String {
-        row.value.ifBlank(String(localized: "ba.common.none"))
+        row.value.ifBlank(BaL10n.string("ba.common.none"))
     }
 
     private var usesParagraphLayout: Bool {
@@ -239,7 +239,7 @@ private struct BaStudentProfileGiftGrid: View {
 
     var body: some View {
         if items.isEmpty {
-            Text(String(localized: "ba.student.detail.profile.gifts.empty"))
+            Text(BaL10n.string("ba.student.detail.profile.gifts.empty"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         } else {
@@ -376,7 +376,7 @@ private struct BaStudentSameNameRoleRow: View {
                     .fixedSize(horizontal: false, vertical: true)
 
                 if isLinked == false {
-                    Text(String(localized: "ba.student.detail.profile.sameName.linkUnavailable"))
+                    Text(BaL10n.string("ba.student.detail.profile.sameName.linkUnavailable"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -515,7 +515,7 @@ private struct BaStudentProfileFurnitureMediaCard: View {
             .buttonStyle(.plain)
             .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .accessibilityLabel(item.furnitureDisplayTitle)
-            .accessibilityHint(String(localized: "ba.student.detail.media.preview"))
+            .accessibilityHint(BaL10n.string("ba.student.detail.media.preview"))
         }
     }
 }
@@ -527,7 +527,7 @@ private struct BaStudentProfileFurnitureTitleRow: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
-            Label(String(localized: "ba.student.detail.profile.furniture.badge"), systemImage: "chair.lounge")
+            Label(BaL10n.string("ba.student.detail.profile.furniture.badge"), systemImage: "chair.lounge")
                 .font(.caption.weight(.semibold))
                 .labelStyle(.titleAndIcon)
                 .foregroundStyle(tint)
@@ -630,7 +630,7 @@ private struct BaStudentProfileFurniturePreviewSheet: View {
             .platformInlineNavigationTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(String(localized: "ba.common.done")) {
+                    Button(BaL10n.string("ba.common.done")) {
                         dismiss()
                     }
                 }
@@ -665,12 +665,12 @@ private struct BaGuideMediaSaveButton: View {
                 ProgressView()
                     .controlSize(.small)
             } else {
-                Label(String(localized: "ba.action.save"), systemImage: "square.and.arrow.down")
+                Label(BaL10n.string("ba.action.save"), systemImage: "square.and.arrow.down")
                     .labelStyle(.iconOnly)
             }
         }
         .disabled(url == nil || isLoading)
-        .accessibilityLabel(String(localized: "ba.action.save"))
+        .accessibilityLabel(BaL10n.string("ba.action.save"))
         .fileExporter(
             isPresented: $isExporterPresented,
             document: exportDocument,
@@ -682,13 +682,13 @@ private struct BaGuideMediaSaveButton: View {
             }
         }
         .alert(
-            String(localized: "ba.student.detail.media.saveFailed"),
+            BaL10n.string("ba.student.detail.media.saveFailed"),
             isPresented: Binding(
                 get: { errorMessage != nil },
                 set: { if $0 == false { errorMessage = nil } }
             )
         ) {
-            Button(String(localized: "ba.common.done")) {
+            Button(BaL10n.string("ba.common.done")) {
                 errorMessage = nil
             }
         } message: {
@@ -788,7 +788,7 @@ private struct BaStudentProfileGalleryRow: View {
             parts.append(item.detail)
         }
         if let unlock = item.memoryUnlockLevel, unlock.isBlank == false {
-            parts.append(String(format: String(localized: "ba.student.detail.memory.unlock.format"), unlock))
+            parts.append(String(format: BaL10n.string("ba.student.detail.memory.unlock.format"), unlock))
         }
         if let note = item.note, note.isBlank == false, parts.contains(note) == false {
             parts.append(note)
@@ -863,11 +863,11 @@ private extension BaGuideGalleryItem {
         {
             return localizedFurnitureTitle(number: number)
         }
-        return value.ifBlank(String(localized: "ba.student.detail.profile.furniture.title"))
+        return value.ifBlank(BaL10n.string("ba.student.detail.profile.furniture.title"))
     }
 
     private static func localizedFurnitureTitle(number: String) -> String {
-        String(format: String(localized: "ba.student.detail.profile.furniture.item.format"), number)
+        String(format: BaL10n.string("ba.student.detail.profile.furniture.item.format"), number)
     }
 }
 

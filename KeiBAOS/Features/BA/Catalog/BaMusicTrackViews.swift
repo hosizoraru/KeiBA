@@ -124,19 +124,19 @@ struct BaMusicTrackRow: View {
             Button {
                 isDetailPresented = true
             } label: {
-                Label(String(localized: "ba.music.action.openDetail"), systemImage: "person.crop.circle")
+                Label(BaL10n.string("ba.music.action.openDetail"), systemImage: "person.crop.circle")
             }
 
             if track.availability == .ready {
                 Button(action: onPrimaryAction) {
                     Label(
-                        isCurrent && isPlaying ? String(localized: "ba.music.action.pause") : String(localized: "ba.music.action.play"),
+                        isCurrent && isPlaying ? BaL10n.string("ba.music.action.pause") : BaL10n.string("ba.music.action.play"),
                         systemImage: isCurrent && isPlaying ? "pause.fill" : "play.fill"
                     )
                 }
             } else {
                 Button(action: onLoadDetail) {
-                    Label(String(localized: "ba.music.action.loadDetail"), systemImage: "arrow.clockwise")
+                    Label(BaL10n.string("ba.music.action.loadDetail"), systemImage: "arrow.clockwise")
                 }
             }
 
@@ -149,7 +149,7 @@ struct BaMusicTrackRow: View {
                 .contentShape(Circle())
         }
         .buttonStyle(BaMusicControlButtonStyle())
-        .accessibilityLabel(Text(String(localized: "ba.music.action.moreTrack")))
+        .accessibilityLabel(Text(BaL10n.string("ba.music.action.moreTrack")))
     }
 
     @ViewBuilder
@@ -158,11 +158,11 @@ struct BaMusicTrackRow: View {
             unloadedCacheMenuItems
         } else if cacheState.isCached {
             Button(role: .destructive, action: onClearCache) {
-                Label(String(localized: "ba.music.action.clearCache"), systemImage: "trash")
+                Label(BaL10n.string("ba.music.action.clearCache"), systemImage: "trash")
             }
         } else if cacheState.isCaching {
             Button {} label: {
-                Label(String(localized: "ba.music.status.cache.caching"), systemImage: cacheState.systemImage)
+                Label(BaL10n.string("ba.music.status.cache.caching"), systemImage: cacheState.systemImage)
             }
             .disabled(true)
         } else {
@@ -177,11 +177,11 @@ struct BaMusicTrackRow: View {
         switch track.availability {
         case .needsDetail, .failed:
             Button(action: onCache) {
-                Label(String(localized: "ba.music.action.cache"), systemImage: "arrow.down.circle")
+                Label(BaL10n.string("ba.music.action.cache"), systemImage: "arrow.down.circle")
             }
         case .loadingDetail:
             Button {} label: {
-                Label(String(localized: "ba.music.status.loading"), systemImage: "arrow.down.circle.dotted")
+                Label(BaL10n.string("ba.music.status.loading"), systemImage: "arrow.down.circle.dotted")
             }
             .disabled(true)
         case .ready, .missing:
@@ -221,13 +221,13 @@ struct BaMusicTrackRow: View {
         case .ready:
             ""
         case .needsDetail:
-            String(localized: "ba.music.status.needsDetail")
+            BaL10n.string("ba.music.status.needsDetail")
         case .loadingDetail:
-            String(localized: "ba.music.status.loading")
+            BaL10n.string("ba.music.status.loading")
         case .missing:
-            String(localized: "ba.music.status.missing")
+            BaL10n.string("ba.music.status.missing")
         case let .failed(message):
-            String(format: String(localized: "ba.music.status.failed.format"), message)
+            String(format: BaL10n.string("ba.music.status.failed.format"), message)
         }
     }
 
@@ -270,7 +270,7 @@ struct BaMusicQueueSection: View {
                     onCacheAll(tracks)
                 } label: {
                     ViewThatFits(in: .horizontal) {
-                        Label(String(localized: "ba.music.action.cacheAll"), systemImage: "arrow.down.circle")
+                        Label(BaL10n.string("ba.music.action.cacheAll"), systemImage: "arrow.down.circle")
                             .labelStyle(.titleAndIcon)
 
                         Image(systemName: "arrow.down.circle")
@@ -281,13 +281,13 @@ struct BaMusicQueueSection: View {
                 .buttonStyle(BaMusicControlButtonStyle())
                 .font(.caption.weight(.semibold))
                 .disabled(hasCacheableTracks == false)
-                .accessibilityLabel(Text(String(localized: "ba.music.action.cacheAll")))
+                .accessibilityLabel(Text(BaL10n.string("ba.music.action.cacheAll")))
 
                 Menu {
                     Button(role: .destructive) {
                         onClearAllCache(tracks)
                     } label: {
-                        Label(String(localized: "ba.music.action.clearAllCache"), systemImage: "trash")
+                        Label(BaL10n.string("ba.music.action.clearAllCache"), systemImage: "trash")
                     }
                     .disabled(hasCachedTracks == false)
                 } label: {
@@ -296,7 +296,7 @@ struct BaMusicQueueSection: View {
                         .foregroundStyle(.secondary)
                         .frame(width: 32, height: 32)
                 }
-                .accessibilityLabel(Text(String(localized: "ba.music.action.moreQueue")))
+                .accessibilityLabel(Text(BaL10n.string("ba.music.action.moreQueue")))
             }
 
             LazyVStack(spacing: 10) {

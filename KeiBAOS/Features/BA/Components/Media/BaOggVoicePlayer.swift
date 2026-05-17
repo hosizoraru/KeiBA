@@ -225,7 +225,7 @@ final class BaOggAudioPlayer: NSObject {
         if flag {
             onEvent?(.ended)
         } else {
-            onEvent?(.failed(String(localized: "ba.student.detail.voice.error.playback")))
+            onEvent?(.failed(BaL10n.string("ba.student.detail.voice.error.playback")))
         }
     }
 
@@ -234,7 +234,7 @@ final class BaOggAudioPlayer: NSObject {
         stopProgressTimer()
         callbackPlayer.delegate = nil
         decodedPlayer = nil
-        onEvent?(.failed(String(localized: "ba.student.detail.voice.error.playback")))
+        onEvent?(.failed(BaL10n.string("ba.student.detail.voice.error.playback")))
     }
 
     private func emitEnd(for callbackPlayer: AudioPlayer) {
@@ -384,7 +384,7 @@ extension BaOggAudioPlayer: AudioPlayerDelegate {
             case .disposed:
                 self.emitEnd(for: callbackPlayer)
             case .error:
-                self.emitFailure(String(localized: "ba.student.detail.voice.error.playback"), for: callbackPlayer)
+                self.emitFailure(BaL10n.string("ba.student.detail.voice.error.playback"), for: callbackPlayer)
             default:
                 break
             }

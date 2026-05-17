@@ -99,7 +99,7 @@ struct BaCatalogView: View {
                 .padding(.vertical, 24)
         } else if snapshot.rows.isEmpty {
             ContentUnavailableView(
-                String(localized: "ba.catalog.empty.title"),
+                BaL10n.string("ba.catalog.empty.title"),
                 systemImage: "magnifyingglass",
                 description: Text(emptyDetail)
             )
@@ -141,12 +141,12 @@ struct BaCatalogView: View {
 
     private var footerText: String {
         if let error = model.catalogState.errorMessage, error.isEmpty == false {
-            return String(format: String(localized: "ba.state.error.format"), error)
+            return String(format: BaL10n.string("ba.state.error.format"), error)
         }
         if let lastSyncAt = model.catalogState.lastSyncAt {
             let syncText = model.catalogState.isShowingCache
-                ? String(format: String(localized: "ba.state.cachedAt.format"), BaDisplayFormatters.syncTime(lastSyncAt))
-                : String(format: String(localized: "ba.state.syncedAt.format"), BaDisplayFormatters.syncTime(lastSyncAt))
+                ? String(format: BaL10n.string("ba.state.cachedAt.format"), BaDisplayFormatters.syncTime(lastSyncAt))
+                : String(format: BaL10n.string("ba.state.syncedAt.format"), BaDisplayFormatters.syncTime(lastSyncAt))
             return "\(categoryFooter) \(syncText)"
         }
         return categoryFooter
@@ -155,31 +155,31 @@ struct BaCatalogView: View {
     private var categoryFooter: String {
         switch selectedCategory {
         case .students:
-            String(localized: "ba.catalog.footer.students.live")
+            BaL10n.string("ba.catalog.footer.students.live")
         case .npcSatellite:
-            String(localized: "ba.catalog.footer.npc.live")
+            BaL10n.string("ba.catalog.footer.npc.live")
         case .studentBgm, .favorites:
-            String(localized: "ba.catalog.placeholder.footer")
+            BaL10n.string("ba.catalog.placeholder.footer")
         }
     }
 
     private var emptyDetail: String {
         if selectedCategory == .favorites {
-            return String(localized: "ba.catalog.empty.favorites.detail")
+            return BaL10n.string("ba.catalog.empty.favorites.detail")
         }
-        return String(localized: "ba.catalog.empty.detail")
+        return BaL10n.string("ba.catalog.empty.detail")
     }
 
     private func favoriteActionTitle(isFavorite: Bool) -> String {
         isFavorite
-            ? String(localized: "ba.catalog.favorite.remove")
-            : String(localized: "ba.catalog.favorite.add")
+            ? BaL10n.string("ba.catalog.favorite.remove")
+            : BaL10n.string("ba.catalog.favorite.add")
     }
 
     private func dutyStudentActionTitle(isDutyStudent: Bool) -> String {
         isDutyStudent
-            ? String(localized: "ba.catalog.dutyStudent.clear")
-            : String(localized: "ba.catalog.dutyStudent.set")
+            ? BaL10n.string("ba.catalog.dutyStudent.clear")
+            : BaL10n.string("ba.catalog.dutyStudent.set")
     }
 
     private func toggleDutyStudent(_ entry: BaGuideCatalogEntry) {
@@ -199,7 +199,7 @@ private struct BaCatalogViewOptionsMenu: View {
 
     var body: some View {
         Menu {
-            Section(String(localized: "ba.catalog.category.picker")) {
+            Section(BaL10n.string("ba.catalog.category.picker")) {
                 ForEach(BaCatalogCategory.catalogCases) { category in
                     BaCatalogMenuSelectionButton(
                         title: category.title,
@@ -210,7 +210,7 @@ private struct BaCatalogViewOptionsMenu: View {
                 }
             }
 
-            Section(String(localized: "ba.catalog.action.sort")) {
+            Section(BaL10n.string("ba.catalog.action.sort")) {
                 ForEach(BaCatalogSortMode.allCases) { mode in
                     BaCatalogMenuSelectionButton(
                         title: mode.title,
@@ -221,11 +221,11 @@ private struct BaCatalogViewOptionsMenu: View {
                 }
             }
         } label: {
-            Label(String(localized: "ba.catalog.action.viewOptions"), systemImage: "line.3.horizontal.decrease.circle")
+            Label(BaL10n.string("ba.catalog.action.viewOptions"), systemImage: "line.3.horizontal.decrease.circle")
         }
         .labelStyle(.iconOnly)
         .menuOrder(.fixed)
-        .accessibilityLabel(Text(String(localized: "ba.catalog.action.viewOptions")))
+        .accessibilityLabel(Text(BaL10n.string("ba.catalog.action.viewOptions")))
         .accessibilityValue(Text(verbatim: "\(selectedCategory.title), \(sortMode.title)"))
     }
 }

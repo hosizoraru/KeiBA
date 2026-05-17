@@ -15,6 +15,7 @@ struct AppShell: View {
 
     var body: some View {
         shellContent
+            .environment(\.locale, model.envelope.globalSettings.appLanguage.locale)
             .sheet(isPresented: musicNowPlayingExpandedBinding) {
                 if let musicPlaybackSession {
                     BaMusicNowPlayingSheet(session: musicPlaybackSession)
@@ -126,6 +127,9 @@ struct AppShell: View {
 
 private struct BaNavigationRoot: View {
     @Environment(BaAppModel.self) private var model
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    #endif
 
     let tab: AppTab
     let musicPlaybackSession: BaMusicPlaybackSession?
@@ -138,12 +142,15 @@ private struct BaNavigationRoot: View {
     var body: some View {
         NavigationStack {
             rootContent
-                .navigationTitle(tab.navigationTitle)
+                .navigationTitle(tab.titleResource)
                 .platformLargeNavigationTitle()
                 .toolbar {
                     ToolbarItemGroup(placement: .primaryAction) {
                         pageRefreshButton
                         notificationButton
+                        if showsStandaloneSettingsButton {
+                            settingsButton
+                        }
                         moreMenu
                     }
                 }
@@ -190,7 +197,7 @@ private struct BaNavigationRoot: View {
             Button {
                 Task { await model.refreshActivities(force: true) }
             } label: {
-                Label(String(localized: "ba.activity.action.refresh"), systemImage: "arrow.clockwise")
+                Label(BaL10n.string("ba.activity.action.refresh"), systemImage: "arrow.clockwise")
             }
             .labelStyle(.iconOnly)
             .disabled(model.activityState.isLoading)
@@ -198,7 +205,7 @@ private struct BaNavigationRoot: View {
             Button {
                 Task { await model.refreshPools(force: true) }
             } label: {
-                Label(String(localized: "ba.pool.action.refresh"), systemImage: "arrow.clockwise")
+                Label(BaL10n.string("ba.pool.action.refresh"), systemImage: "arrow.clockwise")
             }
             .labelStyle(.iconOnly)
             .disabled(model.poolState.isLoading)
@@ -206,7 +213,7 @@ private struct BaNavigationRoot: View {
             Button {
                 Task { await model.refreshCatalog(force: true) }
             } label: {
-                Label(String(localized: "ba.action.refresh"), systemImage: "arrow.clockwise")
+                Label(BaL10n.string("ba.action.refresh"), systemImage: "arrow.clockwise")
             }
             .labelStyle(.iconOnly)
             .disabled(model.catalogState.isLoading)
@@ -214,7 +221,7 @@ private struct BaNavigationRoot: View {
             Button {
                 Task { await model.refreshCatalog(force: true) }
             } label: {
-                Label(String(localized: "ba.action.refresh"), systemImage: "arrow.clockwise")
+                Label(BaL10n.string("ba.action.refresh"), systemImage: "arrow.clockwise")
             }
             .labelStyle(.iconOnly)
             .disabled(model.catalogState.isLoading)
@@ -233,16 +240,29 @@ private struct BaNavigationRoot: View {
         .accessibilityLabel(Text(BaPresentedSheet.notifications.title))
     }
 
+    private var settingsButton: some View {
+        Button {
+            presentedSheet = .settings
+        } label: {
+            Label(BaPresentedSheet.settings.title, systemImage: BaPresentedSheet.settings.systemImage)
+        }
+        .labelStyle(.iconOnly)
+        .accessibilityLabel(Text(BaPresentedSheet.settings.title))
+    }
+
     private var moreMenu: some View {
         Menu {
             timelineOptionsMenu
+            if showsStandaloneSettingsButton == false {
+                appSettingsMenuItem
+            }
             officeActionsMenu
         } label: {
-            Label(String(localized: "ba.action.more.title"), systemImage: "ellipsis.circle")
+            Label(BaL10n.string("ba.action.more.title"), systemImage: "ellipsis.circle")
         }
         .labelStyle(.iconOnly)
         .menuOrder(.fixed)
-        .accessibilityLabel(Text(String(localized: "ba.action.more.title")))
+        .accessibilityLabel(Text(BaL10n.string("ba.action.more.title")))
     }
 
     @ViewBuilder
@@ -266,6 +286,17 @@ private struct BaNavigationRoot: View {
             Divider()
         case .overview, .catalog, .library:
             EmptyView()
+        }
+    }
+
+    @ViewBuilder
+    private var appSettingsMenuItem: some View {
+        Section {
+            Button {
+                presentedSheet = .settings
+            } label: {
+                Label(BaPresentedSheet.settings.title, systemImage: BaPresentedSheet.settings.systemImage)
+            }
         }
     }
 
@@ -302,6 +333,14 @@ private struct BaNavigationRoot: View {
                 model.updateGlobalSettings { $0[keyPath: keyPath] = value }
             }
         )
+    }
+
+    private var showsStandaloneSettingsButton: Bool {
+        #if os(macOS)
+        false
+        #else
+        horizontalSizeClass == .regular
+        #endif
     }
 }
 

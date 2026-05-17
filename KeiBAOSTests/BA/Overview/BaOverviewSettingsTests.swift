@@ -96,6 +96,20 @@ final class BaOverviewSettingsTests: XCTestCase {
         XCTAssertEqual(BaFriendCodeFormat.normalized("short7"), BaFriendCodeFormat.fallback)
     }
 
+    func testAppLanguageDefaultsPersistAndLookupLocalizedStrings() throws {
+        let defaults = try makeIsolatedDefaults()
+        var envelope = BaSettingsEnvelope.defaults(now: Date(timeIntervalSince1970: 1_700_000_000))
+        XCTAssertEqual(envelope.globalSettings.appLanguage, .system)
+        XCTAssertEqual(BaL10n.string("ba.settings.language.title", language: .japanese), "アプリの言語")
+        XCTAssertEqual(BaL10n.string("ba.settings.language.title", language: .simplifiedChinese), "应用语言")
+
+        envelope.globalSettings.appLanguage = .japanese
+        let store = BaSettingsStore(defaults: defaults)
+        store.saveEnvelope(envelope)
+
+        XCTAssertEqual(store.loadEnvelope().globalSettings.appLanguage, .japanese)
+    }
+
     func testCafeAPStorageUsesSingleSharedCafeBucket() {
         let base = Date(timeIntervalSince1970: 1_700_000_000)
         var profile = BaServerProfile.defaults(now: base)

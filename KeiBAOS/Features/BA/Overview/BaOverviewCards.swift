@@ -49,7 +49,7 @@ struct BaOverviewIdentityCard: View {
     var body: some View {
         BaGlassCard(tint: BaDesign.blue) {
             VStack(alignment: .leading, spacing: BaOverviewMetricStyle.cardSpacing) {
-                BaOverviewSectionTitle(title: String(localized: "ba.office.overview.title"), asset: .schale)
+                BaOverviewSectionTitle(title: BaL10n.string("ba.office.overview.title"), asset: .schale)
 
                 if metrics.usesCompactOverviewIdentityLayout {
                     compactIdentityContent
@@ -61,7 +61,7 @@ struct BaOverviewIdentityCard: View {
     }
 
     private var displayName: String {
-        "\(settings.nickname) \(String(localized: "ba.office.nickname.suffix"))"
+        "\(settings.nickname) \(BaL10n.string("ba.office.nickname.suffix"))"
     }
 
     private var regularIdentityContent: some View {
@@ -115,7 +115,7 @@ struct BaOverviewIdentityCard: View {
     }
 
     private var serverPicker: some View {
-        Picker(String(localized: "ba.settings.server.title"), selection: serverBinding) {
+        Picker(BaL10n.string("ba.settings.server.title"), selection: serverBinding) {
             ForEach(BaServer.allCases) { server in
                 Text(server.title)
                     .tag(server)
@@ -165,8 +165,8 @@ private struct BaFriendCodeCopyLine: View {
 
     private var copyTitle: String {
         isCopied
-            ? String(localized: "ba.office.friendCode.copied")
-            : String(localized: "ba.office.friendCode.copy")
+            ? BaL10n.string("ba.office.friendCode.copied")
+            : BaL10n.string("ba.office.friendCode.copy")
     }
 }
 
@@ -197,8 +197,8 @@ private struct BaFriendCodeCopyPill: View {
 
     private var copyTitle: String {
         isCopied
-            ? String(localized: "ba.office.friendCode.copied")
-            : String(localized: "ba.office.friendCode.copy")
+            ? BaL10n.string("ba.office.friendCode.copied")
+            : BaL10n.string("ba.office.friendCode.copy")
     }
 }
 
@@ -222,7 +222,7 @@ private struct BaFriendCodeInlineText: View {
     }
 
     private var prefix: String {
-        String(format: String(localized: "ba.office.friendCode.display.format"), "")
+        String(format: BaL10n.string("ba.office.friendCode.display.format"), "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
@@ -242,13 +242,13 @@ private struct BaOverviewIdentityAvatar: View {
                 maxPixelDimension: 180
             )
             .accessibilityLabel(
-                Text(String(format: String(localized: "ba.office.dutyStudent.avatar.accessibility"), dutyStudent.name))
+                Text(String(format: BaL10n.string("ba.office.dutyStudent.avatar.accessibility"), dutyStudent.name))
             )
         } else {
             BaGameAssetIcon(.schale, size: 44)
                 .frame(width: 50, height: 50)
                 .liquidGlassSurface(cornerRadius: 18, tint: BaDesign.blue.opacity(0.06), isInteractive: false)
-                .accessibilityLabel(Text(String(localized: "ba.office.identity.avatar.accessibility")))
+                .accessibilityLabel(Text(BaL10n.string("ba.office.identity.avatar.accessibility")))
         }
     }
 }
@@ -265,17 +265,17 @@ struct BaOverviewAPCard: View {
     var body: some View {
         BaGlassCard(tint: BaDesign.green) {
             VStack(alignment: .leading, spacing: BaOverviewMetricStyle.cardSpacing) {
-                BaOverviewSectionTitle(title: String(localized: "ba.office.ap.label"), asset: .actionPoint)
+                BaOverviewSectionTitle(title: BaL10n.string("ba.office.ap.label"), asset: .actionPoint)
 
                 BaOverviewResourceReadout(
-                    title: String(localized: "ba.office.ap.current.title"),
+                    title: BaL10n.string("ba.office.ap.current.title"),
                     value: office.apCurrentLimit,
                     detail: office.apRemaining,
                     asset: .actionPoint,
                     tint: BaDesign.green
                 ) {
                     BaOverviewIconGlassButton(
-                        title: String(localized: "ba.overview.ap.edit.title"),
+                        title: BaL10n.string("ba.overview.ap.edit.title"),
                         systemImage: "pencil",
                         action: presentEditor
                     )
@@ -283,23 +283,23 @@ struct BaOverviewAPCard: View {
 
                 LazyVGrid(columns: metrics.overviewInnerGridColumns, spacing: 10) {
                     BaOverviewMetricTile(
-                        title: String(localized: "ba.office.ap.next.title"),
+                        title: BaL10n.string("ba.office.ap.next.title"),
                         value: office.apNext,
-                        detail: String(localized: "ba.office.ap.next.detail"),
+                        detail: BaL10n.string("ba.office.ap.next.detail"),
                         asset: .actionPointTight,
                         tint: BaDesign.green
                     )
                     BaOverviewMetricTile(
-                        title: String(localized: "ba.office.ap.full.label"),
+                        title: BaL10n.string("ba.office.ap.full.label"),
                         value: office.apFullAt,
                         detail: office.apFullRemain,
                         systemImage: "calendar.badge.checkmark",
                         tint: BaDesign.cyan
                     )
                     BaOverviewMetricTile(
-                        title: String(localized: "ba.office.ap.sync.label"),
+                        title: BaL10n.string("ba.office.ap.sync.label"),
                         value: office.apSyncAt,
-                        detail: String(localized: "ba.overview.sync.detail"),
+                        detail: BaL10n.string("ba.overview.sync.detail"),
                         systemImage: "clock.arrow.circlepath",
                         tint: BaDesign.blue
                     )
@@ -307,15 +307,15 @@ struct BaOverviewAPCard: View {
                         presentEditor()
                     } label: {
                         BaOverviewMetricTile(
-                            title: String(localized: "ba.settings.ap.threshold.title"),
+                            title: BaL10n.string("ba.settings.ap.threshold.title"),
                             value: "\(settings.apNotifyThreshold)",
-                            detail: String(localized: "ba.settings.threshold.edit.detail"),
+                            detail: BaL10n.string("ba.settings.threshold.edit.detail"),
                             systemImage: "bell.badge",
                             tint: BaDesign.amber
                         )
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(String(localized: "ba.overview.ap.edit.title"))
+                    .accessibilityLabel(BaL10n.string("ba.overview.ap.edit.title"))
                 }
             }
         }
@@ -350,10 +350,10 @@ struct BaOverviewCafeCard: View {
     var body: some View {
         BaGlassCard(tint: BaDesign.pink) {
             VStack(alignment: .leading, spacing: BaOverviewMetricStyle.cardSpacing) {
-                BaOverviewSectionTitle(title: String(localized: "ba.cafe.title"), asset: .cafeAP)
+                BaOverviewSectionTitle(title: BaL10n.string("ba.cafe.title"), asset: .cafeAP)
 
                 BaOverviewResourceReadout(
-                    title: String(localized: "ba.cafe.storage.title"),
+                    title: BaL10n.string("ba.cafe.storage.title"),
                     value: "\(office.cafeApCurrent)/\(office.cafeApLimit)",
                     detail: cafeStorageDetail,
                     asset: .cafeAP,
@@ -361,13 +361,13 @@ struct BaOverviewCafeCard: View {
                 ) {
                     HStack(spacing: 8) {
                         BaOverviewIconGlassButton(
-                            title: String(localized: "ba.overview.cafe.edit.title"),
+                            title: BaL10n.string("ba.overview.cafe.edit.title"),
                             systemImage: "slider.horizontal.3",
                             action: presentEditor
                         )
 
                         BaOverviewIconGlassButton(
-                            title: String(localized: "ba.cafe.action.claimAp"),
+                            title: BaL10n.string("ba.cafe.action.claimAp"),
                             systemImage: "tray.and.arrow.down.fill",
                             action: onClaimCafeAP
                         )
@@ -388,7 +388,7 @@ struct BaOverviewCafeCard: View {
 
                 LazyVGrid(columns: metrics.overviewInnerGridColumns, spacing: 10) {
                     BaOverviewMetricTile(
-                        title: String(localized: "ba.cafe.metric.tactical"),
+                        title: BaL10n.string("ba.cafe.metric.tactical"),
                         value: office.tacticalRefresh,
                         detail: office.tacticalRefreshDetail,
                         asset: .arenaCoin,
@@ -430,8 +430,8 @@ struct BaOverviewCafeCard: View {
 
     private var cafeStorageDetail: String {
         String.localizedStringWithFormat(
-            String(localized: "ba.overview.cafe.storage.detail.format"),
-            String(localized: "ba.overview.cafe.shared.detail"),
+            BaL10n.string("ba.overview.cafe.storage.detail.format"),
+            BaL10n.string("ba.overview.cafe.shared.detail"),
             office.cafeLevel
         )
     }
@@ -527,7 +527,7 @@ struct BaOverviewTimelineSummaryItem: Equatable {
     let endAt: Date?
 
     var primaryTitle: String {
-        titles.first ?? String(localized: "ba.overview.timeline.empty")
+        titles.first ?? BaL10n.string("ba.overview.timeline.empty")
     }
 
     var extraTitleText: String? {
@@ -536,7 +536,7 @@ struct BaOverviewTimelineSummaryItem: Equatable {
             return nil
         }
         return String.localizedStringWithFormat(
-            String(localized: "ba.overview.timeline.moreItems.format"),
+            BaL10n.string("ba.overview.timeline.moreItems.format"),
             extraCount
         )
     }
@@ -546,7 +546,7 @@ struct BaOverviewTimelineSummaryItem: Equatable {
             return nil
         }
         return String.localizedStringWithFormat(
-            String(localized: "ba.overview.timeline.endsAt.format"),
+            BaL10n.string("ba.overview.timeline.endsAt.format"),
             endText
         )
     }
@@ -561,7 +561,7 @@ struct BaOverviewTimelineSummaryItem: Equatable {
     static var empty: BaOverviewTimelineSummaryItem {
         BaOverviewTimelineSummaryItem(
             titles: [],
-            remainingText: String(localized: "ba.state.notSynced"),
+            remainingText: BaL10n.string("ba.state.notSynced"),
             endText: nil,
             endAt: nil
         )
@@ -579,14 +579,14 @@ struct BaOverviewTimelineSummaryCard: View {
     var body: some View {
         BaGlassCard(tint: BaDesign.violet) {
             VStack(alignment: .leading, spacing: BaOverviewMetricStyle.cardSpacing) {
-                BaOverviewSectionTitle(title: String(localized: "ba.overview.timeline.title"), asset: .guideMission)
+                BaOverviewSectionTitle(title: BaL10n.string("ba.overview.timeline.title"), asset: .guideMission)
 
                 LazyVGrid(columns: metrics.overviewSummaryGridColumns, spacing: 10) {
                     Button {
                         onOpenTab(.activity)
                     } label: {
                         BaOverviewTimelineTile(
-                            title: String(localized: "ba.tab.activity"),
+                            title: BaL10n.string("ba.tab.activity"),
                             item: summary.activity,
                             syncAt: activitySyncAt,
                             systemImage: "calendar",
@@ -594,13 +594,13 @@ struct BaOverviewTimelineSummaryCard: View {
                         )
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(String(localized: "ba.overview.timeline.openActivity"))
+                    .accessibilityLabel(BaL10n.string("ba.overview.timeline.openActivity"))
 
                     Button {
                         onOpenTab(.pool)
                     } label: {
                         BaOverviewTimelineTile(
-                            title: String(localized: "ba.tab.pool"),
+                            title: BaL10n.string("ba.tab.pool"),
                             item: summary.pool,
                             syncAt: poolSyncAt,
                             systemImage: "sparkles",
@@ -608,7 +608,7 @@ struct BaOverviewTimelineSummaryCard: View {
                         )
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(String(localized: "ba.overview.timeline.openPool"))
+                    .accessibilityLabel(BaL10n.string("ba.overview.timeline.openPool"))
                 }
             }
         }

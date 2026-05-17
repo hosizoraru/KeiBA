@@ -19,6 +19,10 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
     }
 
     var titleResource: LocalizedStringResource {
+        LocalizedStringResource(stringLiteral: localizationKey)
+    }
+
+    var localizationKey: String {
         switch self {
         case .overview:
             "ba.tab.overview"
@@ -34,7 +38,7 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
     }
 
     var title: String {
-        String(localized: titleResource)
+        BaL10n.string(localizationKey)
     }
 
     var navigationTitle: String {

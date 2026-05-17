@@ -36,7 +36,7 @@ struct BaPoolView: View {
                     pool: pool,
                     status: status,
                     tagTitle: BaTimelineLabels.poolTagTitle(tagId: pool.tagId, fallback: pool.tagName),
-                    subtitle: pool.alias.isEmpty ? String(localized: "ba.pool.linkedStudent.detail") : pool.alias,
+                    subtitle: pool.alias.isEmpty ? BaL10n.string("ba.pool.linkedStudent.detail") : pool.alias,
                     timelineDetail: BaDisplayFormatters.timelineDetail(start: pool.startAt, end: pool.endAt, now: now),
                     startText: BaDisplayFormatters.dateTime(pool.startAt, server: settings.server),
                     endText: BaDisplayFormatters.dateTime(pool.endAt, server: settings.server),
@@ -65,9 +65,9 @@ struct BaPoolView: View {
                             .padding(.vertical, 24)
                     } else if snapshot.rows.isEmpty {
                         ContentUnavailableView(
-                            String(localized: "ba.pool.empty.title"),
+                            BaL10n.string("ba.pool.empty.title"),
                             systemImage: "rectangle.stack.badge.person.crop",
-                            description: Text(String(localized: "ba.pool.empty.detail"))
+                            description: Text(BaL10n.string("ba.pool.empty.detail"))
                         )
                     } else {
                         poolRows(snapshot.rows, metrics: metrics)
@@ -121,23 +121,23 @@ struct BaPoolView: View {
         BaGlassCard(tint: BaDesign.violet) {
             VStack(alignment: .leading, spacing: 12) {
                 BaSectionHeader(
-                    title: String(localized: "ba.pool.summary.title"),
+                    title: BaL10n.string("ba.pool.summary.title"),
                     asset: .weaponStarBadge
                 )
 
                 HStack(alignment: .top, spacing: 10) {
                     BaSummaryMetric(
-                        title: String(localized: "ba.status.running"),
+                        title: BaL10n.string("ba.status.running"),
                         value: "\(snapshot.count(for: .running))",
                         tint: BaDesign.green
                     )
                     BaSummaryMetric(
-                        title: String(localized: "ba.status.upcoming"),
+                        title: BaL10n.string("ba.status.upcoming"),
                         value: "\(snapshot.count(for: .upcoming))",
                         tint: BaDesign.blue
                     )
                     BaSummaryMetric(
-                        title: String(localized: "ba.status.ended"),
+                        title: BaL10n.string("ba.status.ended"),
                         value: "\(snapshot.count(for: .ended))",
                         tint: .secondary
                     )
@@ -151,30 +151,30 @@ struct BaPoolView: View {
     }
 
     private var currentFilterTitle: String {
-        statusFilter?.title ?? String(localized: "ba.filter.all")
+        statusFilter?.title ?? BaL10n.string("ba.filter.all")
     }
 
     private var summarySyncText: String {
         guard let lastSyncAt = model.poolState.lastSyncAt else {
-            return String(localized: "ba.state.notSynced")
+            return BaL10n.string("ba.state.notSynced")
         }
         if model.poolState.isShowingCache {
             return String(
-                format: String(localized: "ba.state.cachedAt.format"),
+                format: BaL10n.string("ba.state.cachedAt.format"),
                 BaDisplayFormatters.syncTime(lastSyncAt)
             )
         }
         return String(
-            format: String(localized: "ba.state.syncedAt.format"),
+            format: BaL10n.string("ba.state.syncedAt.format"),
             BaDisplayFormatters.syncTime(lastSyncAt)
         )
     }
 
     private var footerText: String {
         if let error = model.poolState.errorMessage, error.isEmpty == false {
-            return String(format: String(localized: "ba.state.error.format"), error)
+            return String(format: BaL10n.string("ba.state.error.format"), error)
         }
-        return String(localized: "ba.pool.footer.live")
+        return BaL10n.string("ba.pool.footer.live")
     }
 }
 
@@ -307,17 +307,17 @@ private struct BaPoolSourceDetailView: View {
                         .baAdaptiveListCardRow(top: 10, bottom: 10)
                 }
 
-                Section(String(localized: "ba.pool.detail.section.title")) {
-                    LabeledContent(String(localized: "ba.pool.detail.name.title")) {
+                Section(BaL10n.string("ba.pool.detail.section.title")) {
+                    LabeledContent(BaL10n.string("ba.pool.detail.name.title")) {
                         Text(pool.name)
                     }
-                    LabeledContent(String(localized: "ba.pool.detail.tag.title")) {
+                    LabeledContent(BaL10n.string("ba.pool.detail.tag.title")) {
                         Text(BaTimelineLabels.poolTagTitle(tagId: pool.tagId, fallback: pool.tagName))
                     }
-                    LabeledContent(String(localized: "ba.timeline.start")) {
+                    LabeledContent(BaL10n.string("ba.timeline.start")) {
                         Text(BaDisplayFormatters.dateTime(pool.startAt, server: server))
                     }
-                    LabeledContent(String(localized: "ba.timeline.end")) {
+                    LabeledContent(BaL10n.string("ba.timeline.end")) {
                         Text(BaDisplayFormatters.dateTime(pool.endAt, server: server))
                     }
                 }

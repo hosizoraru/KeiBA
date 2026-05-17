@@ -496,19 +496,19 @@ nonisolated enum BaStudentSimulationDisplayModel {
     }
 
     private static var fallbackEquipmentSlot: String {
-        String(localized: "ba.student.detail.simulate.equipment.slot")
+        BaL10n.string("ba.student.detail.simulate.equipment.slot")
     }
 
     private static var fallbackBondRole: String {
-        String(localized: "ba.student.detail.simulate.bond.role")
+        BaL10n.string("ba.student.detail.simulate.bond.role")
     }
 
     private static var fallbackInfoTitle: String {
-        String(localized: "ba.student.detail.simulate.info")
+        BaL10n.string("ba.student.detail.simulate.info")
     }
 
     private static var fallbackLevelTitle: String {
-        String(localized: "ba.student.detail.simulate.level")
+        BaL10n.string("ba.student.detail.simulate.level")
     }
 }
 

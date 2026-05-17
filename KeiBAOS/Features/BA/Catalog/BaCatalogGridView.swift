@@ -46,7 +46,7 @@ struct BaCatalogGridView: View {
                 .liquidGlassSurface(cornerRadius: 24, tint: BaDesign.blue.opacity(0.035), isInteractive: false)
         } else if rows.isEmpty {
             ContentUnavailableView(
-                String(localized: "ba.catalog.empty.title"),
+                BaL10n.string("ba.catalog.empty.title"),
                 systemImage: "magnifyingglass",
                 description: Text(emptyDetail)
             )

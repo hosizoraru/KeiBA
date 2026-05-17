@@ -46,12 +46,12 @@ struct BaStudentDetailOverviewSections: View {
             return items
         }
         let tactic = BaGuideMetaItem(
-            title: String(localized: "ba.student.detail.meta.tactic"),
+            title: BaL10n.string("ba.student.detail.meta.tactic"),
             value: "",
             imageURL: tactical.imageURL
         )
         let position = BaGuideMetaItem(
-            title: String(localized: "ba.student.detail.meta.position"),
+            title: BaL10n.string("ba.student.detail.meta.position"),
             value: tactical.extraValue ?? "",
             imageURL: tactical.extraImageURL
         )
@@ -121,7 +121,7 @@ private struct BaStudentPortraitMetaCard: View {
         if let tactical = BaStudentGuideMeta.combatMetaItems(from: info).first(where: { $0.isTacticalPositionItem }) {
             items.append(
                 BaGuideMetaItem(
-                    title: String(localized: "ba.student.detail.meta.role"),
+                    title: BaL10n.string("ba.student.detail.meta.role"),
                     value: tactical.value,
                     imageURL: nil
                 )
@@ -270,7 +270,7 @@ private struct BaStudentCombatMetaRow: View {
     }
 
     private var isTacticalPosition: Bool {
-        item.title == String(localized: "ba.student.detail.meta.tacticalPosition")
+        item.title == BaL10n.string("ba.student.detail.meta.tacticalPosition")
     }
 }
 
@@ -281,7 +281,7 @@ private struct BaStudentTacticalPositionLines: View {
         VStack(spacing: 4) {
             BaStudentCombatMetaLine(
                 item: BaGuideMetaItem(
-                    title: String(localized: "ba.student.detail.meta.tacticalRole"),
+                    title: BaL10n.string("ba.student.detail.meta.tacticalRole"),
                     value: item.value,
                     imageURL: item.imageURL
                 ),
@@ -290,7 +290,7 @@ private struct BaStudentTacticalPositionLines: View {
 
             BaStudentCombatMetaLine(
                 item: BaGuideMetaItem(
-                    title: String(localized: "ba.student.detail.meta.position"),
+                    title: BaL10n.string("ba.student.detail.meta.position"),
                     value: item.extraValue ?? "",
                     imageURL: item.extraImageURL
                 ),
@@ -387,15 +387,15 @@ private struct BaStudentMetaImages: View {
 
 private extension BaGuideMetaItem {
     var isAffiliationItem: Bool {
-        title == String(localized: "ba.student.detail.meta.belongs")
+        title == BaL10n.string("ba.student.detail.meta.belongs")
     }
 
     var isAcademyItem: Bool {
-        title == String(localized: "ba.student.detail.meta.academy")
+        title == BaL10n.string("ba.student.detail.meta.academy")
     }
 
     var isTacticalPositionItem: Bool {
-        title == String(localized: "ba.student.detail.meta.tacticalPosition")
+        title == BaL10n.string("ba.student.detail.meta.tacticalPosition")
     }
 
     var hasRenderableMetaContent: Bool {
@@ -414,7 +414,7 @@ private extension String {
             .replacingOccurrences(of: "　", with: "")
             .lowercased()
         guard normalized.isEmpty == false else { return false }
-        return normalized != String(localized: "ba.common.none") &&
+        return normalized != BaL10n.string("ba.common.none") &&
             normalized != "-" &&
             normalized != "—" &&
             normalized != "--" &&

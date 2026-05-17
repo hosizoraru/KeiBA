@@ -161,7 +161,7 @@ final class BaAudioPlaybackController {
 
     func toggle(remoteURL: URL) {
         guard Self.supportsPlayback(remoteURL) else {
-            fail(message: String(localized: "ba.student.detail.voice.error.unsupported"))
+            fail(message: BaL10n.string("ba.student.detail.voice.error.unsupported"))
             return
         }
         if currentRemoteURL == remoteURL {
@@ -299,7 +299,7 @@ final class BaAudioPlaybackController {
                     playbackBackend = .decodedOgg
                     startOggPlayer(localURL: localURL)
                 } else {
-                    fail(message: String(localized: "ba.student.detail.voice.error.playback"))
+                    fail(message: BaL10n.string("ba.student.detail.voice.error.playback"))
                 }
                 return
             }
@@ -313,7 +313,7 @@ final class BaAudioPlaybackController {
                 playbackBackend = .decodedOgg
                 startOggPlayer(localURL: localURL)
             } else {
-                fail(message: String(localized: "ba.student.detail.voice.error.unsupported"))
+                fail(message: BaL10n.string("ba.student.detail.voice.error.unsupported"))
             }
         }
     }
@@ -570,7 +570,7 @@ private extension BaAudioPlaybackController {
         case let .progress(value):
             progress = min(max(value, 0), 1)
         case let .failed(message):
-            fail(message: message.isEmpty ? String(localized: "ba.student.detail.voice.error.playback") : message)
+            fail(message: message.isEmpty ? BaL10n.string("ba.student.detail.voice.error.playback") : message)
         }
     }
 }

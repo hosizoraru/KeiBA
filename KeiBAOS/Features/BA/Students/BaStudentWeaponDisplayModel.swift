@@ -18,7 +18,7 @@ nonisolated struct BaStudentWeaponDisplayModel: Identifiable, Hashable {
     let glossaryIcons: [String: URL]
 
     var displayName: String {
-        name.ifBlank(String(localized: "ba.student.detail.weapon.unique"))
+        name.ifBlank(BaL10n.string("ba.student.detail.weapon.unique"))
     }
 
     static func card(from info: BaStudentGuideInfo) -> BaStudentWeaponDisplayModel? {
@@ -191,13 +191,13 @@ nonisolated struct BaStudentWeaponDisplayModel: Identifiable, Hashable {
                 starIconURL: draft.starIconURL,
                 name: draft.name.ifBlank(
                     draft.starLabel == "★2"
-                        ? String(localized: "ba.student.detail.weapon.passiveUpgrade")
+                        ? BaL10n.string("ba.student.detail.weapon.passiveUpgrade")
                         : (fallbackAsTitle ? draft.fallbackDescription : draft.starLabel)
                 ),
                 iconURL: draft.iconURL,
                 descriptionByLevel: draft.descriptionByLevel,
                 descriptionIconsByLevel: draft.descriptionIconsByLevel,
-                roleTag: draft.starLabel == "★2" ? String(localized: "ba.student.detail.skill.sub") : "",
+                roleTag: draft.starLabel == "★2" ? BaL10n.string("ba.student.detail.skill.sub") : "",
                 fallbackDescription: fallbackAsTitle ? "" : draft.fallbackDescription,
                 fallbackDescriptionIcons: draft.fallbackDescriptionIcons
             )

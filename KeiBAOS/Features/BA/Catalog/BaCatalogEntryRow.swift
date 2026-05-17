@@ -41,28 +41,28 @@ struct BaCatalogEntryRowDisplayModel: Identifiable, Equatable {
 
     private static func subtitle(for entry: BaGuideCatalogEntry) -> String {
         if entry.aliasDisplay.isEmpty {
-            return String(format: String(localized: "ba.catalog.contentId.format"), entry.contentId)
+            return String(format: BaL10n.string("ba.catalog.contentId.format"), entry.contentId)
         }
         return entry.aliasDisplay
     }
 
     private static func detail(for entry: BaGuideCatalogEntry) -> String {
         if entry.category == .studentBgm {
-            return String(localized: "ba.catalog.bgm.entry.detail")
+            return BaL10n.string("ba.catalog.bgm.entry.detail")
         }
         if let releaseDate = entry.releaseDate {
             return String(
-                format: String(localized: "ba.catalog.releaseDate.format"),
+                format: BaL10n.string("ba.catalog.releaseDate.format"),
                 BaDisplayFormatters.dateTime(releaseDate)
             )
         }
         if let createdAt = entry.createdAt {
             return String(
-                format: String(localized: "ba.catalog.createdAt.format"),
+                format: BaL10n.string("ba.catalog.createdAt.format"),
                 BaDisplayFormatters.dateTime(createdAt)
             )
         }
-        return String(format: String(localized: "ba.catalog.contentId.format"), entry.contentId)
+        return String(format: BaL10n.string("ba.catalog.contentId.format"), entry.contentId)
     }
 }
 

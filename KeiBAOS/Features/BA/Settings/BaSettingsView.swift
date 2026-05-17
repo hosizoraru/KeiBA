@@ -11,9 +11,18 @@ struct BaSettingsView: View {
     @Environment(BaAppModel.self) private var model
 
     var body: some View {
+        #if os(macOS)
+            macSettingsBody
+        #else
+            touchSettingsBody
+        #endif
+    }
+
+    private var touchSettingsBody: some View {
         BaAdaptiveGeometry { _ in
             Form {
                 serverIdentitySection
+                languageSection
                 resourcesSection
                 activityPoolSection
                 notificationSection
@@ -26,9 +35,290 @@ struct BaSettingsView: View {
         }
     }
 
+    #if os(macOS)
+    private var macSettingsBody: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                macSettingsGroup(
+                    title: BaL10n.string("ba.settings.identity.section"),
+                    footer: BaL10n.string("ba.settings.identity.footer")
+                ) {
+                    macSettingsRow(BaL10n.string("ba.settings.server.title")) {
+                        Picker(BaL10n.string("ba.settings.server.title"), selection: serverBinding) {
+                            ForEach(BaServer.allCases) { server in
+                                Text(server.title)
+                                    .tag(server)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .frame(width: 150, alignment: .leading)
+                    }
+
+                    macToggleRow {
+                        Toggle(
+                            BaL10n.string("ba.settings.identity.independent.title"),
+                            isOn: globalBoolBinding(\.identityIndependentByServer)
+                        )
+                    }
+
+                    macSettingsRow(BaL10n.string("ba.office.nickname.label")) {
+                        TextField(
+                            BaL10n.string("ba.office.nickname.label"),
+                            text: profileStringBinding(\.nickname),
+                            prompt: Text(BaL10n.string("ba.office.nickname.prompt"))
+                        )
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 300)
+                    }
+
+                    macSettingsRow(BaL10n.string("ba.office.friendCode.label")) {
+                        TextField(
+                            BaL10n.string("ba.office.friendCode.label"),
+                            text: friendCodeBinding,
+                            prompt: Text(BaL10n.string("ba.office.friendCode.prompt"))
+                        )
+                        .textFieldStyle(.roundedBorder)
+                        .monospaced()
+                        .autocorrectionDisabled()
+                        .frame(width: 180)
+                    }
+                }
+
+                macSettingsGroup(
+                    title: BaL10n.string("ba.settings.language.section"),
+                    footer: BaL10n.string("ba.settings.language.footer")
+                ) {
+                    macSettingsRow(BaL10n.string("ba.settings.language.title")) {
+                        Picker(BaL10n.string("ba.settings.language.title"), selection: appLanguageBinding) {
+                            ForEach(BaAppLanguage.allCases) { language in
+                                Text(language.titleResource)
+                                    .tag(language)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .frame(width: 180, alignment: .leading)
+                    }
+                }
+
+                macSettingsGroup(
+                    title: BaL10n.string("ba.settings.resources.section"),
+                    footer: BaL10n.string("ba.settings.resources.footer")
+                ) {
+                    macNumberRow(
+                        BaL10n.string("ba.office.ap.limit.title"),
+                        value: profileIntBinding(\.apLimit, range: 0 ... BaTimeMath.apLimitMax),
+                        placeholder: "240"
+                    )
+
+                    macSettingsRow(BaL10n.string("ba.cafe.level.title")) {
+                        Stepper(value: profileIntBinding(\.cafeLevel, range: 1 ... 10), in: 1 ... 10) {
+                            Text("Lv\(model.currentProfile.cafeLevel)")
+                                .monospacedDigit()
+                                .frame(width: 52, alignment: .leading)
+                        }
+                        .frame(width: 150, alignment: .leading)
+                    }
+
+                    macNumberRow(
+                        BaL10n.string("ba.settings.ap.threshold.title"),
+                        value: profileIntBinding(\.apNotifyThreshold, range: 0 ... BaTimeMath.apMax),
+                        placeholder: "120"
+                    )
+
+                    macNumberRow(
+                        BaL10n.string("ba.settings.cafe.threshold.title"),
+                        value: profileIntBinding(\.cafeApNotifyThreshold, range: 0 ... BaTimeMath.apMax),
+                        placeholder: "120"
+                    )
+                }
+
+                macSettingsGroup(
+                    title: BaL10n.string("ba.settings.activityPool.title"),
+                    footer: BaL10n.string("ba.settings.activityPool.footer")
+                ) {
+                    macToggleRow {
+                        Toggle(
+                            BaL10n.string("ba.settings.activity.showEnded.title"),
+                            isOn: globalBoolBinding(\.showEndedActivities)
+                        )
+                    }
+
+                    macToggleRow {
+                        Toggle(
+                            BaL10n.string("ba.settings.pool.showEnded.title"),
+                            isOn: globalBoolBinding(\.showEndedPools)
+                        )
+                    }
+
+                    macSettingsRow(BaL10n.string("ba.settings.refresh.title")) {
+                        Picker(BaL10n.string("ba.settings.refresh.title"), selection: refreshIntervalBinding) {
+                            ForEach(BaRefreshInterval.allCases) { interval in
+                                Text(interval.title)
+                                    .tag(interval)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .frame(width: 150, alignment: .leading)
+                    }
+                }
+
+                macSettingsGroup(
+                    title: BaL10n.string("ba.settings.notifications.title"),
+                    footer: BaL10n.string("ba.sheet.notifications.footer")
+                ) {
+                    macToggleRow {
+                        Toggle(BaL10n.string("ba.sheet.notifications.ap.title"), isOn: profileBoolBinding(\.apNotificationsEnabled))
+                    }
+                    macToggleRow {
+                        Toggle(BaL10n.string("ba.sheet.notifications.cafeAp.title"), isOn: profileBoolBinding(\.cafeApNotificationsEnabled))
+                    }
+                    macToggleRow {
+                        Toggle(BaL10n.string("ba.sheet.notifications.visit.title"), isOn: profileBoolBinding(\.visitNotificationsEnabled))
+                    }
+                    macToggleRow {
+                        Toggle(BaL10n.string("ba.settings.arena.notifications.title"), isOn: profileBoolBinding(\.arenaRefreshNotificationsEnabled))
+                    }
+                    macToggleRow {
+                        Toggle(BaL10n.string("ba.settings.activity.start.notifications.title"), isOn: globalBoolBinding(\.calendarUpcomingNotificationsEnabled))
+                    }
+                    macToggleRow {
+                        Toggle(BaL10n.string("ba.settings.activity.end.notifications.title"), isOn: globalBoolBinding(\.calendarEndingNotificationsEnabled))
+                    }
+                    macToggleRow {
+                        Toggle(BaL10n.string("ba.settings.pool.start.notifications.title"), isOn: globalBoolBinding(\.poolUpcomingNotificationsEnabled))
+                    }
+                    macToggleRow {
+                        Toggle(BaL10n.string("ba.settings.pool.end.notifications.title"), isOn: globalBoolBinding(\.poolEndingNotificationsEnabled))
+                    }
+                    macToggleRow {
+                        Toggle(BaL10n.string("ba.settings.calendarPool.change.notifications.title"), isOn: globalBoolBinding(\.calendarPoolChangeNotificationsEnabled))
+                    }
+                    macSettingsRow(BaL10n.string("ba.settings.notifyLead.title")) {
+                        Picker(BaL10n.string("ba.settings.notifyLead.title"), selection: notifyLeadBinding) {
+                            ForEach(BaCalendarPoolNotifyLead.allCases) { lead in
+                                Text(lead.title)
+                                    .tag(lead)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .frame(width: 150, alignment: .leading)
+                    }
+                }
+
+                macSettingsGroup(
+                    title: BaL10n.string("ba.settings.media.title"),
+                    footer: BaL10n.string("ba.settings.media.footer")
+                ) {
+                    macToggleRow {
+                        Toggle(BaL10n.string("ba.settings.media.images.title"), isOn: globalBoolBinding(\.showPreviewImages))
+                    }
+                    macToggleRow {
+                        Toggle(BaL10n.string("ba.settings.media.autoplay.title"), isOn: globalBoolBinding(\.mediaAutoplayEnabled))
+                    }
+                    macToggleRow {
+                        Toggle(BaL10n.string("ba.settings.media.download.title"), isOn: globalBoolBinding(\.mediaDownloadEnabled))
+                    }
+                }
+
+                macSettingsGroup(title: BaL10n.string("ba.settings.platform.title")) {
+                    ForEach(AppPlatformBaseline.allCases) { baseline in
+                        macReadOnlyRow(baseline.displayName, value: baseline.minimumVersion)
+                    }
+
+                    macReadOnlyRow(
+                        BaL10n.string("ba.settings.watch.rule.title"),
+                        value: AppPlatformBaseline.watchRule
+                    )
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 24)
+            .padding(.bottom, 88)
+            .frame(maxWidth: 780)
+            .frame(maxWidth: .infinity, alignment: .center)
+        }
+        .background(AppBackground())
+    }
+
+    private func macSettingsGroup<Content: View>(
+        title: String,
+        footer: String? = nil,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.headline)
+
+            VStack(alignment: .leading, spacing: 12) {
+                content()
+            }
+
+            if let footer {
+                Text(footer)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    private func macSettingsRow<Content: View>(
+        _ title: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 16) {
+            Text(title)
+                .foregroundStyle(.secondary)
+                .frame(width: 132, alignment: .trailing)
+
+            content()
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func macToggleRow<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 16) {
+            Spacer()
+                .frame(width: 132)
+
+            content()
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func macNumberRow(
+        _ title: String,
+        value: Binding<Int>,
+        placeholder: String
+    ) -> some View {
+        macSettingsRow(title) {
+            TextField(placeholder, value: value, format: .number)
+                .textFieldStyle(.roundedBorder)
+                .multilineTextAlignment(.trailing)
+                .monospacedDigit()
+                .frame(width: 96)
+        }
+    }
+
+    private func macReadOnlyRow(_ title: String, value: String) -> some View {
+        macSettingsRow(title) {
+            Text(value)
+                .foregroundStyle(.primary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+    #endif
+
     private var serverIdentitySection: some View {
         Section {
-            Picker(String(localized: "ba.settings.server.title"), selection: serverBinding) {
+            Picker(BaL10n.string("ba.settings.server.title"), selection: serverBinding) {
                 ForEach(BaServer.allCases) { server in
                     Text(server.title)
                         .tag(server)
@@ -36,19 +326,19 @@ struct BaSettingsView: View {
             }
 
             Toggle(
-                String(localized: "ba.settings.identity.independent.title"),
+                BaL10n.string("ba.settings.identity.independent.title"),
                 isOn: globalBoolBinding(\.identityIndependentByServer)
             )
 
             TextField(
-                String(localized: "ba.office.nickname.label"),
+                BaL10n.string("ba.office.nickname.label"),
                 text: profileStringBinding(\.nickname),
-                prompt: Text(String(localized: "ba.office.nickname.prompt"))
+                prompt: Text(BaL10n.string("ba.office.nickname.prompt"))
             )
             TextField(
-                String(localized: "ba.office.friendCode.label"),
+                BaL10n.string("ba.office.friendCode.label"),
                 text: friendCodeBinding,
-                prompt: Text(String(localized: "ba.office.friendCode.prompt"))
+                prompt: Text(BaL10n.string("ba.office.friendCode.prompt"))
             )
             .monospaced()
             .autocorrectionDisabled()
@@ -56,15 +346,15 @@ struct BaSettingsView: View {
                 .textInputAutocapitalization(.characters)
             #endif
         } header: {
-            Text(String(localized: "ba.settings.identity.section"))
+            Text(BaL10n.string("ba.settings.identity.section"))
         } footer: {
-            Text(String(localized: "ba.settings.identity.footer"))
+            Text(BaL10n.string("ba.settings.identity.footer"))
         }
     }
 
     private var resourcesSection: some View {
         Section {
-            LabeledContent(String(localized: "ba.office.ap.limit.title")) {
+            LabeledContent(BaL10n.string("ba.office.ap.limit.title")) {
                 TextField(
                     "240",
                     value: profileIntBinding(\.apLimit, range: 0 ... BaTimeMath.apLimitMax),
@@ -77,12 +367,12 @@ struct BaSettingsView: View {
             }
 
             Stepper(value: profileIntBinding(\.cafeLevel, range: 1 ... 10), in: 1 ... 10) {
-                LabeledContent(String(localized: "ba.cafe.level.title")) {
+                LabeledContent(BaL10n.string("ba.cafe.level.title")) {
                     Text("Lv\(model.currentProfile.cafeLevel)")
                 }
             }
 
-            LabeledContent(String(localized: "ba.settings.ap.threshold.title")) {
+            LabeledContent(BaL10n.string("ba.settings.ap.threshold.title")) {
                 TextField(
                     "120",
                     value: profileIntBinding(\.apNotifyThreshold, range: 0 ... BaTimeMath.apMax),
@@ -94,7 +384,7 @@ struct BaSettingsView: View {
                 #endif
             }
 
-            LabeledContent(String(localized: "ba.settings.cafe.threshold.title")) {
+            LabeledContent(BaL10n.string("ba.settings.cafe.threshold.title")) {
                 TextField(
                     "120",
                     value: profileIntBinding(\.cafeApNotifyThreshold, range: 0 ... BaTimeMath.apMax),
@@ -106,116 +396,134 @@ struct BaSettingsView: View {
                 #endif
             }
         } header: {
-            Text(String(localized: "ba.settings.resources.section"))
+            Text(BaL10n.string("ba.settings.resources.section"))
         } footer: {
-            Text(String(localized: "ba.settings.resources.footer"))
+            Text(BaL10n.string("ba.settings.resources.footer"))
         }
     }
 
     private var activityPoolSection: some View {
         Section {
             Toggle(
-                String(localized: "ba.settings.activity.showEnded.title"),
+                BaL10n.string("ba.settings.activity.showEnded.title"),
                 isOn: globalBoolBinding(\.showEndedActivities)
             )
             Toggle(
-                String(localized: "ba.settings.pool.showEnded.title"),
+                BaL10n.string("ba.settings.pool.showEnded.title"),
                 isOn: globalBoolBinding(\.showEndedPools)
             )
 
-            Picker(String(localized: "ba.settings.refresh.title"), selection: refreshIntervalBinding) {
+            Picker(BaL10n.string("ba.settings.refresh.title"), selection: refreshIntervalBinding) {
                 ForEach(BaRefreshInterval.allCases) { interval in
                     Text(interval.title)
                         .tag(interval)
                 }
             }
         } header: {
-            Text(String(localized: "ba.settings.activityPool.title"))
+            Text(BaL10n.string("ba.settings.activityPool.title"))
         } footer: {
-            Text(String(localized: "ba.settings.activityPool.footer"))
+            Text(BaL10n.string("ba.settings.activityPool.footer"))
         }
     }
 
     private var notificationSection: some View {
         Section {
             Toggle(
-                String(localized: "ba.sheet.notifications.ap.title"),
+                BaL10n.string("ba.sheet.notifications.ap.title"),
                 isOn: profileBoolBinding(\.apNotificationsEnabled)
             )
             Toggle(
-                String(localized: "ba.sheet.notifications.cafeAp.title"),
+                BaL10n.string("ba.sheet.notifications.cafeAp.title"),
                 isOn: profileBoolBinding(\.cafeApNotificationsEnabled)
             )
             Toggle(
-                String(localized: "ba.sheet.notifications.visit.title"),
+                BaL10n.string("ba.sheet.notifications.visit.title"),
                 isOn: profileBoolBinding(\.visitNotificationsEnabled)
             )
             Toggle(
-                String(localized: "ba.settings.arena.notifications.title"),
+                BaL10n.string("ba.settings.arena.notifications.title"),
                 isOn: profileBoolBinding(\.arenaRefreshNotificationsEnabled)
             )
 
             Toggle(
-                String(localized: "ba.settings.activity.start.notifications.title"),
+                BaL10n.string("ba.settings.activity.start.notifications.title"),
                 isOn: globalBoolBinding(\.calendarUpcomingNotificationsEnabled)
             )
             Toggle(
-                String(localized: "ba.settings.activity.end.notifications.title"),
+                BaL10n.string("ba.settings.activity.end.notifications.title"),
                 isOn: globalBoolBinding(\.calendarEndingNotificationsEnabled)
             )
             Toggle(
-                String(localized: "ba.settings.pool.start.notifications.title"),
+                BaL10n.string("ba.settings.pool.start.notifications.title"),
                 isOn: globalBoolBinding(\.poolUpcomingNotificationsEnabled)
             )
             Toggle(
-                String(localized: "ba.settings.pool.end.notifications.title"),
+                BaL10n.string("ba.settings.pool.end.notifications.title"),
                 isOn: globalBoolBinding(\.poolEndingNotificationsEnabled)
             )
             Toggle(
-                String(localized: "ba.settings.calendarPool.change.notifications.title"),
+                BaL10n.string("ba.settings.calendarPool.change.notifications.title"),
                 isOn: globalBoolBinding(\.calendarPoolChangeNotificationsEnabled)
             )
 
-            Picker(String(localized: "ba.settings.notifyLead.title"), selection: notifyLeadBinding) {
+            Picker(BaL10n.string("ba.settings.notifyLead.title"), selection: notifyLeadBinding) {
                 ForEach(BaCalendarPoolNotifyLead.allCases) { lead in
                     Text(lead.title)
                         .tag(lead)
                 }
             }
         } header: {
-            Text(String(localized: "ba.settings.notifications.title"))
+            Text(BaL10n.string("ba.settings.notifications.title"))
         } footer: {
-            Text(String(localized: "ba.sheet.notifications.footer"))
+            Text(BaL10n.string("ba.sheet.notifications.footer"))
         }
     }
 
     private var mediaSection: some View {
         Section {
-            Toggle(String(localized: "ba.settings.media.images.title"), isOn: globalBoolBinding(\.showPreviewImages))
+            Toggle(BaL10n.string("ba.settings.media.images.title"), isOn: globalBoolBinding(\.showPreviewImages))
             Toggle(
-                String(localized: "ba.settings.media.autoplay.title"),
+                BaL10n.string("ba.settings.media.autoplay.title"),
                 isOn: globalBoolBinding(\.mediaAutoplayEnabled)
             )
             Toggle(
-                String(localized: "ba.settings.media.download.title"),
+                BaL10n.string("ba.settings.media.download.title"),
                 isOn: globalBoolBinding(\.mediaDownloadEnabled)
             )
         } header: {
-            Text(String(localized: "ba.settings.media.title"))
+            Text(BaL10n.string("ba.settings.media.title"))
         } footer: {
-            Text(String(localized: "ba.settings.media.footer"))
+            Text(BaL10n.string("ba.settings.media.footer"))
+        }
+    }
+
+    private var languageSection: some View {
+        Section {
+            Picker(BaL10n.string("ba.settings.language.title"), selection: appLanguageBinding) {
+                ForEach(BaAppLanguage.allCases) { language in
+                    Text(language.titleResource)
+                        .tag(language)
+                }
+            }
+            #if os(macOS)
+                .pickerStyle(.menu)
+            #endif
+        } header: {
+            Text(BaL10n.string("ba.settings.language.section"))
+        } footer: {
+            Text(BaL10n.string("ba.settings.language.footer"))
         }
     }
 
     private var platformSection: some View {
-        Section(String(localized: "ba.settings.platform.title")) {
+        Section(BaL10n.string("ba.settings.platform.title")) {
             ForEach(AppPlatformBaseline.allCases) { baseline in
                 LabeledContent(baseline.displayName) {
                     Text(baseline.minimumVersion)
                 }
             }
 
-            LabeledContent(String(localized: "ba.settings.watch.rule.title")) {
+            LabeledContent(BaL10n.string("ba.settings.watch.rule.title")) {
                 Text(AppPlatformBaseline.watchRule)
             }
         }
@@ -248,6 +556,15 @@ struct BaSettingsView: View {
             get: { model.envelope.globalSettings.calendarPoolNotifyLead },
             set: { lead in
                 model.updateGlobalSettings { $0.calendarPoolNotifyLead = lead }
+            }
+        )
+    }
+
+    private var appLanguageBinding: Binding<BaAppLanguage> {
+        Binding(
+            get: { model.envelope.globalSettings.appLanguage },
+            set: { language in
+                model.updateGlobalSettings { $0.appLanguage = language }
             }
         )
     }

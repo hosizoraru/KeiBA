@@ -24,21 +24,21 @@ nonisolated enum BaStudentProfileSectionKind: String, CaseIterable, Codable, Ide
     var title: String {
         switch self {
         case .names:
-            String(localized: "ba.student.detail.profile.names.title")
+            BaL10n.string("ba.student.detail.profile.names.title")
         case .info:
-            String(localized: "ba.student.detail.profile.info.title")
+            BaL10n.string("ba.student.detail.profile.info.title")
         case .hobby:
-            String(localized: "ba.student.detail.profile.hobby.title")
+            BaL10n.string("ba.student.detail.profile.hobby.title")
         case .gifts:
-            String(localized: "ba.student.detail.profile.gifts.title")
+            BaL10n.string("ba.student.detail.profile.gifts.title")
         case .sameName:
-            String(localized: "ba.student.detail.profile.sameName.title")
+            BaL10n.string("ba.student.detail.profile.sameName.title")
         case .chocolate:
-            String(localized: "ba.student.detail.profile.chocolate.title")
+            BaL10n.string("ba.student.detail.profile.chocolate.title")
         case .furniture:
-            String(localized: "ba.student.detail.profile.furniture.title")
+            BaL10n.string("ba.student.detail.profile.furniture.title")
         case .other:
-            String(localized: "ba.student.detail.profile.other.title")
+            BaL10n.string("ba.student.detail.profile.other.title")
         }
     }
 
@@ -71,36 +71,36 @@ nonisolated enum BaStudentProfileRoleRelationKind: Hashable {
     var title: String {
         switch self {
         case .sameName:
-            String(localized: "ba.student.detail.profile.sameName.title")
+            BaL10n.string("ba.student.detail.profile.sameName.title")
         case .related:
-            String(localized: "ba.student.detail.profile.relatedRoles.title")
+            BaL10n.string("ba.student.detail.profile.relatedRoles.title")
         }
     }
 
     var emptyText: String {
         switch self {
         case .sameName:
-            String(localized: "ba.student.detail.profile.sameName.empty")
+            BaL10n.string("ba.student.detail.profile.sameName.empty")
         case .related:
-            String(localized: "ba.student.detail.profile.relatedRoles.empty")
+            BaL10n.string("ba.student.detail.profile.relatedRoles.empty")
         }
     }
 
     var fallbackItemTitle: String {
         switch self {
         case .sameName:
-            String(localized: "ba.student.detail.profile.sameName.item")
+            BaL10n.string("ba.student.detail.profile.sameName.item")
         case .related:
-            String(localized: "ba.student.detail.profile.relatedRoles.item")
+            BaL10n.string("ba.student.detail.profile.relatedRoles.item")
         }
     }
 
     var openDetailHint: String {
         switch self {
         case .sameName:
-            String(localized: "ba.student.detail.profile.sameName.openDetail")
+            BaL10n.string("ba.student.detail.profile.sameName.openDetail")
         case .related:
-            String(localized: "ba.student.detail.profile.relatedRoles.openDetail")
+            BaL10n.string("ba.student.detail.profile.relatedRoles.openDetail")
         }
     }
 }
@@ -418,7 +418,7 @@ nonisolated private func visibleProfileRow(
 
     let displayValue: String
     if cleanedValue.isBlank, hasImage {
-        displayValue = String(localized: "ba.student.detail.profile.imageBelow")
+        displayValue = BaL10n.string("ba.student.detail.profile.imageBelow")
     } else {
         displayValue = cleanedValue
     }
@@ -467,7 +467,7 @@ nonisolated private func buildGiftPreferenceItems(from rows: [BaGuideRow]) -> [B
         let emojiImage = normalizedImages.first { $0 != giftImage }
         let fallbackIndex = extractOrderedNumbers(row.title).first ?? (index + 1)
         let label = row.value.trimmed.nonEmptyUnlessPlaceholder ?? String(
-            format: String(localized: "ba.student.detail.gift.item.format"),
+            format: BaL10n.string("ba.student.detail.gift.item.format"),
             fallbackIndex
         )
         let key = "\(giftImage.absoluteString)|\(emojiImage?.absoluteString ?? "")|\(label)"

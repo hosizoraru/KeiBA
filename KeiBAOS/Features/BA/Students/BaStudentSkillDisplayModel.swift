@@ -20,7 +20,7 @@ nonisolated struct BaStudentSkillDisplayModel: Identifiable, Hashable {
     let fallbackDescriptionIcons: [URL]
 
     var displayName: String {
-        name.ifBlank(String(localized: "ba.student.detail.skill.unnamed"))
+        name.ifBlank(BaL10n.string("ba.student.detail.skill.unnamed"))
     }
 
     var levelOptions: [String] {
@@ -41,13 +41,13 @@ nonisolated struct BaStudentSkillDisplayModel: Identifiable, Hashable {
             return "EX技能"
         }
         if base.localizedCaseInsensitiveContains("普通") {
-            return String(localized: "ba.student.detail.skill.normal")
+            return BaL10n.string("ba.student.detail.skill.normal")
         }
         if base.localizedCaseInsensitiveContains("被动") {
-            return String(localized: "ba.student.detail.skill.passive")
+            return BaL10n.string("ba.student.detail.skill.passive")
         }
         if base.localizedCaseInsensitiveContains("辅助") {
-            return String(localized: "ba.student.detail.skill.sub")
+            return BaL10n.string("ba.student.detail.skill.sub")
         }
         return base.ifBlank(BaStudentDetailSection.skills.title)
     }
@@ -138,7 +138,7 @@ nonisolated struct BaStudentSkillDisplayModel: Identifiable, Hashable {
         if title.isEmpty == false {
             return title
         }
-        return String(format: String(localized: "ba.student.detail.row.format"), index + 1)
+        return String(format: BaL10n.string("ba.student.detail.row.format"), index + 1)
     }
 
     private static func parseBaseSkillDrafts(from rows: [BaGuideRow]) -> [SkillDraft] {

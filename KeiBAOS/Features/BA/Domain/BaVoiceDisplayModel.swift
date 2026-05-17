@@ -16,7 +16,7 @@ nonisolated struct BaVoiceSectionFilter: Identifiable, Hashable {
 
     var title: String {
         guard let section, section.isEmpty == false else {
-            return String(localized: "ba.student.detail.voice.filter.all")
+            return BaL10n.string("ba.student.detail.voice.filter.all")
         }
         return section
     }
@@ -132,7 +132,7 @@ nonisolated enum BaVoiceDisplayModel {
         guard let url else { return nil }
         let ext = url.pathExtension.trimmingCharacters(in: .whitespacesAndNewlines)
         if ext.isEmpty {
-            return String(localized: "ba.student.detail.voice.audio.format")
+            return BaL10n.string("ba.student.detail.voice.audio.format")
         }
         return ext.uppercased()
     }

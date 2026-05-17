@@ -114,7 +114,7 @@ struct BaGuideBaseDataParser {
                 return splitRows
             }
         }
-        let title = key.isEmpty ? String(format: String(localized: "ba.student.detail.row.format"), index + 1) : key
+        let title = key.isEmpty ? String(format: BaL10n.string("ba.student.detail.row.format"), index + 1) : key
         let rowValue = value
         let signature = "\(title)|\(rowValue)|\(imageURLs.map(\.absoluteString).joined(separator: ","))"
         return [
@@ -147,7 +147,7 @@ struct BaGuideBaseDataParser {
             )
             let rowValue = value
             guard title.isEmpty == false || rowValue.isEmpty == false || imageURLs.isEmpty == false else { continue }
-            let fallbackTitle = String(format: String(localized: "ba.student.detail.row.format"), pairIndex / 2 + 1)
+            let fallbackTitle = String(format: BaL10n.string("ba.student.detail.row.format"), pairIndex / 2 + 1)
             let resolvedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? fallbackTitle : title
             let signature = "\(resolvedTitle)|\(rowValue)|\(imageURLs.map(\.absoluteString).joined(separator: ","))"
             out.append(

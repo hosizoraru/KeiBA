@@ -130,7 +130,7 @@ nonisolated enum BaMusicLibraryBuilder {
         return BaMusicTrack(
             entry: entry,
             title: clean(info.title, fallback: entry.name),
-            subtitle: String(localized: "ba.music.bgm.title"),
+            subtitle: BaL10n.string("ba.music.bgm.title"),
             artworkURL: info.preferredPortraitURL(fallback: entry.iconURL),
             audioURL: item?.mediaURL,
             sourceURL: info.sourceURL ?? entry.detailURL,

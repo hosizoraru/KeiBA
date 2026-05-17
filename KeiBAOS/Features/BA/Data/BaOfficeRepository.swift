@@ -32,7 +32,7 @@ struct BaOfficeRepository {
 
         return BaOfficeSnapshot(
             nickname: settings.nickname,
-            teacherSuffix: String(localized: "ba.office.nickname.suffix"),
+            teacherSuffix: BaL10n.string("ba.office.nickname.suffix"),
             friendCode: settings.friendCode,
             server: settings.server.title,
             apCurrent: apSnapshot.apCurrent,
@@ -52,7 +52,7 @@ struct BaOfficeRepository {
                 includingSeconds: false
             ),
             cafeVisitDetail: String(
-                format: String(localized: "ba.cafe.metric.visit.detail.format"),
+                format: BaL10n.string("ba.cafe.metric.visit.detail.format"),
                 BaTimeMath.localCafeStudentRefreshTimes(server: settings.server, reference: now)
             ),
             cafeVisitSlots: visitSlots,
@@ -62,7 +62,7 @@ struct BaOfficeRepository {
                 includingSeconds: false
             ),
             tacticalRefreshDetail: String(
-                format: String(localized: "ba.cafe.metric.tactical.detail.format"),
+                format: BaL10n.string("ba.cafe.metric.tactical.detail.format"),
                 BaTimeMath.localArenaRefreshTime(server: settings.server, reference: now)
             ),
             headpatRemain: cooldownText(availableAt: headpatAvailable, now: now),
@@ -77,7 +77,7 @@ struct BaOfficeRepository {
                 BaCafeVisitSnapshot(
                     id: slot.id,
                     title: String(
-                        format: String(localized: "ba.cafe.metric.visit.index.format"),
+                        format: BaL10n.string("ba.cafe.metric.visit.index.format"),
                         "\(slot.id)"
                     ),
                     value: BaDisplayFormatters.compactRemaining(
@@ -86,7 +86,7 @@ struct BaOfficeRepository {
                         includingSeconds: false
                     ),
                     detail: String(
-                        format: String(localized: "ba.cafe.metric.visit.detail.format"),
+                        format: BaL10n.string("ba.cafe.metric.visit.detail.format"),
                         slot.localClockTime
                     )
                 )
@@ -106,34 +106,34 @@ struct BaOfficeRepository {
             apCurrent: displayedAP,
             apLimit: displayedLimit,
             apCurrentLimit: String(
-                format: String(localized: "ba.office.ap.currentLimit.format"),
+                format: BaL10n.string("ba.office.ap.currentLimit.format"),
                 displayedAP,
                 displayedLimit
             ),
             apRemaining: apRemainingText(currentAP: currentAP, apLimit: apLimit),
             apNext: isAPRecovering
                 ? BaDisplayFormatters.compactRemaining(until: nextAP, now: now)
-                : String(localized: "ba.office.ap.paused.value"),
+                : BaL10n.string("ba.office.ap.paused.value"),
             apFullRemain: isAPRecovering
                 ? BaDisplayFormatters.compactRemaining(until: fullAP, now: now, includingSeconds: false)
-                : String(localized: "ba.office.ap.full.ready"),
+                : BaL10n.string("ba.office.ap.full.ready"),
             apSyncAt: BaDisplayFormatters.syncTime(
                 settings.apSyncAt ?? settings.apRegenBaseAt,
                 includingSeconds: false
             ),
             apFullAt: isAPRecovering
                 ? BaDisplayFormatters.dateTime(fullAP)
-                : String(localized: "ba.office.ap.full.ready")
+                : BaL10n.string("ba.office.ap.full.ready")
         )
     }
 
     private func apRemainingText(currentAP: Double, apLimit: Int) -> String {
         let remaining = max(apLimit - BaTimeMath.displayAP(currentAP), 0)
         guard remaining > 0 else {
-            return String(localized: "ba.office.ap.remaining.ready")
+            return BaL10n.string("ba.office.ap.remaining.ready")
         }
         return String(
-            format: String(localized: "ba.office.ap.remaining.format"),
+            format: BaL10n.string("ba.office.ap.remaining.format"),
             "\(remaining)"
         )
     }
@@ -147,21 +147,21 @@ struct BaOfficeRepository {
         [
             BaCafeActionSeed(
                 kind: .headpat,
-                title: String(localized: "ba.cafe.action.headpat"),
+                title: BaL10n.string("ba.cafe.action.headpat"),
                 asset: .dailyReward,
                 tintName: "green",
                 availableAt: headpatAvailable
             ),
             BaCafeActionSeed(
                 kind: .inviteTicket1,
-                title: String(localized: "ba.cafe.action.invite1"),
+                title: BaL10n.string("ba.cafe.action.invite1"),
                 asset: .cafeCoupon,
                 tintName: "violet",
                 availableAt: invite1Available
             ),
             BaCafeActionSeed(
                 kind: .inviteTicket2,
-                title: String(localized: "ba.cafe.action.invite2"),
+                title: BaL10n.string("ba.cafe.action.invite2"),
                 asset: .cafeCoupon,
                 tintName: "violet",
                 availableAt: invite2Available
@@ -183,17 +183,17 @@ struct BaOfficeRepository {
 
     private func cooldownText(availableAt: Date?, now: Date) -> String {
         guard let availableAt, availableAt > now else {
-            return String(localized: "ba.cafe.action.ready.value")
+            return BaL10n.string("ba.cafe.action.ready.value")
         }
         return BaDisplayFormatters.compactRemaining(until: availableAt, now: now, includingSeconds: false)
     }
 
     private func cooldownDetail(availableAt: Date?, now: Date) -> String {
         guard let availableAt, availableAt > now else {
-            return String(localized: "ba.cafe.action.ready")
+            return BaL10n.string("ba.cafe.action.ready")
         }
         return String(
-            format: String(localized: "ba.cafe.action.availableAt.format"),
+            format: BaL10n.string("ba.cafe.action.availableAt.format"),
             BaDisplayFormatters.dateTime(availableAt)
         )
     }

@@ -64,9 +64,9 @@ struct BaActivityView: View {
                             .padding(.vertical, 24)
                     } else if snapshot.rows.isEmpty {
                         ContentUnavailableView(
-                            String(localized: "ba.activity.empty.title"),
+                            BaL10n.string("ba.activity.empty.title"),
                             systemImage: "calendar.badge.exclamationmark",
-                            description: Text(String(localized: "ba.activity.empty.detail"))
+                            description: Text(BaL10n.string("ba.activity.empty.detail"))
                         )
                     } else {
                         activityRows(snapshot.rows, metrics: metrics)
@@ -110,23 +110,23 @@ struct BaActivityView: View {
         BaGlassCard(tint: BaDesign.blue) {
             VStack(alignment: .leading, spacing: 12) {
                 BaSectionHeader(
-                    title: String(localized: "ba.activity.summary.title"),
+                    title: BaL10n.string("ba.activity.summary.title"),
                     asset: .guideMission
                 )
 
                 HStack(alignment: .top, spacing: 10) {
                     BaSummaryMetric(
-                        title: String(localized: "ba.status.running"),
+                        title: BaL10n.string("ba.status.running"),
                         value: "\(snapshot.count(for: .running))",
                         tint: BaDesign.green
                     )
                     BaSummaryMetric(
-                        title: String(localized: "ba.status.upcoming"),
+                        title: BaL10n.string("ba.status.upcoming"),
                         value: "\(snapshot.count(for: .upcoming))",
                         tint: BaDesign.blue
                     )
                     BaSummaryMetric(
-                        title: String(localized: "ba.status.ended"),
+                        title: BaL10n.string("ba.status.ended"),
                         value: "\(snapshot.count(for: .ended))",
                         tint: .secondary
                     )
@@ -140,30 +140,30 @@ struct BaActivityView: View {
     }
 
     private var currentFilterTitle: String {
-        statusFilter?.title ?? String(localized: "ba.filter.all")
+        statusFilter?.title ?? BaL10n.string("ba.filter.all")
     }
 
     private var summarySyncText: String {
         guard let lastSyncAt = model.activityState.lastSyncAt else {
-            return String(localized: "ba.state.notSynced")
+            return BaL10n.string("ba.state.notSynced")
         }
         if model.activityState.isShowingCache {
             return String(
-                format: String(localized: "ba.state.cachedAt.format"),
+                format: BaL10n.string("ba.state.cachedAt.format"),
                 BaDisplayFormatters.syncTime(lastSyncAt)
             )
         }
         return String(
-            format: String(localized: "ba.state.syncedAt.format"),
+            format: BaL10n.string("ba.state.syncedAt.format"),
             BaDisplayFormatters.syncTime(lastSyncAt)
         )
     }
 
     private var footerText: String {
         if let error = model.activityState.errorMessage, error.isEmpty == false {
-            return String(format: String(localized: "ba.state.error.format"), error)
+            return String(format: BaL10n.string("ba.state.error.format"), error)
         }
-        return String(localized: "ba.activity.footer.live")
+        return BaL10n.string("ba.activity.footer.live")
     }
 }
 

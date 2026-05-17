@@ -65,7 +65,7 @@ struct BaStudentGallerySection: View {
             parts.append(item.detail)
         }
         if let unlock = item.memoryUnlockLevel, unlock.isEmpty == false {
-            parts.append(String(format: String(localized: "ba.student.detail.memory.unlock.format"), unlock))
+            parts.append(String(format: BaL10n.string("ba.student.detail.memory.unlock.format"), unlock))
         }
         if let note = item.note, note.isEmpty == false, parts.contains(note) == false {
             parts.append(note)
@@ -91,12 +91,12 @@ struct BaStudentGuideRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(row.title)
                     .font(BaTextToken.rowTitle)
-                Text(row.value.isEmpty ? String(localized: "ba.common.none") : row.value)
+                Text(row.value.isEmpty ? BaL10n.string("ba.common.none") : row.value)
                     .font(BaTextToken.rowCaption)
                     .foregroundStyle(.secondary)
                     .lineLimit(4)
                 if let count = row.imageURLs?.count, count > 1 {
-                    Text(String(format: String(localized: "ba.student.detail.imageCount.format"), count))
+                    Text(String(format: BaL10n.string("ba.student.detail.imageCount.format"), count))
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                 }
@@ -111,7 +111,7 @@ struct BaStudentDetailEmptyRow: View {
 
     var body: some View {
         Label {
-            Text(String(localized: "ba.student.detail.section.empty"))
+            Text(BaL10n.string("ba.student.detail.section.empty"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         } icon: {

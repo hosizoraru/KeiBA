@@ -172,7 +172,7 @@ struct BaGuideMediaParser {
     private func parseStyleData(_ styleData: [BaJSONObject], sourceURL: URL?) -> [BaGuideGalleryItem] {
         styleData.enumerated().flatMap { index, block in
             let title = BaGuideTextNormalizer.clean(block.string("name") ?? "")
-                .ifBlank(String(format: String(localized: "ba.student.detail.media.style.format"), index + 1))
+                .ifBlank(String(format: BaL10n.string("ba.student.detail.media.style.format"), index + 1))
             let data = block["data"]
             let images = BaGuideTextNormalizer.dedupe(BaGuideTextNormalizer.imageURLs(in: data, sourceURL: sourceURL))
             let videos = BaGuideTextNormalizer.dedupe(BaGuideTextNormalizer.videoURLs(in: data, sourceURL: sourceURL))

@@ -29,11 +29,11 @@ enum BaMusicRepeatMode: Hashable {
     var accessibilityTitle: String {
         switch self {
         case .off:
-            String(localized: "ba.music.action.repeat.off")
+            BaL10n.string("ba.music.action.repeat.off")
         case .all:
-            String(localized: "ba.music.action.repeat.all")
+            BaL10n.string("ba.music.action.repeat.all")
         case .one:
-            String(localized: "ba.music.action.repeat.one")
+            BaL10n.string("ba.music.action.repeat.one")
         }
     }
 
@@ -117,26 +117,26 @@ enum BaMusicCacheState: Hashable {
         case .unknown:
             nil
         case .notCached:
-            String(localized: "ba.music.status.cache.notCached")
+            BaL10n.string("ba.music.status.cache.notCached")
         case .caching:
-            String(localized: "ba.music.status.cache.caching")
+            BaL10n.string("ba.music.status.cache.caching")
         case .cached:
-            String(localized: "ba.music.status.cache.cached")
+            BaL10n.string("ba.music.status.cache.cached")
         case .failed:
-            String(localized: "ba.music.status.cache.failed")
+            BaL10n.string("ba.music.status.cache.failed")
         }
     }
 
     var accessibilityTitle: String {
         switch self {
         case .unknown, .notCached:
-            String(localized: "ba.music.action.cache")
+            BaL10n.string("ba.music.action.cache")
         case .caching:
-            String(localized: "ba.music.status.cache.caching")
+            BaL10n.string("ba.music.status.cache.caching")
         case .cached:
-            String(localized: "ba.music.status.cache.cached")
+            BaL10n.string("ba.music.status.cache.cached")
         case .failed:
-            String(localized: "ba.music.action.cache.retry")
+            BaL10n.string("ba.music.action.cache.retry")
         }
     }
 

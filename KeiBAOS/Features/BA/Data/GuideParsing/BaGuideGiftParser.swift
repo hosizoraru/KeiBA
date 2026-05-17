@@ -91,7 +91,7 @@ struct BaGuideGiftParser {
                 out.append(
                     BaGuideRow(
                         id: "gift-\(giftIndex)-\(abs(giftURL.absoluteString.hashValue))",
-                        title: String(format: String(localized: "ba.student.detail.gift.item.format"), giftIndex),
+                        title: String(format: BaL10n.string("ba.student.detail.gift.item.format"), giftIndex),
                         value: note,
                         imageURL: giftURL,
                         imageURLs: imageURLs

@@ -16,12 +16,27 @@ struct KeiBAOSApp: App {
     }
 
     var body: some Scene {
+        #if os(macOS)
         WindowGroup {
             AppShell()
                 .environment(baModel)
         }
-        #if os(macOS)
             .defaultSize(width: 1_120, height: 760)
+
+        Settings {
+            NavigationStack {
+                BaSettingsView()
+                    .navigationTitle(BaL10n.string("ba.settings.title"))
+            }
+            .environment(baModel)
+            .environment(\.locale, baModel.envelope.globalSettings.appLanguage.locale)
+            .frame(minWidth: 640, minHeight: 680)
+        }
+        #else
+        WindowGroup {
+            AppShell()
+                .environment(baModel)
+        }
         #endif
     }
 }

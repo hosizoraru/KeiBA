@@ -101,7 +101,7 @@ struct BaStudentVoiceRow: View {
                         }
                         .padding(.top, 6)
                     } label: {
-                        Label(String(localized: "ba.student.detail.voice.moreLines"), systemImage: "text.bubble")
+                        Label(BaL10n.string("ba.student.detail.voice.moreLines"), systemImage: "text.bubble")
                             .font(BaTextToken.rowCaption)
                             .foregroundStyle(.secondary)
                     }
@@ -116,7 +116,7 @@ struct BaStudentVoiceRow: View {
             Button {
                 BaVoicePasteboard.copy(copySelectedText)
             } label: {
-                Label(String(localized: "ba.action.copy"), systemImage: "doc.on.doc")
+                Label(BaL10n.string("ba.action.copy"), systemImage: "doc.on.doc")
             }
             .tint(BaDesign.blue)
         }
@@ -133,7 +133,7 @@ struct BaStudentVoiceRow: View {
                         BaVoiceBadge(title: format, tint: BaDesign.blue)
                     } else {
                         BaVoiceBadge(
-                            title: String(localized: "ba.student.detail.voice.textOnly"),
+                            title: BaL10n.string("ba.student.detail.voice.textOnly"),
                             tint: Color.secondary,
                             isMuted: true
                         )
@@ -160,7 +160,7 @@ struct BaStudentVoiceRow: View {
 
     private var audioCountTitle: String {
         String(
-            format: String(localized: "ba.student.detail.voice.audioCount.short.format"),
+            format: BaL10n.string("ba.student.detail.voice.audioCount.short.format"),
             BaVoiceDisplayModel.audioCount(for: row)
         )
     }
@@ -186,15 +186,15 @@ struct BaStudentVoiceRow: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.tertiary)
                     .frame(width: 34, height: 34)
-                    .accessibilityLabel(String(localized: "ba.student.detail.voice.error.unsupported"))
+                    .accessibilityLabel(BaL10n.string("ba.student.detail.voice.error.unsupported"))
             }
         }
     }
 
     private var playbackAccessibilityLabel: String {
         isCurrent && playback.isPlaying
-            ? String(localized: "ba.student.detail.voice.pause")
-            : String(localized: "ba.student.detail.voice.play")
+            ? BaL10n.string("ba.student.detail.voice.pause")
+            : BaL10n.string("ba.student.detail.voice.play")
     }
 
     private var rowMenu: some View {
@@ -205,7 +205,7 @@ struct BaStudentVoiceRow: View {
                 Button {
                     openURL(playbackURL)
                 } label: {
-                    Label(String(localized: "ba.student.detail.voice.openAudio"), systemImage: "safari")
+                    Label(BaL10n.string("ba.student.detail.voice.openAudio"), systemImage: "safari")
                 }
             }
         } label: {
@@ -215,7 +215,7 @@ struct BaStudentVoiceRow: View {
                 .frame(width: 32, height: 34)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(String(localized: "ba.action.more"))
+        .accessibilityLabel(BaL10n.string("ba.action.more"))
     }
 
     @ViewBuilder
@@ -223,13 +223,13 @@ struct BaStudentVoiceRow: View {
         Button {
             BaVoicePasteboard.copy(copySelectedText)
         } label: {
-            Label(String(localized: "ba.student.detail.voice.copySelected"), systemImage: "doc.on.doc")
+            Label(BaL10n.string("ba.student.detail.voice.copySelected"), systemImage: "doc.on.doc")
         }
 
         Button {
             BaVoicePasteboard.copy(copyAllText)
         } label: {
-            Label(String(localized: "ba.student.detail.voice.copyAll"), systemImage: "list.clipboard")
+            Label(BaL10n.string("ba.student.detail.voice.copyAll"), systemImage: "list.clipboard")
         }
     }
 }

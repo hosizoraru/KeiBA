@@ -51,14 +51,14 @@ private struct BaStudentGuideInfoCard: View {
                         .foregroundStyle(.primary)
                         .lineLimit(2)
 
-                    BaStudentHighlightedText(row.value.ifBlank(String(localized: "ba.common.none")))
+                    BaStudentHighlightedText(row.value.ifBlank(BaL10n.string("ba.common.none")))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .lineSpacing(2)
                         .fixedSize(horizontal: false, vertical: true)
 
                     if let count = row.imageURLs?.count, count > 1 {
-                        Text(String(format: String(localized: "ba.student.detail.imageCount.format"), count))
+                        Text(String(format: BaL10n.string("ba.student.detail.imageCount.format"), count))
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
                     }
@@ -111,7 +111,7 @@ private enum BaStudentDetailContentFormatter {
         if title.isEmpty == false {
             return title
         }
-        return String(format: String(localized: "ba.student.detail.row.format"), index + 1)
+        return String(format: BaL10n.string("ba.student.detail.row.format"), index + 1)
     }
 
     static func highlightedAttributedString(in text: String) -> AttributedString {

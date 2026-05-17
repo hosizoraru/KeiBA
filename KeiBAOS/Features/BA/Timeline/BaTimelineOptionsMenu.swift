@@ -14,23 +14,23 @@ enum BaTimelineOptionsScope {
     var filterTitle: String {
         switch self {
         case .activity:
-            String(localized: "ba.activity.action.filter")
+            BaL10n.string("ba.activity.action.filter")
         case .pool:
-            String(localized: "ba.pool.action.filter")
+            BaL10n.string("ba.pool.action.filter")
         }
     }
 
     var showEndedTitle: String {
         switch self {
         case .activity:
-            String(localized: "ba.settings.activity.showEnded.title")
+            BaL10n.string("ba.settings.activity.showEnded.title")
         case .pool:
-            String(localized: "ba.settings.pool.showEnded.title")
+            BaL10n.string("ba.settings.pool.showEnded.title")
         }
     }
 
     var showEndedMenuTitle: String {
-        String(localized: "ba.timeline.options.showEnded.title")
+        BaL10n.string("ba.timeline.options.showEnded.title")
     }
 }
 
@@ -43,7 +43,7 @@ struct BaTimelineOptionsMenu: View {
     var body: some View {
         Section(scope.filterTitle) {
             BaMenuSelectionButton(
-                title: String(localized: "ba.filter.all"),
+                title: BaL10n.string("ba.filter.all"),
                 isSelected: statusFilter == nil
             ) {
                 statusFilter = nil
@@ -59,12 +59,12 @@ struct BaTimelineOptionsMenu: View {
             }
         }
 
-        Section(String(localized: "ba.timeline.options.visibility.title")) {
+        Section(BaL10n.string("ba.timeline.options.visibility.title")) {
             Toggle(scope.showEndedMenuTitle, isOn: $showsEnded)
                 .accessibilityLabel(Text(scope.showEndedTitle))
         }
 
-        Section(String(localized: "ba.settings.refresh.title")) {
+        Section(BaL10n.string("ba.settings.refresh.title")) {
             ForEach(BaRefreshInterval.allCases) { interval in
                 BaMenuSelectionButton(
                     title: interval.title,

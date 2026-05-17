@@ -75,13 +75,13 @@ struct BaStudentGalleryVideoPlayerScreen: View {
             await loadVideo()
         }
         .alert(
-            String(localized: "ba.student.detail.gallery.video.loadFailed"),
+            BaL10n.string("ba.student.detail.gallery.video.loadFailed"),
             isPresented: Binding(
                 get: { errorMessage != nil },
                 set: { if $0 == false { errorMessage = nil } }
             )
         ) {
-            Button(String(localized: "ba.common.done")) {
+            Button(BaL10n.string("ba.common.done")) {
                 errorMessage = nil
             }
         } message: {
@@ -126,7 +126,7 @@ struct BaStudentGalleryVideoPlayerScreen: View {
 
     private var toolbar: some View {
         HStack(spacing: 12) {
-            Button(String(localized: "ba.common.done")) {
+            Button(BaL10n.string("ba.common.done")) {
                 dismiss()
             }
             .buttonStyle(.borderedProminent)
@@ -148,7 +148,7 @@ struct BaStudentGalleryVideoPlayerScreen: View {
                 }
                 .buttonStyle(.bordered)
                 .tint(.white)
-                .accessibilityLabel(String(localized: "ba.action.share"))
+                .accessibilityLabel(BaL10n.string("ba.action.share"))
             }
 
             BaGalleryMediaSaveButton(url: item.mediaURL ?? item.previewURL, title: item.title)

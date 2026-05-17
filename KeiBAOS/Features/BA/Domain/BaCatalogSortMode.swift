@@ -19,11 +19,11 @@ nonisolated enum BaCatalogSortMode: String, CaseIterable, Codable, Hashable, Ide
     var title: String {
         switch self {
         case .defaultOrder:
-            String(localized: "ba.catalog.sort.default")
+            BaL10n.string("ba.catalog.sort.default")
         case .releaseDateDescending:
-            String(localized: "ba.catalog.sort.releaseDate.desc")
+            BaL10n.string("ba.catalog.sort.releaseDate.desc")
         case .releaseDateAscending:
-            String(localized: "ba.catalog.sort.releaseDate.asc")
+            BaL10n.string("ba.catalog.sort.releaseDate.asc")
         }
     }
 }

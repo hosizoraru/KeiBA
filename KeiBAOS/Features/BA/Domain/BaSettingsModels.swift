@@ -18,13 +18,21 @@ nonisolated enum BaServer: String, CaseIterable, Codable, Identifiable, Hashable
     }
 
     var title: String {
+        BaL10n.string(titleKey)
+    }
+
+    var titleResource: LocalizedStringResource {
+        LocalizedStringResource(stringLiteral: titleKey)
+    }
+
+    var titleKey: String {
         switch self {
         case .cn:
-            String(localized: "ba.server.cn")
+            "ba.server.cn"
         case .global:
-            String(localized: "ba.server.global")
+            "ba.server.global"
         case .jp:
-            String(localized: "ba.server.jp")
+            "ba.server.jp"
         }
     }
 
@@ -65,17 +73,25 @@ nonisolated enum BaRefreshInterval: Int, CaseIterable, Codable, Identifiable, Ha
     }
 
     var title: String {
+        BaL10n.string(titleKey)
+    }
+
+    var titleResource: LocalizedStringResource {
+        LocalizedStringResource(stringLiteral: titleKey)
+    }
+
+    var titleKey: String {
         switch self {
         case .oneHour:
-            String(localized: "ba.settings.refresh.interval.1h")
+            "ba.settings.refresh.interval.1h"
         case .threeHours:
-            String(localized: "ba.settings.refresh.interval.3h")
+            "ba.settings.refresh.interval.3h"
         case .sixHours:
-            String(localized: "ba.settings.refresh.interval.6h")
+            "ba.settings.refresh.interval.6h"
         case .twelveHours:
-            String(localized: "ba.settings.refresh.interval.12h")
+            "ba.settings.refresh.interval.12h"
         case .twentyFourHours:
-            String(localized: "ba.settings.refresh.interval.24h")
+            "ba.settings.refresh.interval.24h"
         }
     }
 
@@ -101,17 +117,25 @@ nonisolated enum BaCalendarPoolNotifyLead: Int, CaseIterable, Codable, Identifia
     }
 
     var title: String {
+        BaL10n.string(titleKey)
+    }
+
+    var titleResource: LocalizedStringResource {
+        LocalizedStringResource(stringLiteral: titleKey)
+    }
+
+    var titleKey: String {
         switch self {
         case .oneHour:
-            String(localized: "ba.settings.refresh.interval.1h")
+            "ba.settings.refresh.interval.1h"
         case .threeHours:
-            String(localized: "ba.settings.refresh.interval.3h")
+            "ba.settings.refresh.interval.3h"
         case .sixHours:
-            String(localized: "ba.settings.refresh.interval.6h")
+            "ba.settings.refresh.interval.6h"
         case .twelveHours:
-            String(localized: "ba.settings.refresh.interval.12h")
+            "ba.settings.refresh.interval.12h"
         case .twentyFourHours:
-            String(localized: "ba.settings.refresh.interval.24h")
+            "ba.settings.refresh.interval.24h"
         }
     }
 }
@@ -138,6 +162,7 @@ nonisolated struct BaGlobalSettings: Codable, Equatable, Sendable {
     var mediaAutoplayEnabled: Bool
     var mediaDownloadEnabled: Bool
     var refreshInterval: BaRefreshInterval
+    var appLanguage: BaAppLanguage
     var favoriteContentIDs: Set<Int64>
     var favoriteCatalogEntries: [BaGuideCatalogEntry]
     var dutyStudent: BaDutyStudent?
@@ -159,6 +184,7 @@ nonisolated struct BaGlobalSettings: Codable, Equatable, Sendable {
             mediaAutoplayEnabled: false,
             mediaDownloadEnabled: false,
             refreshInterval: .threeHours,
+            appLanguage: .system,
             favoriteContentIDs: [],
             favoriteCatalogEntries: [],
             dutyStudent: nil
@@ -183,6 +209,7 @@ nonisolated extension BaGlobalSettings {
         case mediaAutoplayEnabled
         case mediaDownloadEnabled
         case refreshInterval
+        case appLanguage
         case favoriteContentIDs
         case favoriteCatalogEntries
         case dutyStudent
@@ -206,6 +233,7 @@ nonisolated extension BaGlobalSettings {
         mediaAutoplayEnabled = try container.decodeIfPresent(Bool.self, forKey: .mediaAutoplayEnabled) ?? defaults.mediaAutoplayEnabled
         mediaDownloadEnabled = try container.decodeIfPresent(Bool.self, forKey: .mediaDownloadEnabled) ?? defaults.mediaDownloadEnabled
         refreshInterval = try container.decodeIfPresent(BaRefreshInterval.self, forKey: .refreshInterval) ?? defaults.refreshInterval
+        appLanguage = try container.decodeIfPresent(BaAppLanguage.self, forKey: .appLanguage) ?? defaults.appLanguage
         favoriteContentIDs = try container.decodeIfPresent(Set<Int64>.self, forKey: .favoriteContentIDs) ?? defaults.favoriteContentIDs
         favoriteCatalogEntries = try container.decodeIfPresent([BaGuideCatalogEntry].self, forKey: .favoriteCatalogEntries) ?? defaults.favoriteCatalogEntries
         dutyStudent = try container.decodeIfPresent(BaDutyStudent.self, forKey: .dutyStudent)
@@ -228,6 +256,7 @@ nonisolated extension BaGlobalSettings {
         try container.encode(mediaAutoplayEnabled, forKey: .mediaAutoplayEnabled)
         try container.encode(mediaDownloadEnabled, forKey: .mediaDownloadEnabled)
         try container.encode(refreshInterval, forKey: .refreshInterval)
+        try container.encode(appLanguage, forKey: .appLanguage)
         try container.encode(favoriteContentIDs, forKey: .favoriteContentIDs)
         try container.encode(favoriteCatalogEntries, forKey: .favoriteCatalogEntries)
         try container.encodeIfPresent(dutyStudent, forKey: .dutyStudent)
@@ -299,7 +328,7 @@ nonisolated struct BaSettingsEnvelope: Codable, Equatable, Sendable {
     var globalSettings: BaGlobalSettings
     var serverProfiles: [BaServer: BaServerProfile]
 
-    static let currentSchemaVersion = 4
+    static let currentSchemaVersion = 5
 
     static func defaults(now: Date = Date()) -> BaSettingsEnvelope {
         let profile = BaServerProfile.defaults(now: now)
@@ -330,6 +359,7 @@ nonisolated struct BaSettingsEnvelope: Codable, Equatable, Sendable {
             mediaAutoplayEnabled: settings.mediaAutoplayEnabled,
             mediaDownloadEnabled: settings.mediaDownloadEnabled,
             refreshInterval: settings.refreshInterval,
+            appLanguage: settings.appLanguage,
             favoriteContentIDs: settings.favoriteContentIDs,
             favoriteCatalogEntries: settings.favoriteCatalogEntries,
             dutyStudent: settings.dutyStudent
@@ -409,6 +439,7 @@ nonisolated struct BaSettingsEnvelope: Codable, Equatable, Sendable {
             mediaAutoplayEnabled: globalSettings.mediaAutoplayEnabled,
             mediaDownloadEnabled: globalSettings.mediaDownloadEnabled,
             refreshInterval: globalSettings.refreshInterval,
+            appLanguage: globalSettings.appLanguage,
             favoriteContentIDs: globalSettings.favoriteContentIDs,
             favoriteCatalogEntries: globalSettings.favoriteCatalogEntries,
             dutyStudent: globalSettings.dutyStudent,
@@ -470,6 +501,7 @@ nonisolated struct BaAppSettings: Codable, Equatable, Sendable {
     var mediaAutoplayEnabled: Bool
     var mediaDownloadEnabled: Bool
     var refreshInterval: BaRefreshInterval
+    var appLanguage: BaAppLanguage
     var favoriteContentIDs: Set<Int64>
     var favoriteCatalogEntries: [BaGuideCatalogEntry]
     var dutyStudent: BaDutyStudent?
@@ -513,6 +545,7 @@ nonisolated struct BaAppSettings: Codable, Equatable, Sendable {
             mediaAutoplayEnabled: false,
             mediaDownloadEnabled: false,
             refreshInterval: .threeHours,
+            appLanguage: .system,
             favoriteContentIDs: [],
             favoriteCatalogEntries: [],
             dutyStudent: nil,
@@ -559,6 +592,7 @@ nonisolated extension BaAppSettings {
         case mediaAutoplayEnabled
         case mediaDownloadEnabled
         case refreshInterval
+        case appLanguage
         case favoriteContentIDs
         case favoriteCatalogEntries
         case dutyStudent
@@ -604,6 +638,7 @@ nonisolated extension BaAppSettings {
         mediaAutoplayEnabled = try container.decodeIfPresent(Bool.self, forKey: .mediaAutoplayEnabled) ?? defaults.mediaAutoplayEnabled
         mediaDownloadEnabled = try container.decodeIfPresent(Bool.self, forKey: .mediaDownloadEnabled) ?? defaults.mediaDownloadEnabled
         refreshInterval = try container.decodeIfPresent(BaRefreshInterval.self, forKey: .refreshInterval) ?? defaults.refreshInterval
+        appLanguage = try container.decodeIfPresent(BaAppLanguage.self, forKey: .appLanguage) ?? defaults.appLanguage
         favoriteContentIDs = try container.decodeIfPresent(Set<Int64>.self, forKey: .favoriteContentIDs) ?? defaults.favoriteContentIDs
         favoriteCatalogEntries = try container.decodeIfPresent([BaGuideCatalogEntry].self, forKey: .favoriteCatalogEntries) ?? defaults.favoriteCatalogEntries
         dutyStudent = try container.decodeIfPresent(BaDutyStudent.self, forKey: .dutyStudent)

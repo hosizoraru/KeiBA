@@ -11,7 +11,7 @@ enum BaDataErrorPresenter {
     static func studentDetailMessage(for sourceError: String?) -> String? {
         guard let sourceError, sourceError.isEmpty == false else { return nil }
         if isInternalStudentDetailSourceError(sourceError) {
-            return String(localized: "ba.student.detail.partialSource.warning")
+            return BaL10n.string("ba.student.detail.partialSource.warning")
         }
         return sourceError
     }

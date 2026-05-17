@@ -104,7 +104,7 @@ struct BaGuideContentParser {
         return [
             BaGuideRow(
                 id: "stat-content-id",
-                title: String(localized: "ba.student.detail.contentId.title"),
+                title: BaL10n.string("ba.student.detail.contentId.title"),
                 value: "\(fallback.contentId)",
                 imageURL: nil
             ),

@@ -27,7 +27,7 @@ struct BaGuideVoiceParser {
         let entries = audioURLs.enumerated().map { index, url in
             BaGuideVoiceEntry(
                 id: "voice-url-\(index)",
-                title: String(format: String(localized: "ba.student.detail.voice.item.format"), index + 1),
+                title: String(format: BaL10n.string("ba.student.detail.voice.item.format"), index + 1),
                 subtitle: url.lastPathComponent,
                 transcript: "",
                 audioURL: url,
@@ -173,7 +173,7 @@ struct BaGuideVoiceParser {
             for (contentIndex, item) in objectArray(group["content"]).enumerated() {
                 let title = BaGuideRichTextExtractor.text(from: item["name"])
                     .ifBlank(BaGuideRichTextExtractor.text(from: item["title"]))
-                    .ifBlank(String(format: String(localized: "ba.student.detail.voice.item.format"), contentIndex + 1))
+                    .ifBlank(String(format: BaL10n.string("ba.student.detail.voice.item.format"), contentIndex + 1))
                 let descLines = BaGuideRichTextExtractor.lines(from: item["desc"], sourceURL: sourceURL)
                     .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
                     .filter { $0.isEmpty == false }
@@ -646,7 +646,7 @@ struct BaGuideVoiceParser {
     }
 
     private func localizedLanguageLabel(_ index: Int) -> String {
-        String(format: String(localized: "ba.student.detail.voice.language.format"), index + 1)
+        String(format: BaL10n.string("ba.student.detail.voice.language.format"), index + 1)
     }
 
     private func voicePriority(_ label: String) -> Int {

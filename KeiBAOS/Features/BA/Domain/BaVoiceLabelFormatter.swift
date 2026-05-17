@@ -12,16 +12,16 @@ nonisolated enum BaVoiceLabelFormatter {
         let canonical = BaVoiceLanguageResolver.canonicalLanguageLabel(header)
         switch canonical {
         case "日配":
-            return String(localized: "ba.student.detail.voice.language.jp")
+            return BaL10n.string("ba.student.detail.voice.language.jp")
         case "中配":
-            return String(localized: "ba.student.detail.voice.language.cn")
+            return BaL10n.string("ba.student.detail.voice.language.cn")
         case "韩配":
-            return String(localized: "ba.student.detail.voice.language.kr")
+            return BaL10n.string("ba.student.detail.voice.language.kr")
         case "官翻":
-            return String(localized: "ba.student.detail.voice.language.official")
+            return BaL10n.string("ba.student.detail.voice.language.official")
         default:
             if let index = languageIndex(from: canonical.isEmpty ? header : canonical) {
-                return String(format: String(localized: "ba.student.detail.voice.language.format"), index)
+                return String(format: BaL10n.string("ba.student.detail.voice.language.format"), index)
             }
             return header.trimmingCharacters(in: .whitespacesAndNewlines)
         }
@@ -31,13 +31,13 @@ nonisolated enum BaVoiceLabelFormatter {
         let clean = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         let normalized = lookupKey(clean)
         if let index = suffixNumber(in: normalized, prefix: "成长台词") {
-            return String(format: String(localized: "ba.student.detail.voice.growthTitle.format"), index)
+            return String(format: BaL10n.string("ba.student.detail.voice.growthTitle.format"), index)
         }
         if normalized.isEmpty {
-            return String(localized: "ba.student.detail.voice.entry")
+            return BaL10n.string("ba.student.detail.voice.entry")
         }
         if normalized == "语音条目" {
-            return String(localized: "ba.student.detail.voice.entry")
+            return BaL10n.string("ba.student.detail.voice.entry")
         }
         return clean
     }

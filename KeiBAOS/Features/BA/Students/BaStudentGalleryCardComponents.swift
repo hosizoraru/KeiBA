@@ -203,7 +203,7 @@ struct BaStudentGalleryPillRow: View {
         BaGalleryTextChip(title: kind.title, tint: kind.galleryTint)
         if let unlock = item.memoryUnlockLevel, unlock.baGalleryIsBlank == false {
             BaGalleryTextChip(
-                title: String(format: String(localized: "ba.student.detail.memory.unlock.format"), unlock),
+                title: String(format: BaL10n.string("ba.student.detail.memory.unlock.format"), unlock),
                 tint: BaDesign.blue
             )
         }
@@ -440,7 +440,7 @@ struct BaGalleryMediaSaveButton: View {
         }
         .buttonStyle(.plain)
         .disabled(url == nil || isLoading)
-        .accessibilityLabel(String(localized: "ba.action.save"))
+        .accessibilityLabel(BaL10n.string("ba.action.save"))
         .fileExporter(
             isPresented: $isExporterPresented,
             document: exportDocument,
@@ -452,13 +452,13 @@ struct BaGalleryMediaSaveButton: View {
             }
         }
         .alert(
-            String(localized: "ba.student.detail.media.saveFailed"),
+            BaL10n.string("ba.student.detail.media.saveFailed"),
             isPresented: Binding(
                 get: { errorMessage != nil },
                 set: { if $0 == false { errorMessage = nil } }
             )
         ) {
-            Button(String(localized: "ba.common.done")) {
+            Button(BaL10n.string("ba.common.done")) {
                 errorMessage = nil
             }
         } message: {
@@ -565,7 +565,7 @@ extension BaGuideGalleryItem {
 
     var galleryShortTitle: String {
         let title = BaGuideGallerySupport.normalizeTitle(title)
-        return title.isEmpty ? String(localized: "ba.student.detail.media.gallery") : title
+        return title.isEmpty ? BaL10n.string("ba.student.detail.media.gallery") : title
     }
 
     var galleryImageHeight: CGFloat {
@@ -615,7 +615,7 @@ extension BaGuideRow {
         let value = title.replacingOccurrences(of: "影画", with: "")
             .replacingOccurrences(of: "相关链接", with: "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        return value.baGalleryIfBlank(String(localized: "ba.student.detail.gallery.relatedLinks"))
+        return value.baGalleryIfBlank(BaL10n.string("ba.student.detail.gallery.relatedLinks"))
     }
 }
 

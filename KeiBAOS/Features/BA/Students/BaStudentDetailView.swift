@@ -83,7 +83,7 @@ struct BaStudentDetailView: View {
             ToolbarItemGroup(placement: .primaryAction) {
                 if let shareURL = info?.sourceURL ?? entry.detailURL {
                     ShareLink(item: shareURL) {
-                        Label(String(localized: "ba.action.share"), systemImage: "square.and.arrow.up")
+                        Label(BaL10n.string("ba.action.share"), systemImage: "square.and.arrow.up")
                     }
                     .labelStyle(.iconOnly)
                 }
@@ -93,7 +93,7 @@ struct BaStudentDetailView: View {
                         await model.loadStudentDetail(entry: entry, force: true)
                     }
                 } label: {
-                    Label(String(localized: "ba.action.refresh"), systemImage: "arrow.clockwise")
+                    Label(BaL10n.string("ba.action.refresh"), systemImage: "arrow.clockwise")
                 }
                 .labelStyle(.iconOnly)
                 .disabled(state.isLoading)
@@ -119,7 +119,7 @@ struct BaStudentDetailView: View {
                         }
                     }
                 } label: {
-                    Label(String(localized: "ba.action.more"), systemImage: "ellipsis.circle")
+                    Label(BaL10n.string("ba.action.more"), systemImage: "ellipsis.circle")
                 }
                 .labelStyle(.iconOnly)
                 .menuOrder(.fixed)
@@ -205,7 +205,7 @@ struct BaStudentDetailView: View {
             Label(error, systemImage: "exclamationmark.triangle")
                 .foregroundStyle(.secondary)
         } footer: {
-            Text(String(localized: "ba.student.detail.cached.footer"))
+            Text(BaL10n.string("ba.student.detail.cached.footer"))
         }
     }
 
@@ -243,14 +243,14 @@ struct BaStudentDetailView: View {
 
     private var favoriteTitle: String {
         model.isFavorite(entry)
-            ? String(localized: "ba.catalog.favorite.remove")
-            : String(localized: "ba.catalog.favorite.add")
+            ? BaL10n.string("ba.catalog.favorite.remove")
+            : BaL10n.string("ba.catalog.favorite.add")
     }
 
     private var dutyStudentTitle: String {
         model.isDutyStudent(entry)
-            ? String(localized: "ba.catalog.dutyStudent.clear")
-            : String(localized: "ba.catalog.dutyStudent.set")
+            ? BaL10n.string("ba.catalog.dutyStudent.clear")
+            : BaL10n.string("ba.catalog.dutyStudent.set")
     }
 
     private var dutyStudentSystemImage: String {
@@ -386,7 +386,7 @@ private struct BaStudentVoiceSearchModifier: ViewModifier {
         if isActive {
             content.searchable(
                 text: $text,
-                prompt: Text(String(localized: "ba.student.detail.voice.search.placeholder"))
+                prompt: Text(BaL10n.string("ba.student.detail.voice.search.placeholder"))
             )
         } else {
             content

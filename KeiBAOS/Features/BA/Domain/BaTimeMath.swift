@@ -278,17 +278,17 @@ nonisolated enum BaDisplayFormatters {
     ) -> String {
         if now < start {
             return String(
-                format: String(localized: "ba.timeline.remaining.startsIn.format"),
+                format: BaL10n.string("ba.timeline.remaining.startsIn.format"),
                 compactRemaining(until: start, now: now, includingSeconds: includingSeconds)
             )
         }
         if now < end {
             return String(
-                format: String(localized: "ba.timeline.remaining.endsIn.format"),
+                format: BaL10n.string("ba.timeline.remaining.endsIn.format"),
                 compactRemaining(until: end, now: now, includingSeconds: includingSeconds)
             )
         }
-        return String(localized: "ba.timeline.remaining.ended")
+        return BaL10n.string("ba.timeline.remaining.ended")
     }
 
     private static func compactMinuteDuration(_ interval: TimeInterval) -> String {

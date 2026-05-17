@@ -23,14 +23,14 @@ enum BaStudentGuideMeta {
     nonisolated static func profileMetaItems(from info: BaStudentGuideInfo) -> [BaGuideMetaItem] {
         [
             buildMetaItem(
-                title: String(localized: "ba.student.detail.meta.rarity"),
+                title: BaL10n.string("ba.student.detail.meta.rarity"),
                 role: .rarity,
                 valueKeywords: ["稀有度", "星级"],
                 rows: info.profileDisplayRows,
                 stats: info.stats
             ),
             buildMetaItem(
-                title: String(localized: "ba.student.detail.meta.academy"),
+                title: BaL10n.string("ba.student.detail.meta.academy"),
                 role: .academy,
                 valueKeywords: ["所属学园", "所属学院", "学园", "学院", "school"],
                 rows: info.profileDisplayRows,
@@ -38,7 +38,7 @@ enum BaStudentGuideMeta {
                 valuePriority: academyValuePriority
             ),
             buildMetaItem(
-                title: String(localized: "ba.student.detail.meta.club"),
+                title: BaL10n.string("ba.student.detail.meta.club"),
                 role: .club,
                 valueKeywords: ["所属社团", "社团"],
                 rows: info.profileDisplayRows,
@@ -62,14 +62,14 @@ enum BaStudentGuideMeta {
         return [
             tacticalPositionItem(info: info, rows: rows),
             combatFieldItem(
-                title: String(localized: "ba.student.detail.meta.attackType"),
+                title: BaL10n.string("ba.student.detail.meta.attackType"),
                 role: .attackType,
                 valueKeywords: ["攻击类型"],
                 rows: rows,
                 stats: info.stats
             ),
             combatFieldItem(
-                title: String(localized: "ba.student.detail.meta.defenseType"),
+                title: BaL10n.string("ba.student.detail.meta.defenseType"),
                 role: .defenseType,
                 valueKeywords: ["防御类型"],
                 rows: rows,
@@ -77,7 +77,7 @@ enum BaStudentGuideMeta {
             ),
             weaponTypeItem(rows: rows, stats: info.stats),
             combatFieldItem(
-                title: String(localized: "ba.student.detail.meta.street"),
+                title: BaL10n.string("ba.student.detail.meta.street"),
                 role: .terrain,
                 valueKeywords: ["市街"],
                 rows: rows,
@@ -85,7 +85,7 @@ enum BaStudentGuideMeta {
                 valuePriority: terrainValuePriority
             ),
             combatFieldItem(
-                title: String(localized: "ba.student.detail.meta.outdoor"),
+                title: BaL10n.string("ba.student.detail.meta.outdoor"),
                 role: .terrain,
                 valueKeywords: ["屋外"],
                 rows: rows,
@@ -93,7 +93,7 @@ enum BaStudentGuideMeta {
                 valuePriority: terrainValuePriority
             ),
             combatFieldItem(
-                title: String(localized: "ba.student.detail.meta.indoor"),
+                title: BaL10n.string("ba.student.detail.meta.indoor"),
                 role: .terrain,
                 valueKeywords: ["屋内", "室内"],
                 rows: rows,
@@ -161,9 +161,9 @@ enum BaStudentGuideMeta {
             )
         )
         return BaGuideMetaItem(
-            title: String(localized: "ba.student.detail.meta.tacticalPosition"),
+            title: BaL10n.string("ba.student.detail.meta.tacticalPosition"),
             value: tacticalValue,
-            extraValue: positionValue == String(localized: "ba.common.none") ? nil : positionValue,
+            extraValue: positionValue == BaL10n.string("ba.common.none") ? nil : positionValue,
             imageURL: tacticalIcon,
             extraImageURL: positionIcon
         )
@@ -171,7 +171,7 @@ enum BaStudentGuideMeta {
 
     private nonisolated static func weaponTypeItem(rows: [BaGuideRow], stats: [BaGuideRow]) -> BaGuideMetaItem {
         let weapon = combatFieldItem(
-            title: String(localized: "ba.student.detail.meta.weaponType"),
+            title: BaL10n.string("ba.student.detail.meta.weaponType"),
             role: .weaponType,
             valueKeywords: ["武器类型"],
             rows: rows,
@@ -208,21 +208,21 @@ enum BaStudentGuideMeta {
         let stats = info.stats
         let items = [
             buildExactProfileMetaItem(
-                title: String(localized: "ba.student.detail.meta.rarity"),
+                title: BaL10n.string("ba.student.detail.meta.rarity"),
                 role: .rarity,
                 titleKeywords: ["稀有度", "星级"],
                 rows: rows,
                 stats: stats
             ),
             buildExactProfileMetaItem(
-                title: String(localized: "ba.student.detail.meta.belongs"),
+                title: BaL10n.string("ba.student.detail.meta.belongs"),
                 role: .affiliation,
                 titleKeywords: ["所属", "阵营"],
                 rows: rows,
                 stats: stats
             ),
             buildExactProfileMetaItem(
-                title: String(localized: "ba.student.detail.meta.academy"),
+                title: BaL10n.string("ba.student.detail.meta.academy"),
                 role: .academy,
                 titleKeywords: ["所属学园", "所属学院", "学园", "学院", "school"],
                 rows: rows,
@@ -230,7 +230,7 @@ enum BaStudentGuideMeta {
                 valuePriority: academyValuePriority
             ),
             buildExactProfileMetaItem(
-                title: String(localized: "ba.student.detail.meta.club"),
+                title: BaL10n.string("ba.student.detail.meta.club"),
                 role: .club,
                 titleKeywords: ["所属社团", "社团"],
                 rows: rows,
@@ -431,10 +431,10 @@ enum BaStudentGuideMeta {
     private nonisolated static func sanitizeMetaValue(role: MetaRole, raw: String) -> String {
         let cleaned = stripInlineNotes(raw)
         guard cleaned.isEmpty == false, cleaned != "-", isMediaFilenameValue(cleaned) == false else {
-            return String(localized: "ba.common.none")
+            return BaL10n.string("ba.common.none")
         }
         if cleaned == "无", role == .academy || role == .tacticalPosition || role == .position || role == .terrain {
-            return String(localized: "ba.common.none")
+            return BaL10n.string("ba.common.none")
         }
         if role == .rarity || role == .academy || role == .tacticalPosition {
             let segments = splitSlashSegments(cleaned)
@@ -630,11 +630,11 @@ enum BaStudentGuideMeta {
 
     private nonisolated static func normalizeWeaponTypeMetaValue(_ raw: String) -> String {
         let value = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        if value.isEmpty || value == "-" || value == String(localized: "ba.common.none") {
-            return String(localized: "ba.common.none")
+        if value.isEmpty || value == "-" || value == BaL10n.string("ba.common.none") {
+            return BaL10n.string("ba.common.none")
         }
         if value == "原网站暂无该数据" {
-            return String(localized: "ba.common.none")
+            return BaL10n.string("ba.common.none")
         }
         let compact = value.replacingOccurrences(of: " ", with: "")
         let hasPlaceholderHints = compact.contains("这一行") ||
@@ -642,7 +642,7 @@ enum BaStudentGuideMeta {
             compact.contains("占位") ||
             compact.contains("请填写") ||
             compact.contains("暂无")
-        return hasPlaceholderHints || compact.count > 18 ? String(localized: "ba.common.none") : value
+        return hasPlaceholderHints || compact.count > 18 ? BaL10n.string("ba.common.none") : value
     }
 
     private nonisolated enum MetaRole {
@@ -682,7 +682,7 @@ private extension String {
             .replacingOccurrences(of: "　", with: "")
             .lowercased()
         guard normalized.isEmpty == false else { return false }
-        return normalized != String(localized: "ba.common.none") &&
+        return normalized != BaL10n.string("ba.common.none") &&
             normalized != "-" &&
             normalized != "—" &&
             normalized != "--" &&

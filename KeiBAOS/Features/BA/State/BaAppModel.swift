@@ -56,6 +56,7 @@ final class BaAppModel {
         envelope = loadedEnvelope
         settings = loadedSettings
         officeSnapshot = officeRepository.snapshot(settings: loadedSettings)
+        BaL10n.configure(appLanguage: loadedEnvelope.globalSettings.appLanguage)
     }
 
     static func live() -> BaAppModel {
@@ -226,6 +227,7 @@ final class BaAppModel {
     ) {
         envelope = envelope.normalized()
         settings = envelope.flattenedSettings()
+        BaL10n.configure(appLanguage: envelope.globalSettings.appLanguage)
         settingsStore.saveEnvelope(envelope, updatedAt: updatedAt)
         if previousServer != settings.server {
             activityState = BaLoadableState()
@@ -255,6 +257,7 @@ final class BaAppModel {
         envelope.globalSettings.mediaAutoplayEnabled = next.mediaAutoplayEnabled
         envelope.globalSettings.mediaDownloadEnabled = next.mediaDownloadEnabled
         envelope.globalSettings.refreshInterval = next.refreshInterval
+        envelope.globalSettings.appLanguage = next.appLanguage
         envelope.globalSettings.favoriteContentIDs = next.favoriteContentIDs
         envelope.globalSettings.favoriteCatalogEntries = next.favoriteCatalogEntries
         envelope.globalSettings.dutyStudent = next.dutyStudent

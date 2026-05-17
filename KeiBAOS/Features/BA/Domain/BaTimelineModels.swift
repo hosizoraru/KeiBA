@@ -20,11 +20,11 @@ enum BaTimelineStatus: String, CaseIterable, Codable, Identifiable, Hashable {
     var title: String {
         switch self {
         case .running:
-            String(localized: "ba.status.running")
+            BaL10n.string("ba.status.running")
         case .upcoming:
-            String(localized: "ba.status.upcoming")
+            BaL10n.string("ba.status.upcoming")
         case .ended:
-            String(localized: "ba.status.ended")
+            BaL10n.string("ba.status.ended")
         }
     }
 

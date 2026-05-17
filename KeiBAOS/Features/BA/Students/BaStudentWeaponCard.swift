@@ -47,7 +47,7 @@ private struct BaStudentWeaponCard: View {
             VStack(alignment: .leading, spacing: 12) {
                 header
 
-                Text(card.description.ifBlank(String(localized: "ba.student.detail.weapon.description.empty")))
+                Text(card.description.ifBlank(BaL10n.string("ba.student.detail.weapon.description.empty")))
                     .font(.body)
                     .foregroundStyle(.primary)
                     .lineSpacing(3)
@@ -97,7 +97,7 @@ private struct BaStudentWeaponCard: View {
 
             Spacer(minLength: 8)
 
-            Text(String(localized: "ba.student.detail.weapon.short"))
+            Text(BaL10n.string("ba.student.detail.weapon.short"))
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(tint)
                 .lineLimit(1)
@@ -113,7 +113,7 @@ private struct BaStudentWeaponCard: View {
     private var statBlock: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
-                Text(String(localized: "ba.student.detail.weapon.stats"))
+                Text(BaL10n.string("ba.student.detail.weapon.stats"))
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.secondary)
 
@@ -201,7 +201,7 @@ private struct BaStudentWeaponStarEffectCard: View {
     }
 
     private var description: String {
-        effect.description(for: displayLevel).ifBlank(String(localized: "ba.student.detail.weapon.effect.empty"))
+        effect.description(for: displayLevel).ifBlank(BaL10n.string("ba.student.detail.weapon.effect.empty"))
     }
 
     private var hasDescription: Bool {
@@ -223,7 +223,7 @@ private struct BaStudentWeaponStarEffectCard: View {
                     )
                 }
 
-                Text(effect.name.ifBlank(String(localized: "ba.student.detail.weapon.effect")))
+                Text(effect.name.ifBlank(BaL10n.string("ba.student.detail.weapon.effect")))
                     .font(.headline.weight(.semibold))
                     .foregroundStyle(.primary)
                     .lineLimit(2)

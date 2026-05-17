@@ -18,6 +18,7 @@ enum BaDesign {
 
 enum BaPresentedSheet: String, Identifiable {
     case notifications
+    case settings
     case editOffice
     case debugTools
 
@@ -26,24 +27,42 @@ enum BaPresentedSheet: String, Identifiable {
     }
 
     var title: String {
+        BaL10n.string(titleKey)
+    }
+
+    var titleResource: LocalizedStringResource {
+        LocalizedStringResource(stringLiteral: titleKey)
+    }
+
+    private var titleKey: String {
         switch self {
         case .notifications:
-            String(localized: "ba.action.notifications.title")
+            "ba.action.notifications.title"
+        case .settings:
+            "ba.settings.title"
         case .editOffice:
-            String(localized: "ba.action.edit.title")
+            "ba.action.edit.title"
         case .debugTools:
-            String(localized: "ba.action.debug.title")
+            "ba.action.debug.title"
         }
     }
 
     var menuTitle: String {
+        BaL10n.string(menuTitleKey)
+    }
+
+    var menuTitleResource: LocalizedStringResource {
+        LocalizedStringResource(stringLiteral: menuTitleKey)
+    }
+
+    private var menuTitleKey: String {
         switch self {
-        case .notifications:
-            title
+        case .notifications, .settings:
+            titleKey
         case .editOffice:
-            String(localized: "ba.action.edit.menuTitle")
+            "ba.action.edit.menuTitle"
         case .debugTools:
-            String(localized: "ba.action.debug.menuTitle")
+            "ba.action.debug.menuTitle"
         }
     }
 
@@ -51,6 +70,8 @@ enum BaPresentedSheet: String, Identifiable {
         switch self {
         case .notifications:
             "bell"
+        case .settings:
+            "gearshape"
         case .editOffice:
             "square.and.pencil"
         case .debugTools:

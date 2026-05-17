@@ -68,7 +68,7 @@ struct BaStudentVoiceSection: View {
             }
         } footer: {
             if rows.isEmpty == false {
-                Text(String(format: String(localized: "ba.student.detail.voice.footer.format"), rows.count))
+                Text(String(format: BaL10n.string("ba.student.detail.voice.footer.format"), rows.count))
             }
         }
         .onAppear(perform: refreshSelections)
@@ -156,7 +156,7 @@ private struct BaVoiceControlPanel: View {
         VStack(alignment: .leading, spacing: 10) {
             if languages.count > 1 {
                 if languages.count <= 3 {
-                    Picker(String(localized: "ba.student.detail.voice.language.picker"), selection: $selectedLanguage) {
+                    Picker(BaL10n.string("ba.student.detail.voice.language.picker"), selection: $selectedLanguage) {
                         ForEach(languages, id: \.self) { header in
                             Text(BaVoiceLabelFormatter.languageTitle(header))
                                 .tag(header)
@@ -164,7 +164,7 @@ private struct BaVoiceControlPanel: View {
                     }
                     .pickerStyle(.segmented)
                 } else {
-                    Picker(String(localized: "ba.student.detail.voice.language.picker"), selection: $selectedLanguage) {
+                    Picker(BaL10n.string("ba.student.detail.voice.language.picker"), selection: $selectedLanguage) {
                         ForEach(languages, id: \.self) { header in
                             Text(BaVoiceLabelFormatter.languageTitle(header))
                                 .tag(header)
@@ -175,7 +175,7 @@ private struct BaVoiceControlPanel: View {
             }
 
             HStack(spacing: 12) {
-                Label(String(localized: "ba.student.detail.voice.filter.category"), systemImage: "line.3.horizontal.decrease.circle")
+                Label(BaL10n.string("ba.student.detail.voice.filter.category"), systemImage: "line.3.horizontal.decrease.circle")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
@@ -191,7 +191,7 @@ private struct BaVoiceControlPanel: View {
 
     private var visibleCountTitle: String {
         String(
-            format: String(localized: "ba.student.detail.voice.visibleCount.format"),
+            format: BaL10n.string("ba.student.detail.voice.visibleCount.format"),
             visibleCount,
             totalCount
         )
@@ -235,7 +235,7 @@ private struct BaVoiceFilterMenu: View {
         }
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityLabel(String(localized: "ba.student.detail.voice.filter.category"))
+        .accessibilityLabel(BaL10n.string("ba.student.detail.voice.filter.category"))
         .accessibilityValue(selection.title)
     }
 }
@@ -262,7 +262,7 @@ private struct BaVoiceNowPlayingRow: View {
                 .frame(width: 28)
 
             VStack(alignment: .leading, spacing: 5) {
-                Text(String(localized: "ba.student.detail.voice.nowPlaying"))
+                Text(BaL10n.string("ba.student.detail.voice.nowPlaying"))
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
                 Text(BaVoiceLabelFormatter.entryTitle(entry.title))
@@ -287,7 +287,7 @@ private struct BaVoiceNowPlayingRow: View {
                     .frame(width: 34, height: 34)
             }
             .buttonStyle(.glass)
-            .accessibilityLabel(String(localized: "ba.student.detail.voice.stop"))
+            .accessibilityLabel(BaL10n.string("ba.student.detail.voice.stop"))
         }
         .padding(.vertical, 4)
     }
@@ -311,7 +311,7 @@ private struct BaVoicePlaybackErrorRow: View {
 private struct BaVoiceEmptyFilteredRow: View {
     var body: some View {
         Label {
-            Text(String(localized: "ba.student.detail.voice.empty.filtered"))
+            Text(BaL10n.string("ba.student.detail.voice.empty.filtered"))
                 .font(BaTextToken.rowCaption)
                 .foregroundStyle(.secondary)
         } icon: {

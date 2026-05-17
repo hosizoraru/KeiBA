@@ -231,13 +231,13 @@ struct BaTimelineDatePair: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .top, spacing: 16) {
                 timelineColumn(
-                    title: String(localized: "ba.timeline.start"),
+                    title: BaL10n.string("ba.timeline.start"),
                     value: start,
                     systemImage: "calendar.badge.clock",
                     tint: .secondary
                 )
                 timelineColumn(
-                    title: String(localized: "ba.timeline.end"),
+                    title: BaL10n.string("ba.timeline.end"),
                     value: end,
                     systemImage: "calendar.badge.checkmark",
                     tint: tint

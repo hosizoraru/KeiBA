@@ -24,38 +24,38 @@ struct BaOverviewAPEditorSheet: View {
             Form {
                 Section {
                     numberField(
-                        title: String(localized: "ba.office.ap.current.title"),
+                        title: BaL10n.string("ba.office.ap.current.title"),
                         text: $currentText,
                         fallback: currentAP
                     )
                 } footer: {
-                    Text(String(localized: "ba.overview.ap.editor.current.footer"))
+                    Text(BaL10n.string("ba.overview.ap.editor.current.footer"))
                 }
 
                 Section {
                     numberField(
-                        title: String(localized: "ba.settings.ap.threshold.title"),
+                        title: BaL10n.string("ba.settings.ap.threshold.title"),
                         text: $thresholdText,
                         fallback: apThreshold
                     )
                     numberField(
-                        title: String(localized: "ba.office.ap.limit.title"),
+                        title: BaL10n.string("ba.office.ap.limit.title"),
                         text: $limitText,
                         fallback: apLimit
                     )
                 } footer: {
-                    Text(String(localized: "ba.overview.ap.editor.rules.footer"))
+                    Text(BaL10n.string("ba.overview.ap.editor.rules.footer"))
                 }
             }
-            .navigationTitle(String(localized: "ba.overview.ap.editor.title"))
+            .navigationTitle(BaL10n.string("ba.overview.ap.editor.title"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(String(localized: "ba.common.cancel")) {
+                    Button(BaL10n.string("ba.common.cancel")) {
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(String(localized: "ba.common.done"), action: save)
+                    Button(BaL10n.string("ba.common.done"), action: save)
                 }
             }
         }

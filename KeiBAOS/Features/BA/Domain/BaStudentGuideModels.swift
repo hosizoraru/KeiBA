@@ -22,17 +22,17 @@ nonisolated enum BaStudentDetailSection: String, CaseIterable, Codable, Identifi
     var title: String {
         switch self {
         case .profile:
-            String(localized: "ba.student.detail.section.profile")
+            BaL10n.string("ba.student.detail.section.profile")
         case .skills:
-            String(localized: "ba.student.detail.section.skills")
+            BaL10n.string("ba.student.detail.section.skills")
         case .growth:
-            String(localized: "ba.student.detail.section.growth")
+            BaL10n.string("ba.student.detail.section.growth")
         case .voice:
-            String(localized: "ba.student.detail.section.voice")
+            BaL10n.string("ba.student.detail.section.voice")
         case .gallery:
-            String(localized: "ba.student.detail.section.gallery")
+            BaL10n.string("ba.student.detail.section.gallery")
         case .simulate:
-            String(localized: "ba.student.detail.section.simulate")
+            BaL10n.string("ba.student.detail.section.simulate")
         }
     }
 
@@ -69,17 +69,17 @@ nonisolated enum BaStudentDetailPage: String, CaseIterable, Codable, Identifiabl
     var title: String {
         switch self {
         case .overviewProfile:
-            String(localized: "ba.student.detail.page.overviewProfile")
+            BaL10n.string("ba.student.detail.page.overviewProfile")
         case .skills:
-            String(localized: "ba.student.detail.page.skills")
+            BaL10n.string("ba.student.detail.page.skills")
         case .profile:
-            String(localized: "ba.student.detail.page.profile")
+            BaL10n.string("ba.student.detail.page.profile")
         case .voice:
-            String(localized: "ba.student.detail.page.voice")
+            BaL10n.string("ba.student.detail.page.voice")
         case .gallery:
-            String(localized: "ba.student.detail.page.gallery")
+            BaL10n.string("ba.student.detail.page.gallery")
         case .simulate:
-            String(localized: "ba.student.detail.page.simulate")
+            BaL10n.string("ba.student.detail.page.simulate")
         }
     }
 }
@@ -117,15 +117,15 @@ nonisolated enum BaGuideMediaKind: String, Codable, Hashable {
     var title: String {
         switch self {
         case .image:
-            String(localized: "ba.student.detail.media.image")
+            BaL10n.string("ba.student.detail.media.image")
         case .video:
-            String(localized: "ba.student.detail.media.video")
+            BaL10n.string("ba.student.detail.media.video")
         case .audio:
-            String(localized: "ba.student.detail.media.audio")
+            BaL10n.string("ba.student.detail.media.audio")
         case .live2d:
-            String(localized: "ba.student.detail.media.live2d")
+            BaL10n.string("ba.student.detail.media.live2d")
         case .unknown:
-            String(localized: "ba.student.detail.media.unknown")
+            BaL10n.string("ba.student.detail.media.unknown")
         }
     }
 }

@@ -23,26 +23,26 @@ nonisolated enum BaCatalogCategory: String, CaseIterable, Codable, Identifiable,
     var title: String {
         switch self {
         case .students:
-            String(localized: "ba.catalog.category.students")
+            BaL10n.string("ba.catalog.category.students")
         case .npcSatellite:
-            String(localized: "ba.catalog.category.npcSatellite")
+            BaL10n.string("ba.catalog.category.npcSatellite")
         case .studentBgm:
-            String(localized: "ba.catalog.category.studentBgm")
+            BaL10n.string("ba.catalog.category.studentBgm")
         case .favorites:
-            String(localized: "ba.catalog.category.favorites")
+            BaL10n.string("ba.catalog.category.favorites")
         }
     }
 
     var searchPrompt: String {
         switch self {
         case .students:
-            String(localized: "ba.catalog.search.students.prompt")
+            BaL10n.string("ba.catalog.search.students.prompt")
         case .npcSatellite:
-            String(localized: "ba.catalog.search.npc.prompt")
+            BaL10n.string("ba.catalog.search.npc.prompt")
         case .studentBgm:
-            String(localized: "ba.catalog.search.bgm.prompt")
+            BaL10n.string("ba.catalog.search.bgm.prompt")
         case .favorites:
-            String(localized: "ba.catalog.search.favorites.prompt")
+            BaL10n.string("ba.catalog.search.favorites.prompt")
         }
     }
 

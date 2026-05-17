@@ -45,7 +45,7 @@ struct BaLibraryView: View {
             musicPage(snapshot: snapshot, metrics: metrics)
                 .background(AppBackground())
         }
-        .searchable(text: $searchText, prompt: Text(String(localized: "ba.music.search.prompt")))
+        .searchable(text: $searchText, prompt: Text(BaL10n.string("ba.music.search.prompt")))
         .task {
             await model.loadCatalogIfNeeded()
         }
@@ -154,17 +154,17 @@ struct BaLibraryView: View {
             }
         } else if snapshot.tracks.isEmpty {
             ContentUnavailableView(
-                String(localized: "ba.music.empty.title"),
+                BaL10n.string("ba.music.empty.title"),
                 systemImage: "music.note",
-                description: Text(String(localized: "ba.music.empty.detail"))
+                description: Text(BaL10n.string("ba.music.empty.detail"))
             )
             .frame(maxWidth: .infinity)
             .padding(.vertical, 34)
         } else if snapshot.visibleTracks.isEmpty {
             ContentUnavailableView(
-                String(localized: "ba.catalog.empty.title"),
+                BaL10n.string("ba.catalog.empty.title"),
                 systemImage: "magnifyingglass",
-                description: Text(String(localized: "ba.music.empty.search.detail"))
+                description: Text(BaL10n.string("ba.music.empty.search.detail"))
             )
             .frame(maxWidth: .infinity)
             .padding(.vertical, 34)
@@ -195,7 +195,7 @@ struct BaLibraryView: View {
 
     private func trackSection(snapshot: BaMusicLibrarySnapshot, metrics: BaAdaptiveMetrics) -> some View {
         BaMusicQueueSection(
-            title: String(localized: "ba.music.queue.title"),
+            title: BaL10n.string("ba.music.queue.title"),
             tracks: snapshot.visibleTracks,
             thumbnailSize: metrics.catalogThumbnailSize,
             thumbnailMaxPixelDimension: metrics.catalogThumbnailMaxPixelDimension,
@@ -214,10 +214,10 @@ struct BaLibraryView: View {
 
     private func libraryStatusText(snapshot: BaMusicLibrarySnapshot) -> String? {
         if let error = model.catalogState.errorMessage, error.isEmpty == false {
-            return String(format: String(localized: "ba.state.error.format"), error)
+            return String(format: BaL10n.string("ba.state.error.format"), error)
         }
         if snapshot.playableTracks.isEmpty, snapshot.tracks.isEmpty == false {
-            return String(localized: "ba.music.library.loading.subtitle")
+            return BaL10n.string("ba.music.library.loading.subtitle")
         }
         return nil
     }

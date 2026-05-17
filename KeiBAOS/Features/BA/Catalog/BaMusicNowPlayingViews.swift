@@ -111,7 +111,7 @@ struct BaMusicMiniNowPlayingBar: View {
         }
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityLabel(Text(String(format: String(localized: "ba.music.mini.accessibility.format"), track.title)))
+        .accessibilityLabel(Text(String(format: BaL10n.string("ba.music.mini.accessibility.format"), track.title)))
     }
 
     private var miniPlayButton: some View {
@@ -125,7 +125,7 @@ struct BaMusicMiniNowPlayingBar: View {
                 .contentShape(Circle())
         }
         .buttonStyle(BaMusicControlButtonStyle())
-        .accessibilityLabel(Text(session.player.isPlaying ? String(localized: "ba.music.action.pause") : String(localized: "ba.music.action.play")))
+        .accessibilityLabel(Text(session.player.isPlaying ? BaL10n.string("ba.music.action.pause") : BaL10n.string("ba.music.action.play")))
     }
 
     private var miniNextButton: some View {
@@ -141,7 +141,7 @@ struct BaMusicMiniNowPlayingBar: View {
         .buttonStyle(BaMusicControlButtonStyle())
         .disabled(session.queue.count < 2)
         .opacity(session.queue.count < 2 ? 0.42 : 1)
-        .accessibilityLabel(Text(String(localized: "ba.music.action.next")))
+        .accessibilityLabel(Text(BaL10n.string("ba.music.action.next")))
     }
 
     private var displayMode: BaMusicMiniNowPlayingDisplayMode {
@@ -226,11 +226,11 @@ struct BaMusicNowPlayingHero: View {
                 .frame(width: 58, height: 58)
                 .baMusicGlassSurface(cornerRadius: 18, isInteractive: false)
 
-            Text(String(localized: "ba.music.nowPlaying.placeholder.title"))
+            Text(BaL10n.string("ba.music.nowPlaying.placeholder.title"))
                 .font(.title3.weight(.semibold))
                 .multilineTextAlignment(.center)
 
-            Text(String(localized: "ba.music.nowPlaying.placeholder.detail"))
+            Text(BaL10n.string("ba.music.nowPlaying.placeholder.detail"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -259,7 +259,7 @@ struct BaMusicNowPlayingHero: View {
     private func trackInfo(_ track: BaMusicTrack, accent: Color) -> some View {
         VStack(spacing: 6) {
             if showsPlayingLabel, session.selectedTrack?.id == track.id, session.player.isPlaying {
-                Label(String(localized: "ba.music.nowPlaying.title"), systemImage: "waveform")
+                Label(BaL10n.string("ba.music.nowPlaying.title"), systemImage: "waveform")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(accent)
                     .labelStyle(.titleAndIcon)
@@ -394,7 +394,7 @@ private struct BaMusicTransportControls: View {
                     size: regularSize * scale,
                     accent: accent,
                     isDisabled: session.canPlayPrevious == false,
-                    accessibilityLabel: String(localized: "ba.music.action.previous")
+                    accessibilityLabel: BaL10n.string("ba.music.action.previous")
                 ) {
                     session.playPrevious()
                 }
@@ -406,7 +406,7 @@ private struct BaMusicTransportControls: View {
                     accent: accent,
                     isProminent: true,
                     isDisabled: track.isPlayable == false,
-                    accessibilityLabel: isCurrentPlaying ? String(localized: "ba.music.action.pause") : String(localized: "ba.music.action.play")
+                    accessibilityLabel: isCurrentPlaying ? BaL10n.string("ba.music.action.pause") : BaL10n.string("ba.music.action.play")
                 ) {
                     session.play(track)
                 }
@@ -416,7 +416,7 @@ private struct BaMusicTransportControls: View {
                     size: regularSize * scale,
                     accent: accent,
                     isDisabled: session.queue.count < 2,
-                    accessibilityLabel: String(localized: "ba.music.action.next")
+                    accessibilityLabel: BaL10n.string("ba.music.action.next")
                 ) {
                     session.playNext()
                 }
@@ -427,7 +427,7 @@ private struct BaMusicTransportControls: View {
                         size: compactSize * scale,
                         accent: accent,
                         isDisabled: session.hasCurrentTrack == false,
-                        accessibilityLabel: String(localized: "ba.music.action.stop")
+                        accessibilityLabel: BaL10n.string("ba.music.action.stop")
                     ) {
                         session.stop()
                     }
@@ -561,7 +561,7 @@ struct BaMusicNowPlayingSheet: View {
 
                         if session.queue.isEmpty == false {
                             BaMusicQueueSection(
-                                title: String(localized: "ba.music.queue.title"),
+                                title: BaL10n.string("ba.music.queue.title"),
                                 tracks: session.queue,
                                 thumbnailSize: metrics.catalogThumbnailSize,
                                 thumbnailMaxPixelDimension: metrics.catalogThumbnailMaxPixelDimension,
@@ -586,11 +586,11 @@ struct BaMusicNowPlayingSheet: View {
                 }
                 .background(AppBackground())
             }
-            .navigationTitle(String(localized: "ba.music.nowPlaying.title"))
+            .navigationTitle(BaL10n.string("ba.music.nowPlaying.title"))
             .platformInlineNavigationTitle()
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(String(localized: "ba.action.dismiss")) {
+                    Button(BaL10n.string("ba.action.dismiss")) {
                         session.isExpanded = false
                         dismiss()
                     }
@@ -618,7 +618,7 @@ private struct BaMusicProgressControl: View {
                 onEditingChanged: handleEditingChanged
             )
             .tint(accent)
-            .accessibilityLabel(Text(String(localized: "ba.music.progress.accessibility")))
+            .accessibilityLabel(Text(BaL10n.string("ba.music.progress.accessibility")))
             .accessibilityValue(Text("\(elapsedText) / \(durationText)"))
 
             HStack {

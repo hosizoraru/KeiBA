@@ -22,17 +22,17 @@ struct BaOverviewCafeEditorSheet: View {
             Form {
                 Section {
                     Stepper(value: $level, in: 1 ... 10) {
-                        LabeledContent(String(localized: "ba.cafe.level.title")) {
+                        LabeledContent(BaL10n.string("ba.cafe.level.title")) {
                             Text("Lv\(level)")
                                 .monospacedDigit()
                         }
                     }
                 } footer: {
-                    Text(String(localized: "ba.overview.cafe.editor.level.footer"))
+                    Text(BaL10n.string("ba.overview.cafe.editor.level.footer"))
                 }
 
                 Section {
-                    LabeledContent(String(localized: "ba.settings.cafe.threshold.title")) {
+                    LabeledContent(BaL10n.string("ba.settings.cafe.threshold.title")) {
                         TextField("\(cafeThreshold)", text: $thresholdText)
                             .multilineTextAlignment(.trailing)
                             .monospacedDigit()
@@ -48,18 +48,18 @@ struct BaOverviewCafeEditorSheet: View {
                         #endif
                     }
                 } footer: {
-                    Text(String(localized: "ba.overview.cafe.editor.threshold.footer"))
+                    Text(BaL10n.string("ba.overview.cafe.editor.threshold.footer"))
                 }
             }
-            .navigationTitle(String(localized: "ba.overview.cafe.editor.title"))
+            .navigationTitle(BaL10n.string("ba.overview.cafe.editor.title"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(String(localized: "ba.common.cancel")) {
+                    Button(BaL10n.string("ba.common.cancel")) {
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(String(localized: "ba.common.done"), action: save)
+                    Button(BaL10n.string("ba.common.done"), action: save)
                 }
             }
         }

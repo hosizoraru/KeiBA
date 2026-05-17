@@ -45,7 +45,7 @@ struct BaStudentSimulationCardsSection: View {
                     title: BaStudentSimulationSectionName.favorite.rawValue,
                     rows: data.favoriteRows,
                     hint: data.favoriteHint,
-                    emptyText: String(localized: "ba.common.none"),
+                    emptyText: BaL10n.string("ba.common.none"),
                     tint: tint
                 )
                 .baStudentDetailListCardRow()
@@ -117,13 +117,13 @@ private struct BaStudentSimulationAbilityCard: View {
         BaGlassCard(tint: tint) {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(alignment: .top, spacing: 12) {
-                    Text(String(localized: "ba.student.detail.simulate.ability.title"))
+                    Text(BaL10n.string("ba.student.detail.simulate.ability.title"))
                         .font(.title3.weight(.semibold))
                         .foregroundStyle(.primary)
 
                     Spacer(minLength: 8)
 
-                    Picker(String(localized: "ba.student.detail.page.simulate"), selection: $mode) {
+                    Picker(BaL10n.string("ba.student.detail.page.simulate"), selection: $mode) {
                         ForEach(BaStudentSimulationAbilityMode.allCases) { option in
                             Text(option.title).tag(option)
                         }
@@ -141,7 +141,7 @@ private struct BaStudentSimulationAbilityCard: View {
                 }
 
                 if selectedRows.isEmpty {
-                    Text(String(localized: "ba.common.none"))
+                    Text(BaL10n.string("ba.common.none"))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 } else {
@@ -462,7 +462,7 @@ private struct BaStudentSimulationRowItem: View {
     }
 
     private var value: String {
-        row.value.trimmingCharacters(in: .whitespacesAndNewlines).ifBlank(String(localized: "ba.common.none"))
+        row.value.trimmingCharacters(in: .whitespacesAndNewlines).ifBlank(BaL10n.string("ba.common.none"))
     }
 
     var body: some View {
@@ -539,7 +539,7 @@ private struct BaStudentSimulationRowItem: View {
 
 private struct BaStudentSimulationEmptyText: View {
     var body: some View {
-        Text(String(localized: "ba.common.none"))
+        Text(BaL10n.string("ba.common.none"))
             .font(.subheadline)
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -557,9 +557,9 @@ private enum BaStudentSimulationAbilityMode: String, CaseIterable, Identifiable 
     var title: String {
         switch self {
         case .initial:
-            String(localized: "ba.student.detail.simulate.initial")
+            BaL10n.string("ba.student.detail.simulate.initial")
         case .maximum:
-            String(localized: "ba.student.detail.simulate.maximum")
+            BaL10n.string("ba.student.detail.simulate.maximum")
         }
     }
 }

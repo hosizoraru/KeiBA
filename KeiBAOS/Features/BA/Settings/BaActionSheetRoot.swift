@@ -23,10 +23,30 @@ struct BaActionSheetRoot: View {
         switch sheet {
         case .notifications:
             BaNotificationSettingsSheet()
+        case .settings:
+            BaSettingsSheet()
         case .editOffice:
             BaEditOfficeSheet()
         case .debugTools:
             BaDebugToolsSheet()
+        }
+    }
+}
+
+private struct BaSettingsSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            BaSettingsView()
+                .navigationTitle(BaL10n.string("ba.settings.title"))
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(BaL10n.string("ba.common.done")) {
+                            dismiss()
+                        }
+                    }
+                }
         }
     }
 }
@@ -47,7 +67,7 @@ private struct BaNotificationSettingsSheet: View {
 
                 Spacer()
 
-                Button(String(localized: "ba.common.done")) {
+                Button(BaL10n.string("ba.common.done")) {
                     dismiss()
                 }
                 .keyboardShortcut(.defaultAction)
@@ -81,13 +101,13 @@ private struct BaNotificationSettingsSheet: View {
                     .foregroundStyle(authorizationStatus.foregroundStyle)
 
                     if authorizationStatus.canRequestAuthorization {
-                        Button(String(localized: "ba.sheet.notifications.permission.request")) {
+                        Button(BaL10n.string("ba.sheet.notifications.permission.request")) {
                             Task {
                                 await requestAuthorizationAndRefresh(forceRequest: true)
                             }
                         }
                     } else if authorizationStatus.canOpenSystemSettings {
-                        Button(String(localized: "ba.sheet.notifications.permission.openSettings")) {
+                        Button(BaL10n.string("ba.sheet.notifications.permission.openSettings")) {
                             openSystemNotificationSettings()
                         }
                     }
@@ -96,48 +116,48 @@ private struct BaNotificationSettingsSheet: View {
                 }
 
                 Section {
-                    Toggle(String(localized: "ba.sheet.notifications.ap.title"), isOn: profileBinding(\.apNotificationsEnabled))
-                    Toggle(String(localized: "ba.sheet.notifications.cafeAp.title"), isOn: profileBinding(\.cafeApNotificationsEnabled))
-                    Toggle(String(localized: "ba.sheet.notifications.visit.title"), isOn: profileBinding(\.visitNotificationsEnabled))
+                    Toggle(BaL10n.string("ba.sheet.notifications.ap.title"), isOn: profileBinding(\.apNotificationsEnabled))
+                    Toggle(BaL10n.string("ba.sheet.notifications.cafeAp.title"), isOn: profileBinding(\.cafeApNotificationsEnabled))
+                    Toggle(BaL10n.string("ba.sheet.notifications.visit.title"), isOn: profileBinding(\.visitNotificationsEnabled))
                     Toggle(
-                        String(localized: "ba.settings.arena.notifications.title"),
+                        BaL10n.string("ba.settings.arena.notifications.title"),
                         isOn: profileBinding(\.arenaRefreshNotificationsEnabled)
                     )
                 } header: {
-                    Text(String(localized: "ba.settings.resources.section"))
+                    Text(BaL10n.string("ba.settings.resources.section"))
                 } footer: {
                     notificationFooterText("ba.sheet.notifications.resources.footer")
                 }
 
                 Section {
                     Toggle(
-                        String(localized: "ba.settings.activity.start.notifications.title"),
+                        BaL10n.string("ba.settings.activity.start.notifications.title"),
                         isOn: globalBoolBinding(\.calendarUpcomingNotificationsEnabled)
                     )
                     Toggle(
-                        String(localized: "ba.settings.activity.end.notifications.title"),
+                        BaL10n.string("ba.settings.activity.end.notifications.title"),
                         isOn: globalBoolBinding(\.calendarEndingNotificationsEnabled)
                     )
                     Toggle(
-                        String(localized: "ba.settings.pool.start.notifications.title"),
+                        BaL10n.string("ba.settings.pool.start.notifications.title"),
                         isOn: globalBoolBinding(\.poolUpcomingNotificationsEnabled)
                     )
                     Toggle(
-                        String(localized: "ba.settings.pool.end.notifications.title"),
+                        BaL10n.string("ba.settings.pool.end.notifications.title"),
                         isOn: globalBoolBinding(\.poolEndingNotificationsEnabled)
                     )
                     Toggle(
-                        String(localized: "ba.settings.calendarPool.change.notifications.title"),
+                        BaL10n.string("ba.settings.calendarPool.change.notifications.title"),
                         isOn: globalBoolBinding(\.calendarPoolChangeNotificationsEnabled)
                     )
-                    Picker(String(localized: "ba.settings.notifyLead.title"), selection: notifyLeadBinding) {
+                    Picker(BaL10n.string("ba.settings.notifyLead.title"), selection: notifyLeadBinding) {
                         ForEach(BaCalendarPoolNotifyLead.allCases) { lead in
                             Text(lead.title)
                                 .tag(lead)
                         }
                     }
                 } header: {
-                    Text(String(localized: "ba.settings.activityPool.title"))
+                    Text(BaL10n.string("ba.settings.activityPool.title"))
                 } footer: {
                     notificationFooterText("ba.sheet.notifications.activityPool.footer")
                 }
@@ -157,7 +177,7 @@ private struct BaNotificationSettingsSheet: View {
             }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(String(localized: "ba.common.done")) {
+                    Button(BaL10n.string("ba.common.done")) {
                         dismiss()
                     }
                 }
@@ -180,13 +200,13 @@ private struct BaNotificationSettingsSheet: View {
                         .font(.headline)
 
                         if authorizationStatus.canRequestAuthorization {
-                            Button(String(localized: "ba.sheet.notifications.permission.request")) {
+                            Button(BaL10n.string("ba.sheet.notifications.permission.request")) {
                                 Task {
                                     await requestAuthorizationAndRefresh(forceRequest: true)
                                 }
                             }
                         } else if authorizationStatus.canOpenSystemSettings {
-                            Button(String(localized: "ba.sheet.notifications.permission.openSettings")) {
+                            Button(BaL10n.string("ba.sheet.notifications.permission.openSettings")) {
                                 openSystemNotificationSettings()
                             }
                         }
@@ -195,46 +215,46 @@ private struct BaNotificationSettingsSheet: View {
                     }
                 }
 
-                macSettingsGroup(String(localized: "ba.settings.resources.section")) {
+                macSettingsGroup(BaL10n.string("ba.settings.resources.section")) {
                     VStack(alignment: .leading, spacing: 10) {
-                        Toggle(String(localized: "ba.sheet.notifications.ap.title"), isOn: profileBinding(\.apNotificationsEnabled))
-                        Toggle(String(localized: "ba.sheet.notifications.cafeAp.title"), isOn: profileBinding(\.cafeApNotificationsEnabled))
-                        Toggle(String(localized: "ba.sheet.notifications.visit.title"), isOn: profileBinding(\.visitNotificationsEnabled))
+                        Toggle(BaL10n.string("ba.sheet.notifications.ap.title"), isOn: profileBinding(\.apNotificationsEnabled))
+                        Toggle(BaL10n.string("ba.sheet.notifications.cafeAp.title"), isOn: profileBinding(\.cafeApNotificationsEnabled))
+                        Toggle(BaL10n.string("ba.sheet.notifications.visit.title"), isOn: profileBinding(\.visitNotificationsEnabled))
                         Toggle(
-                            String(localized: "ba.settings.arena.notifications.title"),
+                            BaL10n.string("ba.settings.arena.notifications.title"),
                             isOn: profileBinding(\.arenaRefreshNotificationsEnabled)
                         )
                         notificationFooterText("ba.sheet.notifications.resources.footer")
                     }
                 }
 
-                macSettingsGroup(String(localized: "ba.settings.activityPool.title")) {
+                macSettingsGroup(BaL10n.string("ba.settings.activityPool.title")) {
                     VStack(alignment: .leading, spacing: 10) {
                         Toggle(
-                            String(localized: "ba.settings.activity.start.notifications.title"),
+                            BaL10n.string("ba.settings.activity.start.notifications.title"),
                             isOn: globalBoolBinding(\.calendarUpcomingNotificationsEnabled)
                         )
                         Toggle(
-                            String(localized: "ba.settings.activity.end.notifications.title"),
+                            BaL10n.string("ba.settings.activity.end.notifications.title"),
                             isOn: globalBoolBinding(\.calendarEndingNotificationsEnabled)
                         )
                         Toggle(
-                            String(localized: "ba.settings.pool.start.notifications.title"),
+                            BaL10n.string("ba.settings.pool.start.notifications.title"),
                             isOn: globalBoolBinding(\.poolUpcomingNotificationsEnabled)
                         )
                         Toggle(
-                            String(localized: "ba.settings.pool.end.notifications.title"),
+                            BaL10n.string("ba.settings.pool.end.notifications.title"),
                             isOn: globalBoolBinding(\.poolEndingNotificationsEnabled)
                         )
                         Toggle(
-                            String(localized: "ba.settings.calendarPool.change.notifications.title"),
+                            BaL10n.string("ba.settings.calendarPool.change.notifications.title"),
                             isOn: globalBoolBinding(\.calendarPoolChangeNotificationsEnabled)
                         )
 
                         HStack {
-                            Text(String(localized: "ba.settings.notifyLead.title"))
+                            Text(BaL10n.string("ba.settings.notifyLead.title"))
                             Spacer()
-                            Picker(String(localized: "ba.settings.notifyLead.title"), selection: notifyLeadBinding) {
+                            Picker(BaL10n.string("ba.settings.notifyLead.title"), selection: notifyLeadBinding) {
                                 ForEach(BaCalendarPoolNotifyLead.allCases) { lead in
                                     Text(lead.title)
                                         .tag(lead)
@@ -248,7 +268,7 @@ private struct BaNotificationSettingsSheet: View {
                     }
                 }
 
-                macSettingsGroup(String(localized: "ba.sheet.notifications.test.title")) {
+                macSettingsGroup(BaL10n.string("ba.sheet.notifications.test.title")) {
                     VStack(alignment: .leading, spacing: 10) {
                         testActionButtons
                         testStatusText
@@ -284,7 +304,7 @@ private struct BaNotificationSettingsSheet: View {
             testActionButtons
             testStatusText
         } header: {
-            Text(String(localized: "ba.sheet.notifications.test.title"))
+            Text(BaL10n.string("ba.sheet.notifications.test.title"))
         } footer: {
             notificationFooterText("ba.sheet.notifications.test.footer")
         }
@@ -297,7 +317,7 @@ private struct BaNotificationSettingsSheet: View {
                 await sendTestNotification()
             }
         } label: {
-            Label(String(localized: "ba.sheet.notifications.test.local"), systemImage: "bell.badge")
+            Label(BaL10n.string("ba.sheet.notifications.test.local"), systemImage: "bell.badge")
         }
 
         #if os(iOS)
@@ -306,7 +326,7 @@ private struct BaNotificationSettingsSheet: View {
                 await startTestLiveActivity()
             }
         } label: {
-            Label(String(localized: "ba.sheet.notifications.test.live"), systemImage: "timer")
+            Label(BaL10n.string("ba.sheet.notifications.test.live"), systemImage: "timer")
         }
 
         Button(role: .destructive) {
@@ -314,10 +334,10 @@ private struct BaNotificationSettingsSheet: View {
                 await endTestLiveActivities()
             }
         } label: {
-            Label(String(localized: "ba.sheet.notifications.test.live.end"), systemImage: "xmark.circle")
+            Label(BaL10n.string("ba.sheet.notifications.test.live.end"), systemImage: "xmark.circle")
         }
         #else
-        Text(String(localized: "ba.sheet.notifications.test.live.unavailable"))
+        Text(BaL10n.string("ba.sheet.notifications.test.live.unavailable"))
             .font(.footnote)
             .foregroundStyle(.secondary)
             .fixedSize(horizontal: false, vertical: true)
@@ -334,8 +354,8 @@ private struct BaNotificationSettingsSheet: View {
         }
     }
 
-    private func notificationFooterText(_ key: LocalizedStringResource) -> some View {
-        Text(String(localized: key))
+    private func notificationFooterText(_ key: String) -> some View {
+        Text(BaL10n.string(key))
             .font(.footnote)
             .foregroundStyle(.secondary)
             .lineLimit(nil)
@@ -413,20 +433,20 @@ private struct BaNotificationSettingsSheet: View {
         await model.sendTestNotification()
         await refreshAuthorizationStatus()
         testStatus = authorizationStatus.allowsDelivery
-            ? String(localized: "ba.sheet.notifications.test.local.sent")
-            : String(localized: "ba.sheet.notifications.test.permissionNeeded")
+            ? BaL10n.string("ba.sheet.notifications.test.local.sent")
+            : BaL10n.string("ba.sheet.notifications.test.permissionNeeded")
     }
 
     private func startTestLiveActivity() async {
         let started = await model.startTestLiveActivity()
         testStatus = started
-            ? String(localized: "ba.sheet.notifications.test.live.started")
-            : String(localized: "ba.sheet.notifications.test.live.permissionNeeded")
+            ? BaL10n.string("ba.sheet.notifications.test.live.started")
+            : BaL10n.string("ba.sheet.notifications.test.live.permissionNeeded")
     }
 
     private func endTestLiveActivities() async {
         await model.endTestLiveActivities()
-        testStatus = String(localized: "ba.sheet.notifications.test.live.ended")
+        testStatus = BaL10n.string("ba.sheet.notifications.test.live.ended")
     }
 
     private func openSystemNotificationSettings() {
@@ -467,17 +487,17 @@ private enum BaNotificationAuthorizationStatus: Equatable {
     var title: String {
         switch self {
         case .checking:
-            String(localized: "ba.sheet.notifications.permission.checking")
+            BaL10n.string("ba.sheet.notifications.permission.checking")
         case .allowed:
-            String(localized: "ba.sheet.notifications.permission.allowed")
+            BaL10n.string("ba.sheet.notifications.permission.allowed")
         case .provisional:
-            String(localized: "ba.sheet.notifications.permission.provisional")
+            BaL10n.string("ba.sheet.notifications.permission.provisional")
         case .denied:
-            String(localized: "ba.sheet.notifications.permission.denied")
+            BaL10n.string("ba.sheet.notifications.permission.denied")
         case .notDetermined:
-            String(localized: "ba.sheet.notifications.permission.notDetermined")
+            BaL10n.string("ba.sheet.notifications.permission.notDetermined")
         case .unknown:
-            String(localized: "ba.sheet.notifications.permission.unknown")
+            BaL10n.string("ba.sheet.notifications.permission.unknown")
         }
     }
 
@@ -532,62 +552,7 @@ private struct BaEditOfficeSheet: View {
     @State private var draft = BaAppSettings.defaults()
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    Toggle(
-                        String(localized: "ba.settings.identity.independent.title"),
-                        isOn: $draft.identityIndependentByServer
-                    )
-                    TextField(
-                        String(localized: "ba.office.nickname.label"),
-                        text: $draft.nickname,
-                        prompt: Text(String(localized: "ba.office.nickname.prompt"))
-                    )
-                    TextField(
-                        String(localized: "ba.office.friendCode.label"),
-                        text: $draft.friendCode,
-                        prompt: Text(String(localized: "ba.office.friendCode.prompt"))
-                    )
-                    .monospaced()
-                    .autocorrectionDisabled()
-                    #if os(iOS)
-                        .textInputAutocapitalization(.characters)
-                    #endif
-                    Picker(String(localized: "ba.office.server.label"), selection: $draft.server) {
-                        ForEach(BaServer.allCases) { server in
-                            Text(server.title)
-                                .tag(server)
-                        }
-                    }
-                } header: {
-                    Text(String(localized: "ba.sheet.edit.identity.title"))
-                } footer: {
-                    Text(String(localized: "ba.sheet.edit.identity.footer"))
-                }
-
-                Section {
-                    LabeledContent(String(localized: "ba.office.ap.limit.title")) {
-                        TextField("240", value: $draft.apLimit, format: .number)
-                            .multilineTextAlignment(.trailing)
-                            .monospacedDigit()
-                        #if os(iOS)
-                            .keyboardType(.numberPad)
-                        #endif
-                    }
-                    Stepper(value: $draft.cafeLevel, in: 1 ... 10) {
-                        LabeledContent(String(localized: "ba.cafe.level.title")) {
-                            Text("Lv\(draft.cafeLevel)")
-                                .monospacedDigit()
-                        }
-                    }
-                } header: {
-                    Text(String(localized: "ba.sheet.edit.resources.title"))
-                } footer: {
-                    Text(String(localized: "ba.sheet.edit.resources.footer"))
-                }
-            }
-            .navigationTitle(BaPresentedSheet.editOffice.title)
+        content
             .onAppear {
                 draft = model.settings
             }
@@ -597,26 +562,252 @@ private struct BaEditOfficeSheet: View {
                     draft.friendCode = sanitized
                 }
             }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        #if os(macOS)
+            macContent
+        #else
+            touchContent
+        #endif
+    }
+
+    #if os(macOS)
+    private var macContent: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text(BaPresentedSheet.editOffice.title)
+                    .font(.title3.weight(.semibold))
+
+                Spacer()
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 18)
+
+            Divider()
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    macEditGroup(
+                        title: BaL10n.string("ba.sheet.edit.identity.title"),
+                        footer: BaL10n.string("ba.sheet.edit.identity.footer")
+                    ) {
+                        macToggleRow {
+                            Toggle(
+                                BaL10n.string("ba.settings.identity.independent.title"),
+                                isOn: $draft.identityIndependentByServer
+                            )
+                        }
+
+                        macEditRow(BaL10n.string("ba.office.nickname.label")) {
+                            TextField(
+                                BaL10n.string("ba.office.nickname.label"),
+                                text: $draft.nickname,
+                                prompt: Text(BaL10n.string("ba.office.nickname.prompt"))
+                            )
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 280)
+                        }
+
+                        macEditRow(BaL10n.string("ba.office.friendCode.label")) {
+                            TextField(
+                                BaL10n.string("ba.office.friendCode.label"),
+                                text: $draft.friendCode,
+                                prompt: Text(BaL10n.string("ba.office.friendCode.prompt"))
+                            )
+                            .textFieldStyle(.roundedBorder)
+                            .monospaced()
+                            .autocorrectionDisabled()
+                            .frame(width: 180)
+                        }
+
+                        macEditRow(BaL10n.string("ba.office.server.label")) {
+                            Picker(BaL10n.string("ba.office.server.label"), selection: $draft.server) {
+                                ForEach(BaServer.allCases) { server in
+                                    Text(server.title)
+                                        .tag(server)
+                                }
+                            }
+                            .labelsHidden()
+                            .pickerStyle(.menu)
+                            .frame(width: 140, alignment: .leading)
+                        }
+                    }
+
+                    macEditGroup(
+                        title: BaL10n.string("ba.sheet.edit.resources.title"),
+                        footer: BaL10n.string("ba.sheet.edit.resources.footer")
+                    ) {
+                        macEditRow(BaL10n.string("ba.office.ap.limit.title")) {
+                            TextField("240", value: $draft.apLimit, format: .number)
+                                .textFieldStyle(.roundedBorder)
+                                .multilineTextAlignment(.trailing)
+                                .monospacedDigit()
+                                .frame(width: 96)
+                        }
+
+                        macEditRow(BaL10n.string("ba.cafe.level.title")) {
+                            Stepper(value: $draft.cafeLevel, in: 1 ... 10) {
+                                Text("Lv\(draft.cafeLevel)")
+                                    .monospacedDigit()
+                                    .frame(width: 48, alignment: .leading)
+                            }
+                            .frame(width: 150, alignment: .leading)
+                        }
+                    }
+                }
+                .padding(24)
+            }
+
+            Divider()
+
+            HStack {
+                Spacer()
+                Button(BaL10n.string("ba.common.cancel")) {
+                    dismiss()
+                }
+                .keyboardShortcut(.cancelAction)
+
+                Button(BaL10n.string("ba.common.done")) {
+                    saveAndDismiss()
+                }
+                .keyboardShortcut(.defaultAction)
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 16)
+        }
+        .frame(width: 640, height: 520)
+    }
+
+    private func macEditGroup<Content: View>(
+        title: String,
+        footer: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.headline)
+
+            VStack(alignment: .leading, spacing: 12) {
+                content()
+            }
+
+            Text(footer)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    private func macEditRow<Content: View>(
+        _ title: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 16) {
+            Text(title)
+                .foregroundStyle(.secondary)
+                .frame(width: 96, alignment: .trailing)
+
+            content()
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func macToggleRow<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 16) {
+            Spacer()
+                .frame(width: 96)
+            content()
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+    #endif
+
+    private var touchContent: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Toggle(
+                        BaL10n.string("ba.settings.identity.independent.title"),
+                        isOn: $draft.identityIndependentByServer
+                    )
+                    TextField(
+                        BaL10n.string("ba.office.nickname.label"),
+                        text: $draft.nickname,
+                        prompt: Text(BaL10n.string("ba.office.nickname.prompt"))
+                    )
+                    TextField(
+                        BaL10n.string("ba.office.friendCode.label"),
+                        text: $draft.friendCode,
+                        prompt: Text(BaL10n.string("ba.office.friendCode.prompt"))
+                    )
+                    .monospaced()
+                    .autocorrectionDisabled()
+                    #if os(iOS)
+                        .textInputAutocapitalization(.characters)
+                    #endif
+                    Picker(BaL10n.string("ba.office.server.label"), selection: $draft.server) {
+                        ForEach(BaServer.allCases) { server in
+                            Text(server.title)
+                                .tag(server)
+                        }
+                    }
+                } header: {
+                    Text(BaL10n.string("ba.sheet.edit.identity.title"))
+                } footer: {
+                    Text(BaL10n.string("ba.sheet.edit.identity.footer"))
+                }
+
+                Section {
+                    LabeledContent(BaL10n.string("ba.office.ap.limit.title")) {
+                        TextField("240", value: $draft.apLimit, format: .number)
+                            .multilineTextAlignment(.trailing)
+                            .monospacedDigit()
+                        #if os(iOS)
+                            .keyboardType(.numberPad)
+                        #endif
+                    }
+                    Stepper(value: $draft.cafeLevel, in: 1 ... 10) {
+                        LabeledContent(BaL10n.string("ba.cafe.level.title")) {
+                            Text("Lv\(draft.cafeLevel)")
+                                .monospacedDigit()
+                        }
+                    }
+                } header: {
+                    Text(BaL10n.string("ba.sheet.edit.resources.title"))
+                } footer: {
+                    Text(BaL10n.string("ba.sheet.edit.resources.footer"))
+                }
+            }
+            .navigationTitle(BaPresentedSheet.editOffice.title)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(String(localized: "ba.common.cancel")) {
+                    Button(BaL10n.string("ba.common.cancel")) {
                         dismiss()
                     }
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(String(localized: "ba.common.done")) {
-                        model.updateSettings { settings in
-                            settings = draft
-                            settings.friendCode = BaFriendCodeFormat.normalized(settings.friendCode)
-                            settings.apLimit = min(max(settings.apLimit, 0), BaTimeMath.apLimitMax)
-                            settings.cafeLevel = min(max(settings.cafeLevel, 1), 10)
-                        }
-                        dismiss()
+                    Button(BaL10n.string("ba.common.done")) {
+                        saveAndDismiss()
                     }
                 }
             }
         }
+    }
+
+    private func saveAndDismiss() {
+        model.updateSettings { settings in
+            settings = draft
+            settings.friendCode = BaFriendCodeFormat.normalized(settings.friendCode)
+            settings.apLimit = min(max(settings.apLimit, 0), BaTimeMath.apLimitMax)
+            settings.cafeLevel = min(max(settings.cafeLevel, 1), 10)
+        }
+        dismiss()
     }
 }
 
@@ -627,8 +818,8 @@ private struct BaDebugToolsSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                Section(String(localized: "ba.sheet.debug.state.title")) {
-                    LabeledContent(String(localized: "ba.sheet.debug.build.title")) {
+                Section(BaL10n.string("ba.sheet.debug.state.title")) {
+                    LabeledContent(BaL10n.string("ba.sheet.debug.build.title")) {
                         Text(AppPlatformBaseline.summary)
                     }
                     ForEach(AppPlatformBaseline.allCases) { baseline in
@@ -636,10 +827,10 @@ private struct BaDebugToolsSheet: View {
                             Text(baseline.minimumVersion)
                         }
                     }
-                    LabeledContent(String(localized: "ba.settings.watch.rule.title")) {
+                    LabeledContent(BaL10n.string("ba.settings.watch.rule.title")) {
                         Text(AppPlatformBaseline.watchRule)
                     }
-                    LabeledContent(String(localized: "ba.sheet.debug.data.title")) {
+                    LabeledContent(BaL10n.string("ba.sheet.debug.data.title")) {
                         Text(debugDataText)
                     }
                 }
@@ -652,17 +843,17 @@ private struct BaDebugToolsSheet: View {
                             await model.refreshCatalog(force: true)
                         }
                     } label: {
-                        Label(String(localized: "ba.sheet.debug.refresh.title"), systemImage: "arrow.clockwise")
+                        Label(BaL10n.string("ba.sheet.debug.refresh.title"), systemImage: "arrow.clockwise")
                     }
                     .buttonStyle(.glass)
                 } footer: {
-                    Text(String(localized: "ba.sheet.debug.footer"))
+                    Text(BaL10n.string("ba.sheet.debug.footer"))
                 }
             }
             .navigationTitle(BaPresentedSheet.debugTools.title)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(String(localized: "ba.common.done")) {
+                    Button(BaL10n.string("ba.common.done")) {
                         dismiss()
                     }
                 }
@@ -675,7 +866,7 @@ private struct BaDebugToolsSheet: View {
         let poolCount = model.poolState.value?.count ?? 0
         let catalogCount = model.catalogState.value?.entries.count ?? 0
         return String(
-            format: String(localized: "ba.sheet.debug.data.format"),
+            format: BaL10n.string("ba.sheet.debug.data.format"),
             activityCount,
             poolCount,
             catalogCount
@@ -687,7 +878,7 @@ extension View {
     @ViewBuilder
     func baActionSheetPresentation(for sheet: BaPresentedSheet) -> some View {
         #if os(iOS)
-            presentationDetents([.medium, .large])
+            presentationDetents(sheet.presentationDetents)
                 .presentationDragIndicator(.visible)
         #else
             frame(
@@ -698,13 +889,30 @@ extension View {
     }
 }
 
+#if os(iOS)
+private extension BaPresentedSheet {
+    var presentationDetents: Set<PresentationDetent> {
+        switch self {
+        case .settings:
+            [.large]
+        case .notifications, .editOffice, .debugTools:
+            [.medium, .large]
+        }
+    }
+}
+#endif
+
 #if os(macOS)
 private extension BaPresentedSheet {
     var macMinimumSheetWidth: CGFloat {
         switch self {
         case .notifications:
             680
-        case .editOffice, .debugTools:
+        case .settings:
+            760
+        case .editOffice:
+            640
+        case .debugTools:
             520
         }
     }
@@ -713,7 +921,11 @@ private extension BaPresentedSheet {
         switch self {
         case .notifications:
             660
-        case .editOffice, .debugTools:
+        case .settings:
+            720
+        case .editOffice:
+            520
+        case .debugTools:
             360
         }
     }
