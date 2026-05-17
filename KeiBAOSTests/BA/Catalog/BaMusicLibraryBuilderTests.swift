@@ -62,6 +62,8 @@ final class BaMusicLibraryBuilderTests: XCTestCase {
         XCTAssertEqual(snapshot.tracks.count, 2)
         XCTAssertEqual(snapshot.tracks[0].availability, .needsDetail)
         XCTAssertEqual(snapshot.tracks[1].availability, .missing)
+        XCTAssertTrue(snapshot.tracks[0].needsDetailLoadForMusic)
+        XCTAssertFalse(snapshot.tracks[1].needsDetailLoadForMusic)
         XCTAssertTrue(snapshot.playableTracks.isEmpty)
     }
 

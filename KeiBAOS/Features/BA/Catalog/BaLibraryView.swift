@@ -44,13 +44,6 @@ struct BaLibraryView: View {
         BaAdaptiveGeometry { metrics in
             musicPage(snapshot: snapshot, metrics: metrics)
                 .background(AppBackground())
-                #if os(macOS)
-                    .safeAreaInset(edge: .bottom, spacing: 10) {
-                        BaMusicMiniNowPlayingBar(session: playbackSession)
-                            .padding(.horizontal, metrics.screenHorizontalPadding)
-                            .padding(.bottom, 10)
-                    }
-                #endif
         }
         .searchable(text: $searchText, prompt: Text(String(localized: "ba.music.search.prompt")))
         .task {
@@ -58,6 +51,9 @@ struct BaLibraryView: View {
         }
         .task(id: snapshot.queueSignature) {
             playbackSession.updateQueue(snapshot.playableTracks)
+        }
+        .task(id: musicDetailPrefetchSignature(snapshot: snapshot)) {
+            await prefetchMusicDetails(snapshot: snapshot)
         }
     }
 
@@ -276,6 +272,29 @@ struct BaLibraryView: View {
         )
     }
 
+    private func prefetchMusicDetails(snapshot: BaMusicLibrarySnapshot) async {
+        let entries = musicDetailPrefetchEntries(snapshot: snapshot)
+        guard entries.isEmpty == false else { return }
+        await model.loadStudentDetails(entries: entries)
+    }
+
+    private func musicDetailPrefetchEntries(snapshot: BaMusicLibrarySnapshot) -> [BaGuideCatalogEntry] {
+        Array(
+            snapshot.visibleTracks
+                .lazy
+                .filter(\.needsDetailLoadForMusic)
+                .map(\.entry)
+                .prefix(BaPlatformPerformanceProfile.musicInitialDetailFetchLimit)
+        )
+    }
+
+    private func musicDetailPrefetchSignature(snapshot: BaMusicLibrarySnapshot) -> String {
+        musicDetailPrefetchEntries(snapshot: snapshot)
+            .map(\.contentId)
+            .map(String.init)
+            .joined(separator: "|")
+    }
+
     private var navigationChrome: BaMusicLibraryNavigationChrome {
         #if os(iOS)
             switch tabBarPlacement {
@@ -294,13 +313,7 @@ struct BaLibraryView: View {
 
 private extension BaMusicTrack {
     var needsDetailForMusicCache: Bool {
-        guard audioURL == nil else { return false }
-        switch availability {
-        case .needsDetail, .failed:
-            return true
-        case .loadingDetail, .ready, .missing:
-            return false
-        }
+        needsDetailLoadForMusic
     }
 }
 

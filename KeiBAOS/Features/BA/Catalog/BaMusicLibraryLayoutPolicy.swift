@@ -48,7 +48,7 @@ nonisolated enum BaMusicLibraryLayoutPolicy {
             guard navigationChrome == .topBar else { return .stacked }
             return metrics.containerWidth >= 980 ? .split : .stacked
         case .desktop:
-            return metrics.containerWidth >= 1_080 ? .split : .stacked
+            return metrics.containerWidth >= 760 ? .split : .stacked
         }
     }
 

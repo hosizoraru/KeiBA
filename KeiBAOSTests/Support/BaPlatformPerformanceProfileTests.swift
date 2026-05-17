@@ -19,6 +19,10 @@ final class BaPlatformPerformanceProfileTests: XCTestCase {
             BaPlatformPerformanceProfile.musicCacheConcurrency(for: .phone),
             BaPlatformPerformanceProfile.musicCacheConcurrency(for: .desktop)
         )
+        XCTAssertLessThan(
+            BaPlatformPerformanceProfile.musicProgressUpdateInterval(for: .desktop),
+            BaPlatformPerformanceProfile.musicProgressUpdateInterval(for: .phone)
+        )
         XCTAssertFalse(BaPlatformPerformanceProfile.musicSamplesRowAvatarAccent(for: .phone))
         XCTAssertTrue(BaPlatformPerformanceProfile.musicSamplesRowAvatarAccent(for: .pad))
     }

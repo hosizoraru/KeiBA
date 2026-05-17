@@ -54,6 +54,10 @@ enum BaPlatformPerformanceProfile {
         musicCacheConcurrency(for: currentClass)
     }
 
+    nonisolated static var musicProgressUpdateInterval: TimeInterval {
+        musicProgressUpdateInterval(for: currentClass)
+    }
+
     nonisolated static var musicSamplesRowAvatarAccent: Bool {
         musicSamplesRowAvatarAccent(for: currentClass)
     }
@@ -129,6 +133,19 @@ enum BaPlatformPerformanceProfile {
             3
         case .phone:
             2
+        case .watch:
+            1
+        }
+    }
+
+    nonisolated static func musicProgressUpdateInterval(for platformClass: BaPlatformPerformanceClass) -> TimeInterval {
+        switch platformClass {
+        case .desktop:
+            0.25
+        case .pad:
+            0.33
+        case .phone:
+            0.5
         case .watch:
             1
         }

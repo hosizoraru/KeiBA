@@ -26,6 +26,7 @@ enum BaOggPlaybackMode: String, Sendable {
 @MainActor
 final class BaOggAudioPlayer: NSObject {
     var onEvent: ((BaOggAudioEvent) -> Void)?
+    var progressUpdateInterval: TimeInterval = 0.25
 
     private var decodedPlayer: AVAudioPlayer?
     private var streamingPlayer: AudioPlayer?
@@ -179,11 +180,14 @@ final class BaOggAudioPlayer: NSObject {
 
     private func startProgressTimer() {
         stopProgressTimer()
-        progressTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+        let interval = max(progressUpdateInterval, 0.1)
+        let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.updateProgress()
             }
         }
+        timer.tolerance = interval * 0.35
+        progressTimer = timer
     }
 
     private func stopProgressTimer() {

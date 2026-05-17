@@ -116,14 +116,14 @@ final class BaMusicPlaybackSessionTests: XCTestCase {
     func testDesktopMusicLibraryUsesSplitOnlyWhenThereIsRoom() {
         XCTAssertEqual(
             BaMusicLibraryLayoutPolicy.layoutStyle(
-                for: BaAdaptiveMetrics(containerWidth: 960),
+                for: BaAdaptiveMetrics(containerWidth: 740),
                 platform: .desktop
             ),
             .stacked
         )
         XCTAssertEqual(
             BaMusicLibraryLayoutPolicy.layoutStyle(
-                for: BaAdaptiveMetrics(containerWidth: 1_180),
+                for: BaAdaptiveMetrics(containerWidth: 820),
                 platform: .desktop
             ),
             .split

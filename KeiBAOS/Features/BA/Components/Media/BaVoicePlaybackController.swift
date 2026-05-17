@@ -22,6 +22,15 @@ nonisolated enum BaAudioPlaybackProfile: Sendable {
             .decodedPreferred
         }
     }
+
+    var progressUpdateInterval: TimeInterval {
+        switch self {
+        case .voice:
+            0.25
+        case .music:
+            BaPlatformPerformanceProfile.musicProgressUpdateInterval
+        }
+    }
 }
 
 @Observable
@@ -47,6 +56,7 @@ final class BaAudioPlaybackController {
     var progress = 0.0
     var errorMessage: String?
     @ObservationIgnored var onPlaybackFinished: (() -> Void)?
+    @ObservationIgnored var onPlaybackStateChanged: (() -> Void)?
 
     var canSeek: Bool {
         switch playbackBackend {
@@ -174,6 +184,7 @@ final class BaAudioPlaybackController {
         isPlaying = false
         progress = 0
         playbackBackend = nil
+        notifyPlaybackStateChanged()
     }
 
     func seek(to progressFraction: Double) {
@@ -207,6 +218,7 @@ final class BaAudioPlaybackController {
         isPlaying = false
         progress = 0
         playbackBackend = Self.preferredBackend(for: remoteURL, profile: playbackProfile)
+        notifyPlaybackStateChanged()
 
         if playbackBackend == .avPlayer, BaMediaPlaybackSource.requiresRemotePlayback(remoteURL) {
             startAVPlayer(remoteURL: remoteURL)
@@ -237,6 +249,7 @@ final class BaAudioPlaybackController {
             avPlayer?.play()
             isPlaying = true
             startProgressTimer()
+            notifyPlaybackStateChanged()
             return
         }
         guard let player else { return }
@@ -244,23 +257,27 @@ final class BaAudioPlaybackController {
         player.play()
         isPlaying = true
         startProgressTimer()
+        notifyPlaybackStateChanged()
     }
 
     private func pause() {
         if playbackBackend == .decodedOgg || playbackBackend == .audioStreaming {
             pauseOggPlayer()
             isPlaying = false
+            notifyPlaybackStateChanged()
             return
         }
         if playbackBackend == .avPlayer {
             avPlayer?.pause()
             isPlaying = false
             stopProgressTimer()
+            notifyPlaybackStateChanged()
             return
         }
         player?.pause()
         isPlaying = false
         stopProgressTimer()
+        notifyPlaybackStateChanged()
     }
 
     private func startPlayer(localURL: URL, backend: PlaybackBackend?) {
@@ -290,6 +307,7 @@ final class BaAudioPlaybackController {
             isLoading = false
             isPlaying = true
             startProgressTimer()
+            notifyPlaybackStateChanged()
         } catch {
             if isOggFile(localURL) {
                 playbackBackend = .decodedOgg
@@ -332,6 +350,7 @@ final class BaAudioPlaybackController {
         progress = 0
         playbackBackend = nil
         stopProgressTimer()
+        notifyPlaybackStateChanged()
         finished?()
     }
 
@@ -344,6 +363,7 @@ final class BaAudioPlaybackController {
         currentRemoteURL = nil
         playbackBackend = nil
         errorMessage = message
+        notifyPlaybackStateChanged()
     }
 
     private func tearDownPlayer() {
@@ -355,16 +375,23 @@ final class BaAudioPlaybackController {
 
     private func startProgressTimer() {
         stopProgressTimer()
-        progressTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+        let interval = playbackProfile.progressUpdateInterval
+        let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.updateProgress()
             }
         }
+        timer.tolerance = interval * 0.35
+        progressTimer = timer
     }
 
     private func stopProgressTimer() {
         progressTimer?.invalidate()
         progressTimer = nil
+    }
+
+    private func notifyPlaybackStateChanged() {
+        onPlaybackStateChanged?()
     }
 
     private enum PlaybackBackend: String {
@@ -465,6 +492,7 @@ final class BaAudioPlaybackController {
         isLoading = false
         isPlaying = true
         startProgressTimer()
+        notifyPlaybackStateChanged()
     }
 
     private func stopAVPlayer() {
@@ -484,7 +512,11 @@ final class BaAudioPlaybackController {
             return
         }
         let duration = avPlayer.currentItem?.duration.seconds ?? 0
+        let previousDuration = avPlayerDuration
         avPlayerDuration = duration.isFinite && duration > 0 ? duration : avPlayerDuration
+        if previousDuration == nil, avPlayerDuration != nil {
+            notifyPlaybackStateChanged()
+        }
         guard let avPlayerDuration, avPlayerDuration > 0 else {
             progress = 0
             return
@@ -503,6 +535,7 @@ private extension BaAudioPlaybackController {
     func startOggPlayer(localURL: URL) {
         configureAudioSession()
         let mode = playbackBackend?.oggPlaybackMode ?? playbackProfile.defaultOggPlaybackMode
+        oggPlayer.progressUpdateInterval = playbackProfile.progressUpdateInterval
         logger.debug("ogg local playback start, profile: \(String(describing: self.playbackProfile)), mode: \(String(describing: mode))")
         oggPlayer.play(localURL: localURL, mode: mode)
     }
@@ -524,11 +557,14 @@ private extension BaAudioPlaybackController {
         switch event {
         case .ready:
             isLoading = false
+            notifyPlaybackStateChanged()
         case .playing:
             isLoading = false
             isPlaying = true
+            notifyPlaybackStateChanged()
         case .paused:
             isPlaying = false
+            notifyPlaybackStateChanged()
         case .ended:
             finishPlayback()
         case let .progress(value):

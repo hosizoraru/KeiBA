@@ -33,6 +33,16 @@ nonisolated struct BaMusicTrack: Identifiable, Hashable {
         audioURL != nil
     }
 
+    var needsDetailLoadForMusic: Bool {
+        guard audioURL == nil else { return false }
+        switch availability {
+        case .needsDetail, .failed:
+            return true
+        case .loadingDetail, .ready, .missing:
+            return false
+        }
+    }
+
     func matches(trimmedQuery keyword: String) -> Bool {
         guard keyword.isEmpty == false else { return true }
         if entry.matches(trimmedQuery: keyword) { return true }

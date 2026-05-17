@@ -9,37 +9,19 @@ import SwiftUI
 
 @main
 struct KeiBAOSApp: App {
-    @State private var baModel: BaAppModel?
+    @State private var baModel: BaAppModel
+
+    init() {
+        _baModel = State(initialValue: BaAppModel.live())
+    }
 
     var body: some Scene {
         WindowGroup {
-            if let baModel {
-                AppShell()
-                    .environment(baModel)
-            } else {
-                BaAppLoadingView()
-                    .task {
-                        await prepareAppModel()
-                    }
-            }
+            AppShell()
+                .environment(baModel)
         }
-    }
-
-    @MainActor
-    private func prepareAppModel() async {
-        guard baModel == nil else { return }
-        await Task.yield()
-        baModel = BaAppModel.live()
-    }
-}
-
-private struct BaAppLoadingView: View {
-    var body: some View {
-        ZStack {
-            AppBackground()
-
-            ProgressView()
-                .controlSize(.regular)
-        }
+        #if os(macOS)
+            .defaultSize(width: 1_120, height: 760)
+        #endif
     }
 }

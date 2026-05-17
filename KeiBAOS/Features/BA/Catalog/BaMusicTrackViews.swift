@@ -315,9 +315,6 @@ struct BaMusicQueueSection: View {
                         onLoadDetail: { onLoadDetail(track) }
                     )
                     .task(id: track.id) {
-                        if track.availability == .needsDetail {
-                            onLoadDetail(track)
-                        }
                         await onRefreshCacheState(track)
                     }
                 }

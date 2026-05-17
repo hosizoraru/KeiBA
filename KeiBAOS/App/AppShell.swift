@@ -8,11 +8,35 @@
 import SwiftUI
 
 struct AppShell: View {
-    @State private var selectedTab: AppTab = .overview
+    @SceneStorage("AppShell.selectedTab") private var selectedTabRawValue = AppTab.overview.rawValue
     @State private var musicPlaybackSession: BaMusicPlaybackSession?
 
     var body: some View {
-        TabView(selection: $selectedTab) {
+        shellContent
+            .sheet(isPresented: musicNowPlayingExpandedBinding) {
+                if let musicPlaybackSession {
+                    BaMusicNowPlayingSheet(session: musicPlaybackSession)
+                }
+            }
+            .onChange(of: selectedTab, initial: true) { _, tab in
+                if tab == .library {
+                    prepareMusicPlaybackSession()
+                }
+            }
+    }
+
+    @ViewBuilder
+    private var shellContent: some View {
+        #if os(macOS)
+            macShell
+        #else
+            touchShell
+                .baMusicMiniPlayerAccessory(session: musicPlaybackSession, selectedTab: selectedTab)
+        #endif
+    }
+
+    private var touchShell: some View {
+        TabView(selection: selectedTabBinding) {
             ForEach(AppTab.allCases) { tab in
                 Tab(tab.titleResource, systemImage: tab.systemImage, value: tab) {
                     BaNavigationRoot(
@@ -25,18 +49,39 @@ struct AppShell: View {
             }
         }
         .platformAdaptiveTabViewStyle()
-        .baMusicMiniPlayerAccessory(session: musicPlaybackSession, selectedTab: selectedTab)
-        .sheet(isPresented: musicNowPlayingExpandedBinding) {
-            if let musicPlaybackSession {
-                BaMusicNowPlayingSheet(session: musicPlaybackSession)
-            }
-        }
-        .onChange(of: selectedTab, initial: true) { _, tab in
-            if tab == .library {
-                prepareMusicPlaybackSession()
-            }
-        }
     }
+
+    #if os(macOS)
+        private var macShell: some View {
+            NavigationSplitView {
+                List(selection: selectedTabBinding) {
+                    ForEach(AppTab.allCases) { tab in
+                        Label {
+                            Text(tab.titleResource)
+                        } icon: {
+                            Image(systemName: tab.systemImage)
+                                .foregroundStyle(.secondary)
+                                .frame(width: 16)
+                        }
+                        .tag(tab)
+                        .accessibilityIdentifier(tab.accessibilityIdentifier)
+                    }
+                }
+                .navigationTitle("KeiBAOS")
+                .listStyle(.sidebar)
+                .frame(minWidth: 180)
+            } detail: {
+                BaNavigationRoot(
+                    tab: selectedTab,
+                    musicPlaybackSession: musicPlaybackSession,
+                    onPrepareMusicPlaybackSession: prepareMusicPlaybackSession
+                ) { selectedTab = $0 }
+                .accessibilityIdentifier(selectedTab.accessibilityIdentifier)
+                .baMusicMiniPlayerAccessory(session: musicPlaybackSession, selectedTab: selectedTab)
+            }
+            .navigationSplitViewStyle(.balanced)
+        }
+    #endif
 
     private var musicNowPlayingExpandedBinding: Binding<Bool> {
         Binding(
@@ -53,6 +98,22 @@ struct AppShell: View {
         let session = BaMusicPlaybackSession()
         musicPlaybackSession = session
         return session
+    }
+
+    private var selectedTab: AppTab {
+        get {
+            AppTab(rawValue: selectedTabRawValue) ?? .overview
+        }
+        nonmutating set {
+            selectedTabRawValue = newValue.rawValue
+        }
+    }
+
+    private var selectedTabBinding: Binding<AppTab> {
+        Binding(
+            get: { selectedTab },
+            set: { selectedTab = $0 }
+        )
     }
 }
 
@@ -253,6 +314,28 @@ private extension View {
                 .tabBarMinimizeBehavior(.onScrollDown)
             } else {
                 tabBarMinimizeBehavior(.onScrollDown)
+            }
+        #elseif os(macOS)
+            if let session, session.hasCurrentTrack, selectedTab != .library {
+                safeAreaInset(edge: .bottom, spacing: 0) {
+                    HStack {
+                        BaMusicMiniNowPlayingBar(session: session, prefersExpanded: false)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .frame(maxWidth: 460)
+                            .liquidGlassSurface(
+                                cornerRadius: 24,
+                                tint: Color.white.opacity(0.035),
+                                isInteractive: false
+                            )
+
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 8)
+                }
+            } else {
+                self
             }
         #else
             self

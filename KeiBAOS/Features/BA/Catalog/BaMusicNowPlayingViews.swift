@@ -150,6 +150,8 @@ struct BaMusicMiniNowPlayingBar: View {
                 prefersExpanded: prefersExpanded,
                 systemPlacementIsExpanded: accessoryPlacement == .expanded
             )
+        #elseif os(macOS)
+            prefersExpanded ? .expanded : .mini
         #else
             .expanded
         #endif
@@ -275,7 +277,7 @@ struct BaMusicNowPlayingHero: View {
                 .multilineTextAlignment(.center)
                 .lineLimit(1)
 
-            if showsGalleryTitle, track.galleryTitle.isEmpty == false {
+            if showsGalleryTitle(for: track) {
                 Text(track.galleryTitle)
                     .font(.caption)
                     .foregroundStyle(.tertiary)
@@ -300,6 +302,18 @@ struct BaMusicNowPlayingHero: View {
         if resolvedLayout == .sideBySide {
             return min(max(metrics.containerWidth * 0.24, 260), 320)
         }
+        #if os(macOS)
+            if presentation == .inline {
+                return switch metrics.widthClass {
+                case .compact:
+                    min(max(metrics.containerWidth * 0.38, 150), 188)
+                case .regular:
+                    220
+                case .expanded:
+                    252
+                }
+            }
+        #endif
         return switch metrics.widthClass {
         case .compact:
             switch presentation {
@@ -319,8 +333,20 @@ struct BaMusicNowPlayingHero: View {
         presentation == .full || metrics.widthClass != .compact
     }
 
-    private var showsGalleryTitle: Bool {
-        presentation == .full || metrics.widthClass != .compact
+    private func showsGalleryTitle(for track: BaMusicTrack) -> Bool {
+        guard presentation == .full || metrics.widthClass != .compact else { return false }
+        let title = track.galleryTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard title.isEmpty == false else { return false }
+        let compactTitle = Self.compactMediaTitle(title)
+        guard compactTitle != "bgm", compactTitle != "回忆大厅bgm" else { return false }
+        return compactTitle != Self.compactMediaTitle(track.subtitle)
+    }
+
+    private static func compactMediaTitle(_ value: String) -> String {
+        value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: " ", with: "")
+            .localizedLowercase
     }
 
     private var resolvedLayout: BaMusicNowPlayingHeroLayout {

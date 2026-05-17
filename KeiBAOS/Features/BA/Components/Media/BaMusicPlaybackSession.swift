@@ -161,7 +161,6 @@ final class BaMusicPlaybackSession: BaMusicSystemMediaCommandHandling {
     @ObservationIgnored private let audioCache: any BaAudioCaching
     @ObservationIgnored private let systemMediaController: any BaMusicSystemMediaControlling
     @ObservationIgnored private let cacheConcurrency: Int
-    @ObservationIgnored private var systemMediaTimer: Timer?
 
     var selectedTrack: BaMusicTrack?
     var queue: [BaMusicTrack] = []
@@ -188,11 +187,13 @@ final class BaMusicPlaybackSession: BaMusicSystemMediaCommandHandling {
         player.onPlaybackFinished = { [weak self] in
             self?.handlePlaybackFinished()
         }
+        player.onPlaybackStateChanged = { [weak self] in
+            self?.syncSystemMediaState()
+        }
         systemMediaController.configure(commandHandler: self)
     }
 
     deinit {
-        systemMediaTimer?.invalidate()
         let systemMediaController = systemMediaController
         Task { @MainActor in
             systemMediaController.clear()
@@ -338,7 +339,6 @@ final class BaMusicPlaybackSession: BaMusicSystemMediaCommandHandling {
         player.stop()
         selectedTrack = nil
         isExpanded = false
-        stopSystemMediaTimer()
         systemMediaController.clear()
     }
 
@@ -473,28 +473,8 @@ final class BaMusicPlaybackSession: BaMusicSystemMediaCommandHandling {
     private func syncSystemMediaState() {
         guard let metadata = nowPlayingMetadata() else {
             systemMediaController.clear()
-            stopSystemMediaTimer()
             return
         }
         systemMediaController.update(metadata: metadata)
-        if player.isLoading || player.isPlaying {
-            startSystemMediaTimer()
-        } else {
-            stopSystemMediaTimer()
-        }
-    }
-
-    private func startSystemMediaTimer() {
-        guard systemMediaTimer == nil else { return }
-        systemMediaTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.syncSystemMediaState()
-            }
-        }
-    }
-
-    private func stopSystemMediaTimer() {
-        systemMediaTimer?.invalidate()
-        systemMediaTimer = nil
     }
 }
