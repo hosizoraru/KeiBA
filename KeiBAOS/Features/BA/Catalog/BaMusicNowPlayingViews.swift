@@ -8,9 +8,13 @@
 import SwiftUI
 
 private enum BaMusicVisualToken {
+    static let minimumHitSize: CGFloat = 44
     static let compactControlSize: CGFloat = 42
     static let regularControlSize: CGFloat = 48
     static let primaryControlSize: CGFloat = 64
+    static let compactControlSlot: CGFloat = 58
+    static let regularControlSlot: CGFloat = 64
+    static let expandedControlSlot: CGFloat = 66
 }
 
 enum BaMusicNowPlayingPresentation {
@@ -372,16 +376,19 @@ private struct BaMusicTransportControls: View {
             controlRow(scale: 1)
             controlRow(scale: 0.88)
             controlRow(scale: 0.78)
+            controlRow(scale: 0.70)
         }
         .frame(maxWidth: .infinity, alignment: .center)
     }
 
     private func controlRow(scale: CGFloat) -> some View {
-        HStack(spacing: transportSpacing * scale) {
+        HStack(spacing: 0) {
             Group {
                 BaMusicTransportButton(
                     systemImage: session.repeatMode.systemImage,
                     size: compactSize * scale,
+                    hitSize: controlSlotWidth(scale: scale),
+                    fontSize: 18 * scale,
                     accent: accent,
                     isActive: session.repeatMode.isActive,
                     accessibilityLabel: session.repeatMode.accessibilityTitle
@@ -392,6 +399,8 @@ private struct BaMusicTransportControls: View {
                 BaMusicTransportButton(
                     systemImage: "backward.fill",
                     size: regularSize * scale,
+                    hitSize: controlSlotWidth(scale: scale),
+                    fontSize: 18 * scale,
                     accent: accent,
                     isDisabled: session.canPlayPrevious == false,
                     accessibilityLabel: BaL10n.string("ba.music.action.previous")
@@ -402,6 +411,7 @@ private struct BaMusicTransportControls: View {
                 BaMusicTransportButton(
                     systemImage: isCurrentPlaying ? "pause.fill" : "play.fill",
                     size: primarySize * scale,
+                    hitSize: controlSlotWidth(scale: scale),
                     fontSize: 24 * scale,
                     accent: accent,
                     isProminent: true,
@@ -414,6 +424,8 @@ private struct BaMusicTransportControls: View {
                 BaMusicTransportButton(
                     systemImage: "forward.fill",
                     size: regularSize * scale,
+                    hitSize: controlSlotWidth(scale: scale),
+                    fontSize: 18 * scale,
                     accent: accent,
                     isDisabled: session.queue.count < 2,
                     accessibilityLabel: BaL10n.string("ba.music.action.next")
@@ -425,6 +437,8 @@ private struct BaMusicTransportControls: View {
                     BaMusicTransportButton(
                         systemImage: "stop.fill",
                         size: compactSize * scale,
+                        hitSize: controlSlotWidth(scale: scale),
+                        fontSize: 18 * scale,
                         accent: accent,
                         isDisabled: session.hasCurrentTrack == false,
                         accessibilityLabel: BaL10n.string("ba.music.action.stop")
@@ -433,17 +447,21 @@ private struct BaMusicTransportControls: View {
                     }
                 }
 
-                BaMusicCacheButton(track: track, session: session, size: compactSize * scale, accent: accent)
+                BaMusicCacheButton(
+                    track: track,
+                    session: session,
+                    size: compactSize * scale,
+                    hitSize: controlSlotWidth(scale: scale),
+                    fontSize: 18 * scale,
+                    accent: accent
+                )
             }
         }
+        .frame(width: rowWidth(scale: scale), alignment: .center)
     }
 
     private var isCurrentPlaying: Bool {
         session.selectedTrack?.id == track.id && session.player.isPlaying
-    }
-
-    private var transportSpacing: CGFloat {
-        metrics.widthClass == .compact ? 10 : 14
     }
 
     private var compactSize: CGFloat {
@@ -457,11 +475,35 @@ private struct BaMusicTransportControls: View {
     private var primarySize: CGFloat {
         metrics.widthClass == .compact ? 58 : BaMusicVisualToken.primaryControlSize
     }
+
+    private var baseSlotWidth: CGFloat {
+        switch metrics.widthClass {
+        case .compact:
+            BaMusicVisualToken.compactControlSlot
+        case .regular:
+            BaMusicVisualToken.regularControlSlot
+        case .expanded:
+            BaMusicVisualToken.expandedControlSlot
+        }
+    }
+
+    private var controlCount: CGFloat {
+        showsStop ? 6 : 5
+    }
+
+    private func rowWidth(scale: CGFloat) -> CGFloat {
+        controlSlotWidth(scale: scale) * controlCount
+    }
+
+    private func controlSlotWidth(scale: CGFloat) -> CGFloat {
+        max(baseSlotWidth * scale, BaMusicVisualToken.minimumHitSize)
+    }
 }
 
 private struct BaMusicTransportButton: View {
     let systemImage: String
     let size: CGFloat
+    let hitSize: CGFloat
     var fontSize: CGFloat = 18
     var accent: Color
     var isProminent = false
@@ -472,15 +514,18 @@ private struct BaMusicTransportButton: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: systemImage)
-                .font(.system(size: fontSize, weight: .semibold))
-                .foregroundStyle(foregroundStyle)
-                .frame(width: size, height: size)
-                .contentShape(Circle())
-                .overlay {
-                    Circle()
-                        .strokeBorder(foregroundStyle.opacity(isActive ? 0.32 : 0), lineWidth: 1)
-                }
+            ZStack {
+                Image(systemName: systemImage)
+                    .font(.system(size: fontSize, weight: .semibold))
+                    .foregroundStyle(foregroundStyle)
+                    .frame(width: size, height: size)
+                    .overlay {
+                        Circle()
+                            .strokeBorder(foregroundStyle.opacity(isActive ? 0.32 : 0), lineWidth: 1)
+                    }
+            }
+            .frame(width: hitSize, height: max(hitSize, BaMusicVisualToken.minimumHitSize))
+            .contentShape(Circle())
         }
         .buttonStyle(BaMusicControlButtonStyle())
         .disabled(isDisabled)
@@ -500,6 +545,8 @@ private struct BaMusicCacheButton: View {
     let track: BaMusicTrack
     let session: BaMusicPlaybackSession
     let size: CGFloat
+    let hitSize: CGFloat
+    let fontSize: CGFloat
     let accent: Color
 
     var body: some View {
@@ -515,16 +562,17 @@ private struct BaMusicCacheButton: View {
                         .controlSize(.small)
                 } else {
                     Image(systemName: state.systemImage)
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.system(size: fontSize, weight: .semibold))
                         .foregroundStyle(state.isCached ? accent : .primary)
                 }
             }
             .frame(width: size, height: size)
-            .contentShape(Circle())
             .overlay {
                 Circle()
                     .strokeBorder(accent.opacity(state.isCached ? 0.28 : 0), lineWidth: 1)
             }
+            .frame(width: hitSize, height: max(hitSize, BaMusicVisualToken.minimumHitSize))
+            .contentShape(Circle())
         }
         .buttonStyle(BaMusicControlButtonStyle())
         .disabled(track.audioURL == nil || state.isCaching)
