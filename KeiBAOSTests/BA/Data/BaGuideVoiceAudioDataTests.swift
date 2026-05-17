@@ -303,9 +303,82 @@ final class BaGuideVoiceAudioDataTests: XCTestCase {
         XCTAssertGreaterThan(elapsed, 0.5)
     }
 
+    @MainActor
+    func testNativeVoicePlaybackClearsStateWhenAudioFinishes() async throws {
+        let localURL = try Self.writeShortCAFVoiceFixture()
+        defer {
+            try? FileManager.default.removeItem(at: localURL)
+        }
+        let remoteURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/voice/native.caf"))
+        let playback = BaVoicePlaybackController(audioCache: StaticVoiceAudioCache(localURL: localURL))
+        let startedExpectation = expectation(description: "native voice reaches playing")
+        let finishedExpectation = expectation(description: "native voice finishes")
+        var didStart = false
+        playback.onPlaybackStateChanged = {
+            if playback.isPlaying, didStart == false {
+                didStart = true
+                startedExpectation.fulfill()
+            }
+        }
+        playback.onPlaybackFinished = {
+            finishedExpectation.fulfill()
+        }
+
+        playback.play(remoteURL: remoteURL)
+
+        await fulfillment(of: [startedExpectation, finishedExpectation], timeout: 3)
+        XCTAssertNil(playback.currentRemoteURL)
+        XCTAssertFalse(playback.isLoading)
+        XCTAssertFalse(playback.isPlaying)
+        XCTAssertEqual(playback.progress, 0, accuracy: 0.001)
+        playback.stop()
+    }
+
     func testSmallOggVoiceDataIsAcceptedByAudioCache() {
         let smallOggHeader = Data([0x4F, 0x67, 0x67, 0x53, 0x00, 0x02, 0x00, 0x00])
 
         XCTAssertTrue(BaAudioCache.recognizesAudioDataForTesting(smallOggHeader, expectedExtension: "ogg"))
     }
+
+    private static func writeShortCAFVoiceFixture() throws -> URL {
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("native-voice-\(UUID().uuidString).caf")
+        let sampleRate = 44_100.0
+        let frameCount = AVAudioFrameCount(sampleRate * 0.18)
+        let format = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1))
+        let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount))
+        buffer.frameLength = frameCount
+        let samples = try XCTUnwrap(buffer.floatChannelData?[0])
+
+        for frame in 0 ..< Int(frameCount) {
+            let sample = sin(2 * .pi * 440 * Double(frame) / sampleRate)
+            samples[frame] = Float(sample * 0.25)
+        }
+
+        let file = try AVAudioFile(forWriting: fileURL, settings: format.settings)
+        try file.write(from: buffer)
+        return fileURL
+    }
+}
+
+private actor StaticVoiceAudioCache: BaAudioCaching {
+    let localURL: URL
+
+    init(localURL: URL) {
+        self.localURL = localURL
+    }
+
+    func localURL(for _: URL, refererPath _: String) async throws -> URL {
+        localURL
+    }
+
+    func cachedURL(for _: URL) async -> URL? {
+        localURL
+    }
+
+    func isCached(_: URL) async -> Bool {
+        true
+    }
+
+    func removeCachedAudio(for _: URL) async {}
 }

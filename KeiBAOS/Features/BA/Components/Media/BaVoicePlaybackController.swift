@@ -100,6 +100,11 @@ final class BaAudioPlaybackController {
     private let audioCache: any BaAudioCaching
     @ObservationIgnored private let oggPlayer = BaOggAudioPlayer()
     @ObservationIgnored private let logger = Logger(subsystem: "os.kei.KeiBAOS", category: "BaVoicePlayback")
+    @ObservationIgnored private lazy var audioPlayerDelegate = BaAudioPlayerDelegateProxy { [weak self] player, didFinishSuccessfully in
+        self?.handleAudioPlayerDidFinish(player, successfully: didFinishSuccessfully)
+    } onDecodeError: { [weak self] player in
+        self?.handleAudioPlayerDecodeError(player)
+    }
     @ObservationIgnored private var playbackObserver: NSObjectProtocol?
     @ObservationIgnored private var avPlayerEndObserver: NSObjectProtocol?
     private let playbackProfile: BaAudioPlaybackProfile
@@ -292,6 +297,7 @@ final class BaAudioPlaybackController {
             configureAudioSession()
             let nextPlayer = try AVAudioPlayer(contentsOf: localURL)
             nextPlayer.volume = 1
+            nextPlayer.delegate = audioPlayerDelegate
             nextPlayer.prepareToPlay()
             guard nextPlayer.play() else {
                 if isOggFile(localURL) {
@@ -339,6 +345,7 @@ final class BaAudioPlaybackController {
     private func finishPlayback() {
         let finished = onPlaybackFinished
         loadToken = UUID()
+        player?.delegate = nil
         player?.currentTime = 0
         player?.stop()
         player = nil
@@ -367,6 +374,7 @@ final class BaAudioPlaybackController {
 
     private func tearDownPlayer() {
         stopProgressTimer()
+        player?.delegate = nil
         player?.stop()
         player = nil
         stopAVPlayer()
@@ -521,6 +529,47 @@ final class BaAudioPlaybackController {
     private func finishAVPlayerPlayback() {
         avPlayer?.seek(to: .zero)
         finishPlayback()
+    }
+
+    private func handleAudioPlayerDidFinish(_ finishedPlayer: AVAudioPlayer, successfully flag: Bool) {
+        guard player === finishedPlayer else { return }
+        if flag {
+            finishPlayback()
+        } else {
+            fail(message: BaL10n.string("ba.student.detail.voice.error.playback"))
+        }
+    }
+
+    private func handleAudioPlayerDecodeError(_ failedPlayer: AVAudioPlayer) {
+        guard player === failedPlayer else { return }
+        fail(message: BaL10n.string("ba.student.detail.voice.error.playback"))
+    }
+}
+
+private final class BaAudioPlayerDelegateProxy: NSObject, AVAudioPlayerDelegate {
+    private let onFinish: @MainActor (AVAudioPlayer, Bool) -> Void
+    private let onDecodeError: @MainActor (AVAudioPlayer) -> Void
+
+    init(
+        onFinish: @escaping @MainActor (AVAudioPlayer, Bool) -> Void,
+        onDecodeError: @escaping @MainActor (AVAudioPlayer) -> Void
+    ) {
+        self.onFinish = onFinish
+        self.onDecodeError = onDecodeError
+    }
+
+    nonisolated func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        Task { @MainActor [weak player, onFinish] in
+            guard let player else { return }
+            onFinish(player, flag)
+        }
+    }
+
+    nonisolated func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error _: (any Error)?) {
+        Task { @MainActor [weak player, onDecodeError] in
+            guard let player else { return }
+            onDecodeError(player)
+        }
     }
 }
 
