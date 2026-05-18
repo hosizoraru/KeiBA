@@ -242,40 +242,29 @@ private struct BaCatalogViewOptionsMenu: View {
             }
 
             if filterGroups.isEmpty == false {
-                if filterSelection.isEmpty == false {
-                    Section(BaL10n.string("ba.catalog.filter.selected.section")) {
-                        Button {
-                            filterSelection.clear()
-                        } label: {
-                            Label(BaL10n.string("ba.catalog.filter.clear"), systemImage: "xmark.circle")
-                        }
-
-                        ForEach(selectedFilterRows) { row in
-                            Button {
-                                filterSelection.toggle(row.option, in: row.group)
-                            } label: {
-                                Label(row.title, systemImage: "checkmark.circle.fill")
-                            }
-                        }
-                    }
-                }
-
                 Section(BaL10n.string("ba.catalog.action.filter")) {
+                    Button {
+                        filterSelection.clear()
+                    } label: {
+                        Label(BaL10n.string("ba.catalog.filter.clear"), systemImage: "xmark.circle")
+                    }
+                    .disabled(filterSelection.isEmpty)
+
                     ForEach(filterGroups) { group in
                         Menu {
                             ForEach(group.options) { option in
-                                BaCatalogMenuSelectionButton(
-                                    title: option.title,
-                                    isSelected: filterSelection.isSelected(option, in: group)
-                                ) {
-                                    filterSelection.toggle(option, in: group)
-                                }
+                                Toggle(
+                                    option.title,
+                                    isOn: filterBinding(for: option, in: group)
+                                )
                             }
                         } label: {
-                            Label(
-                                groupMenuTitle(for: group),
-                                systemImage: filterSelection.selectedOptions(in: group).isEmpty ? "circle" : "checkmark.circle.fill"
-                            )
+                            Text(group.title)
+                            if let selectedText = selectedFilterText(for: group) {
+                                Text(selectedText)
+                            } else {
+                                Text(BaL10n.string("ba.catalog.filter.notSelected"))
+                            }
                         }
                     }
                 }
@@ -292,6 +281,20 @@ private struct BaCatalogViewOptionsMenu: View {
         .accessibilityValue(Text(verbatim: accessibilityValue))
     }
 
+    private func filterBinding(for option: BaCatalogFilterOption, in group: BaCatalogFilterGroup) -> Binding<Bool> {
+        Binding(
+            get: {
+                filterSelection.isSelected(option, in: group)
+            },
+            set: { isOn in
+                let isSelected = filterSelection.isSelected(option, in: group)
+                if isOn != isSelected {
+                    filterSelection.toggle(option, in: group)
+                }
+            }
+        )
+    }
+
     private var accessibilityValue: String {
         guard filterSelection.isEmpty == false else {
             return "\(selectedCategory.title), \(sortMode.title)"
@@ -303,40 +306,10 @@ private struct BaCatalogViewOptionsMenu: View {
         return "\(selectedCategory.title), \(sortMode.title), \(filterText)"
     }
 
-    private var selectedFilterRows: [BaCatalogSelectedFilterRow] {
-        filterGroups.flatMap { group in
-            filterSelection.selectedOptions(in: group).map { option in
-                BaCatalogSelectedFilterRow(group: group, option: option)
-            }
-        }
-    }
-
-    private func groupMenuTitle(for group: BaCatalogFilterGroup) -> String {
+    private func selectedFilterText(for group: BaCatalogFilterGroup) -> String? {
         let selectedOptions = filterSelection.selectedOptions(in: group)
-        guard selectedOptions.isEmpty == false else { return group.title }
-        let selectedText = selectedOptions.map(\.title).joined(separator: " / ")
-        return String(
-            format: BaL10n.string("ba.catalog.filter.group.selected.format"),
-            group.title,
-            selectedText
-        )
-    }
-}
-
-private struct BaCatalogSelectedFilterRow: Identifiable {
-    let group: BaCatalogFilterGroup
-    let option: BaCatalogFilterOption
-
-    var id: String {
-        "\(group.id)-\(option.id)"
-    }
-
-    var title: String {
-        String(
-            format: BaL10n.string("ba.catalog.filter.group.selected.format"),
-            group.title,
-            option.title
-        )
+        guard selectedOptions.isEmpty == false else { return nil }
+        return selectedOptions.map(\.title).joined(separator: " / ")
     }
 }
 

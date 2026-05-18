@@ -1950,46 +1950,24 @@
         }
       }
     },
-    "ba.catalog.filter.group.selected.format" : {
+    "ba.catalog.filter.notSelected" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@: %@"
+            "value" : "Not selected"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@：%@"
+            "value" : "未選択"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@：%@"
-          }
-        }
-      }
-    },
-    "ba.catalog.filter.selected.section" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selected Filters"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "選択中のフィルタ"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已选筛选"
+            "value" : "未选择"
           }
         }
       }
