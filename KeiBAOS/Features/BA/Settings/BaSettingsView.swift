@@ -125,9 +125,12 @@ struct BaSettingsView: View {
                 ) {
                     macNumberRow(
                         BaL10n.string("ba.office.ap.limit.title"),
-                        value: profileIntBinding(\.apLimit, range: 0 ... BaTimeMath.apLimitMax),
-                        placeholder: "240"
-                    )
+                        value: model.currentProfile.apLimit,
+                        prompt: "240",
+                        range: 0 ... BaTimeMath.apLimitMax
+                    ) { value in
+                        model.setAPLimit(value)
+                    }
 
                     macSettingsRow(BaL10n.string("ba.cafe.level.title")) {
                         Stepper(value: profileIntBinding(\.cafeLevel, range: 1 ... 10), in: 1 ... 10) {
@@ -140,15 +143,21 @@ struct BaSettingsView: View {
 
                     macNumberRow(
                         BaL10n.string("ba.settings.ap.threshold.title"),
-                        value: profileIntBinding(\.apNotifyThreshold, range: 0 ... BaTimeMath.apMax),
-                        placeholder: "120"
-                    )
+                        value: model.currentProfile.apNotifyThreshold,
+                        prompt: "120",
+                        range: 0 ... BaTimeMath.apMax
+                    ) { value in
+                        model.setAPNotifyThreshold(value)
+                    }
 
                     macNumberRow(
                         BaL10n.string("ba.settings.cafe.threshold.title"),
-                        value: profileIntBinding(\.cafeApNotifyThreshold, range: 0 ... BaTimeMath.apMax),
-                        placeholder: "120"
-                    )
+                        value: model.currentProfile.cafeApNotifyThreshold,
+                        prompt: "120",
+                        range: 0 ... BaTimeMath.apMax
+                    ) { value in
+                        model.setCafeAPNotifyThreshold(value)
+                    }
                 }
 
                 macSettingsGroup(
@@ -302,11 +311,19 @@ struct BaSettingsView: View {
 
     private func macNumberRow(
         _ title: String,
-        value: Binding<Int>,
-        placeholder: String
+        value: Int,
+        prompt: String,
+        range: ClosedRange<Int>,
+        onCommit: @escaping (Int) -> Void
     ) -> some View {
         macSettingsRow(title) {
-            TextField(placeholder, value: value, format: .number)
+            BaDeferredIntField(
+                title: title,
+                value: value,
+                prompt: prompt,
+                range: range,
+                onCommit: onCommit
+            )
                 .textFieldStyle(.roundedBorder)
                 .multilineTextAlignment(.trailing)
                 .baNumberTextInput()
@@ -366,11 +383,14 @@ struct BaSettingsView: View {
     private var resourcesSection: some View {
         Section {
             LabeledContent(BaL10n.string("ba.office.ap.limit.title")) {
-                TextField(
-                    "240",
-                    value: profileIntBinding(\.apLimit, range: 0 ... BaTimeMath.apLimitMax),
-                    format: .number
-                )
+                BaDeferredIntField(
+                    title: BaL10n.string("ba.office.ap.limit.title"),
+                    value: model.currentProfile.apLimit,
+                    prompt: "240",
+                    range: 0 ... BaTimeMath.apLimitMax
+                ) { value in
+                    model.setAPLimit(value)
+                }
                 .multilineTextAlignment(.trailing)
                 .baNumberTextInput()
             }
@@ -382,21 +402,27 @@ struct BaSettingsView: View {
             }
 
             LabeledContent(BaL10n.string("ba.settings.ap.threshold.title")) {
-                TextField(
-                    "120",
-                    value: profileIntBinding(\.apNotifyThreshold, range: 0 ... BaTimeMath.apMax),
-                    format: .number
-                )
+                BaDeferredIntField(
+                    title: BaL10n.string("ba.settings.ap.threshold.title"),
+                    value: model.currentProfile.apNotifyThreshold,
+                    prompt: "120",
+                    range: 0 ... BaTimeMath.apMax
+                ) { value in
+                    model.setAPNotifyThreshold(value)
+                }
                 .multilineTextAlignment(.trailing)
                 .baNumberTextInput()
             }
 
             LabeledContent(BaL10n.string("ba.settings.cafe.threshold.title")) {
-                TextField(
-                    "120",
-                    value: profileIntBinding(\.cafeApNotifyThreshold, range: 0 ... BaTimeMath.apMax),
-                    format: .number
-                )
+                BaDeferredIntField(
+                    title: BaL10n.string("ba.settings.cafe.threshold.title"),
+                    value: model.currentProfile.cafeApNotifyThreshold,
+                    prompt: "120",
+                    range: 0 ... BaTimeMath.apMax
+                ) { value in
+                    model.setCafeAPNotifyThreshold(value)
+                }
                 .multilineTextAlignment(.trailing)
                 .baNumberTextInput()
             }

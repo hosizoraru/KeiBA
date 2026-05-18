@@ -45,6 +45,32 @@ final class BaNotificationAppModelTests: XCTestCase {
         XCTAssertTrue(coordinator.calls[0].settings.poolEndingNotificationsEnabled)
     }
 
+    func testIdentityTextUpdateSkipsNotificationRefresh() async throws {
+        let defaults = try makeIsolatedDefaults()
+        let coordinator = RecordingNotificationCoordinator()
+        let model = makeAppModel(defaults: defaults, coordinator: coordinator) { _ in }
+
+        model.updateCurrentProfile { profile in
+            profile.nickname = "Atri"
+        }
+
+        await assertNoCoordinatorCalls(coordinator: coordinator)
+        XCTAssertEqual(model.currentProfile.nickname, "Atri")
+    }
+
+    func testNoOpProfileUpdateSkipsPersistenceSideEffects() async throws {
+        let defaults = try makeIsolatedDefaults()
+        let coordinator = RecordingNotificationCoordinator()
+        let model = makeAppModel(defaults: defaults, coordinator: coordinator) { _ in }
+        let profile = model.currentProfile
+
+        model.updateCurrentProfile { next in
+            next = profile
+        }
+
+        await assertNoCoordinatorCalls(coordinator: coordinator)
+    }
+
     func testExplicitAuthorizationRefreshRequestsOnlyWhenAnyReminderIsEnabled() async throws {
         let defaults = try makeIsolatedDefaults()
         let coordinator = RecordingNotificationCoordinator()
@@ -168,6 +194,15 @@ final class BaNotificationAppModelTests: XCTestCase {
             try? await Task.sleep(nanoseconds: 10_000_000)
         }
         XCTFail("Expected \(expectedCount) notification sync call(s), got \(coordinator.calls.count).", file: file, line: line)
+    }
+
+    private func assertNoCoordinatorCalls(
+        coordinator: RecordingNotificationCoordinator,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) async {
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        XCTAssertTrue(coordinator.calls.isEmpty, file: file, line: line)
     }
 }
 

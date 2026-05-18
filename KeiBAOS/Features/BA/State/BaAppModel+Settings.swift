@@ -28,6 +28,7 @@ extension BaAppModel {
     }
 
     func selectServer(_ server: BaServer) {
+        guard envelope.selectedServer != server else { return }
         let previousServer = settings.server
         let previousEnvelope = envelope
         envelope.selectedServer = server
@@ -40,6 +41,7 @@ extension BaAppModel {
         let previousEnvelope = envelope
         var next = settings
         transform(&next)
+        guard next != previous else { return }
         applyFlattenedSettings(next, previous: previous)
         persistEnvelope(previousServer: previousServer, previousEnvelope: previousEnvelope)
     }
@@ -49,6 +51,7 @@ extension BaAppModel {
         let previousEnvelope = envelope
         var profile = currentProfile
         transform(&profile)
+        guard profile != currentProfile else { return }
         envelope.setProfile(profile, for: envelope.selectedServer)
         synchronizeSharedIdentityIfNeeded(from: envelope.selectedServer)
         persistEnvelope(previousServer: previousServer, previousEnvelope: previousEnvelope)
@@ -57,7 +60,9 @@ extension BaAppModel {
     func updateGlobalSettings(_ transform: (inout BaGlobalSettings) -> Void) {
         let previousServer = settings.server
         let previousEnvelope = envelope
+        let previousGlobalSettings = envelope.globalSettings
         transform(&envelope.globalSettings)
+        guard envelope.globalSettings != previousGlobalSettings else { return }
         synchronizeSharedIdentityIfNeeded(from: envelope.selectedServer)
         persistEnvelope(previousServer: previousServer, previousEnvelope: previousEnvelope)
     }
@@ -110,6 +115,12 @@ extension BaAppModel {
     func setAPNotifyThreshold(_ value: Int) {
         updateCurrentProfile { profile in
             profile.apNotifyThreshold = min(max(value, 0), BaTimeMath.apMax)
+        }
+    }
+
+    func setCafeAPNotifyThreshold(_ value: Int) {
+        updateCurrentProfile { profile in
+            profile.cafeApNotifyThreshold = min(max(value, 0), BaTimeMath.apMax)
         }
     }
 
