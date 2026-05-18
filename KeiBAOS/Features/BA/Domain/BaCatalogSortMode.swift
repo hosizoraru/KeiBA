@@ -32,9 +32,7 @@ nonisolated extension Array where Element == BaGuideCatalogEntry {
     func sorted(using mode: BaCatalogSortMode, favoriteContentIDs: Set<Int64>) -> [BaGuideCatalogEntry] {
         let sortedBase: [BaGuideCatalogEntry]
         switch mode {
-        case .defaultOrder:
-            sortedBase = self
-        case .releaseDateDescending, .releaseDateAscending:
+        case .defaultOrder, .releaseDateDescending, .releaseDateAscending:
             sortedBase = enumerated()
                 .map { IndexedCatalogEntry(index: $0.offset, entry: $0.element) }
                 .sorted { mode.isInIncreasingOrder($0, $1) }

@@ -74,6 +74,7 @@ jobs:
             -project KeiBAOS.xcodeproj \
             -scheme KeiBAOS \
             -destination 'platform=macOS' \
+            -parallel-testing-enabled NO \
             -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests" \
             CODE_SIGNING_ALLOWED=NO
 
