@@ -14,6 +14,7 @@ struct BaCatalogView: View {
     @State private var sortMode: BaCatalogSortMode = .defaultOrder
     @State private var filterSelection = BaCatalogFilterSelection()
     @State private var searchText = ""
+    @State private var isOptionsPanelPresented = false
 
     private func snapshot(filterGroups: [BaCatalogFilterGroup]) -> BaCatalogViewSnapshot {
         let favoriteIDs = model.settings.favoriteContentIDs
@@ -40,22 +41,39 @@ struct BaCatalogView: View {
 
         BaAdaptiveGeometry { metrics in
             catalogLayout(snapshot: snapshot, metrics: metrics)
+                .overlay(alignment: .topTrailing) {
+                    if usesContentAnchoredOptionsPanel(for: metrics) {
+                        Color.clear
+                            .frame(width: 1, height: 1)
+                            .padding(.trailing, 28)
+                            .popover(isPresented: $isOptionsPanelPresented, arrowEdge: .top) {
+                                BaCatalogViewOptionsPanel(
+                                    selectedCategory: $selectedCategory,
+                                    sortMode: $sortMode,
+                                    filterSelection: $filterSelection,
+                                    filterGroups: filterGroups
+                                )
+                            }
+                    }
+                }
+                .toolbar {
+                    ToolbarItem(placement: .primaryAction) {
+                        BaCatalogViewOptionsControl(
+                            selectedCategory: $selectedCategory,
+                            sortMode: $sortMode,
+                            filterSelection: $filterSelection,
+                            isPanelPresented: $isOptionsPanelPresented,
+                            filterGroups: filterGroups,
+                            usesPanelPresentation: usesOptionsPanel(for: metrics)
+                        )
+                    }
+                }
         }
         .searchable(text: $searchText, prompt: Text(selectedCategory.searchPrompt))
         .searchScopes($selectedCategory, activation: .automatic) {
             ForEach(BaCatalogCategory.catalogCases) { category in
                 Text(category.title)
                     .tag(category)
-            }
-        }
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                BaCatalogViewOptionsMenu(
-                    selectedCategory: $selectedCategory,
-                    sortMode: $sortMode,
-                    filterSelection: $filterSelection,
-                    filterGroups: filterGroups
-                )
             }
         }
         .onChange(of: selectedCategory) { _, _ in
@@ -127,7 +145,7 @@ struct BaCatalogView: View {
                         thumbnailMaxPixelDimension: metrics.catalogThumbnailMaxPixelDimension,
                         usesThumbnailGlassSurface: false
                     )
-                        .equatable()
+                    .equatable()
                 }
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                     if model.canSetDutyStudent(row.entry) {
@@ -205,10 +223,91 @@ struct BaCatalogView: View {
             await model.toggleDutyStudent(entry)
         }
     }
+
+    private func usesOptionsPanel(for metrics: BaAdaptiveMetrics) -> Bool {
+        #if os(macOS)
+            true
+        #else
+            metrics.containerWidth >= 860
+        #endif
+    }
+
+    private func usesContentAnchoredOptionsPanel(for metrics: BaAdaptiveMetrics) -> Bool {
+        #if os(macOS)
+            false
+        #else
+            usesOptionsPanel(for: metrics)
+        #endif
+    }
 }
 
 private struct BaCatalogViewSnapshot {
     let rows: [BaCatalogEntryRowDisplayModel]
+}
+
+private struct BaCatalogViewOptionsControl: View {
+    @Binding var selectedCategory: BaCatalogCategory
+    @Binding var sortMode: BaCatalogSortMode
+    @Binding var filterSelection: BaCatalogFilterSelection
+    @Binding var isPanelPresented: Bool
+
+    let filterGroups: [BaCatalogFilterGroup]
+    let usesPanelPresentation: Bool
+
+    var body: some View {
+        if usesPanelPresentation {
+            panelButton
+        } else {
+            BaCatalogViewOptionsMenu(
+                selectedCategory: $selectedCategory,
+                sortMode: $sortMode,
+                filterSelection: $filterSelection,
+                filterGroups: filterGroups
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var panelButton: some View {
+        #if os(macOS)
+            panelButtonBase
+                .popover(isPresented: $isPanelPresented, arrowEdge: .top) {
+                    BaCatalogViewOptionsPanel(
+                        selectedCategory: $selectedCategory,
+                        sortMode: $sortMode,
+                        filterSelection: $filterSelection,
+                        filterGroups: filterGroups
+                    )
+                }
+        #else
+            panelButtonBase
+        #endif
+    }
+
+    private var panelButtonBase: some View {
+        Button {
+            isPanelPresented = true
+        } label: {
+            viewOptionsLabel
+        }
+        .accessibilityLabel(Text(BaL10n.string("ba.catalog.action.viewOptions")))
+        .accessibilityValue(Text(verbatim: accessibilityValue))
+    }
+
+    private var viewOptionsLabel: some View {
+        Label(
+            BaL10n.string("ba.catalog.action.viewOptions"),
+            systemImage: filterSelection.isEmpty ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill"
+        )
+    }
+
+    private var accessibilityValue: String {
+        BaCatalogViewOptionsSummary.accessibilityValue(
+            selectedCategory: selectedCategory,
+            sortMode: sortMode,
+            filterSelection: filterSelection
+        )
+    }
 }
 
 private struct BaCatalogViewOptionsMenu: View {
@@ -297,6 +396,125 @@ private struct BaCatalogViewOptionsMenu: View {
     }
 
     private var accessibilityValue: String {
+        BaCatalogViewOptionsSummary.accessibilityValue(
+            selectedCategory: selectedCategory,
+            sortMode: sortMode,
+            filterSelection: filterSelection
+        )
+    }
+
+    private func selectedFilterText(for group: BaCatalogFilterGroup) -> String? {
+        let selectedOptions = filterSelection.selectedOptions(in: group)
+        guard selectedOptions.isEmpty == false else { return nil }
+        return selectedOptions.map(\.title).joined(separator: " / ")
+    }
+}
+
+private struct BaCatalogViewOptionsPanel: View {
+    @Binding var selectedCategory: BaCatalogCategory
+    @Binding var sortMode: BaCatalogSortMode
+    @Binding var filterSelection: BaCatalogFilterSelection
+
+    let filterGroups: [BaCatalogFilterGroup]
+
+    var body: some View {
+        Form {
+            Section(BaL10n.string("ba.catalog.category.picker")) {
+                Picker(BaL10n.string("ba.catalog.category.picker"), selection: $selectedCategory) {
+                    ForEach(BaCatalogCategory.catalogCases) { category in
+                        Text(category.title)
+                            .tag(category)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.inline)
+            }
+
+            Section(BaL10n.string("ba.catalog.action.sort")) {
+                Picker(BaL10n.string("ba.catalog.action.sort"), selection: $sortMode) {
+                    ForEach(BaCatalogSortMode.allCases) { mode in
+                        Text(mode.title)
+                            .tag(mode)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.inline)
+            }
+
+            if filterGroups.isEmpty == false {
+                Section(BaL10n.string("ba.catalog.action.filter")) {
+                    Button {
+                        filterSelection.clear()
+                    } label: {
+                        Label(BaL10n.string("ba.catalog.filter.clear"), systemImage: "xmark.circle")
+                    }
+                    .disabled(filterSelection.isEmpty)
+
+                    ForEach(filterGroups) { group in
+                        DisclosureGroup {
+                            ForEach(group.options) { option in
+                                Toggle(
+                                    option.title,
+                                    isOn: filterBinding(for: option, in: group)
+                                )
+                            }
+                        } label: {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(group.title)
+
+                                Text(selectedFilterText(for: group) ?? BaL10n.string("ba.catalog.filter.notSelected"))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(2)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .frame(minWidth: 320, idealWidth: 380, maxWidth: 460)
+        .frame(minHeight: 360, idealHeight: 560, maxHeight: 680)
+        .presentationCompactAdaptation(.popover)
+        .accessibilityLabel(Text(BaL10n.string("ba.catalog.action.viewOptions")))
+        .accessibilityValue(Text(verbatim: accessibilityValue))
+    }
+
+    private func filterBinding(for option: BaCatalogFilterOption, in group: BaCatalogFilterGroup) -> Binding<Bool> {
+        Binding(
+            get: {
+                filterSelection.isSelected(option, in: group)
+            },
+            set: { isOn in
+                let isSelected = filterSelection.isSelected(option, in: group)
+                if isOn != isSelected {
+                    filterSelection.toggle(option, in: group)
+                }
+            }
+        )
+    }
+
+    private var accessibilityValue: String {
+        BaCatalogViewOptionsSummary.accessibilityValue(
+            selectedCategory: selectedCategory,
+            sortMode: sortMode,
+            filterSelection: filterSelection
+        )
+    }
+
+    private func selectedFilterText(for group: BaCatalogFilterGroup) -> String? {
+        let selectedOptions = filterSelection.selectedOptions(in: group)
+        guard selectedOptions.isEmpty == false else { return nil }
+        return selectedOptions.map(\.title).joined(separator: " / ")
+    }
+}
+
+private enum BaCatalogViewOptionsSummary {
+    static func accessibilityValue(
+        selectedCategory: BaCatalogCategory,
+        sortMode: BaCatalogSortMode,
+        filterSelection: BaCatalogFilterSelection
+    ) -> String {
         guard filterSelection.isEmpty == false else {
             return "\(selectedCategory.title), \(sortMode.title)"
         }
@@ -305,12 +523,6 @@ private struct BaCatalogViewOptionsMenu: View {
             Int64(filterSelection.activeFilterCount)
         )
         return "\(selectedCategory.title), \(sortMode.title), \(filterText)"
-    }
-
-    private func selectedFilterText(for group: BaCatalogFilterGroup) -> String? {
-        let selectedOptions = filterSelection.selectedOptions(in: group)
-        guard selectedOptions.isEmpty == false else { return nil }
-        return selectedOptions.map(\.title).joined(separator: " / ")
     }
 }
 

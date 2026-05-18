@@ -2113,19 +2113,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "NPC & Satellite"
+            "value" : "NPC & Satellites"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "NPC・未実装"
+            "value" : "NPC・未実装生徒"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "NPC&卫星"
+            "value" : "NPC及卫星"
           }
         }
       }
@@ -2179,19 +2179,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Students"
+            "value" : "Implemented Students"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "生徒"
+            "value" : "実装済み生徒"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "学生"
+            "value" : "实装学生"
           }
         }
       }
