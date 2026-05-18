@@ -107,6 +107,14 @@ GitHub Actions runs localization validation, iOS simulator build, macOS build,
 and macOS unit tests on `macos-26`.
 See [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
+Pushes to `main` and manual workflow runs also upload side-load test artifacts:
+
+- `KeiBAOS-iOS-unsigned.ipa` is an unsigned iOS device payload. It needs
+  re-signing with a valid Apple certificate and provisioning profile before
+  installation on a physical device.
+- `KeiBAOS-macOS-unsigned.dmg` is an unsigned, unnotarized macOS build for
+  local smoke testing.
+
 ## Data And Assets
 
 KeiBAOS fetches public Blue Archive guide data from GameKee pages and APIs.

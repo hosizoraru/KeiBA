@@ -24,11 +24,11 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
-      - name: Select Xcode 26.5
+      - name: Select Xcode 26.4.1
         run: |
-          xcode_path="/Applications/Xcode_26.5.app/Contents/Developer"
+          xcode_path="/Applications/Xcode_26.4.1.app/Contents/Developer"
           if [ ! -d "$xcode_path" ]; then
-            echo "::error::Xcode 26.5 is required for project file format 100."
+            echo "::error::Xcode 26.4.1 is required for CI simulator builds."
             find /Applications -maxdepth 1 -name 'Xcode*.app' -print || true
             exit 1
           fi
@@ -76,3 +76,98 @@ jobs:
             -destination 'platform=macOS' \
             -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests" \
             CODE_SIGNING_ALLOWED=NO
+
+  package-artifacts:
+    name: Build side-load artifacts
+    runs-on: macos-26
+    timeout-minutes: 60
+    if: github.event_name != 'pull_request'
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Select Xcode 26.4.1
+        run: |
+          xcode_path="/Applications/Xcode_26.4.1.app/Contents/Developer"
+          if [ ! -d "$xcode_path" ]; then
+            echo "::error::Xcode 26.4.1 is required for CI simulator builds."
+            find /Applications -maxdepth 1 -name 'Xcode*.app' -print || true
+            exit 1
+          fi
+          echo "DEVELOPER_DIR=$xcode_path" >> "$GITHUB_ENV"
+
+      - name: Show toolchain
+        run: |
+          sw_vers
+          echo "DEVELOPER_DIR=$DEVELOPER_DIR"
+          xcodebuild -version
+          xcodebuild -showsdks
+
+      - name: Build unsigned iOS IPA payload
+        run: |
+          set -euo pipefail
+          derived_data="$RUNNER_TEMP/KeiBAOS-iOS-Device"
+          artifacts="$RUNNER_TEMP/KeiBAOS-artifacts"
+          app_path="$derived_data/Build/Products/Release-iphoneos/KeiBAOS.app"
+          payload_root="$artifacts/iphoneos"
+          payload_dir="$payload_root/Payload"
+          ipa_path="$artifacts/KeiBAOS-iOS-unsigned.ipa"
+
+          xcodebuild build \
+            -project KeiBAOS.xcodeproj \
+            -scheme KeiBAOS \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$derived_data" \
+            CODE_SIGNING_ALLOWED=NO
+
+          test -d "$app_path"
+          rm -rf "$payload_root"
+          mkdir -p "$payload_dir" "$artifacts"
+          ditto "$app_path" "$payload_dir/KeiBAOS.app"
+          (
+            cd "$payload_root"
+            COPYFILE_DISABLE=1 zip -qry "$ipa_path" Payload
+          )
+          du -h "$ipa_path"
+
+      - name: Build unsigned macOS DMG
+        run: |
+          set -euo pipefail
+          derived_data="$RUNNER_TEMP/KeiBAOS-macOS-Release"
+          artifacts="$RUNNER_TEMP/KeiBAOS-artifacts"
+          app_path="$derived_data/Build/Products/Release/KeiBAOS.app"
+          dmg_stage="$RUNNER_TEMP/KeiBAOS-dmg"
+          dmg_path="$artifacts/KeiBAOS-macOS-unsigned.dmg"
+
+          xcodebuild build \
+            -project KeiBAOS.xcodeproj \
+            -scheme KeiBAOS \
+            -configuration Release \
+            -destination 'generic/platform=macOS' \
+            -derivedDataPath "$derived_data" \
+            CODE_SIGNING_ALLOWED=NO
+
+          test -d "$app_path"
+          rm -rf "$dmg_stage"
+          mkdir -p "$dmg_stage" "$artifacts"
+          ditto "$app_path" "$dmg_stage/KeiBAOS.app"
+          ln -s /Applications "$dmg_stage/Applications"
+          hdiutil create \
+            -volname KeiBAOS \
+            -srcfolder "$dmg_stage" \
+            -ov \
+            -format UDZO \
+            "$dmg_path"
+          du -h "$dmg_path"
+
+      - name: Upload side-load artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: KeiBAOS-side-load-artifacts
+          path: |
+            ${{ runner.temp }}/KeiBAOS-artifacts/KeiBAOS-iOS-unsigned.ipa
+            ${{ runner.temp }}/KeiBAOS-artifacts/KeiBAOS-macOS-unsigned.dmg
+          if-no-files-found: error
+          retention-days: 14
