@@ -268,7 +268,7 @@ nonisolated struct BaCatalogFilterSelection: Hashable, Sendable {
 
     func matches(_ entry: BaGuideCatalogEntry, groups: [BaCatalogFilterGroup]) -> Bool {
         guard isEmpty == false else { return true }
-        guard entry.category == .students, let metadata = entry.metadata else { return false }
+        guard let metadata = entry.metadata else { return false }
         for (kind, optionIDs) in selectedOptionIDsByKind where optionIDs.isEmpty == false {
             guard let group = groups.first(where: { $0.kind == kind }) else { return false }
             let selectedOptions = group.options.filter { optionIDs.contains($0.id) }

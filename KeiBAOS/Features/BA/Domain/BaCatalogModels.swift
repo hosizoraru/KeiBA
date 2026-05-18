@@ -154,21 +154,25 @@ nonisolated struct BaGuideCatalogBundle: Codable, Hashable, Sendable {
     let entries: [BaGuideCatalogEntry]
     let syncedAt: Date
     let studentFilterGroups: [BaCatalogFilterGroup]
+    let npcSatelliteFilterGroups: [BaCatalogFilterGroup]
 
     init(
         entries: [BaGuideCatalogEntry],
         syncedAt: Date,
-        studentFilterGroups: [BaCatalogFilterGroup] = []
+        studentFilterGroups: [BaCatalogFilterGroup] = [],
+        npcSatelliteFilterGroups: [BaCatalogFilterGroup] = []
     ) {
         self.entries = entries
         self.syncedAt = syncedAt
         self.studentFilterGroups = studentFilterGroups
+        self.npcSatelliteFilterGroups = npcSatelliteFilterGroups
     }
 
     private enum CodingKeys: String, CodingKey {
         case entries
         case syncedAt
         case studentFilterGroups
+        case npcSatelliteFilterGroups
     }
 
     init(from decoder: Decoder) throws {
@@ -176,9 +180,21 @@ nonisolated struct BaGuideCatalogBundle: Codable, Hashable, Sendable {
         entries = try container.decode([BaGuideCatalogEntry].self, forKey: .entries)
         syncedAt = try container.decode(Date.self, forKey: .syncedAt)
         studentFilterGroups = try container.decodeIfPresent([BaCatalogFilterGroup].self, forKey: .studentFilterGroups) ?? []
+        npcSatelliteFilterGroups = try container.decodeIfPresent([BaCatalogFilterGroup].self, forKey: .npcSatelliteFilterGroups) ?? []
     }
 
     func entries(in category: BaCatalogCategory) -> [BaGuideCatalogEntry] {
         entries.filter { $0.category == category }
+    }
+
+    func filterGroups(for category: BaCatalogCategory) -> [BaCatalogFilterGroup] {
+        switch category {
+        case .students:
+            studentFilterGroups
+        case .npcSatellite:
+            npcSatelliteFilterGroups
+        case .studentBgm, .favorites:
+            []
+        }
     }
 }

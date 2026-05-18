@@ -145,6 +145,69 @@ final class BaCatalogFilterTests: XCTestCase {
         XCTAssertEqual(metadata?.filterOptionIDsByKind[.attackType], [75])
     }
 
+    func testParsesNpcSatelliteSchoolFilterGroup() throws {
+        let data = Data(
+            """
+            {
+              "code": 0,
+              "data": {
+                "entry_filter": [
+                  {
+                    "id": 12034,
+                    "name": "学园",
+                    "children": [
+                      { "id": 12036, "name": "格黑娜" },
+                      { "id": 12037, "name": "三一" }
+                    ]
+                  }
+                ]
+              }
+            }
+            """.utf8
+        )
+
+        let groups = try BaGuideCatalogRepository(client: GameKeeClient()).parseFilterGroups(data: data)
+
+        XCTAssertEqual(groups.map(\.kind), [.school])
+        XCTAssertEqual(groups.first?.title, "学园")
+        XCTAssertEqual(groups.first?.options.map(\.title), ["格黑娜", "三一"])
+    }
+
+    func testParsesNpcSatelliteSchoolFilterAttributes() throws {
+        let groups = [
+            BaCatalogFilterGroup(
+                id: 12034,
+                title: "学园",
+                kind: .school,
+                options: [
+                    BaCatalogFilterOption(id: 12036, title: "格黑娜", iconURL: nil),
+                    BaCatalogFilterOption(id: 12037, title: "三一", iconURL: nil),
+                ]
+            ),
+        ]
+        let data = Data(
+            """
+            {
+              "code": 0,
+              "data": {
+                "entry_filter": [],
+                "entry_filter_attr": {
+                  "107697": [
+                    { "input_id": 12034, "value": ["12036"] }
+                  ]
+                }
+              }
+            }
+            """.utf8
+        )
+
+        let metadata = try BaGuideCatalogRepository(client: GameKeeClient())
+            .parseFilterAttributeMetadata(data: data, filterGroups: groups)[107697]
+
+        XCTAssertEqual(metadata?.school, "格黑娜")
+        XCTAssertEqual(metadata?.filterOptionIDsByKind[.school], [12036])
+    }
+
     func testFilterSelectionMatchesCanonicalizedValues() {
         let groups = [
             BaCatalogFilterGroup(
@@ -228,15 +291,44 @@ final class BaCatalogFilterTests: XCTestCase {
         XCTAssertTrue(selection.matches(matched, groups: groups))
         XCTAssertFalse(selection.matches(regular, groups: groups))
     }
+
+    func testFilterSelectionMatchesNpcSatelliteEntry() {
+        let groups = [
+            BaCatalogFilterGroup(
+                id: 12034,
+                title: "学园",
+                kind: .school,
+                options: [
+                    BaCatalogFilterOption(id: 12036, title: "格黑娜", iconURL: nil),
+                ]
+            ),
+        ]
+        let selection = BaCatalogFilterSelection(
+            selectedOptionIDsByKind: [
+                .school: [12036],
+            ]
+        )
+        let matched = makeCatalogEntry(
+            contentId: 161199,
+            category: .npcSatellite,
+            metadata: BaGuideCatalogMetadata(
+                school: "格黑娜",
+                filterOptionIDsByKind: [.school: [12036]]
+            )
+        )
+
+        XCTAssertTrue(selection.matches(matched, groups: groups))
+    }
 }
 
 private func makeCatalogEntry(
     contentId: Int64,
+    category: BaCatalogCategory = .students,
     metadata: BaGuideCatalogMetadata?
 ) -> BaGuideCatalogEntry {
     BaGuideCatalogEntry(
         entryId: Int(contentId),
-        pid: BaCatalogCategory.students.gameKeePID,
+        pid: category.gameKeePID,
         contentId: contentId,
         name: "Student \(contentId)",
         alias: "",
@@ -247,7 +339,7 @@ private func makeCatalogEntry(
         createdAt: nil,
         releaseDate: nil,
         detailURL: nil,
-        category: .students,
+        category: category,
         metadata: metadata
     )
 }

@@ -17,12 +17,12 @@ struct BaCatalogView: View {
 
     private var snapshot: BaCatalogViewSnapshot {
         let favoriteIDs = model.settings.favoriteContentIDs
-        let filterGroups = model.catalogState.value?.studentFilterGroups ?? []
+        let filterGroups = currentFilterGroups
         let rows = model.entries(
             for: selectedCategory,
             query: searchText,
             sortMode: sortMode,
-            filterSelection: selectedCategory == .students ? filterSelection : .empty,
+            filterSelection: filterGroups.isEmpty ? .empty : filterSelection,
             filterGroups: filterGroups
         ).map { entry in
             BaCatalogEntryRowDisplayModel(
@@ -53,14 +53,12 @@ struct BaCatalogView: View {
                     selectedCategory: $selectedCategory,
                     sortMode: $sortMode,
                     filterSelection: $filterSelection,
-                    filterGroups: model.catalogState.value?.studentFilterGroups ?? []
+                    filterGroups: currentFilterGroups
                 )
             }
         }
-        .onChange(of: selectedCategory) { _, newValue in
-            if newValue != .students {
-                filterSelection.clear()
-            }
+        .onChange(of: selectedCategory) { _, _ in
+            filterSelection.clear()
         }
         .task {
             await model.loadCatalogIfNeeded()
@@ -178,6 +176,10 @@ struct BaCatalogView: View {
         }
     }
 
+    private var currentFilterGroups: [BaCatalogFilterGroup] {
+        model.catalogState.value?.filterGroups(for: selectedCategory) ?? []
+    }
+
     private var emptyDetail: String {
         if selectedCategory == .favorites {
             return BaL10n.string("ba.catalog.empty.favorites.detail")
@@ -239,7 +241,7 @@ private struct BaCatalogViewOptionsMenu: View {
                 }
             }
 
-            if selectedCategory == .students, filterGroups.isEmpty == false {
+            if filterGroups.isEmpty == false {
                 Section(BaL10n.string("ba.catalog.action.filter")) {
                     ForEach(filterGroups) { group in
                         Menu(group.title) {

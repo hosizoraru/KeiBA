@@ -17,39 +17,49 @@ struct BaGuideCatalogRepository {
     func fetchCatalog(now: Date = Date()) async throws -> BaRepositorySnapshot<BaGuideCatalogBundle> {
         async let students = fetchEntries(pid: BaCatalogCategory.students.gameKeePID, category: .students)
         async let npcSatellite = fetchEntries(pid: BaCatalogCategory.npcSatellite.gameKeePID, category: .npcSatellite)
-        async let filterPayloadResult = fetchStudentFilterPayload()
+        async let studentFilterPayloadResult = fetchFilterPayload(for: .students)
+        async let npcSatelliteFilterPayloadResult = fetchFilterPayload(for: .npcSatellite)
         async let metadataDataResult = fetchStudentMetadataData()
         let (studentEntries, npcSatelliteEntries) = try await (students, npcSatellite)
-        let filterPayload = await filterPayloadResult
+        let studentFilterPayload = await studentFilterPayloadResult
+        let npcSatelliteFilterPayload = await npcSatelliteFilterPayloadResult
         let metadataData = await metadataDataResult
         let studentMetadata = metadataData.value.flatMap { data in
-            try? parseStudentMetadata(data: data, filterGroups: filterPayload.value.groups)
+            try? parseStudentMetadata(data: data, filterGroups: studentFilterPayload.value.groups)
         } ?? [:]
         let enrichedStudentEntries = studentEntries.map { entry in
             entry.withMetadata(
                 mergedMetadata(
                     bulkMetadata: studentMetadata[entry.contentId],
-                    filterMetadata: filterPayload.value.metadataByEntryID[entry.entryId]
+                    filterMetadata: studentFilterPayload.value.metadataByEntryID[entry.entryId]
                 )
             )
         }
-        let entries = (enrichedStudentEntries + npcSatelliteEntries)
+        let enrichedNPCSatelliteEntries = npcSatelliteEntries.map { entry in
+            entry.withMetadata(npcSatelliteFilterPayload.value.metadataByEntryID[entry.entryId])
+        }
+        let entries = (enrichedStudentEntries + enrichedNPCSatelliteEntries)
             .sorted { lhs, rhs in
                 if lhs.category != rhs.category {
                     return lhs.category.rawValue < rhs.category.rawValue
                 }
                 return lhs.order < rhs.order
-        }
+            }
         return BaRepositorySnapshot(
-            value: BaGuideCatalogBundle(entries: entries, syncedAt: now, studentFilterGroups: filterPayload.value.groups),
+            value: BaGuideCatalogBundle(
+                entries: entries,
+                syncedAt: now,
+                studentFilterGroups: studentFilterPayload.value.groups,
+                npcSatelliteFilterGroups: npcSatelliteFilterPayload.value.groups
+            ),
             syncedAt: now,
-            sourceErrors: [filterPayload.error, metadataData.error].compactMap { $0 }
+            sourceErrors: [studentFilterPayload.error, npcSatelliteFilterPayload.error, metadataData.error].compactMap { $0 }
         )
     }
 
     func fetchStudentCatalog(now: Date = Date()) async throws -> BaRepositorySnapshot<[BaGuideCatalogEntry]> {
         async let entries = fetchEntries(pid: BaCatalogCategory.students.gameKeePID, category: .students)
-        async let filterPayloadResult = fetchStudentFilterPayload()
+        async let filterPayloadResult = fetchFilterPayload(for: .students)
         async let metadataDataResult = fetchStudentMetadataData()
         let (studentEntries, filterPayload, metadataData) = try await (entries, filterPayloadResult, metadataDataResult)
         let studentMetadata = metadataData.value.flatMap { data in
@@ -124,11 +134,11 @@ struct BaGuideCatalogRepository {
         try BaCatalogMetadataParser.parseStudentMetadata(data: data, filterGroups: filterGroups)
     }
 
-    private func fetchStudentFilterPayload() async -> CatalogPartial<CatalogFilterPayload> {
+    private func fetchFilterPayload(for category: BaCatalogCategory) async -> CatalogPartial<CatalogFilterPayload> {
         do {
             let data = try await client.fetchJSONData(
                 GameKeeRequest(
-                    pathOrURL: "/v1/entryFilter/getEntryFilter?entry_id=\(BaCatalogCategory.students.gameKeePID)",
+                    pathOrURL: "/v1/entryFilter/getEntryFilter?entry_id=\(category.gameKeePID)",
                     refererPath: "/ba/second/\(BaCatalogCategory.gameKeeSecondPageID)",
                     extraHeaders: GameKeeClient.baHeaders
                 )
@@ -140,7 +150,7 @@ struct BaGuideCatalogRepository {
                 error: nil
             )
         } catch {
-            return CatalogPartial(value: CatalogFilterPayload(), error: "catalog-filter:\(error.localizedDescription)")
+            return CatalogPartial(value: CatalogFilterPayload(), error: "catalog-filter-\(category.rawValue):\(error.localizedDescription)")
         }
     }
 

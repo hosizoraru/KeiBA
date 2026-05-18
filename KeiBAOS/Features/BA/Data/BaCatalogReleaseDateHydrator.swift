@@ -89,7 +89,8 @@ struct BaCatalogReleaseDateHydrator {
                     .withMetadata(patchedMetadata)
             },
             syncedAt: bundle.syncedAt,
-            studentFilterGroups: bundle.studentFilterGroups
+            studentFilterGroups: bundle.studentFilterGroups,
+            npcSatelliteFilterGroups: bundle.npcSatelliteFilterGroups
         )
     }
 
