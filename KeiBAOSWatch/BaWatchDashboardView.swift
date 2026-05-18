@@ -12,9 +12,9 @@ struct BaWatchDashboardView: View {
 
     var body: some View {
         NavigationStack {
-            TimelineView(.periodic(from: .now, by: 60)) { timeline in
+            Group {
                 if let snapshot = store.snapshot {
-                    BaWatchDashboardContent(snapshot: snapshot, now: timeline.date)
+                    BaWatchDashboardContent(snapshot: snapshot)
                 } else {
                     BaWatchEmptyState(error: store.lastSyncError)
                 }
@@ -26,7 +26,6 @@ struct BaWatchDashboardView: View {
 
 private struct BaWatchDashboardContent: View {
     let snapshot: BaWatchDashboardSnapshot
-    let now: Date
 
     var body: some View {
         List {
@@ -36,21 +35,8 @@ private struct BaWatchDashboardContent: View {
             .listRowBackground(Color.clear)
 
             Section {
-                BaWatchGaugeRow(
-                    title: Text("ba.watch.ap.title"),
-                    value: "\(snapshot.currentAP(at: now)) / \(snapshot.apLimit)",
-                    status: statusText(until: snapshot.apFullAt(from: now), readyKey: "ba.watch.status.full"),
-                    systemImage: "bolt.fill",
-                    color: .green
-                )
-
-                BaWatchGaugeRow(
-                    title: Text("ba.watch.cafeAP.title"),
-                    value: "\(snapshot.currentCafeAP(at: now)) / \(snapshot.cafeAPCapacity)",
-                    status: statusText(until: snapshot.cafeAPFullAt(from: now), readyKey: "ba.watch.status.full"),
-                    systemImage: "cup.and.saucer.fill",
-                    color: .pink
-                )
+                BaWatchLiveAPRow(snapshot: snapshot)
+                BaWatchLiveCafeAPRow(snapshot: snapshot)
             } header: {
                 Text("ba.watch.section.resources")
             }
@@ -59,21 +45,18 @@ private struct BaWatchDashboardContent: View {
                 BaWatchCooldownRow(
                     title: Text("ba.watch.cafe.headpat"),
                     date: snapshot.nextHeadpatAvailableAt,
-                    now: now,
                     systemImage: "hand.tap.fill"
                 )
 
                 BaWatchCooldownRow(
                     title: Text("ba.watch.cafe.inviteTicket1"),
                     date: snapshot.nextInviteTicket1AvailableAt,
-                    now: now,
                     systemImage: "ticket.fill"
                 )
 
                 BaWatchCooldownRow(
                     title: Text("ba.watch.cafe.inviteTicket2"),
                     date: snapshot.nextInviteTicket2AvailableAt,
-                    now: now,
                     systemImage: "ticket.fill"
                 )
             } header: {
@@ -128,12 +111,6 @@ private struct BaWatchDashboardContent: View {
         return String(localized: "ba.watch.status.off")
     }
 
-    private func statusText(until date: Date?, readyKey: LocalizedStringKey) -> Text {
-        guard let date, date > now else {
-            return Text(readyKey)
-        }
-        return Text(date, style: .relative)
-    }
 }
 
 private struct BaWatchTeacherHeader: View {
@@ -201,10 +178,60 @@ private struct BaWatchDutyAvatar: View {
     }
 }
 
+private struct BaWatchLiveAPRow: View {
+    let snapshot: BaWatchDashboardSnapshot
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 60)) { timeline in
+            BaWatchGaugeRow(
+                title: Text("ba.watch.ap.title"),
+                value: "\(snapshot.currentAP(at: timeline.date)) / \(snapshot.apLimit)",
+                status: BaWatchRelativeStatusText(until: snapshot.apFullAt(from: timeline.date), now: timeline.date),
+                systemImage: "bolt.fill",
+                color: .green
+            )
+        }
+    }
+}
+
+private struct BaWatchLiveCafeAPRow: View {
+    let snapshot: BaWatchDashboardSnapshot
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 60)) { timeline in
+            BaWatchGaugeRow(
+                title: Text("ba.watch.cafeAP.title"),
+                value: "\(snapshot.currentCafeAP(at: timeline.date)) / \(snapshot.cafeAPCapacity)",
+                status: BaWatchRelativeStatusText(until: snapshot.cafeAPFullAt(from: timeline.date), now: timeline.date),
+                systemImage: "cup.and.saucer.fill",
+                color: .pink
+            )
+        }
+    }
+}
+
+private struct BaWatchRelativeStatusText: View {
+    let date: Date?
+    let now: Date
+
+    init(until date: Date?, now: Date) {
+        self.date = date
+        self.now = now
+    }
+
+    var body: some View {
+        if let date, date > now {
+            Text(date, style: .relative)
+        } else {
+            Text("ba.watch.status.full")
+        }
+    }
+}
+
 private struct BaWatchGaugeRow: View {
     let title: Text
     let value: String
-    let status: Text
+    let status: BaWatchRelativeStatusText
     let systemImage: String
     let color: Color
 
@@ -236,18 +263,19 @@ private struct BaWatchGaugeRow: View {
 private struct BaWatchCooldownRow: View {
     let title: Text
     let date: Date?
-    let now: Date
     let systemImage: String
 
     var body: some View {
-        BaWatchStatusRow(
-            title: title,
-            value: cooldownText,
-            systemImage: systemImage
-        )
+        TimelineView(.periodic(from: .now, by: 60)) { timeline in
+            BaWatchStatusRow(
+                title: title,
+                value: cooldownText(now: timeline.date),
+                systemImage: systemImage
+            )
+        }
     }
 
-    private var cooldownText: String {
+    private func cooldownText(now: Date) -> String {
         guard let date, date > now else {
             return String(localized: "ba.watch.status.ready")
         }

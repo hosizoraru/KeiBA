@@ -38,18 +38,31 @@ final class BaWatchSnapshotStore {
     }
 
     func applySnapshotData(_ data: Data) {
-        do {
-            let decoded = try BaWatchDashboardSnapshotCoding.decode(data)
-            snapshot = decoded
-            lastSyncError = nil
-            defaults.set(data, forKey: snapshotKey)
-        } catch {
-            lastSyncError = error.localizedDescription
+        Task.detached(priority: .utility) {
+            do {
+                let decoded = try BaWatchDashboardSnapshotCoding.decode(data)
+                await self.commit(snapshot: decoded, data: data)
+            } catch {
+                await self.recordSyncError(error)
+            }
         }
     }
 
     private static func loadSnapshot(from defaults: UserDefaults, key: String) -> BaWatchDashboardSnapshot? {
         guard let data = defaults.data(forKey: key) else { return nil }
         return try? BaWatchDashboardSnapshotCoding.decode(data)
+    }
+
+    private func commit(snapshot decoded: BaWatchDashboardSnapshot, data: Data) {
+        lastSyncError = nil
+        if defaults.data(forKey: snapshotKey) != data {
+            defaults.set(data, forKey: snapshotKey)
+        }
+        guard snapshot != decoded else { return }
+        snapshot = decoded
+    }
+
+    private func recordSyncError(_ error: Error) {
+        lastSyncError = error.localizedDescription
     }
 }

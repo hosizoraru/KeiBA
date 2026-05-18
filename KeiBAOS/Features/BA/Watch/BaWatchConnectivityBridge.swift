@@ -27,7 +27,10 @@ final class BaNoopWatchSnapshotSyncer: BaWatchSnapshotSyncing {
 @MainActor
 final class BaWatchConnectivityBridge: NSObject, BaWatchSnapshotSyncing {
     private var pendingSnapshot: BaWatchDashboardSnapshot?
+    private var pendingRequiresGuaranteedDelivery = false
     private var didAssignDelegate = false
+    private var lastApplicationContextData: Data?
+    private var lastQueuedGuaranteedSourceUpdatedAt: Date?
 
     func activate() {
         guard WCSession.isSupported() else { return }
@@ -42,6 +45,7 @@ final class BaWatchConnectivityBridge: NSObject, BaWatchSnapshotSyncing {
 
     func sync(_ snapshot: BaWatchDashboardSnapshot) {
         pendingSnapshot = snapshot
+        pendingRequiresGuaranteedDelivery = true
         flushPendingSnapshot()
     }
 
@@ -59,13 +63,50 @@ final class BaWatchConnectivityBridge: NSObject, BaWatchSnapshotSyncing {
             return
         }
 
-        let payload: [String: Any] = [BaWatchDashboardSnapshot.applicationContextKey: data]
+        let payload = payload(for: snapshot, data: data)
         do {
-            try session.updateApplicationContext(payload)
+            if data != lastApplicationContextData {
+                try session.updateApplicationContext(payload)
+                lastApplicationContextData = data
+            }
+            queueGuaranteedTransferIfNeeded(payload: payload, snapshot: snapshot, session: session)
             pendingSnapshot = nil
+            pendingRequiresGuaranteedDelivery = false
         } catch {
-            session.transferUserInfo(payload)
+            queueGuaranteedTransfer(payload: payload, snapshot: snapshot, session: session)
         }
+    }
+
+    private func payload(for snapshot: BaWatchDashboardSnapshot, data: Data) -> [String: Any] {
+        [
+            BaWatchDashboardSnapshot.applicationContextKey: data,
+            "ba.watch.sourceUpdatedAt": snapshot.sourceUpdatedAt.timeIntervalSince1970
+        ]
+    }
+
+    private func queueGuaranteedTransferIfNeeded(
+        payload: [String: Any],
+        snapshot: BaWatchDashboardSnapshot,
+        session: WCSession
+    ) {
+        guard pendingRequiresGuaranteedDelivery, session.isReachable == false else { return }
+        queueGuaranteedTransfer(payload: payload, snapshot: snapshot, session: session)
+    }
+
+    private func queueGuaranteedTransfer(
+        payload: [String: Any],
+        snapshot: BaWatchDashboardSnapshot,
+        session: WCSession
+    ) {
+        #if targetEnvironment(simulator)
+        _ = payload
+        _ = snapshot
+        _ = session
+        #else
+        guard lastQueuedGuaranteedSourceUpdatedAt != snapshot.sourceUpdatedAt else { return }
+        session.transferUserInfo(payload)
+        lastQueuedGuaranteedSourceUpdatedAt = snapshot.sourceUpdatedAt
+        #endif
     }
 }
 
@@ -85,6 +126,12 @@ extension BaWatchConnectivityBridge: WCSessionDelegate {
 
     nonisolated func sessionDidDeactivate(_ session: WCSession) {
         session.activate()
+    }
+
+    nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
+        Task { @MainActor [weak self] in
+            self?.flushPendingSnapshot()
+        }
     }
 }
 #endif

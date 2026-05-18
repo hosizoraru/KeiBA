@@ -47,4 +47,6 @@ final class BaWatchConnectivityController: NSObject, WCSessionDelegate {
             BaWatchSnapshotStore.shared.applyApplicationContext(userInfo)
         }
     }
+
+    nonisolated func sessionReachabilityDidChange(_ session: WCSession) {}
 }
