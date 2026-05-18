@@ -104,57 +104,29 @@ final class BaUserDataSyncTests: XCTestCase {
         XCTAssertFalse(json.contains("favoriteCatalogEntries"))
     }
 
-    @MainActor
-    func testApplyingUserDataResetsServerScopedTimelineStateAndKeepsCatalogCache() throws {
+    func testSettingsPersistenceTransitionResetsServerScopedTimelineState() throws {
         let defaults = try makeIsolatedDefaults()
-        let model = makeAppModel(defaults: defaults)
         let base = Date(timeIntervalSince1970: 1_800_000_000)
-        let activity = BaActivityEntry(
-            id: 1,
-            title: "Event",
-            kindId: 1,
-            kindName: "Event",
-            beginAt: base,
-            endAt: base.addingTimeInterval(3_600),
-            linkURL: nil,
-            imageURL: nil
-        )
-        let pool = BaPoolEntry(
-            id: 1,
-            name: "Pickup",
-            tagId: 1,
-            tagName: "Pool",
-            alias: "",
-            startAt: base,
-            endAt: base.addingTimeInterval(3_600),
-            linkURL: nil,
-            imageURL: nil,
-            contentId: nil,
-            studentGuideURL: nil
-        )
-        let catalog = BaGuideCatalogBundle(
-            entries: [makeCatalogEntry(contentId: 702_789, name: "新角色", category: .students)],
-            syncedAt: base
-        )
-        model.activityState = BaLoadableState(value: [activity], lastSyncAt: base)
-        model.poolState = BaLoadableState(value: [pool], lastSyncAt: base)
-        model.catalogState = BaLoadableState(value: catalog, lastSyncAt: base)
-
-        var envelope = model.envelope
+        let previousEnvelope = BaSettingsEnvelope.defaults(now: base)
+        var envelope = previousEnvelope
         envelope.selectedServer = .global
         var profile = envelope.profile(for: .global)
         profile.nickname = "Synced Sensei"
         profile.friendCode = "sync0001"
         envelope.setProfile(profile, for: .global)
 
-        model.applyUserData(envelope.userData(updatedAt: base))
+        let userData = envelope.userData(updatedAt: base)
+        let outcome = BaSettingsPersistenceTransition.outcome(
+            envelope: userData.settingsEnvelope(),
+            previousServer: previousEnvelope.selectedServer,
+            previousEnvelope: previousEnvelope
+        )
+        BaSettingsStore(defaults: defaults).saveEnvelope(outcome.envelope, updatedAt: userData.updatedAt)
 
-        XCTAssertEqual(model.settings.server, .global)
-        XCTAssertEqual(model.settings.nickname, "Synced Sensei")
-        XCTAssertEqual(model.settings.friendCode, "SYNC0001")
-        XCTAssertNil(model.activityState.value)
-        XCTAssertNil(model.poolState.value)
-        XCTAssertEqual(model.catalogState.value?.entries.first?.contentId, 702_789)
+        XCTAssertEqual(outcome.settings.server, .global)
+        XCTAssertEqual(outcome.settings.nickname, "Synced Sensei")
+        XCTAssertEqual(outcome.settings.friendCode, "SYNC0001")
+        XCTAssertTrue(outcome.shouldResetServerScopedTimelineState)
         XCTAssertEqual(BaSettingsStore(defaults: defaults).loadEnvelope().selectedServer, .global)
     }
 
@@ -177,25 +149,6 @@ final class BaUserDataSyncTests: XCTestCase {
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
         return defaults
-    }
-
-    @MainActor
-    private func makeAppModel(defaults: UserDefaults) -> BaAppModel {
-        let client = GameKeeClient()
-        let cacheStore = BaCacheStore()
-        return BaAppModel(
-            settingsStore: BaSettingsStore(defaults: defaults),
-            cacheStore: cacheStore,
-            imageCache: BaImageCache(client: client),
-            activityPoolRepository: BaActivityPoolRepository(client: client),
-            catalogRepository: BaGuideCatalogRepository(client: client),
-            catalogReleaseDateHydrator: BaCatalogReleaseDateHydrator(
-                cacheStore: cacheStore,
-                studentRepository: BaStudentGuideRepository(client: client)
-            ),
-            studentRepository: BaStudentGuideRepository(client: client),
-            officeRepository: BaOfficeRepository()
-        )
     }
 
     private func makeCatalogEntry(

@@ -180,21 +180,22 @@ extension BaAppModel {
         previousEnvelope: BaSettingsEnvelope? = nil,
         refreshNotifications: Bool = true
     ) {
-        envelope = envelope.normalized()
-        settings = envelope.flattenedSettings()
+        let outcome = BaSettingsPersistenceTransition.outcome(
+            envelope: envelope,
+            previousServer: previousServer,
+            previousEnvelope: previousEnvelope
+        )
+        envelope = outcome.envelope
+        settings = outcome.settings
         BaL10n.configure(appLanguage: envelope.globalSettings.appLanguage)
         settingsStore.saveEnvelope(envelope, updatedAt: updatedAt)
-        if previousServer != settings.server {
+        if outcome.shouldResetServerScopedTimelineState {
             activityState = BaLoadableState()
             poolState = BaLoadableState()
         }
         refreshOfficeSnapshot()
         guard refreshNotifications else { return }
-        let shouldRequestAuthorization = previousEnvelope.map {
-            BaNotificationPreferenceSnapshot(envelope: envelope)
-                .becameEnabled(from: BaNotificationPreferenceSnapshot(envelope: $0))
-        } ?? false
-        scheduleNotificationRefresh(requestAuthorizationIfNeeded: shouldRequestAuthorization)
+        scheduleNotificationRefresh(requestAuthorizationIfNeeded: outcome.shouldRequestNotificationAuthorization)
     }
 
     private func persistAppIconChoice(_ choice: BaAppIconChoice) {
