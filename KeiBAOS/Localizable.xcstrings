@@ -8077,9 +8077,9 @@
     },
     "ba.settings.watch.content.summary" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Office, AP, cafe, and notification preferences" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "オフィス、AP、カフェ、通知設定" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "办公室、AP、咖啡厅、通知偏好" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Office, AP, cafe, events, pools, and notification preferences" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "オフィス、AP、カフェ、イベント、募集、通知設定" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "办公室、AP、咖啡厅、活动、卡池、通知偏好" } }
       }
     },
     "ba.settings.watch.content.title" : {
@@ -8171,6 +8171,20 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Sync to Apple Watch Now" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "Apple Watchへ今すぐ同期" } },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "立即同步到 Apple Watch" } }
+      }
+    },
+    "ba.settings.watch.timeline.summary.format" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Activity %d/%d · Pool %d/%d" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "イベント %d/%d · 募集 %d/%d" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "活动 %d/%d · 卡池 %d/%d" } }
+      }
+    },
+    "ba.settings.watch.timeline.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Timeline" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "日程" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "活动/卡池" } }
       }
     },
     "ba.settings.arena.notifications.title" : {

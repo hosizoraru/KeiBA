@@ -53,6 +53,7 @@ extension BaAppModel {
                 isShowingCache: false
             )
             await cacheStore.save(snapshot.value, for: .activities(server), schemaVersion: 3, syncedAt: snapshot.syncedAt)
+            syncWatchSnapshot(updatedAt: settingsStore.userDataUpdatedAt(fallback: snapshot.syncedAt))
             scheduleNotificationRefresh(delay: BaPlatformPerformanceProfile.notificationTimelineRefreshDelay)
         } catch {
             guard settings.server == server else { return }
@@ -99,6 +100,7 @@ extension BaAppModel {
                 isShowingCache: false
             )
             await cacheStore.save(entries, for: .pools(server), schemaVersion: Self.poolCacheSchemaVersion, syncedAt: snapshot.syncedAt)
+            syncWatchSnapshot(updatedAt: settingsStore.userDataUpdatedAt(fallback: snapshot.syncedAt))
             scheduleNotificationRefresh(delay: BaPlatformPerformanceProfile.notificationTimelineRefreshDelay)
         } catch {
             guard settings.server == server else { return }
@@ -119,6 +121,7 @@ extension BaAppModel {
             lastSyncAt: cached.syncedAt,
             isShowingCache: true
         )
+        syncWatchSnapshot(updatedAt: settingsStore.userDataUpdatedAt(fallback: cached.syncedAt))
         scheduleNotificationRefresh(delay: BaPlatformPerformanceProfile.notificationTimelineRefreshDelay)
     }
 
@@ -137,6 +140,7 @@ extension BaAppModel {
             lastSyncAt: cached.syncedAt,
             isShowingCache: true
         )
+        syncWatchSnapshot(updatedAt: settingsStore.userDataUpdatedAt(fallback: cached.syncedAt))
         scheduleNotificationRefresh(delay: BaPlatformPerformanceProfile.notificationTimelineRefreshDelay)
         if entries != cached.value {
             await cacheStore.save(entries, for: .pools(server), schemaVersion: Self.poolCacheSchemaVersion, syncedAt: cached.syncedAt)

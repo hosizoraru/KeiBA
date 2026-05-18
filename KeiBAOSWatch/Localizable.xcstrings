@@ -134,6 +134,13 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "卡池" } }
       }
     },
+    "ba.watch.section.timeline" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Events" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "イベント" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "活动/卡池" } }
+      }
+    },
     "ba.watch.section.cafe" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Cafe" } },
@@ -195,6 +202,62 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Last updated" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "最終更新" } },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "上次同步" } }
+      }
+    },
+    "ba.watch.timeline.activity" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Activity" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "イベント" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "活动" } }
+      }
+    },
+    "ba.watch.timeline.counts.format" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%d now · %d next" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "開催%d · 予定%d" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "进行%d · 即将%d" } }
+      }
+    },
+    "ba.watch.timeline.empty" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Waiting for timeline" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "日程を待機中" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "等待时间线数据" } }
+      }
+    },
+    "ba.watch.timeline.more.format" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "+%d" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "+%d" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "+%d" } }
+      }
+    },
+    "ba.watch.timeline.pool" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pool" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "募集" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "卡池" } }
+      }
+    },
+    "ba.watch.timeline.status.ended" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Ended" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "終了" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已结束" } }
+      }
+    },
+    "ba.watch.timeline.status.running" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Ends" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "終了" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "结束" } }
+      }
+    },
+    "ba.watch.timeline.status.upcoming" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Starts" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "開始" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "开始" } }
       }
     },
     "ba.watch.teacher.format" : {

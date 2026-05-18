@@ -46,6 +46,24 @@ private struct BaWatchDashboardContent: View {
             }
 
             Section {
+                BaWatchTimelineGlanceRow(
+                    title: Text("ba.watch.timeline.activity"),
+                    section: snapshot.timeline.activities,
+                    systemImage: "calendar.badge.clock",
+                    color: .blue
+                )
+
+                BaWatchTimelineGlanceRow(
+                    title: Text("ba.watch.timeline.pool"),
+                    section: snapshot.timeline.pools,
+                    systemImage: "sparkles",
+                    color: .purple
+                )
+            } header: {
+                Text("ba.watch.section.timeline")
+            }
+
+            Section {
                 BaWatchCooldownRow(
                     title: Text("ba.watch.cafe.headpat"),
                     date: snapshot.nextHeadpatAvailableAt,
@@ -100,7 +118,7 @@ private struct BaWatchDashboardContent: View {
                     Text("ba.watch.sync.updatedAt")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
-                    Text(snapshot.sourceUpdatedAt, format: .dateTime.month(.twoDigits).day(.twoDigits).hour().minute())
+                    Text(snapshot.generatedAt, format: .dateTime.month(.twoDigits).day(.twoDigits).hour().minute())
                         .font(.caption)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -295,6 +313,83 @@ private struct BaWatchCooldownRow: View {
     }
 }
 
+private struct BaWatchTimelineGlanceRow: View {
+    let title: Text
+    let section: BaTimelineGlanceSection
+    let systemImage: String
+    let color: Color
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 60)) { timeline in
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: systemImage)
+                    .font(.headline)
+                    .foregroundStyle(color)
+                    .frame(width: 24)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        title
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        Spacer(minLength: 2)
+
+                        Text(countsText)
+                            .font(.caption2.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.72)
+                    }
+
+                    if let item = section.featuredItem {
+                        Text(item.title)
+                            .font(.caption.weight(.semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+
+                        HStack(spacing: 4) {
+                            Text(item.status.watchTitle)
+                            Text(targetDate(for: item), style: .relative)
+                            if item.relatedItemCount > 0 {
+                                Text(String(format: String(localized: "ba.watch.timeline.more.format"), item.relatedItemCount))
+                            }
+                        }
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+
+                        if item.status == .running {
+                            ProgressView(value: item.progress(at: timeline.date))
+                                .tint(color)
+                                .controlSize(.mini)
+                        }
+                    } else {
+                        Text("ba.watch.timeline.empty")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                }
+            }
+            .padding(.vertical, 2)
+        }
+    }
+
+    private var countsText: String {
+        String(
+            format: String(localized: "ba.watch.timeline.counts.format"),
+            section.runningCount,
+            section.upcomingCount
+        )
+    }
+
+    private func targetDate(for item: BaTimelineGlanceItem) -> Date {
+        item.status == .upcoming ? item.startAt : item.endAt
+    }
+}
+
 private struct BaWatchStatusRow: View {
     let title: Text
     let value: String
@@ -317,6 +412,19 @@ private struct BaWatchStatusRow: View {
                 .font(.caption.weight(.semibold))
                 .lineLimit(1)
                 .minimumScaleFactor(0.82)
+        }
+    }
+}
+
+private extension BaTimelineGlanceStatus {
+    var watchTitle: LocalizedStringResource {
+        switch self {
+        case .running:
+            "ba.watch.timeline.status.running"
+        case .upcoming:
+            "ba.watch.timeline.status.upcoming"
+        case .ended:
+            "ba.watch.timeline.status.ended"
         }
     }
 }
@@ -368,7 +476,33 @@ private extension BaWatchSnapshotStore {
             cafeAPNotifyThreshold: 120,
             activityNotificationsEnabled: true,
             poolNotificationsEnabled: false,
-            favoriteStudentCount: 12
+            favoriteStudentCount: 12,
+            timeline: BaTimelineGlanceSnapshot(
+                generatedAt: .now,
+                activities: BaTimelineGlanceSection(
+                    runningCount: 2,
+                    upcomingCount: 1,
+                    featuredItem: BaTimelineGlanceItem(
+                        title: "沙勒总决算",
+                        status: .running,
+                        startAt: .now.addingTimeInterval(-3_600),
+                        endAt: .now.addingTimeInterval(7_200),
+                        relatedItemCount: 1
+                    ),
+                    lastSyncAt: .now
+                ),
+                pools: BaTimelineGlanceSection(
+                    runningCount: 1,
+                    upcomingCount: 1,
+                    featuredItem: BaTimelineGlanceItem(
+                        title: "FES 招募",
+                        status: .running,
+                        startAt: .now.addingTimeInterval(-1_800),
+                        endAt: .now.addingTimeInterval(18_000)
+                    ),
+                    lastSyncAt: .now
+                )
+            )
         )
         store.phoneConnectionStatus = .connected
         return store

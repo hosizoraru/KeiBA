@@ -35,6 +35,35 @@ nonisolated struct BaWatchDashboardSnapshot: Codable, Equatable, Sendable {
     var activityNotificationsEnabled: Bool
     var poolNotificationsEnabled: Bool
     var favoriteStudentCount: Int
+    var timeline: BaTimelineGlanceSnapshot
+
+    enum CodingKeys: String, CodingKey {
+        case schemaVersion
+        case sourceUpdatedAt
+        case generatedAt
+        case serverName
+        case teacherName
+        case friendCode
+        case dutyStudentName
+        case dutyStudentAvatarURLString
+        case apBaseValue
+        case apLimit
+        case apRegenBaseAt
+        case apNotificationsEnabled
+        case apNotifyThreshold
+        case cafeLevel
+        case cafeAPBaseValue
+        case cafeStorageBaseAt
+        case cafeAPNotificationsEnabled
+        case cafeAPNotifyThreshold
+        case nextHeadpatAvailableAt
+        case nextInviteTicket1AvailableAt
+        case nextInviteTicket2AvailableAt
+        case activityNotificationsEnabled
+        case poolNotificationsEnabled
+        case favoriteStudentCount
+        case timeline
+    }
 
     init(
         schemaVersion: Int = currentSchemaVersion,
@@ -60,7 +89,8 @@ nonisolated struct BaWatchDashboardSnapshot: Codable, Equatable, Sendable {
         nextInviteTicket2AvailableAt: Date? = nil,
         activityNotificationsEnabled: Bool,
         poolNotificationsEnabled: Bool,
-        favoriteStudentCount: Int
+        favoriteStudentCount: Int,
+        timeline: BaTimelineGlanceSnapshot? = nil
     ) {
         self.schemaVersion = schemaVersion
         self.sourceUpdatedAt = sourceUpdatedAt
@@ -86,6 +116,66 @@ nonisolated struct BaWatchDashboardSnapshot: Codable, Equatable, Sendable {
         self.activityNotificationsEnabled = activityNotificationsEnabled
         self.poolNotificationsEnabled = poolNotificationsEnabled
         self.favoriteStudentCount = max(favoriteStudentCount, 0)
+        self.timeline = timeline ?? BaTimelineGlanceSnapshot.empty(generatedAt: generatedAt)
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
+        sourceUpdatedAt = try container.decode(Date.self, forKey: .sourceUpdatedAt)
+        generatedAt = try container.decode(Date.self, forKey: .generatedAt)
+        serverName = try container.decode(String.self, forKey: .serverName)
+        teacherName = try container.decode(String.self, forKey: .teacherName)
+        friendCode = try container.decode(String.self, forKey: .friendCode)
+        dutyStudentName = try container.decodeIfPresent(String.self, forKey: .dutyStudentName)
+        dutyStudentAvatarURLString = try container.decodeIfPresent(String.self, forKey: .dutyStudentAvatarURLString)
+        apBaseValue = BaWatchTimeMath.normalizedAP(try container.decode(Double.self, forKey: .apBaseValue))
+        apLimit = min(max(try container.decode(Int.self, forKey: .apLimit), 0), BaWatchTimeMath.apLimitMax)
+        apRegenBaseAt = try container.decode(Date.self, forKey: .apRegenBaseAt)
+        apNotificationsEnabled = try container.decode(Bool.self, forKey: .apNotificationsEnabled)
+        apNotifyThreshold = min(max(try container.decode(Int.self, forKey: .apNotifyThreshold), 0), BaWatchTimeMath.apMax)
+        cafeLevel = min(max(try container.decode(Int.self, forKey: .cafeLevel), 1), BaWatchTimeMath.cafeLevelMax)
+        cafeAPBaseValue = BaWatchTimeMath.normalizedAP(try container.decode(Double.self, forKey: .cafeAPBaseValue))
+        cafeStorageBaseAt = try container.decode(Date.self, forKey: .cafeStorageBaseAt)
+        cafeAPNotificationsEnabled = try container.decode(Bool.self, forKey: .cafeAPNotificationsEnabled)
+        cafeAPNotifyThreshold = min(max(try container.decode(Int.self, forKey: .cafeAPNotifyThreshold), 0), BaWatchTimeMath.apMax)
+        nextHeadpatAvailableAt = try container.decodeIfPresent(Date.self, forKey: .nextHeadpatAvailableAt)
+        nextInviteTicket1AvailableAt = try container.decodeIfPresent(Date.self, forKey: .nextInviteTicket1AvailableAt)
+        nextInviteTicket2AvailableAt = try container.decodeIfPresent(Date.self, forKey: .nextInviteTicket2AvailableAt)
+        activityNotificationsEnabled = try container.decode(Bool.self, forKey: .activityNotificationsEnabled)
+        poolNotificationsEnabled = try container.decode(Bool.self, forKey: .poolNotificationsEnabled)
+        favoriteStudentCount = max(try container.decode(Int.self, forKey: .favoriteStudentCount), 0)
+        timeline = try container.decodeIfPresent(BaTimelineGlanceSnapshot.self, forKey: .timeline) ??
+            BaTimelineGlanceSnapshot.empty(generatedAt: generatedAt)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(schemaVersion, forKey: .schemaVersion)
+        try container.encode(sourceUpdatedAt, forKey: .sourceUpdatedAt)
+        try container.encode(generatedAt, forKey: .generatedAt)
+        try container.encode(serverName, forKey: .serverName)
+        try container.encode(teacherName, forKey: .teacherName)
+        try container.encode(friendCode, forKey: .friendCode)
+        try container.encodeIfPresent(dutyStudentName, forKey: .dutyStudentName)
+        try container.encodeIfPresent(dutyStudentAvatarURLString, forKey: .dutyStudentAvatarURLString)
+        try container.encode(apBaseValue, forKey: .apBaseValue)
+        try container.encode(apLimit, forKey: .apLimit)
+        try container.encode(apRegenBaseAt, forKey: .apRegenBaseAt)
+        try container.encode(apNotificationsEnabled, forKey: .apNotificationsEnabled)
+        try container.encode(apNotifyThreshold, forKey: .apNotifyThreshold)
+        try container.encode(cafeLevel, forKey: .cafeLevel)
+        try container.encode(cafeAPBaseValue, forKey: .cafeAPBaseValue)
+        try container.encode(cafeStorageBaseAt, forKey: .cafeStorageBaseAt)
+        try container.encode(cafeAPNotificationsEnabled, forKey: .cafeAPNotificationsEnabled)
+        try container.encode(cafeAPNotifyThreshold, forKey: .cafeAPNotifyThreshold)
+        try container.encodeIfPresent(nextHeadpatAvailableAt, forKey: .nextHeadpatAvailableAt)
+        try container.encodeIfPresent(nextInviteTicket1AvailableAt, forKey: .nextInviteTicket1AvailableAt)
+        try container.encodeIfPresent(nextInviteTicket2AvailableAt, forKey: .nextInviteTicket2AvailableAt)
+        try container.encode(activityNotificationsEnabled, forKey: .activityNotificationsEnabled)
+        try container.encode(poolNotificationsEnabled, forKey: .poolNotificationsEnabled)
+        try container.encode(favoriteStudentCount, forKey: .favoriteStudentCount)
+        try container.encode(timeline, forKey: .timeline)
     }
 
     func currentAP(at date: Date = Date()) -> Int {

@@ -609,6 +609,12 @@ struct BaSettingsView: View {
                     .multilineTextAlignment(.trailing)
             }
 
+            LabeledContent(BaL10n.string("ba.settings.watch.timeline.title")) {
+                Text(watchTimelineStatus(snapshot.timeline))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.trailing)
+            }
+
             if let error = state.lastErrorDescription {
                 LabeledContent(BaL10n.string("ba.settings.watch.error.title")) {
                     Text(error)
@@ -681,6 +687,16 @@ struct BaSettingsView: View {
             return String(format: BaL10n.string("ba.settings.watch.dutyAvatar.ready"), dutyStudentName)
         }
         return String(format: BaL10n.string("ba.settings.watch.dutyAvatar.noImage"), dutyStudentName)
+    }
+
+    private func watchTimelineStatus(_ timeline: BaTimelineGlanceSnapshot) -> String {
+        String(
+            format: BaL10n.string("ba.settings.watch.timeline.summary.format"),
+            timeline.activities.runningCount,
+            timeline.activities.upcomingCount,
+            timeline.pools.runningCount,
+            timeline.pools.upcomingCount
+        )
     }
 
     private func watchSyncDateText(_ date: Date?) -> String {
