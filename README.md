@@ -10,8 +10,10 @@ music in an Apple-native interface.
 ## Status
 
 KeiBAOS is in active development. The current app target supports iOS,
-iPadOS, macOS, and watchOS 26. The data model is being shaped with future
-iCloud sync and lightweight cross-device surfaces in mind.
+iPadOS, and macOS 26. A watchOS 26 companion app is in development and is
+already part of the local build and CI verification path. The data model is
+being shaped with future iCloud sync and lightweight cross-device surfaces in
+mind.
 
 ## Platform Baseline
 
@@ -35,8 +37,9 @@ Build baseline for the current project:
 - Office overview for AP, cafe AP, daily reset timing, and player identity.
 - Activity and recruitment-pool timelines with local notifications and
   Live Activities.
-- Apple Watch companion app for office identity, AP, cafe AP, timeline
-  highlights, notification status, connection state, and synced duty avatar.
+- Apple Watch companion app in development for office identity, AP, cafe AP,
+  timeline highlights, notification status, connection state, and synced duty
+  avatar.
 - Student catalog with search, sorting, implemented-student filters, and
   NPC or satellite filters.
 - Student detail pages with profile, skills, weapon data, gallery media, and
@@ -61,6 +64,23 @@ Docs/                   Project notes and feature coverage
 scripts/                Local maintenance scripts
 ```
 
+## Apple Watch Companion
+
+The watchOS app is a lightweight companion surface for quick checks during the
+day. It currently focuses on:
+
+- Teacher identity, server-aware office naming, friend code, and duty student.
+- AP and cafe AP values with local full-time calculation on the Watch.
+- Activity and recruitment-pool glance summaries synced from the iPhone app.
+- Notification preference status and iPhone-Watch connection state.
+- Duty-student avatar thumbnail sync through the shared dashboard snapshot.
+
+The iPhone app owns the main settings and sends a compact Watch dashboard
+snapshot through WatchConnectivity. The Watch app keeps the last received
+snapshot locally so recent AP and timeline data remain readable between syncs.
+Future Widget work is expected to share more timeline data with the Watch
+surface.
+
 ## Dependencies
 
 Swift Package Manager resolves packages through the Xcode project:
@@ -76,15 +96,16 @@ revisions.
 
 Open `KeiBAOS.xcodeproj` in Xcode 26.5 or newer, select the `KeiBAOS` scheme,
 then build for an iOS 26 simulator, iPadOS 26 simulator, macOS 26, or an
-iOS 26 device.
+iOS 26 device. Select the `KeiBAOSWatch` scheme to build the watchOS companion
+for a watchOS 26 simulator.
 
 Release install on a connected iPhone or iPad from Xcode:
 
 1. Select the `KeiBAOS` scheme and the physical device in the destination menu.
 2. Open `Product > Scheme > Edit Scheme...`.
 3. Select `Run > Info`, set `Build Configuration` to `Release`, then close the sheet.
-4. Confirm `Signing & Capabilities` has the Apple team selected for the app and
-   the Live Activities extension.
+4. Confirm `Signing & Capabilities` has the Apple team selected for the app,
+   Live Activities extension, and Watch companion.
 5. Use `Product > Run` to build, sign, install, and launch the Release build on
    the device.
 
@@ -136,7 +157,8 @@ xcodebuild test \
 ## CI
 
 GitHub Actions runs localization validation, iOS simulator build, watchOS
-simulator build, macOS build, and macOS unit tests on `macos-26`.
+simulator build, macOS build, macOS unit tests, focused Watch snapshot tests,
+and user-data sync tests on `macos-26`.
 See [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 Pushes to `main` and manual workflow runs also upload side-load test artifacts:
