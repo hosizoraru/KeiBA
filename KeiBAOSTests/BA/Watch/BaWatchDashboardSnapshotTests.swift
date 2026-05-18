@@ -172,43 +172,34 @@ final class BaWatchDashboardSnapshotTests: XCTestCase {
     }
 
     @MainActor
-    func testAppModelMirrorsWatchConnectivityStateChanges() throws {
+    func testWatchSyncStateCallbackMirrorsSyncerChanges() {
         let syncer = RecordingWatchSnapshotSyncer()
-        let model = makeWatchAppModel(watchSnapshotSyncer: syncer)
+        var mirroredState = syncer.state
 
-        XCTAssertEqual(model.watchSyncState.availability, .background)
+        syncer.onStateChanged = { state in
+            mirroredState = state
+        }
+
+        XCTAssertEqual(mirroredState.availability, .unavailable)
+
+        syncer.activate()
+        XCTAssertEqual(mirroredState.availability, .activating)
+
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let snapshot = BaWatchDashboardSnapshot(
+            userData: BaSettingsEnvelope.defaults(now: now).userData(updatedAt: now),
+            now: now
+        )
+
+        syncer.sync(snapshot)
+        XCTAssertEqual(mirroredState.availability, .background)
+        XCTAssertEqual(syncer.syncedSnapshots.count, 1)
 
         syncer.setAvailability(.reachable)
+        XCTAssertEqual(mirroredState.availability, .reachable)
 
-        XCTAssertEqual(model.watchSyncState.availability, .reachable)
-        XCTAssertGreaterThanOrEqual(syncer.syncedSnapshots.count, 1)
-    }
-
-    @MainActor
-    private func makeWatchAppModel(watchSnapshotSyncer: RecordingWatchSnapshotSyncer) -> BaAppModel {
-        let client = GameKeeClient()
-        let cacheStore = BaCacheStore()
-        return BaAppModel(
-            settingsStore: BaSettingsStore(defaults: makeIsolatedDefaults()),
-            cacheStore: cacheStore,
-            imageCache: BaImageCache(client: client),
-            activityPoolRepository: BaActivityPoolRepository(client: client),
-            catalogRepository: BaGuideCatalogRepository(client: client),
-            catalogReleaseDateHydrator: BaCatalogReleaseDateHydrator(
-                cacheStore: cacheStore,
-                studentRepository: BaStudentGuideRepository(client: client)
-            ),
-            studentRepository: BaStudentGuideRepository(client: client),
-            officeRepository: BaOfficeRepository(),
-            watchSnapshotSyncer: watchSnapshotSyncer
-        )
-    }
-
-    private func makeIsolatedDefaults() -> UserDefaults {
-        let suiteName = "KeiBAOSTests.\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: suiteName)!
-        defaults.removePersistentDomain(forName: suiteName)
-        return defaults
+        syncer.refreshState()
+        XCTAssertEqual(mirroredState.availability, .reachable)
     }
 
     private static let onePixelPNGBase64 =
