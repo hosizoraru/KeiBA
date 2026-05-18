@@ -1,124 +1,408 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%lld" : {
+
+    },
+    "%lld/%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "AP %lld/%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "AP %1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "ba.notification.live.markRead" : {
+
+    },
     "ba.widget.activity.title" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Events" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "イベント" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "活动" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Events"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "イベント"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "活动"
+          }
+        }
       }
     },
     "ba.widget.ap.title" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "AP" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "AP" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "AP" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AP"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AP"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AP"
+          }
+        }
       }
     },
     "ba.widget.cafeAP.title" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cafe AP" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "カフェ AP" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "咖啡厅 AP" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cafe AP"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カフェ AP"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "咖啡厅 AP"
+          }
+        }
       }
     },
     "ba.widget.empty.inline" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open KeiBAOS to sync" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "KeiBAOSで同期" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开 KeiBAOS 同步" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open KeiBAOS to sync"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KeiBAOSで同期"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开 KeiBAOS 同步"
+          }
+        }
       }
     },
     "ba.widget.empty.message" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open the app once so the widget can read the latest office snapshot." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アプリを一度開くと、最新の執務室スナップショットを表示します。" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开 App 一次，小组件即可读取最新办公室快照。" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open the app once so the widget can read the latest office snapshot."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アプリを一度開くと、最新の執務室スナップショットを表示します。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开 App 一次，小组件即可读取最新办公室快照。"
+          }
+        }
       }
     },
     "ba.widget.empty.title" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Waiting for sync" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "同期待ち" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "等待同步" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for sync"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同期待ち"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待同步"
+          }
+        }
       }
     },
     "ba.widget.pool.title" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Recruitment" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "募集" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "卡池" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recruitment"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "募集"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卡池"
+          }
+        }
       }
     },
     "ba.widget.resource.full" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Full" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "満タン" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已满" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Full"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "満タン"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已满"
+          }
+        }
       }
     },
     "ba.widget.resources.description" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Shows current AP, cafe AP, and the next full time." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "現在のAP、カフェAP、満タン時刻を表示します。" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "显示当前 AP、咖啡厅 AP 和预计回满时间。" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows current AP, cafe AP, and the next full time."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在のAP、カフェAP、満タン時刻を表示します。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示当前 AP、咖啡厅 AP 和预计回满时间。"
+          }
+        }
       }
     },
     "ba.widget.resources.name" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Office Resources" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "執務室リソース" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "办公室资源" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Office Resources"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "執務室リソース"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "办公室资源"
+          }
+        }
       }
     },
     "ba.widget.timeline.counts.format" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld active · %lld upcoming" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "開催中 %lld · 予定 %lld" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "进行 %lld · 预告 %lld" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld active · %lld upcoming"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開催中 %lld · 予定 %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进行 %lld · 预告 %lld"
+          }
+        }
       }
     },
     "ba.widget.timeline.description" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Shows event and recruitment highlights." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "イベントと募集の注目情報を表示します。" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "显示活动与卡池重点信息。" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows event and recruitment highlights."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "イベントと募集の注目情報を表示します。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示活动与卡池重点信息。"
+          }
+        }
       }
     },
     "ba.widget.timeline.empty" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No timeline item" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "予定なし" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂无日程" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No timeline item"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "予定なし"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂无日程"
+          }
+        }
       }
     },
     "ba.widget.timeline.name" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Events & Recruitment" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "イベントと募集" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "活动与卡池" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Events & Recruitment"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "イベントと募集"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "活动与卡池"
+          }
+        }
       }
     },
     "ba.widget.timeline.status.ended" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Ended" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "終了" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已结束" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ended"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "終了"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已结束"
+          }
+        }
       }
     },
     "ba.widget.timeline.status.running" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Active" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "開催中" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "进行中" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開催中"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进行中"
+          }
+        }
       }
     },
     "ba.widget.timeline.status.upcoming" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Upcoming" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "予定" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "即将开始" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upcoming"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "予定"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "即将开始"
+          }
+        }
       }
+    },
+    "KeiBAOS" : {
+
     }
   },
   "version" : "1.0"
