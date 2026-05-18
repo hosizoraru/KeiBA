@@ -9,6 +9,16 @@
 import XCTest
 
 final class BaVoiceDisplayTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        BaL10n.configure(appLanguage: .simplifiedChinese)
+    }
+
+    override func tearDown() {
+        BaL10n.configure(appLanguage: .system)
+        super.tearDown()
+    }
+
     func testVoiceDisplayFiltersBySectionAndSearchText() throws {
         let entries = try makeVoiceEntries()
         let headers = BaVoiceLanguageResolver.displayHeaders(for: entries)
