@@ -14,7 +14,6 @@ extension View {
             self
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
-                .textContentType(.nickname)
                 .submitLabel(.done)
         #else
             self

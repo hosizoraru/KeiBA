@@ -144,7 +144,9 @@ private struct BaStudentGalleryExpressionCard: View {
                         ) {
                             ForEach(items) { item in
                                 Button(item.galleryShortTitle) {
-                                    selectedID = item.id
+                                    BaMenuActionDispatcher.perform {
+                                        selectedID = item.id
+                                    }
                                 }
                             }
                         }
@@ -207,7 +209,9 @@ private struct BaStudentGalleryVideoGroupCard: View {
                             ) {
                                 ForEach(group.items) { item in
                                     Button(videoVariantTitle(for: item)) {
-                                        selectedID = item.id
+                                        BaMenuActionDispatcher.perform {
+                                            selectedID = item.id
+                                        }
                                     }
                                 }
                             }

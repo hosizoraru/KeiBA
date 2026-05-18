@@ -207,7 +207,9 @@ private struct BaVoiceFilterMenu: View {
         Menu {
             ForEach(filters) { filter in
                 Button {
-                    selection = filter
+                    BaMenuActionDispatcher.perform {
+                        selection = filter
+                    }
                 } label: {
                     if filter == selection {
                         Label(filter.title, systemImage: "checkmark")

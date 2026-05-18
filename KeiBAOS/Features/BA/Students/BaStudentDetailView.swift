@@ -99,23 +99,19 @@ struct BaStudentDetailView: View {
                 .disabled(state.isLoading)
 
                 Menu {
-                    Button {
+                    BaMenuActionButton(
+                        title: favoriteTitle,
+                        systemImage: model.isFavorite(entry) ? "star.slash" : "star"
+                    ) {
                         model.toggleFavorite(entry)
-                    } label: {
-                        Label(
-                            favoriteTitle,
-                            systemImage: model.isFavorite(entry) ? "star.slash" : "star"
-                        )
                     }
 
                     if model.canSetDutyStudent(entry) {
-                        Button {
+                        BaMenuActionButton(
+                            title: dutyStudentTitle,
+                            systemImage: dutyStudentSystemImage
+                        ) {
                             toggleDutyStudent()
-                        } label: {
-                            Label(
-                                dutyStudentTitle,
-                                systemImage: dutyStudentSystemImage
-                            )
                         }
                     }
                 } label: {

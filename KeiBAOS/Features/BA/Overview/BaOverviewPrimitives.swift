@@ -270,60 +270,72 @@ struct BaOverviewActionTile: View {
     let onReset: () -> Void
 
     var body: some View {
-        Button(action: onTap) {
-            VStack(alignment: .leading, spacing: BaOverviewMetricStyle.compactTileSpacing) {
-                HStack(spacing: 7) {
-                    BaOverviewAssetIcon(action.asset, size: BaOverviewMetricStyle.rowIconSlot)
-
-                    Text(action.title)
-                        .font(BaOverviewTextToken.rowTitle)
-                        .foregroundStyle(.primary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.82)
-
-                    Spacer(minLength: 0)
-
-                    BaOverviewSymbolIcon(
-                        action.isReady ? "checkmark.circle.fill" : "clock.fill",
-                        size: BaOverviewMetricStyle.badgeIconSlot,
-                        fontSize: BaOverviewMetricStyle.badgeIcon,
-                        tint: action.isReady ? BaDesign.green : tint
-                    )
-                }
-                .frame(height: BaOverviewMetricStyle.compactHeaderHeight, alignment: .leading)
-
-                Text(action.value)
-                    .font(BaOverviewTextToken.timeValue)
-                    .foregroundStyle(tint)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.68)
-                    .contentTransition(.numericText())
-                    .frame(height: BaOverviewMetricStyle.compactValueHeight, alignment: .leading)
-
-                Text(action.detail)
-                    .font(BaOverviewTextToken.timeDetail)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.76)
-                    .frame(height: BaOverviewMetricStyle.compactDetailHeight, alignment: .topLeading)
+        ZStack(alignment: .topTrailing) {
+            Button(action: onTap) {
+                tileContent
             }
-            .frame(
-                maxWidth: .infinity,
-                minHeight: BaOverviewMetricStyle.actionMinHeight,
-                alignment: .topLeading
-            )
-            .padding(BaOverviewMetricStyle.compactTilePadding)
-            .liquidGlassSurface(cornerRadius: 20, tint: tint.opacity(0.05), isInteractive: true)
-        }
-        .buttonStyle(.plain)
-        .contextMenu {
-            Button(
-                BaL10n.string("ba.overview.action.resetCooldown"),
-                systemImage: "arrow.counterclockwise",
-                action: onReset
-            )
+            .buttonStyle(.plain)
+
+            Button(action: onReset) {
+                Image(systemName: "arrow.counterclockwise")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 30, height: 30)
+                    .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 8)
+            .padding(.trailing, 8)
+            .accessibilityLabel(BaL10n.string("ba.overview.action.resetCooldown"))
         }
         .accessibilityLabel(action.title)
+    }
+
+    private var tileContent: some View {
+        VStack(alignment: .leading, spacing: BaOverviewMetricStyle.compactTileSpacing) {
+            HStack(spacing: 7) {
+                BaOverviewAssetIcon(action.asset, size: BaOverviewMetricStyle.rowIconSlot)
+
+                Text(action.title)
+                    .font(BaOverviewTextToken.rowTitle)
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.82)
+
+                Spacer(minLength: 0)
+
+                BaOverviewSymbolIcon(
+                    action.isReady ? "checkmark.circle.fill" : "clock.fill",
+                    size: BaOverviewMetricStyle.badgeIconSlot,
+                    fontSize: BaOverviewMetricStyle.badgeIcon,
+                    tint: action.isReady ? BaDesign.green : tint
+                )
+                .padding(.trailing, 30)
+            }
+            .frame(height: BaOverviewMetricStyle.compactHeaderHeight, alignment: .leading)
+
+            Text(action.value)
+                .font(BaOverviewTextToken.timeValue)
+                .foregroundStyle(tint)
+                .lineLimit(1)
+                .minimumScaleFactor(0.68)
+                .contentTransition(.numericText())
+                .frame(height: BaOverviewMetricStyle.compactValueHeight, alignment: .leading)
+
+            Text(action.detail)
+                .font(BaOverviewTextToken.timeDetail)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+                .minimumScaleFactor(0.76)
+                .frame(height: BaOverviewMetricStyle.compactDetailHeight, alignment: .topLeading)
+        }
+        .frame(
+            maxWidth: .infinity,
+            minHeight: BaOverviewMetricStyle.actionMinHeight,
+            alignment: .topLeading
+        )
+        .padding(BaOverviewMetricStyle.compactTilePadding)
+        .liquidGlassSurface(cornerRadius: 20, tint: tint.opacity(0.05), isInteractive: true)
     }
 
     private var tint: Color {

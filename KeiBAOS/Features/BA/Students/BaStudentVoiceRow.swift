@@ -109,9 +109,6 @@ struct BaStudentVoiceRow: View {
             }
         }
         .padding(.vertical, 6)
-        .contextMenu {
-            copyActions
-        }
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button {
                 BaVoicePasteboard.copy(copySelectedText)
@@ -202,10 +199,11 @@ struct BaStudentVoiceRow: View {
             copyActions
 
             if let playbackURL {
-                Button {
+                BaMenuActionButton(
+                    title: BaL10n.string("ba.student.detail.voice.openAudio"),
+                    systemImage: "safari"
+                ) {
                     openURL(playbackURL)
-                } label: {
-                    Label(BaL10n.string("ba.student.detail.voice.openAudio"), systemImage: "safari")
                 }
             }
         } label: {
@@ -220,16 +218,18 @@ struct BaStudentVoiceRow: View {
 
     @ViewBuilder
     private var copyActions: some View {
-        Button {
+        BaMenuActionButton(
+            title: BaL10n.string("ba.student.detail.voice.copySelected"),
+            systemImage: "doc.on.doc"
+        ) {
             BaVoicePasteboard.copy(copySelectedText)
-        } label: {
-            Label(BaL10n.string("ba.student.detail.voice.copySelected"), systemImage: "doc.on.doc")
         }
 
-        Button {
+        BaMenuActionButton(
+            title: BaL10n.string("ba.student.detail.voice.copyAll"),
+            systemImage: "list.clipboard"
+        ) {
             BaVoicePasteboard.copy(copyAllText)
-        } label: {
-            Label(BaL10n.string("ba.student.detail.voice.copyAll"), systemImage: "list.clipboard")
         }
     }
 }

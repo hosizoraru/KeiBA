@@ -260,16 +260,18 @@ private struct BaNavigationRoot: View {
     @ViewBuilder
     private var appSettingsMenuItem: some View {
         Section {
-            Button {
+            BaMenuActionButton(
+                title: BaPresentedSheet.settings.title,
+                systemImage: BaPresentedSheet.settings.systemImage
+            ) {
                 presentedSheet = .settings
-            } label: {
-                Label(BaPresentedSheet.settings.title, systemImage: BaPresentedSheet.settings.systemImage)
             }
 
-            Button {
+            BaMenuActionButton(
+                title: BaPresentedSheet.about.title,
+                systemImage: BaPresentedSheet.about.systemImage
+            ) {
                 presentedSheet = .about
-            } label: {
-                Label(BaPresentedSheet.about.title, systemImage: BaPresentedSheet.about.systemImage)
             }
         }
     }
@@ -279,60 +281,71 @@ private struct BaNavigationRoot: View {
         switch tab {
         case .overview:
             Section {
-                Button {
+                BaMenuActionButton(
+                    title: BaPresentedSheet.editOffice.menuTitle,
+                    systemImage: BaPresentedSheet.editOffice.systemImage
+                ) {
                     presentedSheet = .editOffice
-                } label: {
-                    Label(BaPresentedSheet.editOffice.menuTitle, systemImage: BaPresentedSheet.editOffice.systemImage)
                 }
 
-                Button {
+                BaMenuActionButton(
+                    title: BaPresentedSheet.notifications.title,
+                    systemImage: BaPresentedSheet.notifications.systemImage
+                ) {
                     presentedSheet = .notifications
-                } label: {
-                    Label(BaPresentedSheet.notifications.title, systemImage: BaPresentedSheet.notifications.systemImage)
                 }
 
-                Button {
+                BaMenuActionButton(
+                    title: BaPresentedSheet.debugTools.menuTitle,
+                    systemImage: BaPresentedSheet.debugTools.systemImage
+                ) {
                     presentedSheet = .debugTools
-                } label: {
-                    Label(BaPresentedSheet.debugTools.menuTitle, systemImage: BaPresentedSheet.debugTools.systemImage)
                 }
             }
         case .activity:
             timelineOptionsMenu
             Section {
-                Button {
+                BaMenuActionButton(
+                    title: BaPresentedSheet.notifications.title,
+                    systemImage: BaPresentedSheet.notifications.systemImage
+                ) {
                     presentedSheet = .notifications
-                } label: {
-                    Label(BaPresentedSheet.notifications.title, systemImage: BaPresentedSheet.notifications.systemImage)
                 }
             }
         case .pool:
             timelineOptionsMenu
             Section {
-                Button {
+                BaMenuActionButton(
+                    title: BaPresentedSheet.notifications.title,
+                    systemImage: BaPresentedSheet.notifications.systemImage
+                ) {
                     presentedSheet = .notifications
-                } label: {
-                    Label(BaPresentedSheet.notifications.title, systemImage: BaPresentedSheet.notifications.systemImage)
                 }
             }
         case .catalog:
             Section(BaL10n.string("ba.settings.media.title")) {
-                Toggle(
-                    BaL10n.string("ba.settings.media.images.title"),
-                    isOn: globalBoolBinding(\.showPreviewImages)
-                )
+                BaMenuToggleButton(
+                    title: BaL10n.string("ba.settings.media.images.title"),
+                    isOn: model.envelope.globalSettings.showPreviewImages
+                ) {
+                    model.updateGlobalSettings { $0.showPreviewImages.toggle() }
+                }
             }
         case .library:
             Section(BaL10n.string("ba.settings.media.title")) {
-                Toggle(
-                    BaL10n.string("ba.settings.media.autoplay.title"),
-                    isOn: globalBoolBinding(\.mediaAutoplayEnabled)
-                )
+                BaMenuToggleButton(
+                    title: BaL10n.string("ba.settings.media.autoplay.title"),
+                    isOn: model.envelope.globalSettings.mediaAutoplayEnabled
+                ) {
+                    model.updateGlobalSettings { $0.mediaAutoplayEnabled.toggle() }
+                }
 
-                Toggle(
-                    BaL10n.string("ba.settings.media.download.title"),
-                    isOn: globalBoolBinding(\.mediaDownloadEnabled)
-                )
+                BaMenuToggleButton(
+                    title: BaL10n.string("ba.settings.media.download.title"),
+                    isOn: model.envelope.globalSettings.mediaDownloadEnabled
+                ) {
+                    model.updateGlobalSettings { $0.mediaDownloadEnabled.toggle() }
+                }
             }
         }
     }

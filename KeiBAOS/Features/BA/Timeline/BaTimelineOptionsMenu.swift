@@ -60,8 +60,13 @@ struct BaTimelineOptionsMenu: View {
         }
 
         Section(BaL10n.string("ba.timeline.options.visibility.title")) {
-            Toggle(scope.showEndedMenuTitle, isOn: $showsEnded)
-                .accessibilityLabel(Text(scope.showEndedTitle))
+            BaMenuToggleButton(
+                title: scope.showEndedMenuTitle,
+                isOn: showsEnded
+            ) {
+                showsEnded.toggle()
+            }
+            .accessibilityLabel(Text(scope.showEndedTitle))
         }
 
         Section(BaL10n.string("ba.settings.refresh.title")) {
@@ -80,10 +85,22 @@ struct BaTimelineOptionsMenu: View {
 private struct BaMenuSelectionButton: View {
     let title: String
     let isSelected: Bool
-    let action: () -> Void
+    let action: BaDelayedMenuAction
+
+    init(
+        title: String,
+        isSelected: Bool,
+        action: @escaping @MainActor () -> Void
+    ) {
+        self.title = title
+        self.isSelected = isSelected
+        self.action = BaDelayedMenuAction(action)
+    }
 
     var body: some View {
-        Button(action: action) {
+        Button {
+            BaMenuActionDispatcher.perform(action)
+        } label: {
             Label(title, systemImage: isSelected ? "checkmark" : "circle")
         }
     }

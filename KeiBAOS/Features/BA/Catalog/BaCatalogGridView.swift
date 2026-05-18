@@ -56,33 +56,25 @@ struct BaCatalogGridView: View {
         } else {
             LazyVGrid(columns: columns, alignment: .leading, spacing: 14) {
                 ForEach(rows) { row in
-                    NavigationLink {
-                        BaStudentDetailView(entry: row.entry)
-                    } label: {
-                        BaCatalogEntryGridCard(row: row)
-                            .equatable()
-                    }
-                    .buttonStyle(.plain)
-                    .contextMenu {
-                        if canSetDutyStudent(row.entry) {
-                            Button {
-                                onToggleDutyStudent(row.entry)
-                            } label: {
-                                Label(
-                                    dutyStudentActionTitle(row.isDutyStudent),
-                                    systemImage: row.isDutyStudent ? "person.crop.circle.badge.xmark" : "person.crop.circle.badge.checkmark"
-                                )
-                            }
-                        }
-
-                        Button {
-                            onToggleFavorite(row.entry)
+                    ZStack(alignment: .topTrailing) {
+                        NavigationLink {
+                            BaStudentDetailView(entry: row.entry)
                         } label: {
-                            Label(
-                                favoriteActionTitle(row.isFavorite),
-                                systemImage: row.isFavorite ? "star.slash" : "star"
-                            )
+                            BaCatalogEntryGridCard(row: row)
+                                .equatable()
                         }
+                        .buttonStyle(.plain)
+
+                        BaCatalogGridActionMenu(
+                            row: row,
+                            favoriteActionTitle: favoriteActionTitle,
+                            dutyStudentActionTitle: dutyStudentActionTitle,
+                            canSetDutyStudent: canSetDutyStudent,
+                            onToggleFavorite: onToggleFavorite,
+                            onToggleDutyStudent: onToggleDutyStudent
+                        )
+                        .padding(.top, 8)
+                        .padding(.trailing, 8)
                     }
                 }
             }
@@ -98,6 +90,43 @@ struct BaCatalogGridView: View {
 
     private var contentMaxWidth: CGFloat {
         metrics.catalogContentMaxWidth
+    }
+}
+
+private struct BaCatalogGridActionMenu: View {
+    let row: BaCatalogEntryRowDisplayModel
+    let favoriteActionTitle: (Bool) -> String
+    let dutyStudentActionTitle: (Bool) -> String
+    let canSetDutyStudent: (BaGuideCatalogEntry) -> Bool
+    let onToggleFavorite: (BaGuideCatalogEntry) -> Void
+    let onToggleDutyStudent: (BaGuideCatalogEntry) -> Void
+
+    var body: some View {
+        Menu {
+            if canSetDutyStudent(row.entry) {
+                BaMenuActionButton(
+                    title: dutyStudentActionTitle(row.isDutyStudent),
+                    systemImage: row.isDutyStudent ? "person.crop.circle.badge.xmark" : "person.crop.circle.badge.checkmark"
+                ) {
+                    onToggleDutyStudent(row.entry)
+                }
+            }
+
+            BaMenuActionButton(
+                title: favoriteActionTitle(row.isFavorite),
+                systemImage: row.isFavorite ? "star.slash" : "star"
+            ) {
+                onToggleFavorite(row.entry)
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .frame(width: 34, height: 34)
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(BaL10n.string("ba.action.more"))
     }
 }
 

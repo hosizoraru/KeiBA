@@ -112,7 +112,9 @@ private struct BaStudentSkillCard: View {
                     Menu {
                         ForEach(card.levelOptions, id: \.self) { level in
                             Button {
-                                selectedLevel = level
+                                BaMenuActionDispatcher.perform {
+                                    selectedLevel = level
+                                }
                             } label: {
                                 if level == displayLevel {
                                     Label(level, systemImage: "checkmark")

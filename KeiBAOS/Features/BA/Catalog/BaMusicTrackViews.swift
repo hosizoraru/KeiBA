@@ -117,20 +117,26 @@ struct BaMusicTrackRow: View {
 
     private var trackMenu: some View {
         Menu {
-            Button(action: onOpenDetail) {
-                Label(BaL10n.string("ba.music.action.openDetail"), systemImage: "person.crop.circle")
+            BaMenuActionButton(
+                title: BaL10n.string("ba.music.action.openDetail"),
+                systemImage: "person.crop.circle"
+            ) {
+                onOpenDetail()
             }
 
             if track.availability == .ready {
-                Button(action: onPrimaryAction) {
-                    Label(
-                        isCurrent && isPlaying ? BaL10n.string("ba.music.action.pause") : BaL10n.string("ba.music.action.play"),
-                        systemImage: isCurrent && isPlaying ? "pause.fill" : "play.fill"
-                    )
+                BaMenuActionButton(
+                    title: isCurrent && isPlaying ? BaL10n.string("ba.music.action.pause") : BaL10n.string("ba.music.action.play"),
+                    systemImage: isCurrent && isPlaying ? "pause.fill" : "play.fill"
+                ) {
+                    onPrimaryAction()
                 }
             } else {
-                Button(action: onLoadDetail) {
-                    Label(BaL10n.string("ba.music.action.loadDetail"), systemImage: "arrow.clockwise")
+                BaMenuActionButton(
+                    title: BaL10n.string("ba.music.action.loadDetail"),
+                    systemImage: "arrow.clockwise"
+                ) {
+                    onLoadDetail()
                 }
             }
 
@@ -151,7 +157,11 @@ struct BaMusicTrackRow: View {
         if track.audioURL == nil {
             unloadedCacheMenuItems
         } else if cacheState.isCached {
-            Button(role: .destructive, action: onClearCache) {
+            Button(role: .destructive) {
+                BaMenuActionDispatcher.perform {
+                    onClearCache()
+                }
+            } label: {
                 Label(BaL10n.string("ba.music.action.clearCache"), systemImage: "trash")
             }
         } else if cacheState.isCaching {
@@ -160,8 +170,11 @@ struct BaMusicTrackRow: View {
             }
             .disabled(true)
         } else {
-            Button(action: onCache) {
-                Label(cacheState.accessibilityTitle, systemImage: cacheState.systemImage)
+            BaMenuActionButton(
+                title: cacheState.accessibilityTitle,
+                systemImage: cacheState.systemImage
+            ) {
+                onCache()
             }
         }
     }
@@ -170,8 +183,11 @@ struct BaMusicTrackRow: View {
     private var unloadedCacheMenuItems: some View {
         switch track.availability {
         case .needsDetail, .failed:
-            Button(action: onCache) {
-                Label(BaL10n.string("ba.music.action.cache"), systemImage: "arrow.down.circle")
+            BaMenuActionButton(
+                title: BaL10n.string("ba.music.action.cache"),
+                systemImage: "arrow.down.circle"
+            ) {
+                onCache()
             }
         case .loadingDetail:
             Button {} label: {
@@ -280,7 +296,9 @@ struct BaMusicQueueSection: View {
 
                 Menu {
                     Button(role: .destructive) {
-                        onClearAllCache(tracks)
+                        BaMenuActionDispatcher.perform {
+                            onClearAllCache(tracks)
+                        }
                     } label: {
                         Label(BaL10n.string("ba.music.action.clearAllCache"), systemImage: "trash")
                     }

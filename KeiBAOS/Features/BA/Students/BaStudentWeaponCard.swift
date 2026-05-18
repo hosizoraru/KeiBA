@@ -123,7 +123,9 @@ private struct BaStudentWeaponCard: View {
                     Menu {
                         ForEach(card.statHeaders, id: \.self) { level in
                             Button {
-                                selectedStatLevel = level
+                                BaMenuActionDispatcher.perform {
+                                    selectedStatLevel = level
+                                }
                             } label: {
                                 if level == statLevel {
                                     Label(level, systemImage: "checkmark")
@@ -261,7 +263,9 @@ private struct BaStudentWeaponStarEffectCard: View {
                             Menu {
                                 ForEach(effect.levelOptions, id: \.self) { level in
                                     Button {
-                                        selectedLevel = level
+                                        BaMenuActionDispatcher.perform {
+                                            selectedLevel = level
+                                        }
                                     } label: {
                                         if level == displayLevel {
                                             Label(level, systemImage: "checkmark")
