@@ -242,9 +242,27 @@ private struct BaCatalogViewOptionsMenu: View {
             }
 
             if filterGroups.isEmpty == false {
+                if filterSelection.isEmpty == false {
+                    Section(BaL10n.string("ba.catalog.filter.selected.section")) {
+                        Button {
+                            filterSelection.clear()
+                        } label: {
+                            Label(BaL10n.string("ba.catalog.filter.clear"), systemImage: "xmark.circle")
+                        }
+
+                        ForEach(selectedFilterRows) { row in
+                            Button {
+                                filterSelection.toggle(row.option, in: row.group)
+                            } label: {
+                                Label(row.title, systemImage: "checkmark.circle.fill")
+                            }
+                        }
+                    }
+                }
+
                 Section(BaL10n.string("ba.catalog.action.filter")) {
                     ForEach(filterGroups) { group in
-                        Menu(group.title) {
+                        Menu {
                             ForEach(group.options) { option in
                                 BaCatalogMenuSelectionButton(
                                     title: option.title,
@@ -253,14 +271,11 @@ private struct BaCatalogViewOptionsMenu: View {
                                     filterSelection.toggle(option, in: group)
                                 }
                             }
-                        }
-                    }
-
-                    if filterSelection.isEmpty == false {
-                        Button(role: .destructive) {
-                            filterSelection.clear()
                         } label: {
-                            Label(BaL10n.string("ba.catalog.filter.clear"), systemImage: "xmark.circle")
+                            Label(
+                                groupMenuTitle(for: group),
+                                systemImage: filterSelection.selectedOptions(in: group).isEmpty ? "circle" : "checkmark.circle.fill"
+                            )
                         }
                     }
                 }
@@ -286,6 +301,42 @@ private struct BaCatalogViewOptionsMenu: View {
             Int64(filterSelection.activeFilterCount)
         )
         return "\(selectedCategory.title), \(sortMode.title), \(filterText)"
+    }
+
+    private var selectedFilterRows: [BaCatalogSelectedFilterRow] {
+        filterGroups.flatMap { group in
+            filterSelection.selectedOptions(in: group).map { option in
+                BaCatalogSelectedFilterRow(group: group, option: option)
+            }
+        }
+    }
+
+    private func groupMenuTitle(for group: BaCatalogFilterGroup) -> String {
+        let selectedOptions = filterSelection.selectedOptions(in: group)
+        guard selectedOptions.isEmpty == false else { return group.title }
+        let selectedText = selectedOptions.map(\.title).joined(separator: " / ")
+        return String(
+            format: BaL10n.string("ba.catalog.filter.group.selected.format"),
+            group.title,
+            selectedText
+        )
+    }
+}
+
+private struct BaCatalogSelectedFilterRow: Identifiable {
+    let group: BaCatalogFilterGroup
+    let option: BaCatalogFilterOption
+
+    var id: String {
+        "\(group.id)-\(option.id)"
+    }
+
+    var title: String {
+        String(
+            format: BaL10n.string("ba.catalog.filter.group.selected.format"),
+            group.title,
+            option.title
+        )
     }
 }
 
