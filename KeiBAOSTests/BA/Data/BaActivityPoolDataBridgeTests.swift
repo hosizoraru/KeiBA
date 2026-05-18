@@ -6,7 +6,6 @@
 //
 
 @testable import KeiBAOS
-import AVFAudio
 import Foundation
 import XCTest
 
@@ -240,7 +239,7 @@ final class BaActivityPoolDataBridgeTests: XCTestCase {
 
     @MainActor
     func testResolvedPoolBuildsStudentCatalogEntryForDetailNavigation() throws {
-        let model = BaAppModel.live()
+        let model = makeDataBridgeAppModel(defaults: try makeDataBridgeIsolatedDefaults())
         let pool = makeDataBridgePoolEntry(
             id: 2388,
             name: "优香(体操服)",

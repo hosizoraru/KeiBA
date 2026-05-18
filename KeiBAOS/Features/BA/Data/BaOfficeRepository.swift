@@ -8,12 +8,16 @@
 import Foundation
 
 struct BaOfficeRepository {
-    func snapshot(settings: BaAppSettings, now: Date = Date()) -> BaOfficeSnapshot {
+    func snapshot(
+        settings: BaAppSettings,
+        now: Date = Date(),
+        localTimeZone: TimeZone = .current
+    ) -> BaOfficeSnapshot {
         let apSnapshot = apSnapshot(settings: settings, now: now)
         let cafeAP = BaTimeMath.currentCafeAP(settings: settings, now: now)
         let cafeLimit = BaTimeMath.cafeDailyCapacity(level: settings.cafeLevel)
         let visitRefresh = BaTimeMath.nextCafeStudentRefresh(from: now, server: settings.server)
-        let visitSlots = cafeVisitSnapshots(settings: settings, now: now)
+        let visitSlots = cafeVisitSnapshots(settings: settings, now: now, localTimeZone: localTimeZone)
         let tacticalRefresh = BaTimeMath.nextArenaRefresh(from: now, server: settings.server)
         let headpatAvailable = BaTimeMath.nextHeadpatAvailable(
             lastHeadpatAt: settings.lastHeadpatAt,
@@ -53,7 +57,11 @@ struct BaOfficeRepository {
             ),
             cafeVisitDetail: String(
                 format: BaL10n.string("ba.cafe.metric.visit.detail.format"),
-                BaTimeMath.localCafeStudentRefreshTimes(server: settings.server, reference: now)
+                BaTimeMath.localCafeStudentRefreshTimes(
+                    server: settings.server,
+                    reference: now,
+                    localTimeZone: localTimeZone
+                )
             ),
             cafeVisitSlots: visitSlots,
             tacticalRefresh: BaDisplayFormatters.compactRemaining(
@@ -63,7 +71,11 @@ struct BaOfficeRepository {
             ),
             tacticalRefreshDetail: String(
                 format: BaL10n.string("ba.cafe.metric.tactical.detail.format"),
-                BaTimeMath.localArenaRefreshTime(server: settings.server, reference: now)
+                BaTimeMath.localArenaRefreshTime(
+                    server: settings.server,
+                    reference: now,
+                    localTimeZone: localTimeZone
+                )
             ),
             headpatRemain: cooldownText(availableAt: headpatAvailable, now: now),
             headpatDetail: cooldownDetail(availableAt: headpatAvailable, now: now),
@@ -71,8 +83,16 @@ struct BaOfficeRepository {
         )
     }
 
-    private func cafeVisitSnapshots(settings: BaAppSettings, now: Date) -> [BaCafeVisitSnapshot] {
-        BaTimeMath.localCafeStudentRefreshSlots(server: settings.server, reference: now)
+    private func cafeVisitSnapshots(
+        settings: BaAppSettings,
+        now: Date,
+        localTimeZone: TimeZone
+    ) -> [BaCafeVisitSnapshot] {
+        BaTimeMath.localCafeStudentRefreshSlots(
+            server: settings.server,
+            reference: now,
+            localTimeZone: localTimeZone
+        )
             .map { slot in
                 BaCafeVisitSnapshot(
                     id: slot.id,

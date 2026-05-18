@@ -227,7 +227,11 @@ final class BaOverviewSettingsTests: XCTestCase {
         var settings = BaAppSettings.defaults(now: now)
         settings.server = .jp
 
-        let snapshot = BaOfficeRepository().snapshot(settings: settings, now: now)
+        let snapshot = BaOfficeRepository().snapshot(
+            settings: settings,
+            now: now,
+            localTimeZone: localTimeZone
+        )
 
         XCTAssertEqual(snapshot.cafeVisitSlots.count, 2)
         XCTAssertEqual(
