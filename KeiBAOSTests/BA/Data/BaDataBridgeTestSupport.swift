@@ -9,32 +9,6 @@
 import Foundation
 import XCTest
 
-func makeDataBridgeIsolatedDefaults() throws -> UserDefaults {
-    let suiteName = "KeiBAOSTests.\(UUID().uuidString)"
-    let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
-    defaults.removePersistentDomain(forName: suiteName)
-    return defaults
-}
-
-@MainActor
-func makeDataBridgeAppModel(defaults: UserDefaults) -> BaAppModel {
-    let client = GameKeeClient()
-    let cacheStore = BaCacheStore()
-    return BaAppModel(
-        settingsStore: BaSettingsStore(defaults: defaults),
-        cacheStore: cacheStore,
-        imageCache: BaImageCache(client: client),
-        activityPoolRepository: BaActivityPoolRepository(client: client),
-        catalogRepository: BaGuideCatalogRepository(client: client),
-        catalogReleaseDateHydrator: BaCatalogReleaseDateHydrator(
-            cacheStore: cacheStore,
-            studentRepository: BaStudentGuideRepository(client: client)
-        ),
-        studentRepository: BaStudentGuideRepository(client: client),
-        officeRepository: BaOfficeRepository()
-    )
-}
-
 func makeDataBridgeCatalogEntry(
     contentId: Int64 = 609_145,
     name: String = "Test",

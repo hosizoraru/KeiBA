@@ -237,16 +237,15 @@ final class BaActivityPoolDataBridgeTests: XCTestCase {
         XCTAssertNil(decoded.value.single?.studentGuideURL)
     }
 
-    @MainActor
     func testResolvedPoolBuildsStudentCatalogEntryForDetailNavigation() throws {
-        let model = makeDataBridgeAppModel(defaults: try makeDataBridgeIsolatedDefaults())
+        let resolver = BaPoolCatalogEntryResolver(studentEntries: [])
         let pool = makeDataBridgePoolEntry(
             id: 2388,
             name: "优香(体操服)",
             linkURL: try XCTUnwrap(URL(string: "https://www.gamekee.com/ba/701261.html")),
             studentGuideURL: try XCTUnwrap(URL(string: "https://www.gamekee.com/ba/tj/170295.html"))
         )
-        let entry = try XCTUnwrap(model.studentCatalogEntry(for: pool))
+        let entry = try XCTUnwrap(resolver.catalogEntry(for: pool))
 
         XCTAssertEqual(entry.contentId, 170_295)
         XCTAssertEqual(entry.name, "优香(体操服)")

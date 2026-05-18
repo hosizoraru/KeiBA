@@ -10,24 +10,7 @@ import Foundation
 extension BaAppModel {
     func studentCatalogEntry(for pool: BaPoolEntry) -> BaGuideCatalogEntry? {
         let studentEntries = catalogState.value?.entries(in: .students) ?? []
-        if let contentId = pool.contentId {
-            if let entry = studentEntries.first(where: { $0.contentId == contentId }) {
-                return entry
-            }
-            return fallbackStudentCatalogEntry(pool: pool, contentId: contentId, detailURL: pool.studentGuideOpenURL)
-        }
-
-        let resolvedPool = BaPoolStudentGuideResolver(catalogEntries: studentEntries).resolve(pool)
-        guard let guideURL = resolvedPool.studentGuideOpenURL,
-              let contentId = BaPoolStudentGuideResolver.contentID(from: guideURL)
-        else {
-            return nil
-        }
-
-        if let entry = studentEntries.first(where: { $0.contentId == contentId }) {
-            return entry
-        }
-        return fallbackStudentCatalogEntry(pool: resolvedPool, contentId: contentId, detailURL: guideURL)
+        return BaPoolCatalogEntryResolver(studentEntries: studentEntries).catalogEntry(for: pool)
     }
 
     func studentCatalogEntry(forSameNameRole item: BaStudentProfileSameNameRoleItem) -> BaGuideCatalogEntry? {
@@ -80,25 +63,4 @@ extension BaAppModel {
         entries.contains { $0.studentGuideOpenURL == nil }
     }
 
-    private func fallbackStudentCatalogEntry(
-        pool: BaPoolEntry,
-        contentId: Int64,
-        detailURL: URL?
-    ) -> BaGuideCatalogEntry {
-        BaGuideCatalogEntry(
-            entryId: Int(contentId),
-            pid: Self.studentCatalogPID,
-            contentId: contentId,
-            name: pool.name,
-            alias: pool.alias,
-            aliasDisplay: pool.alias,
-            iconURL: pool.imageURL,
-            type: 0,
-            order: 0,
-            createdAt: nil,
-            releaseDate: nil,
-            detailURL: detailURL ?? URL(string: "https://www.gamekee.com/ba/tj/\(contentId).html"),
-            category: .students
-        )
-    }
 }
