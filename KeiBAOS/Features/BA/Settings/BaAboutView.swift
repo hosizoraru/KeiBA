@@ -146,6 +146,15 @@ struct BaAboutView: View {
                 .monospacedDigit()
         }
 
+        LabeledContent(BaL10n.string("ba.about.version.configuration")) {
+            Text(BaAppVersionInfo.buildConfiguration)
+                .font(.callout.monospaced())
+        }
+
+        LabeledContent(BaL10n.string("ba.about.version.runtime")) {
+            Text(BaAppVersionInfo.runtimeEnvironment)
+        }
+
         LabeledContent(BaL10n.string("ba.about.version.bundle")) {
             Text(BaAppVersionInfo.bundleIdentifier)
                 .textSelection(.enabled)
@@ -186,6 +195,18 @@ struct BaAboutView: View {
 
     @ViewBuilder
     private var dataRows: some View {
+        BaAboutLinkRow(
+            title: BaL10n.string("ba.about.data.github.title"),
+            detail: BaL10n.string("ba.about.data.github.detail"),
+            url: URL(string: "https://github.com/hosizoraru/KeiBAOS")
+        )
+
+        BaAboutLinkRow(
+            title: BaL10n.string("ba.about.data.releases.title"),
+            detail: BaL10n.string("ba.about.data.releases.detail"),
+            url: URL(string: "https://github.com/hosizoraru/KeiBAOS/releases")
+        )
+
         BaAboutLinkRow(
             title: BaL10n.string("ba.about.data.gamekee.title"),
             detail: BaL10n.string("ba.about.data.gamekee.detail"),
@@ -319,6 +340,24 @@ private enum BaAppVersionInfo {
 
     static var buildVersion: String {
         infoString("CFBundleVersion")
+    }
+
+    static var buildConfiguration: String {
+        #if DEBUG
+            BaL10n.string("ba.about.version.configuration.debug")
+        #else
+            BaL10n.string("ba.about.version.configuration.release")
+        #endif
+    }
+
+    static var runtimeEnvironment: String {
+        #if os(macOS)
+            BaL10n.string("ba.about.version.runtime.mac")
+        #elseif targetEnvironment(simulator)
+            BaL10n.string("ba.about.version.runtime.simulator")
+        #else
+            BaL10n.string("ba.about.version.runtime.device")
+        #endif
     }
 
     static var bundleIdentifier: String {
