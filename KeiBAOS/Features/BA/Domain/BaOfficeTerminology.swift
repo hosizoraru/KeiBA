@@ -24,6 +24,13 @@ nonisolated enum BaOfficeTerminology {
         }
         return BaL10n.string(server.simplifiedChineseOfficeNameKey, language: appLanguage)
     }
+
+    static func shortOfficeName(for server: BaServer, appLanguage: BaAppLanguage) -> String {
+        guard appLanguage.usesSimplifiedChineseTerminology else {
+            return BaL10n.string("ba.office.name.short.default", language: appLanguage)
+        }
+        return BaL10n.string(server.simplifiedChineseOfficeShortNameKey, language: appLanguage)
+    }
 }
 
 private extension BaServer {
@@ -35,6 +42,17 @@ private extension BaServer {
             "ba.office.name.global"
         case .jp:
             "ba.office.name.jp"
+        }
+    }
+
+    nonisolated var simplifiedChineseOfficeShortNameKey: String {
+        switch self {
+        case .cn:
+            "ba.office.name.short.cn"
+        case .global:
+            "ba.office.name.short.global"
+        case .jp:
+            "ba.office.name.short.jp"
         }
     }
 }

@@ -21,6 +21,14 @@ extension BaWatchDashboardSnapshot {
         self.init(
             sourceUpdatedAt: userData.updatedAt,
             generatedAt: now,
+            officeName: BaOfficeTerminology.officeName(
+                for: envelope.selectedServer,
+                appLanguage: globalSettings.appLanguage
+            ),
+            officeShortName: BaOfficeTerminology.shortOfficeName(
+                for: envelope.selectedServer,
+                appLanguage: globalSettings.appLanguage
+            ),
             serverName: envelope.selectedServer.title,
             teacherName: profile.nickname,
             friendCode: profile.friendCode,

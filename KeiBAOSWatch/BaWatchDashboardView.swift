@@ -25,7 +25,7 @@ struct BaWatchDashboardView: View {
                     BaWatchEmptyState(error: store.lastSyncError)
                 }
             }
-            .navigationTitle(Text("ba.watch.title"))
+            .navigationTitle(store.snapshot?.officeShortName ?? String(localized: "ba.watch.title"))
         }
     }
 }
@@ -477,6 +477,7 @@ private extension BaWatchSnapshotStore {
         let store = BaWatchSnapshotStore(defaults: UserDefaults(suiteName: "KeiBAOSWatchPreview") ?? .standard)
         store.snapshot = BaWatchDashboardSnapshot(
             sourceUpdatedAt: .now,
+            officeName: "沙勒办公室",
             serverName: "国服",
             teacherName: "Kei",
             friendCode: "ARISUKEI",

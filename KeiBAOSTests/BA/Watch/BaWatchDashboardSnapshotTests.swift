@@ -40,6 +40,8 @@ final class BaWatchDashboardSnapshotTests: XCTestCase {
         let json = try XCTUnwrap(String(data: data, encoding: .utf8))
         let decoded = try BaWatchDashboardSnapshotCoding.decode(data)
 
+        XCTAssertEqual(decoded.officeName, "沙勒办公室")
+        XCTAssertEqual(decoded.officeShortName, "沙勒")
         XCTAssertEqual(decoded.teacherName, "Voyager")
         XCTAssertEqual(decoded.friendCode, "BA26TEST")
         XCTAssertEqual(decoded.dutyStudentName, "爱丽丝")
@@ -59,6 +61,7 @@ final class BaWatchDashboardSnapshotTests: XCTestCase {
 
         let snapshot = BaWatchDashboardSnapshot(
             sourceUpdatedAt: Date(timeIntervalSince1970: 1_800_000_000),
+            officeName: "夏莱办公室",
             serverName: "日服",
             teacherName: "Kei",
             friendCode: "ARISUKEI",
@@ -84,7 +87,24 @@ final class BaWatchDashboardSnapshotTests: XCTestCase {
         let decoded = try BaWatchDashboardSnapshotCoding.decode(encoded)
 
         XCTAssertLessThanOrEqual(avatarData.count, BaWatchAvatarThumbnailEncoder.maxPayloadBytes)
+        XCTAssertEqual(decoded.officeName, "夏莱办公室")
+        XCTAssertEqual(decoded.officeShortName, "夏莱")
         XCTAssertEqual(decoded.dutyStudentAvatarImageData, avatarData)
+    }
+
+    func testWatchSnapshotUsesGlobalOfficeTerminologyForSimplifiedChinese() throws {
+        let base = Date(timeIntervalSince1970: 1_800_000_000)
+        var envelope = BaSettingsEnvelope.defaults(now: base)
+        envelope.selectedServer = .global
+        envelope.globalSettings.appLanguage = .simplifiedChinese
+
+        let snapshot = BaWatchDashboardSnapshot(
+            userData: envelope.userData(updatedAt: base),
+            now: base
+        )
+
+        XCTAssertEqual(snapshot.officeName, "夏萊行政室")
+        XCTAssertEqual(snapshot.officeShortName, "夏萊")
     }
 
     func testTimelineGlanceSnapshotKeepsActivityAndPoolHighlightsSmall() {
