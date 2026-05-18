@@ -174,16 +174,26 @@ struct BaAboutView: View {
 
     @ViewBuilder
     private var platformRows: some View {
+        BaAboutSubsectionHeader(title: BaL10n.string("ba.about.platform.deployment"))
+
         ForEach(AppPlatformBaseline.allCases) { baseline in
-            Label {
-                LabeledContent(baseline.displayName) {
-                    Text(baseline.minimumVersion)
-                        .monospacedDigit()
-                }
-            } icon: {
-                Image(systemName: baseline.systemImage)
-                    .foregroundStyle(.tint)
-            }
+            BaAboutBaselineRow(
+                title: baseline.displayName,
+                value: baseline.minimumVersion,
+                systemImage: baseline.systemImage
+            )
+        }
+
+        Divider()
+
+        BaAboutSubsectionHeader(title: BaL10n.string("ba.about.platform.build"))
+
+        ForEach(AppBuildBaseline.allCases) { baseline in
+            BaAboutBaselineRow(
+                title: BaL10n.string(baseline.titleKey),
+                value: baseline.value,
+                systemImage: baseline.systemImage
+            )
         }
     }
 
@@ -241,6 +251,36 @@ struct BaAboutView: View {
                 ),
                 url: acknowledgement.url
             )
+        }
+    }
+}
+
+private struct BaAboutSubsectionHeader: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .textCase(.uppercase)
+    }
+}
+
+private struct BaAboutBaselineRow: View {
+    let title: String
+    let value: String
+    let systemImage: String
+
+    var body: some View {
+        Label {
+            LabeledContent(title) {
+                Text(value)
+                    .monospacedDigit()
+                    .textSelection(.enabled)
+            }
+        } icon: {
+            Image(systemName: systemImage)
+                .foregroundStyle(.tint)
         }
     }
 }

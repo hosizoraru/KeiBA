@@ -354,28 +354,6 @@
         }
       }
     },
-    "ba.about.data.rights.detail" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blue Archive names, artwork, music, voice lines, and related game assets belong to their respective rights holders."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blue Archiveの名称、アートワーク、音楽、ボイス、関連ゲームアセットの権利は各権利者に帰属します。"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blue Archive 的名称、插图、音乐、语音和相关游戏素材归各自权利方所有。"
-          }
-        }
-      }
-    },
     "ba.about.data.releases.detail" : {
       "localizations" : {
         "en" : {
@@ -416,6 +394,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "GitHub Releases"
+          }
+        }
+      }
+    },
+    "ba.about.data.rights.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blue Archive names, artwork, music, voice lines, and related game assets belong to their respective rights holders."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blue Archiveの名称、アートワーク、音楽、ボイス、関連ゲームアセットの権利は各権利者に帰属します。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blue Archive 的名称、插图、音乐、语音和相关游戏素材归各自权利方所有。"
           }
         }
       }
@@ -464,24 +464,156 @@
         }
       }
     },
-    "ba.about.platform.footer" : {
+    "ba.about.platform.build" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The project targets the current Apple 26 platform family and uses modern SwiftUI APIs directly."
+            "value" : "Build environment"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "このプロジェクトは現在のApple 26プラットフォーム群を対象とし、モダンなSwiftUI APIを直接使用します。"
+            "value" : "ビルド環境"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "项目面向当前 Apple 26 平台家族，直接使用现代 SwiftUI API。"
+            "value" : "构建环境"
+          }
+        }
+      }
+    },
+    "ba.about.platform.build.projectFormat" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Project format"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プロジェクト形式"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "项目格式"
+          }
+        }
+      }
+    },
+    "ba.about.platform.build.runtimeMinimum" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current build minimum"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在のビルドの最小要件"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前构建最低版本"
+          }
+        }
+      }
+    },
+    "ba.about.platform.build.sdk" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SDK"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SDK"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SDK"
+          }
+        }
+      }
+    },
+    "ba.about.platform.build.xcode" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xcode"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xcode"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xcode"
+          }
+        }
+      }
+    },
+    "ba.about.platform.deployment" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deployment targets"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デプロイメントターゲット"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "部署目标"
+          }
+        }
+      }
+    },
+    "ba.about.platform.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app uses Apple 26 platform APIs directly. The SDK and Xcode rows come from the built app bundle metadata."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このアプリはApple 26プラットフォームAPIを直接使用します。SDKとXcodeの行はビルド済みアプリのバンドルメタデータから取得します。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App 直接使用 Apple 26 平台 API。SDK 与 Xcode 行来自已构建 App 的 bundle 元数据。"
           }
         }
       }
@@ -597,6 +729,7 @@
       }
     },
     "ba.about.version.configuration.debug" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -729,6 +862,7 @@
       }
     },
     "ba.about.version.runtime.simulator" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

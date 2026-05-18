@@ -15,11 +15,19 @@ sync and a planned watchOS 26 companion surface in mind.
 
 ## Platform Baseline
 
+Deployment targets:
+
 - iOS 26.0+
 - iPadOS 26.0+
 - macOS 26.0+
 - watchOS 26.0+ planned companion target
-- Xcode 26+
+
+Build baseline for the current project:
+
+- Local Xcode: 26.5 (`17F42`)
+- SDKs: iOS 26.5, iOS Simulator 26.5, macOS 26.5, watchOS 26.5
+- Xcode Project Format: Xcode 26.3
+- Project `objectVersion`: 100
 - SwiftUI, Swift Concurrency, Observation, Swift Package Manager
 
 ## Features
@@ -62,8 +70,23 @@ revisions.
 
 ## Build
 
-Open `KeiBAOS.xcodeproj` in Xcode 26 or newer, select the `KeiBAOS` scheme,
-then build for an iOS 26 simulator, iPadOS 26 simulator, or macOS 26.
+Open `KeiBAOS.xcodeproj` in Xcode 26.5 or newer, select the `KeiBAOS` scheme,
+then build for an iOS 26 simulator, iPadOS 26 simulator, macOS 26, or an
+iOS 26 device.
+
+Release install on a connected iPhone or iPad from Xcode:
+
+1. Select the `KeiBAOS` scheme and the physical device in the destination menu.
+2. Open `Product > Scheme > Edit Scheme...`.
+3. Select `Run > Info`, set `Build Configuration` to `Release`, then close the sheet.
+4. Confirm `Signing & Capabilities` has the Apple team selected for the app and
+   the Live Activities extension.
+5. Use `Product > Run` to build, sign, install, and launch the Release build on
+   the device.
+
+For a distributable build, select `Any iOS Device (arm64)`, use
+`Product > Archive`, then distribute from the Organizer with the appropriate
+Apple signing method.
 
 Command-line build examples:
 
