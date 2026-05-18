@@ -372,7 +372,9 @@ private struct BaNotificationSettingsSheet: View {
             }
         } label: {
             Label(BaL10n.string("ba.sheet.notifications.test.live.end"), systemImage: "xmark.circle")
+                .foregroundStyle(.red)
         }
+        .tint(.red)
         #else
         Text(BaL10n.string("ba.sheet.notifications.test.live.unavailable"))
             .font(.footnote)

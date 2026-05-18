@@ -11,6 +11,7 @@ struct BaPoolView: View {
     @Environment(BaAppModel.self) private var model
 
     @Binding private var statusFilter: BaTimelineStatus?
+    @State private var selectedPool: BaPoolEntry?
 
     init(
         statusFilter: Binding<BaTimelineStatus?> = .constant(nil)
@@ -89,18 +90,17 @@ struct BaPoolView: View {
         .refreshable {
             await model.refreshPools(force: true)
         }
+        .navigationDestination(item: $selectedPool) { pool in
+            poolDestination(for: pool)
+        }
     }
 
     private func poolRows(_ rows: [BaPoolRowDisplayModel], metrics: BaAdaptiveMetrics) -> some View {
         ForEach(rows.baChunked(into: metrics.timelineColumnCount), id: \.baPoolChunkID) { chunk in
             HStack(alignment: .top, spacing: metrics.cardSpacing) {
                 ForEach(chunk) { row in
-                    NavigationLink {
-                        if let entry = model.studentCatalogEntry(for: row.pool) {
-                            BaStudentDetailView(entry: entry)
-                        } else {
-                            BaPoolSourceDetailView(pool: row.pool, server: model.settings.server)
-                        }
+                    Button {
+                        selectedPool = row.pool
                     } label: {
                         BaPoolNavigationCard(row: row)
                             .equatable()
@@ -114,6 +114,15 @@ struct BaPoolView: View {
                 }
             }
             .baAdaptiveListCardRow(top: 7, bottom: 7)
+        }
+    }
+
+    @ViewBuilder
+    private func poolDestination(for pool: BaPoolEntry) -> some View {
+        if let entry = model.studentCatalogEntry(for: pool) {
+            BaStudentDetailView(entry: entry)
+        } else {
+            BaPoolSourceDetailView(pool: pool, server: model.settings.server)
         }
     }
 
