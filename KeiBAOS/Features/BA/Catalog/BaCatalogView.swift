@@ -53,6 +53,7 @@ struct BaCatalogView: View {
                                     filterSelection: $filterSelection,
                                     filterGroups: filterGroups
                                 )
+                                .baCatalogOptionsPopoverLayout()
                             }
                     }
                 }
@@ -67,6 +68,7 @@ struct BaCatalogView: View {
                                         filterSelection: $filterSelection,
                                         filterGroups: filterGroups
                                     )
+                                    .baCatalogOptionsPanelLayout()
                                     .presentationDetents([.medium, .large])
                                     .presentationDragIndicator(.visible)
                                 }
@@ -240,14 +242,6 @@ struct BaCatalogView: View {
         }
     }
 
-    private func usesOptionsPanel(for metrics: BaAdaptiveMetrics) -> Bool {
-        #if os(macOS)
-            true
-        #else
-            true
-        #endif
-    }
-
     private func usesContentAnchoredOptionsPanel(for metrics: BaAdaptiveMetrics) -> Bool {
         #if os(macOS)
             false
@@ -286,13 +280,14 @@ private struct BaCatalogViewOptionsControl: View {
         #if os(macOS)
             panelButtonBase
                 .popover(isPresented: $isPanelPresented, arrowEdge: .top) {
-                    BaCatalogViewOptionsPanel(
-                        selectedCategory: $selectedCategory,
-                        sortMode: $sortMode,
-                        filterSelection: $filterSelection,
-                        filterGroups: filterGroups
-                    )
-                }
+                BaCatalogViewOptionsPanel(
+                    selectedCategory: $selectedCategory,
+                    sortMode: $sortMode,
+                    filterSelection: $filterSelection,
+                    filterGroups: filterGroups
+                )
+                .baCatalogOptionsPopoverLayout()
+            }
         #else
             panelButtonBase
         #endif
@@ -387,9 +382,6 @@ private struct BaCatalogViewOptionsPanel: View {
             }
         }
         .formStyle(.grouped)
-        .frame(minWidth: 320, idealWidth: 380, maxWidth: 460)
-        .frame(minHeight: 360, idealHeight: 560, maxHeight: 680)
-        .presentationCompactAdaptation(.popover)
         .accessibilityLabel(Text(BaL10n.string("ba.catalog.action.viewOptions")))
         .accessibilityValue(Text(verbatim: accessibilityValue))
     }
@@ -448,6 +440,16 @@ private extension View {
         #else
             self
         #endif
+    }
+
+    func baCatalogOptionsPanelLayout() -> some View {
+        frame(minWidth: 320, idealWidth: 380, maxWidth: 460)
+            .frame(minHeight: 360, idealHeight: 560, maxHeight: 680)
+    }
+
+    func baCatalogOptionsPopoverLayout() -> some View {
+        baCatalogOptionsPanelLayout()
+            .presentationCompactAdaptation(.popover)
     }
 }
 
