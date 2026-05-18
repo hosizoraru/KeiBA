@@ -79,7 +79,7 @@ final class BaAppModel {
         )
     }
 
-    static let catalogCacheSchemaVersion = 3
+    static let catalogCacheSchemaVersion = 4
     static let poolCacheSchemaVersion = 6
     static let studentCatalogPID = BaCatalogCategory.students.gameKeePID
 }

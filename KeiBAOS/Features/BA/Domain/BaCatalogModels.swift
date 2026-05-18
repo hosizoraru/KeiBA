@@ -74,6 +74,7 @@ nonisolated struct BaGuideCatalogEntry: Identifiable, Codable, Hashable, Sendabl
     let releaseDate: Date?
     let detailURL: URL?
     let category: BaCatalogCategory
+    var metadata: BaGuideCatalogMetadata? = nil
 
     var id: Int64 {
         contentId
@@ -105,7 +106,8 @@ nonisolated struct BaGuideCatalogEntry: Identifiable, Codable, Hashable, Sendabl
             createdAt: createdAt,
             releaseDate: releaseDate,
             detailURL: detailURL,
-            category: category
+            category: category,
+            metadata: metadata
         )
     }
 
@@ -123,7 +125,27 @@ nonisolated struct BaGuideCatalogEntry: Identifiable, Codable, Hashable, Sendabl
             createdAt: createdAt,
             releaseDate: releaseDate ?? self.releaseDate,
             detailURL: detailURL,
-            category: category
+            category: category,
+            metadata: metadata
+        )
+    }
+
+    func withMetadata(_ metadata: BaGuideCatalogMetadata?) -> BaGuideCatalogEntry {
+        BaGuideCatalogEntry(
+            entryId: entryId,
+            pid: pid,
+            contentId: contentId,
+            name: name,
+            alias: alias,
+            aliasDisplay: aliasDisplay,
+            iconURL: iconURL,
+            type: type,
+            order: order,
+            createdAt: createdAt,
+            releaseDate: releaseDate,
+            detailURL: detailURL,
+            category: category,
+            metadata: metadata
         )
     }
 }
@@ -131,6 +153,30 @@ nonisolated struct BaGuideCatalogEntry: Identifiable, Codable, Hashable, Sendabl
 nonisolated struct BaGuideCatalogBundle: Codable, Hashable, Sendable {
     let entries: [BaGuideCatalogEntry]
     let syncedAt: Date
+    let studentFilterGroups: [BaCatalogFilterGroup]
+
+    init(
+        entries: [BaGuideCatalogEntry],
+        syncedAt: Date,
+        studentFilterGroups: [BaCatalogFilterGroup] = []
+    ) {
+        self.entries = entries
+        self.syncedAt = syncedAt
+        self.studentFilterGroups = studentFilterGroups
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case entries
+        case syncedAt
+        case studentFilterGroups
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        entries = try container.decode([BaGuideCatalogEntry].self, forKey: .entries)
+        syncedAt = try container.decode(Date.self, forKey: .syncedAt)
+        studentFilterGroups = try container.decodeIfPresent([BaCatalogFilterGroup].self, forKey: .studentFilterGroups) ?? []
+    }
 
     func entries(in category: BaCatalogCategory) -> [BaGuideCatalogEntry] {
         entries.filter { $0.category == category }

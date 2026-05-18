@@ -12,11 +12,19 @@ struct BaCatalogView: View {
 
     @State private var selectedCategory: BaCatalogCategory = .students
     @State private var sortMode: BaCatalogSortMode = .defaultOrder
+    @State private var filterSelection = BaCatalogFilterSelection()
     @State private var searchText = ""
 
     private var snapshot: BaCatalogViewSnapshot {
         let favoriteIDs = model.settings.favoriteContentIDs
-        let rows = model.entries(for: selectedCategory, query: searchText, sortMode: sortMode).map { entry in
+        let filterGroups = model.catalogState.value?.studentFilterGroups ?? []
+        let rows = model.entries(
+            for: selectedCategory,
+            query: searchText,
+            sortMode: sortMode,
+            filterSelection: selectedCategory == .students ? filterSelection : .empty,
+            filterGroups: filterGroups
+        ).map { entry in
             BaCatalogEntryRowDisplayModel(
                 entry: entry,
                 isFavorite: favoriteIDs.contains(entry.contentId),
@@ -43,8 +51,15 @@ struct BaCatalogView: View {
             ToolbarItem(placement: .primaryAction) {
                 BaCatalogViewOptionsMenu(
                     selectedCategory: $selectedCategory,
-                    sortMode: $sortMode
+                    sortMode: $sortMode,
+                    filterSelection: $filterSelection,
+                    filterGroups: model.catalogState.value?.studentFilterGroups ?? []
                 )
+            }
+        }
+        .onChange(of: selectedCategory) { _, newValue in
+            if newValue != .students {
+                filterSelection.clear()
             }
         }
         .task {
@@ -196,6 +211,9 @@ private struct BaCatalogViewSnapshot {
 private struct BaCatalogViewOptionsMenu: View {
     @Binding var selectedCategory: BaCatalogCategory
     @Binding var sortMode: BaCatalogSortMode
+    @Binding var filterSelection: BaCatalogFilterSelection
+
+    let filterGroups: [BaCatalogFilterGroup]
 
     var body: some View {
         Menu {
@@ -220,13 +238,52 @@ private struct BaCatalogViewOptionsMenu: View {
                     }
                 }
             }
+
+            if selectedCategory == .students, filterGroups.isEmpty == false {
+                Section(BaL10n.string("ba.catalog.action.filter")) {
+                    ForEach(filterGroups) { group in
+                        Menu(group.title) {
+                            ForEach(group.options) { option in
+                                BaCatalogMenuSelectionButton(
+                                    title: option.title,
+                                    isSelected: filterSelection.isSelected(option, in: group)
+                                ) {
+                                    filterSelection.toggle(option, in: group)
+                                }
+                            }
+                        }
+                    }
+
+                    if filterSelection.isEmpty == false {
+                        Button(role: .destructive) {
+                            filterSelection.clear()
+                        } label: {
+                            Label(BaL10n.string("ba.catalog.filter.clear"), systemImage: "xmark.circle")
+                        }
+                    }
+                }
+            }
         } label: {
-            Label(BaL10n.string("ba.catalog.action.viewOptions"), systemImage: "line.3.horizontal.decrease.circle")
+            Label(
+                BaL10n.string("ba.catalog.action.viewOptions"),
+                systemImage: filterSelection.isEmpty ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill"
+            )
         }
         .labelStyle(.iconOnly)
         .menuOrder(.fixed)
         .accessibilityLabel(Text(BaL10n.string("ba.catalog.action.viewOptions")))
-        .accessibilityValue(Text(verbatim: "\(selectedCategory.title), \(sortMode.title)"))
+        .accessibilityValue(Text(verbatim: accessibilityValue))
+    }
+
+    private var accessibilityValue: String {
+        guard filterSelection.isEmpty == false else {
+            return "\(selectedCategory.title), \(sortMode.title)"
+        }
+        let filterText = String(
+            format: BaL10n.string("ba.catalog.filter.active.count.format"),
+            Int64(filterSelection.activeFilterCount)
+        )
+        return "\(selectedCategory.title), \(sortMode.title), \(filterText)"
     }
 }
 

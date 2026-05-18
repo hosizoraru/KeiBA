@@ -17,8 +17,18 @@ struct BaGuideCatalogRepository {
     func fetchCatalog(now: Date = Date()) async throws -> BaRepositorySnapshot<BaGuideCatalogBundle> {
         async let students = fetchEntries(pid: BaCatalogCategory.students.gameKeePID, category: .students)
         async let npcSatellite = fetchEntries(pid: BaCatalogCategory.npcSatellite.gameKeePID, category: .npcSatellite)
+        async let filterGroupsResult = fetchStudentFilterGroups()
+        async let metadataDataResult = fetchStudentMetadataData()
         let (studentEntries, npcSatelliteEntries) = try await (students, npcSatellite)
-        let entries = (studentEntries + npcSatelliteEntries)
+        let filterGroups = await filterGroupsResult
+        let metadataData = await metadataDataResult
+        let studentMetadata = metadataData.value.flatMap { data in
+            try? parseStudentMetadata(data: data, filterGroups: filterGroups.value)
+        } ?? [:]
+        let enrichedStudentEntries = studentEntries.map { entry in
+            entry.withMetadata(studentMetadata[entry.contentId])
+        }
+        let entries = (enrichedStudentEntries + npcSatelliteEntries)
             .sorted { lhs, rhs in
                 if lhs.category != rhs.category {
                     return lhs.category.rawValue < rhs.category.rawValue
@@ -26,15 +36,28 @@ struct BaGuideCatalogRepository {
                 return lhs.order < rhs.order
             }
         return BaRepositorySnapshot(
-            value: BaGuideCatalogBundle(entries: entries, syncedAt: now),
+            value: BaGuideCatalogBundle(entries: entries, syncedAt: now, studentFilterGroups: filterGroups.value),
             syncedAt: now,
-            sourceErrors: []
+            sourceErrors: [filterGroups.error, metadataData.error].compactMap { $0 }
         )
     }
 
     func fetchStudentCatalog(now: Date = Date()) async throws -> BaRepositorySnapshot<[BaGuideCatalogEntry]> {
-        let entries = try await fetchEntries(pid: BaCatalogCategory.students.gameKeePID, category: .students)
-        return BaRepositorySnapshot(value: entries, syncedAt: now, sourceErrors: [])
+        async let entries = fetchEntries(pid: BaCatalogCategory.students.gameKeePID, category: .students)
+        async let filterGroupsResult = fetchStudentFilterGroups()
+        async let metadataDataResult = fetchStudentMetadataData()
+        let (studentEntries, filterGroups, metadataData) = try await (entries, filterGroupsResult, metadataDataResult)
+        let studentMetadata = metadataData.value.flatMap { data in
+            try? parseStudentMetadata(data: data, filterGroups: filterGroups.value)
+        } ?? [:]
+        let enrichedEntries = studentEntries.map { entry in
+            entry.withMetadata(studentMetadata[entry.contentId])
+        }
+        return BaRepositorySnapshot(
+            value: enrichedEntries,
+            syncedAt: now,
+            sourceErrors: [filterGroups.error, metadataData.error].compactMap { $0 }
+        )
     }
 
     private func fetchEntries(pid: Int, category: BaCatalogCategory) async throws -> [BaGuideCatalogEntry] {
@@ -73,6 +96,47 @@ struct BaGuideCatalogRepository {
         }
     }
 
+    func parseFilterGroups(data: Data) throws -> [BaCatalogFilterGroup] {
+        try BaCatalogMetadataParser.parseFilterGroups(data: data)
+    }
+
+    func parseStudentMetadata(
+        data: Data,
+        filterGroups: [BaCatalogFilterGroup]
+    ) throws -> [Int64: BaGuideCatalogMetadata] {
+        try BaCatalogMetadataParser.parseStudentMetadata(data: data, filterGroups: filterGroups)
+    }
+
+    private func fetchStudentFilterGroups() async -> CatalogPartial<[BaCatalogFilterGroup]> {
+        do {
+            let data = try await client.fetchJSONData(
+                GameKeeRequest(
+                    pathOrURL: "/v1/entryFilter/getEntryFilter?entry_id=\(BaCatalogCategory.students.gameKeePID)",
+                    refererPath: "/ba/second/\(BaCatalogCategory.gameKeeSecondPageID)",
+                    extraHeaders: GameKeeClient.baHeaders
+                )
+            )
+            return CatalogPartial(value: try parseFilterGroups(data: data), error: nil)
+        } catch {
+            return CatalogPartial(value: [], error: "catalog-filter:\(error.localizedDescription)")
+        }
+    }
+
+    private func fetchStudentMetadataData() async -> CatalogPartial<Data?> {
+        do {
+            let data = try await client.fetchJSONData(
+                GameKeeRequest(
+                    pathOrURL: "/v1/entry/tj-list?entry_id=\(BaCatalogCategory.students.gameKeePID)",
+                    refererPath: "/ba/second/\(BaCatalogCategory.gameKeeSecondPageID)",
+                    extraHeaders: GameKeeClient.baHeaders
+                )
+            )
+            return CatalogPartial(value: data, error: nil)
+        } catch {
+            return CatalogPartial(value: nil, error: "catalog-metadata:\(error.localizedDescription)")
+        }
+    }
+
     private static func formatAliasDisplay(_ alias: String) -> String {
         alias
             .split(separator: ",")
@@ -80,4 +144,9 @@ struct BaGuideCatalogRepository {
             .filter { $0.isEmpty == false }
             .joined(separator: " · ")
     }
+}
+
+private struct CatalogPartial<Value> {
+    let value: Value
+    let error: String?
 }

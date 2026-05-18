@@ -65,7 +65,9 @@ extension BaAppModel {
     func entries(
         for category: BaCatalogCategory,
         query: String = "",
-        sortMode: BaCatalogSortMode = .releaseDateDescending
+        sortMode: BaCatalogSortMode = .releaseDateDescending,
+        filterSelection: BaCatalogFilterSelection = .empty,
+        filterGroups: [BaCatalogFilterGroup] = []
     ) -> [BaGuideCatalogEntry] {
         let bundle = catalogState.value
         guard bundle != nil || category == .favorites else { return [] }
@@ -85,6 +87,7 @@ extension BaAppModel {
         }
         return source
             .filter { $0.matches(trimmedQuery: keyword) }
+            .filter { filterSelection.matches($0, groups: filterGroups) }
             .sorted(using: sortMode, favoriteContentIDs: settings.favoriteContentIDs)
     }
 
