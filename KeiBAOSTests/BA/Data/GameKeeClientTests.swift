@@ -64,6 +64,15 @@ final class GameKeeClientTests: XCTestCase {
         XCTAssertEqual(headers["game-alias"], "ba")
     }
 
+    func testDefaultHTTPCacheDirectoryUsesUserCacheContainer() throws {
+        let cacheDirectory = GameKeeClient.httpCacheDirectory()
+        let userCacheDirectory = try XCTUnwrap(FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first)
+
+        XCTAssertTrue(cacheDirectory.isFileURL)
+        XCTAssertTrue(cacheDirectory.path.hasPrefix(userCacheDirectory.path))
+        XCTAssertEqual(cacheDirectory.lastPathComponent, "ba_gamekee_http_cache")
+    }
+
     func testAudioFetchRequestsUseGameKeeMediaHeaders() async throws {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [GameKeeClientURLProtocol.self]

@@ -492,11 +492,19 @@ struct GameKeeClient: @unchecked Sendable {
         return trimmed.hasPrefix("<svg") || trimmed.hasPrefix("#extm3u")
     }
 
+    nonisolated static func httpCacheDirectory(fileManager: FileManager = .default) -> URL {
+        let baseDirectory = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? fileManager.temporaryDirectory
+        return baseDirectory.appendingPathComponent("ba_gamekee_http_cache", isDirectory: true)
+    }
+
     private nonisolated static func makeSession() -> URLSession {
+        let cacheDirectory = httpCacheDirectory()
+        try? FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
         let cache = URLCache(
             memoryCapacity: 16 * 1024 * 1024,
             diskCapacity: 64 * 1024 * 1024,
-            diskPath: "ba_gamekee_http_cache"
+            directory: cacheDirectory
         )
         let configuration = URLSessionConfiguration.default
         configuration.timeoutIntervalForRequest = 12
