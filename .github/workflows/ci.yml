@@ -130,6 +130,8 @@ jobs:
             -destination 'platform=macOS' \
             -skip-testing:KeiBAOSTests/BaUserDataSyncTests \
             -parallel-testing-enabled NO \
+            -testLanguage en \
+            -testRegion US \
             -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests-macOS" \
             MARKETING_VERSION="$APP_MARKETING_VERSION" \
             CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
@@ -143,6 +145,8 @@ jobs:
             -destination 'platform=macOS' \
             -only-testing:KeiBAOSTests/BaUserDataSyncTests \
             -parallel-testing-enabled NO \
+            -testLanguage en \
+            -testRegion US \
             -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests-macOS" \
             MARKETING_VERSION="$APP_MARKETING_VERSION" \
             CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \

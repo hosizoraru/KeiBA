@@ -13,6 +13,7 @@ final class BaWatchDashboardSnapshotTests: XCTestCase {
         let base = Date(timeIntervalSince1970: 1_800_000_000)
         var envelope = BaSettingsEnvelope.defaults(now: base)
         envelope.selectedServer = .cn
+        envelope.globalSettings.appLanguage = .simplifiedChinese
         envelope.globalSettings.favoriteContentIDs = [1, 2, 3]
         envelope.globalSettings.dutyStudent = BaDutyStudent(
             contentId: 1,
