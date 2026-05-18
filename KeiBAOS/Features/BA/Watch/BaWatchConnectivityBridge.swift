@@ -14,14 +14,17 @@ import WatchConnectivity
 @MainActor
 protocol BaWatchSnapshotSyncing: AnyObject {
     var state: BaWatchSyncState { get }
+    var onStateChanged: (@MainActor (BaWatchSyncState) -> Void)? { get set }
 
     func activate()
     func sync(_ snapshot: BaWatchDashboardSnapshot)
+    func refreshState()
 }
 
 nonisolated enum BaWatchSyncAvailability: String, Equatable, Sendable {
     case unavailable
     case activating
+    case confirmingInstall
     case notPaired
     case appNotInstalled
     case reachable
@@ -42,20 +45,32 @@ nonisolated struct BaWatchSyncState: Equatable, Sendable {
 @MainActor
 final class BaNoopWatchSnapshotSyncer: BaWatchSnapshotSyncing {
     let state = BaWatchSyncState.unavailable
+    var onStateChanged: (@MainActor (BaWatchSyncState) -> Void)?
 
     func activate() {}
     func sync(_ snapshot: BaWatchDashboardSnapshot) {}
+    func refreshState() {}
 }
 
 #if os(iOS) && canImport(WatchConnectivity)
 @MainActor
 final class BaWatchConnectivityBridge: NSObject, BaWatchSnapshotSyncing {
-    private(set) var state = BaWatchSyncState.unavailable
+    private(set) var state = BaWatchSyncState.unavailable {
+        didSet {
+            guard state != oldValue else { return }
+            onStateChanged?(state)
+        }
+    }
+
+    var onStateChanged: (@MainActor (BaWatchSyncState) -> Void)?
+
     private var pendingSnapshot: BaWatchDashboardSnapshot?
     private var pendingRequiresGuaranteedDelivery = false
     private var didAssignDelegate = false
     private var lastApplicationContextData: Data?
     private var lastQueuedGuaranteedSourceUpdatedAt: Date?
+    private var watchAppMissingSince: Date?
+    private let watchAppInstallGraceInterval: TimeInterval = 45
 
     func activate() {
         guard WCSession.isSupported() else {
@@ -77,6 +92,12 @@ final class BaWatchConnectivityBridge: NSObject, BaWatchSnapshotSyncing {
         pendingSnapshot = snapshot
         pendingRequiresGuaranteedDelivery = true
         flushPendingSnapshot()
+    }
+
+    func refreshState() {
+        activate()
+        guard WCSession.isSupported() else { return }
+        updateState(from: WCSession.default)
     }
 
     private func flushPendingSnapshot() {
@@ -126,7 +147,7 @@ final class BaWatchConnectivityBridge: NSObject, BaWatchSnapshotSyncing {
         }
     }
 
-    private func updateState(from session: WCSession) {
+    private func updateState(from session: WCSession, now: Date = Date()) {
         guard session.activationState == .activated else {
             state.availability = .activating
             return
@@ -136,9 +157,18 @@ final class BaWatchConnectivityBridge: NSObject, BaWatchSnapshotSyncing {
             return
         }
         guard session.isWatchAppInstalled else {
-            state.availability = .appNotInstalled
+            if watchAppMissingSince == nil {
+                watchAppMissingSince = now
+            }
+            let missingDuration = now.timeIntervalSince(watchAppMissingSince ?? now)
+            if missingDuration < watchAppInstallGraceInterval {
+                state.availability = .confirmingInstall
+            } else {
+                state.availability = .appNotInstalled
+            }
             return
         }
+        watchAppMissingSince = nil
         state.availability = session.isReachable ? .reachable : .background
     }
 

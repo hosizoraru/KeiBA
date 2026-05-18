@@ -150,10 +150,6 @@ extension BaTimelineGlanceSnapshot {
 }
 
 extension BaAppModel {
-    var watchSyncState: BaWatchSyncState {
-        watchSnapshotSyncer.state
-    }
-
     var currentWatchDashboardSnapshot: BaWatchDashboardSnapshot {
         BaWatchDashboardSnapshot(
             userData: envelope.userData(updatedAt: settingsStore.userDataUpdatedAt(fallback: Date())),
@@ -171,11 +167,18 @@ extension BaAppModel {
                 timeline: watchTimelineGlanceSnapshot(now: now)
             )
         )
+        watchSyncState = watchSnapshotSyncer.state
     }
 
     func requestWatchSnapshotSync() {
         watchSnapshotSyncer.activate()
         syncWatchSnapshot(updatedAt: Date(), now: Date())
+        watchSyncState = watchSnapshotSyncer.state
+    }
+
+    func refreshWatchSyncState() {
+        watchSnapshotSyncer.refreshState()
+        watchSyncState = watchSnapshotSyncer.state
     }
 
     private func watchTimelineGlanceSnapshot(now: Date = Date()) -> BaTimelineGlanceSnapshot {

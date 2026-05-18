@@ -12,6 +12,7 @@ struct BaOverviewView: View {
     @Environment(\.baAdaptiveMetrics) private var metrics
 
     var onOpenTab: (AppTab) -> Void = { _ in }
+    var onOpenSheet: (BaPresentedSheet) -> Void = { _ in }
 
     var body: some View {
         BaScreenScaffold {
@@ -26,7 +27,9 @@ struct BaOverviewView: View {
                 BaOverviewAdaptiveCards {
                     BaOverviewIdentityCard(
                         settings: model.settings,
-                        onServerSelected: selectServer
+                        watchSyncState: model.watchSyncState,
+                        onServerSelected: selectServer,
+                        onOpenWatchSettings: { onOpenSheet(.watch) }
                     )
                 } ap: {
                     BaOverviewAPCard(
@@ -55,6 +58,7 @@ struct BaOverviewView: View {
         }
         .task(id: model.settings.server) {
             model.refreshOfficeSnapshot()
+            model.refreshWatchSyncState()
             await Task.yield()
             let cacheSignpost = BaStartupInstrumentation.begin("Overview Startup Cache")
             await model.loadTimelineCachesIfNeeded()

@@ -18,6 +18,7 @@ final class BaAppModel {
     var poolState = BaLoadableState<[BaPoolEntry]>()
     var catalogState = BaLoadableState<BaGuideCatalogBundle>()
     var studentDetailStates: [Int64: BaLoadableState<BaStudentGuideInfo>] = [:]
+    var watchSyncState = BaWatchSyncState.unavailable
 
     let settingsStore: BaSettingsStore
     let cacheStore: BaCacheStore
@@ -60,6 +61,10 @@ final class BaAppModel {
         settings = loadedSettings
         officeSnapshot = officeRepository.snapshot(settings: loadedSettings)
         BaL10n.configure(appLanguage: loadedEnvelope.globalSettings.appLanguage)
+        watchSyncState = self.watchSnapshotSyncer.state
+        self.watchSnapshotSyncer.onStateChanged = { [weak self] state in
+            self?.watchSyncState = state
+        }
         self.watchSnapshotSyncer.activate()
         let loadedUserData = loadedEnvelope.userData(
             updatedAt: settingsStore.userDataUpdatedAt(fallback: Date())

@@ -42,7 +42,9 @@ struct BaOverviewIdentityCard: View {
     @Environment(\.baAdaptiveMetrics) private var metrics
 
     let settings: BaAppSettings
+    let watchSyncState: BaWatchSyncState
     let onServerSelected: (BaServer) -> Void
+    let onOpenWatchSettings: () -> Void
 
     @State private var copiedFriendCode = false
 
@@ -76,6 +78,8 @@ struct BaOverviewIdentityCard: View {
                     isCopied: copiedFriendCode,
                     onCopy: copyFriendCode
                 )
+
+                watchStatusButton
             }
             .layoutPriority(1)
 
@@ -103,6 +107,8 @@ struct BaOverviewIdentityCard: View {
                 isCopied: copiedFriendCode,
                 onCopy: copyFriendCode
             )
+
+            watchStatusButton
         }
     }
 
@@ -124,6 +130,41 @@ struct BaOverviewIdentityCard: View {
         .labelsHidden()
         .pickerStyle(.menu)
         .fixedSize(horizontal: true, vertical: false)
+    }
+
+    @ViewBuilder
+    private var watchStatusButton: some View {
+        #if os(iOS)
+        Button(action: onOpenWatchSettings) {
+            HStack(spacing: 6) {
+                Image(systemName: BaWatchSyncStatusPresenter.systemImage(for: watchSyncState))
+                    .font(.caption.weight(.semibold))
+                    .frame(width: 16)
+
+                Text(BaL10n.string("ba.overview.watch.title"))
+                    .foregroundStyle(.secondary)
+
+                Text(BaWatchSyncStatusPresenter.compactTitle(for: watchSyncState))
+                    .foregroundStyle(BaWatchSyncStatusPresenter.foregroundStyle(for: watchSyncState))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.78)
+            }
+            .font(.caption.weight(.semibold))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .liquidGlassSurface(cornerRadius: 14, tint: BaDesign.blue.opacity(0.045), isInteractive: true)
+        .accessibilityLabel(
+            Text(
+                String(
+                    format: BaL10n.string("ba.overview.watch.accessibility.format"),
+                    BaWatchSyncStatusPresenter.compactTitle(for: watchSyncState)
+                )
+            )
+        )
+        #endif
     }
 
     private var serverBinding: Binding<BaServer> {

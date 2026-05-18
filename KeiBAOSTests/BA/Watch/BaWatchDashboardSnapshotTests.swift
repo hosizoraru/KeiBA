@@ -113,6 +113,76 @@ final class BaWatchDashboardSnapshotTests: XCTestCase {
         XCTAssertNotNil(cafeFullAt)
         XCTAssertLessThan(cafeFullAt ?? .distantFuture, base.addingTimeInterval(24 * 60 * 60))
     }
+
+    @MainActor
+    func testAppModelMirrorsWatchConnectivityStateChanges() throws {
+        let syncer = RecordingWatchSnapshotSyncer()
+        let model = makeWatchAppModel(watchSnapshotSyncer: syncer)
+
+        XCTAssertEqual(model.watchSyncState.availability, .background)
+
+        syncer.setAvailability(.reachable)
+
+        XCTAssertEqual(model.watchSyncState.availability, .reachable)
+        XCTAssertGreaterThanOrEqual(syncer.syncedSnapshots.count, 1)
+    }
+
+    @MainActor
+    private func makeWatchAppModel(watchSnapshotSyncer: RecordingWatchSnapshotSyncer) -> BaAppModel {
+        let client = GameKeeClient()
+        let cacheStore = BaCacheStore()
+        return BaAppModel(
+            settingsStore: BaSettingsStore(defaults: makeIsolatedDefaults()),
+            cacheStore: cacheStore,
+            imageCache: BaImageCache(client: client),
+            activityPoolRepository: BaActivityPoolRepository(client: client),
+            catalogRepository: BaGuideCatalogRepository(client: client),
+            catalogReleaseDateHydrator: BaCatalogReleaseDateHydrator(
+                cacheStore: cacheStore,
+                studentRepository: BaStudentGuideRepository(client: client)
+            ),
+            studentRepository: BaStudentGuideRepository(client: client),
+            officeRepository: BaOfficeRepository(),
+            watchSnapshotSyncer: watchSnapshotSyncer
+        )
+    }
+
+    private func makeIsolatedDefaults() -> UserDefaults {
+        let suiteName = "KeiBAOSTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        return defaults
+    }
+}
+
+@MainActor
+private final class RecordingWatchSnapshotSyncer: BaWatchSnapshotSyncing {
+    private(set) var state = BaWatchSyncState.unavailable {
+        didSet {
+            guard state != oldValue else { return }
+            onStateChanged?(state)
+        }
+    }
+
+    var onStateChanged: (@MainActor (BaWatchSyncState) -> Void)?
+    var syncedSnapshots: [BaWatchDashboardSnapshot] = []
+
+    func activate() {
+        setAvailability(.activating)
+    }
+
+    func sync(_ snapshot: BaWatchDashboardSnapshot) {
+        syncedSnapshots.append(snapshot)
+        setAvailability(.background)
+    }
+
+    func refreshState() {
+        setAvailability(.reachable)
+    }
+
+    func setAvailability(_ availability: BaWatchSyncAvailability) {
+        state.availability = availability
+    }
 }
 
 private func makeActivity(id: Int, title: String, beginAt: Date, endAt: Date) -> BaActivityEntry {

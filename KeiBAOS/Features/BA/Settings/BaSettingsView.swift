@@ -7,13 +7,8 @@
 
 import SwiftUI
 
-#if os(iOS)
-import UIKit
-#endif
-
 struct BaSettingsView: View {
     @Environment(BaAppModel.self) private var model
-    @State private var watchSyncStateRefreshID = UUID()
 
     var body: some View {
         #if os(macOS)
@@ -27,9 +22,6 @@ struct BaSettingsView: View {
         BaAdaptiveGeometry { _ in
             Form {
                 appPreferencesSection
-                #if os(iOS)
-                watchSection
-                #endif
                 serverIdentitySection
                 resourcesSection
                 activityPoolSection
@@ -573,144 +565,6 @@ struct BaSettingsView: View {
             #endif
         }
     }
-
-    #if os(iOS)
-    private var watchSection: some View {
-        let state = refreshedWatchSyncState
-        let snapshot = model.currentWatchDashboardSnapshot
-
-        return Section {
-            LabeledContent(BaL10n.string("ba.settings.watch.connection.title")) {
-                Text(watchSyncConnectionTitle(for: state))
-                    .foregroundStyle(watchSyncConnectionStyle(for: state))
-            }
-
-            LabeledContent(BaL10n.string("ba.settings.watch.lastSent.title")) {
-                Text(watchSyncDateText(state.lastApplicationContextSentAt))
-                    .foregroundStyle(.secondary)
-            }
-
-            if let queuedAt = state.lastGuaranteedTransferQueuedAt {
-                LabeledContent(BaL10n.string("ba.settings.watch.queued.title")) {
-                    Text(watchSyncDateText(queuedAt))
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            LabeledContent(BaL10n.string("ba.settings.watch.dutyAvatar.title")) {
-                Text(watchDutyAvatarStatus(snapshot: snapshot))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.trailing)
-            }
-
-            LabeledContent(BaL10n.string("ba.settings.watch.content.title")) {
-                Text(BaL10n.string("ba.settings.watch.content.summary"))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.trailing)
-            }
-
-            LabeledContent(BaL10n.string("ba.settings.watch.timeline.title")) {
-                Text(watchTimelineStatus(snapshot.timeline))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.trailing)
-            }
-
-            if let error = state.lastErrorDescription {
-                LabeledContent(BaL10n.string("ba.settings.watch.error.title")) {
-                    Text(error)
-                        .foregroundStyle(.red)
-                        .multilineTextAlignment(.trailing)
-                }
-            }
-
-            Button {
-                model.requestWatchSnapshotSync()
-                watchSyncStateRefreshID = UUID()
-            } label: {
-                Label(BaL10n.string("ba.settings.watch.syncNow.title"), systemImage: "applewatch.radiowaves.left.and.right")
-            }
-
-            Button {
-                openAppNotificationSettings()
-            } label: {
-                Label(BaL10n.string("ba.settings.watch.openNotificationSettings.title"), systemImage: "bell.badge")
-            }
-        } header: {
-            Text(BaL10n.string("ba.settings.watch.section"))
-        } footer: {
-            Text(BaL10n.string("ba.settings.watch.footer"))
-        }
-    }
-
-    private var refreshedWatchSyncState: BaWatchSyncState {
-        _ = watchSyncStateRefreshID
-        return model.watchSyncState
-    }
-
-    private func watchSyncConnectionTitle(for state: BaWatchSyncState) -> String {
-        switch state.availability {
-        case .unavailable:
-            BaL10n.string("ba.settings.watch.connection.unavailable")
-        case .activating:
-            BaL10n.string("ba.settings.watch.connection.activating")
-        case .notPaired:
-            BaL10n.string("ba.settings.watch.connection.notPaired")
-        case .appNotInstalled:
-            BaL10n.string("ba.settings.watch.connection.notInstalled")
-        case .reachable:
-            BaL10n.string("ba.settings.watch.connection.reachable")
-        case .background:
-            BaL10n.string("ba.settings.watch.connection.background")
-        case .error:
-            BaL10n.string("ba.settings.watch.connection.error")
-        }
-    }
-
-    private func watchSyncConnectionStyle(for state: BaWatchSyncState) -> Color {
-        switch state.availability {
-        case .reachable:
-            .green
-        case .background:
-            .secondary
-        case .error:
-            .red
-        default:
-            .secondary
-        }
-    }
-
-    private func watchDutyAvatarStatus(snapshot: BaWatchDashboardSnapshot) -> String {
-        guard let dutyStudentName = snapshot.dutyStudentName, dutyStudentName.isEmpty == false else {
-            return BaL10n.string("ba.settings.watch.dutyAvatar.missing")
-        }
-        if snapshot.dutyStudentAvatarURLString?.isEmpty == false {
-            return String(format: BaL10n.string("ba.settings.watch.dutyAvatar.ready"), dutyStudentName)
-        }
-        return String(format: BaL10n.string("ba.settings.watch.dutyAvatar.noImage"), dutyStudentName)
-    }
-
-    private func watchTimelineStatus(_ timeline: BaTimelineGlanceSnapshot) -> String {
-        String(
-            format: BaL10n.string("ba.settings.watch.timeline.summary.format"),
-            timeline.activities.runningCount,
-            timeline.activities.upcomingCount,
-            timeline.pools.runningCount,
-            timeline.pools.upcomingCount
-        )
-    }
-
-    private func watchSyncDateText(_ date: Date?) -> String {
-        guard let date else {
-            return BaL10n.string("ba.settings.watch.never")
-        }
-        return date.formatted(.dateTime.month(.twoDigits).day(.twoDigits).hour().minute().second())
-    }
-
-    private func openAppNotificationSettings() {
-        guard let url = URL(string: UIApplication.openNotificationSettingsURLString) else { return }
-        UIApplication.shared.open(url)
-    }
-    #endif
 
     private var serverBinding: Binding<BaServer> {
         Binding(
