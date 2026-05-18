@@ -63,14 +63,15 @@ final class BaAppModel {
         officeSnapshot = officeRepository.snapshot(settings: loadedSettings)
         BaL10n.configure(appLanguage: loadedEnvelope.globalSettings.appLanguage)
         watchSyncState = self.watchSnapshotSyncer.state
-        self.watchSnapshotSyncer.onStateChanged = { [weak self] state in
-            self?.watchSyncState = state
-        }
         self.watchSnapshotSyncer.activate()
         let loadedUserData = loadedEnvelope.userData(
             updatedAt: settingsStore.userDataUpdatedAt(fallback: Date())
         )
         syncWatchSnapshot(updatedAt: loadedUserData.updatedAt, now: Date())
+        watchSyncState = self.watchSnapshotSyncer.state
+        self.watchSnapshotSyncer.onStateChanged = { [weak self] state in
+            self?.watchSyncState = state
+        }
     }
 
     static func live() -> BaAppModel {
