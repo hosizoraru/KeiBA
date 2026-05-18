@@ -74,8 +74,20 @@ jobs:
             -project KeiBAOS.xcodeproj \
             -scheme KeiBAOS \
             -destination 'platform=macOS' \
+            -skip-testing:KeiBAOSTests/BaUserDataSyncTests \
             -parallel-testing-enabled NO \
-            -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests" \
+            -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests-main" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Run user data sync tests
+        run: |
+          xcodebuild test \
+            -project KeiBAOS.xcodeproj \
+            -scheme KeiBAOS \
+            -destination 'platform=macOS' \
+            -only-testing:KeiBAOSTests/BaUserDataSyncTests \
+            -parallel-testing-enabled NO \
+            -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests-sync" \
             CODE_SIGNING_ALLOWED=NO
 
   package-artifacts:
