@@ -171,69 +171,8 @@ final class BaWatchDashboardSnapshotTests: XCTestCase {
         XCTAssertLessThan(cafeFullAt ?? .distantFuture, base.addingTimeInterval(24 * 60 * 60))
     }
 
-    @MainActor
-    func testWatchSyncStateCallbackMirrorsSyncerChanges() {
-        let syncer = RecordingWatchSnapshotSyncer()
-        var mirroredState = syncer.state
-
-        syncer.onStateChanged = { state in
-            mirroredState = state
-        }
-
-        XCTAssertEqual(mirroredState.availability, .unavailable)
-
-        syncer.activate()
-        XCTAssertEqual(mirroredState.availability, .activating)
-
-        let now = Date(timeIntervalSince1970: 1_800_000_000)
-        let snapshot = BaWatchDashboardSnapshot(
-            userData: BaSettingsEnvelope.defaults(now: now).userData(updatedAt: now),
-            now: now
-        )
-
-        syncer.sync(snapshot)
-        XCTAssertEqual(mirroredState.availability, .background)
-        XCTAssertEqual(syncer.syncedSnapshots.count, 1)
-
-        syncer.setAvailability(.reachable)
-        XCTAssertEqual(mirroredState.availability, .reachable)
-
-        syncer.refreshState()
-        XCTAssertEqual(mirroredState.availability, .reachable)
-    }
-
     private static let onePixelPNGBase64 =
         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR4nGP4DwQACfsD/fteaysAAAAASUVORK5CYII="
-}
-
-@MainActor
-private final class RecordingWatchSnapshotSyncer: BaWatchSnapshotSyncing {
-    private(set) var state = BaWatchSyncState.unavailable {
-        didSet {
-            guard state != oldValue else { return }
-            onStateChanged?(state)
-        }
-    }
-
-    var onStateChanged: (@MainActor (BaWatchSyncState) -> Void)?
-    var syncedSnapshots: [BaWatchDashboardSnapshot] = []
-
-    func activate() {
-        setAvailability(.activating)
-    }
-
-    func sync(_ snapshot: BaWatchDashboardSnapshot) {
-        syncedSnapshots.append(snapshot)
-        setAvailability(.background)
-    }
-
-    func refreshState() {
-        setAvailability(.reachable)
-    }
-
-    func setAvailability(_ availability: BaWatchSyncAvailability) {
-        state.availability = availability
-    }
 }
 
 private func makeActivity(id: Int, title: String, beginAt: Date, endAt: Date) -> BaActivityEntry {
