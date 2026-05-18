@@ -1,8 +1,10 @@
 # Xcode
 DerivedData/
+Build/
 *.xcuserstate
 xcuserdata/
 *.xcscmblueprint
+*.xcresult
 
 # Swift Package Manager
 .build/
@@ -13,5 +15,6 @@ xcuserdata/
 
 # App artifacts
 *.ipa
+*.dSYM
 *.dSYM.zip
 *.xcarchive

@@ -1,0 +1,56 @@
+name: Feature request
+description: Suggest a focused improvement for KeiBAOS.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: User need
+      description: What user workflow gets better?
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - iPhone
+        - iPad
+        - macOS
+        - Live Activities / Dynamic Island
+        - Apple Watch
+        - All Apple platforms
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Overview
+        - Activity
+        - Recruitment pools
+        - Student catalog
+        - Student detail
+        - Music
+        - Notifications
+        - Settings
+        - Data sync
+        - Localization
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed experience
+      description: Describe the interaction, layout, or data behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Add Apple HIG references, screenshots, GameKee examples, or similar app behavior when useful.

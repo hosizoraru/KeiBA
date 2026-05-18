@@ -1,0 +1,81 @@
+name: Bug report
+description: Report a reproducible KeiBAOS problem.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Add enough detail for maintainers to reproduce it.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Overview
+        - Activity
+        - Recruitment pools
+        - Student catalog
+        - Student detail
+        - Music
+        - Notifications
+        - Live Activities / Dynamic Island
+        - Settings
+        - macOS layout
+        - iPadOS layout
+        - Data parsing
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device or Mac
+      placeholder: iPhone 15 Pro, iPad mini (A17 Pro), MacBook Pro, etc.
+    validations:
+      required: true
+  - type: input
+    id: os-version
+    attributes:
+      label: OS version
+      placeholder: iOS 26.5, iPadOS 26.5, macOS 26.5
+    validations:
+      required: true
+  - type: input
+    id: app-version
+    attributes:
+      label: App build or commit
+      placeholder: Version, TestFlight build, or commit hash
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Tap ...
+        3. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: attachments
+    attributes:
+      label: Screenshots, recordings, or logs
+      description: Attach captures, console logs, or relevant payload snippets.
