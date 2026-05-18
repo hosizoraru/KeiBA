@@ -15,12 +15,35 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  version:
+    name: Resolve app version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      marketing_version: ${{ steps.version.outputs.marketing_version }}
+      build_version: ${{ steps.version.outputs.build_version }}
+      artifact_version: ${{ steps.version.outputs.artifact_version }}
+      artifact_slug: ${{ steps.version.outputs.artifact_slug }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version metadata
+        id: version
+        run: scripts/ci/resolve_app_version.sh
+
   build-and-test:
     name: Xcode build and tests
     runs-on: macos-26
     timeout-minutes: 45
+    needs: version
     env:
       SWIFTPM_CACHE_PATH: ${{ github.workspace }}/.build/xcode-sourcepackages
+      APP_MARKETING_VERSION: ${{ needs.version.outputs.marketing_version }}
+      APP_BUILD_VERSION: ${{ needs.version.outputs.build_version }}
 
     steps:
       - name: Check out repository
@@ -69,6 +92,8 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath "$RUNNER_TEMP/KeiBAOS-iOS" \
             -clonedSourcePackagesDirPath "$SWIFTPM_CACHE_PATH" \
+            MARKETING_VERSION="$APP_MARKETING_VERSION" \
+            CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
             CODE_SIGNING_ALLOWED=NO
 
       - name: Build macOS tests
@@ -79,6 +104,8 @@ jobs:
             -destination 'platform=macOS' \
             -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests-macOS" \
             -clonedSourcePackagesDirPath "$SWIFTPM_CACHE_PATH" \
+            MARKETING_VERSION="$APP_MARKETING_VERSION" \
+            CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
             CODE_SIGNING_ALLOWED=NO
 
       - name: Run macOS unit tests
@@ -90,6 +117,8 @@ jobs:
             -skip-testing:KeiBAOSTests/BaUserDataSyncTests \
             -parallel-testing-enabled NO \
             -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests-macOS" \
+            MARKETING_VERSION="$APP_MARKETING_VERSION" \
+            CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
             CODE_SIGNING_ALLOWED=NO
 
       - name: Run user data sync tests
@@ -101,15 +130,21 @@ jobs:
             -only-testing:KeiBAOSTests/BaUserDataSyncTests \
             -parallel-testing-enabled NO \
             -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests-macOS" \
+            MARKETING_VERSION="$APP_MARKETING_VERSION" \
+            CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
             CODE_SIGNING_ALLOWED=NO
 
-  package-artifacts:
-    name: Build side-load artifacts
+  package-ios-ipa:
+    name: Build unsigned iOS IPA
     runs-on: macos-26
-    timeout-minutes: 60
+    timeout-minutes: 45
     if: github.event_name != 'pull_request'
+    needs: version
     env:
       SWIFTPM_CACHE_PATH: ${{ github.workspace }}/.build/xcode-sourcepackages
+      APP_MARKETING_VERSION: ${{ needs.version.outputs.marketing_version }}
+      APP_BUILD_VERSION: ${{ needs.version.outputs.build_version }}
+      ARTIFACT_SLUG: ${{ needs.version.outputs.artifact_slug }}
 
     steps:
       - name: Check out repository
@@ -148,7 +183,6 @@ jobs:
           app_path="$derived_data/Build/Products/Release-iphoneos/KeiBAOS.app"
           payload_root="$artifacts/iphoneos"
           payload_dir="$payload_root/Payload"
-          ipa_path="$artifacts/KeiBAOS-iOS-unsigned.ipa"
 
           xcodebuild build \
             -project KeiBAOS.xcodeproj \
@@ -157,17 +191,69 @@ jobs:
             -destination 'generic/platform=iOS' \
             -derivedDataPath "$derived_data" \
             -clonedSourcePackagesDirPath "$SWIFTPM_CACHE_PATH" \
+            MARKETING_VERSION="$APP_MARKETING_VERSION" \
+            CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
             CODE_SIGNING_ALLOWED=NO
 
           test -d "$app_path"
           rm -rf "$payload_root"
           mkdir -p "$payload_dir" "$artifacts"
+          ipa_path="$artifacts/KeiBAOS-iOS-$ARTIFACT_SLUG-unsigned.ipa"
           ditto "$app_path" "$payload_dir/KeiBAOS.app"
           (
             cd "$payload_root"
             COPYFILE_DISABLE=1 zip -qry "$ipa_path" Payload
           )
           du -h "$ipa_path"
+
+      - name: Upload unsigned iOS IPA
+        uses: actions/upload-artifact@v7
+        with:
+          name: KeiBAOS-iOS-${{ needs.version.outputs.artifact_slug }}-unsigned
+          path: ${{ runner.temp }}/KeiBAOS-artifacts/KeiBAOS-iOS-${{ needs.version.outputs.artifact_slug }}-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 14
+
+  package-macos-dmg:
+    name: Build unsigned macOS DMG
+    runs-on: macos-26
+    timeout-minutes: 45
+    if: github.event_name != 'pull_request'
+    needs: version
+    env:
+      SWIFTPM_CACHE_PATH: ${{ github.workspace }}/.build/xcode-sourcepackages
+      APP_MARKETING_VERSION: ${{ needs.version.outputs.marketing_version }}
+      APP_BUILD_VERSION: ${{ needs.version.outputs.build_version }}
+      ARTIFACT_SLUG: ${{ needs.version.outputs.artifact_slug }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Select Xcode 26.4.1
+        run: |
+          xcode_path="/Applications/Xcode_26.4.1.app/Contents/Developer"
+          if [ ! -d "$xcode_path" ]; then
+            echo "::error::Xcode 26.4.1 is required for CI simulator builds."
+            find /Applications -maxdepth 1 -name 'Xcode*.app' -print || true
+            exit 1
+          fi
+          echo "DEVELOPER_DIR=$xcode_path" >> "$GITHUB_ENV"
+
+      - name: Show toolchain
+        run: |
+          sw_vers
+          echo "DEVELOPER_DIR=$DEVELOPER_DIR"
+          xcodebuild -version
+          xcodebuild -showsdks
+
+      - name: Cache Swift package checkouts
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.SWIFTPM_CACHE_PATH }}
+          key: ${{ runner.os }}-xcode-26.4.1-spm-${{ hashFiles('KeiBAOS.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-26.4.1-spm-
 
       - name: Build unsigned macOS DMG
         run: |
@@ -176,7 +262,7 @@ jobs:
           artifacts="$RUNNER_TEMP/KeiBAOS-artifacts"
           app_path="$derived_data/Build/Products/Release/KeiBAOS.app"
           dmg_stage="$RUNNER_TEMP/KeiBAOS-dmg"
-          dmg_path="$artifacts/KeiBAOS-macOS-unsigned.dmg"
+          dmg_path="$artifacts/KeiBAOS-macOS-$ARTIFACT_SLUG-unsigned.dmg"
 
           xcodebuild build \
             -project KeiBAOS.xcodeproj \
@@ -185,6 +271,8 @@ jobs:
             -destination 'generic/platform=macOS' \
             -derivedDataPath "$derived_data" \
             -clonedSourcePackagesDirPath "$SWIFTPM_CACHE_PATH" \
+            MARKETING_VERSION="$APP_MARKETING_VERSION" \
+            CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
             CODE_SIGNING_ALLOWED=NO
 
           test -d "$app_path"
@@ -200,12 +288,10 @@ jobs:
             "$dmg_path"
           du -h "$dmg_path"
 
-      - name: Upload side-load artifacts
+      - name: Upload unsigned macOS DMG
         uses: actions/upload-artifact@v7
         with:
-          name: KeiBAOS-side-load-artifacts
-          path: |
-            ${{ runner.temp }}/KeiBAOS-artifacts/KeiBAOS-iOS-unsigned.ipa
-            ${{ runner.temp }}/KeiBAOS-artifacts/KeiBAOS-macOS-unsigned.dmg
+          name: KeiBAOS-macOS-${{ needs.version.outputs.artifact_slug }}-unsigned
+          path: ${{ runner.temp }}/KeiBAOS-artifacts/KeiBAOS-macOS-${{ needs.version.outputs.artifact_slug }}-unsigned.dmg
           if-no-files-found: error
           retention-days: 14

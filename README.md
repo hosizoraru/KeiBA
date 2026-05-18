@@ -109,11 +109,30 @@ See [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 Pushes to `main` and manual workflow runs also upload side-load test artifacts:
 
-- `KeiBAOS-iOS-unsigned.ipa` is an unsigned iOS device payload. It needs
+- `KeiBAOS-iOS-<version>-unsigned.ipa` is an unsigned iOS device payload. It needs
   re-signing with a valid Apple certificate and provisioning profile before
   installation on a physical device.
-- `KeiBAOS-macOS-unsigned.dmg` is an unsigned, unnotarized macOS build for
-  local smoke testing.
+- `KeiBAOS-macOS-<version>-unsigned.dmg` is an unsigned, unnotarized
+  macOS build for local smoke testing.
+
+The IPA and DMG are uploaded as separate workflow artifacts so testers can
+download only the platform package they need.
+
+## Versioning
+
+KeiBAOS keeps Apple bundle versions and CI artifact names separate:
+
+- `MARKETING_VERSION` / `CFBundleShortVersionString` uses a three-part release
+  version such as `1.0.0`.
+- `CURRENT_PROJECT_VERSION` / `CFBundleVersion` uses the repository commit count
+  as the numeric build version in CI.
+- CI artifact names add git metadata for non-tagged builds, for example
+  `1.0.1-162.g6d0c346`, while the app bundle keeps Apple-compatible values.
+
+The CI version resolver reads the latest merged semantic tag (`v1.2.3` or
+`1.2.3`). Tagged builds use that release version. Builds after a tag use the
+next patch version and append the commit distance plus short SHA to the artifact
+name.
 
 ## Data And Assets
 
