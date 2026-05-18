@@ -219,21 +219,12 @@ private struct BaVoiceFilterMenu: View {
                 }
             }
         } label: {
-            HStack(spacing: 5) {
-                Text(selection.title)
-                    .lineLimit(1)
-                Image(systemName: "chevron.up.chevron.down")
-                    .font(.caption2.weight(.bold))
-            }
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(BaDesign.blue)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(BaDesign.blue.opacity(0.08), in: Capsule())
-            .overlay {
-                Capsule()
-                    .strokeBorder(BaDesign.blue.opacity(0.16), lineWidth: 0.8)
-            }
+            BaMenuPickerLabel(
+                title: selection.title,
+                tint: BaDesign.blue,
+                minWidth: 72,
+                maxWidth: 128
+            )
         }
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity, alignment: .leading)

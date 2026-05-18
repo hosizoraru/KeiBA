@@ -42,40 +42,6 @@ struct BaCatalogView: View {
 
         BaAdaptiveGeometry { metrics in
             catalogLayout(snapshot: snapshot, metrics: metrics)
-                .overlay(alignment: .topTrailing) {
-                    if usesContentAnchoredOptionsPanel(for: metrics) {
-                        Color.clear
-                            .frame(width: 1, height: 1)
-                            .padding(.trailing, 28)
-                            .popover(isPresented: $isOptionsPanelPresented, arrowEdge: .top) {
-                                BaCatalogViewOptionsPanel(
-                                    selectedCategory: $selectedCategory,
-                                    sortMode: $sortMode,
-                                    filterSelection: $filterSelection,
-                                    filterGroups: filterGroups
-                                )
-                                .baCatalogOptionsPopoverLayout()
-                            }
-                    }
-                }
-                .background {
-                    #if os(iOS)
-                        if usesSheetOptionsPanel(for: metrics) {
-                            Color.clear
-                                .sheet(isPresented: $isOptionsPanelPresented) {
-                                    BaCatalogViewOptionsPanel(
-                                        selectedCategory: $selectedCategory,
-                                        sortMode: $sortMode,
-                                        filterSelection: $filterSelection,
-                                        filterGroups: filterGroups
-                                    )
-                                    .baCatalogOptionsPanelLayout()
-                                    .presentationDetents([.medium, .large])
-                                    .presentationDragIndicator(.visible)
-                                }
-                        }
-                    #endif
-                }
                 .toolbar {
                     ToolbarItem(placement: .primaryAction) {
                         BaCatalogViewOptionsControl(
@@ -83,7 +49,8 @@ struct BaCatalogView: View {
                             sortMode: $sortMode,
                             filterSelection: $filterSelection,
                             isPanelPresented: $isOptionsPanelPresented,
-                            filterGroups: filterGroups
+                            filterGroups: filterGroups,
+                            usesSheetPresentation: usesOptionsSheet(for: metrics)
                         )
                     }
                 }
@@ -253,17 +220,9 @@ struct BaCatalogView: View {
         selectedDetailEntry = entry
     }
 
-    private func usesContentAnchoredOptionsPanel(for metrics: BaAdaptiveMetrics) -> Bool {
-        #if os(macOS)
-            false
-        #else
-            metrics.containerWidth >= 860
-        #endif
-    }
-
-    private func usesSheetOptionsPanel(for metrics: BaAdaptiveMetrics) -> Bool {
+    private func usesOptionsSheet(for metrics: BaAdaptiveMetrics) -> Bool {
         #if os(iOS)
-            usesContentAnchoredOptionsPanel(for: metrics) == false
+            metrics.containerWidth < 860
         #else
             false
         #endif
@@ -281,6 +240,7 @@ private struct BaCatalogViewOptionsControl: View {
     @Binding var isPanelPresented: Bool
 
     let filterGroups: [BaCatalogFilterGroup]
+    let usesSheetPresentation: Bool
 
     var body: some View {
         panelButton
@@ -291,17 +251,48 @@ private struct BaCatalogViewOptionsControl: View {
         #if os(macOS)
             panelButtonBase
                 .popover(isPresented: $isPanelPresented, arrowEdge: .top) {
-                BaCatalogViewOptionsPanel(
-                    selectedCategory: $selectedCategory,
-                    sortMode: $sortMode,
-                    filterSelection: $filterSelection,
-                    filterGroups: filterGroups
-                )
-                .baCatalogOptionsPopoverLayout()
-            }
+                    popoverPanel
+                }
         #else
-            panelButtonBase
+            if usesSheetPresentation {
+                panelButtonBase
+                    .sheet(isPresented: $isPanelPresented) {
+                        sheetPanel
+                    }
+            } else {
+                panelButtonBase
+                    .popover(isPresented: $isPanelPresented, arrowEdge: .top) {
+                        popoverPanel
+                    }
+            }
         #endif
+    }
+
+    @ViewBuilder
+    private var sheetPanel: some View {
+        #if os(iOS)
+            optionsPanel
+                .baCatalogOptionsPanelLayout()
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+        #else
+            optionsPanel
+                .baCatalogOptionsPanelLayout()
+        #endif
+    }
+
+    private var popoverPanel: some View {
+        optionsPanel
+            .baCatalogOptionsPopoverLayout()
+    }
+
+    private var optionsPanel: some View {
+        BaCatalogViewOptionsPanel(
+            selectedCategory: $selectedCategory,
+            sortMode: $sortMode,
+            filterSelection: $filterSelection,
+            filterGroups: filterGroups
+        )
     }
 
     private var panelButtonBase: some View {

@@ -153,24 +153,14 @@ struct BaGalleryMenuPicker<Content: View>: View {
         Menu {
             content
         } label: {
-            HStack(spacing: 5) {
-                Text(selectionTitle.baGalleryIfBlank(title))
-                    .font(.caption.weight(.semibold))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
-                    .frame(maxWidth: 112, alignment: .leading)
-
-                Image(systemName: "chevron.up.chevron.down")
-                    .font(.caption2.weight(.bold))
-            }
-            .foregroundStyle(tint)
-            .padding(.horizontal, 10)
-            .frame(height: BaStudentGalleryMetrics.minimumActionHeight)
-            .background(tint.opacity(0.09), in: Capsule())
-            .overlay {
-                Capsule()
-                    .strokeBorder(tint.opacity(0.24), lineWidth: 1)
-            }
+            BaMenuPickerLabel(
+                title: selectionTitle.baGalleryIfBlank(title),
+                tint: tint,
+                minWidth: 72,
+                maxWidth: 112,
+                height: BaStudentGalleryMetrics.minimumActionHeight,
+                font: .caption.weight(.semibold)
+            )
         }
         .accessibilityLabel(title)
     }

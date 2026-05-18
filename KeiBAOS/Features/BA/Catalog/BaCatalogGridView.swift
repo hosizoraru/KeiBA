@@ -120,11 +120,7 @@ private struct BaCatalogGridActionMenu: View {
                 onToggleFavorite(row.entry)
             }
         } label: {
-            Image(systemName: "ellipsis.circle")
-                .font(.body.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .frame(width: 34, height: 34)
-                .contentShape(Circle())
+            BaMenuIconButton(dimension: 36)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(BaL10n.string("ba.action.more"))

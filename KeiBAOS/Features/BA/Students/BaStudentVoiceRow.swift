@@ -207,10 +207,7 @@ struct BaStudentVoiceRow: View {
                 }
             }
         } label: {
-            Image(systemName: "ellipsis.circle")
-                .font(.body.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .frame(width: 32, height: 34)
+            BaMenuIconButton(dimension: 36)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(BaL10n.string("ba.action.more"))

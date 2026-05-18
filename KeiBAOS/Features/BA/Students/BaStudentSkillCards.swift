@@ -124,16 +124,15 @@ private struct BaStudentSkillCard: View {
                             }
                         }
                     } label: {
-                        HStack(spacing: 5) {
-                            Text(displayLevel)
-                                .font(.callout.monospacedDigit().weight(.semibold))
-                            Image(systemName: "chevron.down")
-                                .font(.caption.weight(.bold))
-                        }
-                        .foregroundStyle(tint)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 7)
-                        .liquidGlassSurface(cornerRadius: 16, tint: tint.opacity(0.10), isInteractive: true)
+                        BaMenuPickerLabel(
+                            title: displayLevel,
+                            tint: tint,
+                            minWidth: 44,
+                            font: .callout.monospacedDigit().weight(.semibold),
+                            iconSystemName: "chevron.down",
+                            iconFont: .caption.weight(.bold),
+                            usesGlassSurface: true
+                        )
                     }
                     .buttonStyle(.plain)
                 }

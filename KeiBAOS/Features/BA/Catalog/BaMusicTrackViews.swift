@@ -142,11 +142,7 @@ struct BaMusicTrackRow: View {
 
             cacheMenuItems
         } label: {
-            Image(systemName: "ellipsis.circle")
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .frame(width: 32, height: 36)
-                .contentShape(Circle())
+            BaMenuIconButton(dimension: 36, font: .headline.weight(.semibold))
         }
         .buttonStyle(BaMusicControlButtonStyle())
         .accessibilityLabel(Text(BaL10n.string("ba.music.action.moreTrack")))
@@ -304,11 +300,9 @@ struct BaMusicQueueSection: View {
                     }
                     .disabled(hasCachedTracks == false)
                 } label: {
-                    Image(systemName: "ellipsis.circle")
-                        .font(.headline.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 32, height: 32)
+                    BaMenuIconButton(dimension: 36, font: .headline.weight(.semibold))
                 }
+                .buttonStyle(BaMusicControlButtonStyle())
                 .accessibilityLabel(Text(BaL10n.string("ba.music.action.moreQueue")))
             }
 
