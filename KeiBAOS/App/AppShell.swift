@@ -265,6 +265,12 @@ private struct BaNavigationRoot: View {
             } label: {
                 Label(BaPresentedSheet.settings.title, systemImage: BaPresentedSheet.settings.systemImage)
             }
+
+            Button {
+                presentedSheet = .about
+            } label: {
+                Label(BaPresentedSheet.about.title, systemImage: BaPresentedSheet.about.systemImage)
+            }
         }
     }
 

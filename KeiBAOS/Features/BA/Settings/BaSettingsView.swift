@@ -27,7 +27,6 @@ struct BaSettingsView: View {
                 activityPoolSection
                 notificationSection
                 mediaSection
-                platformSection
             }
             .baAdaptiveReadableContent(maxWidth: 760)
             .scrollContentBackground(.hidden)
@@ -235,16 +234,6 @@ struct BaSettingsView: View {
                     }
                 }
 
-                macSettingsGroup(title: BaL10n.string("ba.settings.platform.title")) {
-                    ForEach(AppPlatformBaseline.allCases) { baseline in
-                        macReadOnlyRow(baseline.displayName, value: baseline.minimumVersion)
-                    }
-
-                    macReadOnlyRow(
-                        BaL10n.string("ba.settings.watch.rule.title"),
-                        value: AppPlatformBaseline.watchRule
-                    )
-                }
             }
             .padding(.horizontal, 24)
             .padding(.top, 24)
@@ -533,20 +522,6 @@ struct BaSettingsView: View {
             #else
                 Text(BaL10n.string("ba.settings.app.footer"))
             #endif
-        }
-    }
-
-    private var platformSection: some View {
-        Section(BaL10n.string("ba.settings.platform.title")) {
-            ForEach(AppPlatformBaseline.allCases) { baseline in
-                LabeledContent(baseline.displayName) {
-                    Text(baseline.minimumVersion)
-                }
-            }
-
-            LabeledContent(BaL10n.string("ba.settings.watch.rule.title")) {
-                Text(AppPlatformBaseline.watchRule)
-            }
         }
     }
 

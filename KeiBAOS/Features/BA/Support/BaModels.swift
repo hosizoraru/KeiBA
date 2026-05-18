@@ -19,6 +19,7 @@ enum BaDesign {
 enum BaPresentedSheet: String, Identifiable {
     case notifications
     case settings
+    case about
     case editOffice
     case debugTools
 
@@ -40,6 +41,8 @@ enum BaPresentedSheet: String, Identifiable {
             "ba.action.notifications.title"
         case .settings:
             "ba.settings.title"
+        case .about:
+            "ba.about.title"
         case .editOffice:
             "ba.action.edit.title"
         case .debugTools:
@@ -57,7 +60,7 @@ enum BaPresentedSheet: String, Identifiable {
 
     private var menuTitleKey: String {
         switch self {
-        case .notifications, .settings:
+        case .notifications, .settings, .about:
             titleKey
         case .editOffice:
             "ba.action.edit.menuTitle"
@@ -72,6 +75,8 @@ enum BaPresentedSheet: String, Identifiable {
             "bell"
         case .settings:
             "gearshape"
+        case .about:
+            "info.circle"
         case .editOffice:
             "square.and.pencil"
         case .debugTools:

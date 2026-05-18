@@ -11,10 +11,9 @@ enum AppPlatformBaseline: CaseIterable, Identifiable {
     case iOS
     case iPadOS
     case macOS
-    case visionOS
+    case watchOS
 
     static let minimumVersion = "26.0"
-    static let watchRule = "watchOS 26.0"
     static let summary = "26.0+"
 
     var id: Self {
@@ -29,8 +28,8 @@ enum AppPlatformBaseline: CaseIterable, Identifiable {
             "iPadOS"
         case .macOS:
             "macOS"
-        case .visionOS:
-            "visionOS"
+        case .watchOS:
+            "watchOS"
         }
     }
 
@@ -46,8 +45,8 @@ enum AppPlatformBaseline: CaseIterable, Identifiable {
             "ipad"
         case .macOS:
             "macwindow"
-        case .visionOS:
-            "visionpro"
+        case .watchOS:
+            "applewatch"
         }
     }
 }

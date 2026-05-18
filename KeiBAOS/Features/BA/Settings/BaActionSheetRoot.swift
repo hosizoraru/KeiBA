@@ -25,10 +25,30 @@ struct BaActionSheetRoot: View {
             BaNotificationSettingsSheet()
         case .settings:
             BaSettingsSheet()
+        case .about:
+            BaAboutSheet()
         case .editOffice:
             BaEditOfficeSheet()
         case .debugTools:
             BaDebugToolsSheet()
+        }
+    }
+}
+
+private struct BaAboutSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            BaAboutView()
+                .navigationTitle(BaPresentedSheet.about.title)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(BaL10n.string("ba.common.done")) {
+                            dismiss()
+                        }
+                    }
+                }
         }
     }
 }
@@ -828,17 +848,6 @@ private struct BaDebugToolsSheet: View {
         NavigationStack {
             List {
                 Section(BaL10n.string("ba.sheet.debug.state.title")) {
-                    LabeledContent(BaL10n.string("ba.sheet.debug.build.title")) {
-                        Text(AppPlatformBaseline.summary)
-                    }
-                    ForEach(AppPlatformBaseline.allCases) { baseline in
-                        LabeledContent(baseline.displayName) {
-                            Text(baseline.minimumVersion)
-                        }
-                    }
-                    LabeledContent(BaL10n.string("ba.settings.watch.rule.title")) {
-                        Text(AppPlatformBaseline.watchRule)
-                    }
                     LabeledContent(BaL10n.string("ba.sheet.debug.data.title")) {
                         Text(debugDataText)
                     }
@@ -902,7 +911,7 @@ extension View {
 private extension BaPresentedSheet {
     var presentationDetents: Set<PresentationDetent> {
         switch self {
-        case .settings:
+        case .settings, .about:
             [.large]
         case .notifications, .editOffice, .debugTools:
             [.medium, .large]
@@ -919,6 +928,8 @@ private extension BaPresentedSheet {
             680
         case .settings:
             760
+        case .about:
+            680
         case .editOffice:
             640
         case .debugTools:
@@ -932,6 +943,8 @@ private extension BaPresentedSheet {
             660
         case .settings:
             720
+        case .about:
+            680
         case .editOffice:
             520
         case .debugTools:
