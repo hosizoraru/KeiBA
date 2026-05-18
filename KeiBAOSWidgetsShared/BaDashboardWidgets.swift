@@ -357,16 +357,85 @@ private struct BaTimelineRectangularWidget: View {
 
     var body: some View {
         if let snapshot = entry.snapshot {
-            BaTimelineFeaturedCompactSection(
-                title: Text("ba.widget.activity.title"),
-                section: snapshot.timeline.activities.hasContent ? snapshot.timeline.activities : snapshot.timeline.pools,
-                systemImage: snapshot.timeline.activities.hasContent ? "calendar.badge.clock" : "sparkles",
-                tint: snapshot.timeline.activities.hasContent ? BaWidgetPalette.activity : BaWidgetPalette.pool,
-                date: entry.date
-            )
+            if snapshot.timeline.activities.hasContent {
+                BaTimelineAccessoryRectangularContent(
+                    title: Text("ba.widget.activity.title"),
+                    section: snapshot.timeline.activities,
+                    systemImage: "calendar.badge.clock",
+                    tint: BaWidgetPalette.activity,
+                    date: entry.date
+                )
+            } else {
+                BaTimelineAccessoryRectangularContent(
+                    title: Text("ba.widget.pool.title"),
+                    section: snapshot.timeline.pools,
+                    systemImage: "sparkles",
+                    tint: BaWidgetPalette.pool,
+                    date: entry.date
+                )
+            }
         } else {
             BaWidgetNoDataCompactView()
         }
+    }
+}
+
+private struct BaTimelineAccessoryRectangularContent: View {
+    let title: Text
+    let section: BaTimelineGlanceSection
+    let systemImage: String
+    let tint: Color
+    let date: Date
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 4) {
+                Image(systemName: systemImage)
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(tint)
+
+                title
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.78)
+
+                Spacer(minLength: 4)
+
+                if let item = section.featuredItem {
+                    Text(item.endAt, style: item.status == .running ? .relative : .date)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.62)
+                }
+            }
+
+            if let item = section.featuredItem {
+                Text(item.title)
+                    .font(.caption.weight(.semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+
+                HStack(alignment: .center, spacing: 6) {
+                    BaTimelineStatusLabel(status: item.status)
+
+                    BaWidgetCompactMeter(
+                        value: item.progress(at: date),
+                        limit: 1,
+                        tint: tint
+                    )
+                    .frame(maxWidth: 76)
+                }
+            } else {
+                Text("ba.widget.timeline.empty")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.74)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 }
 
@@ -715,7 +784,7 @@ private extension BaTimelineGlanceSnapshot {
 }
 
 private enum BaDashboardWidgetSchedule {
-    static func entryDates(for snapshot: BaWatchDashboardSnapshot?, from now: Date) -> [Date] {
+    nonisolated static func entryDates(for snapshot: BaWatchDashboardSnapshot?, from now: Date) -> [Date] {
         guard let snapshot else {
             return [roundedMinute(now)]
         }
@@ -745,18 +814,18 @@ private enum BaDashboardWidgetSchedule {
             .map { $0 }
     }
 
-    private static func add(_ date: Date?, to dates: inout Set<Date>, now: Date) {
+    nonisolated private static func add(_ date: Date?, to dates: inout Set<Date>, now: Date) {
         guard let date, date > now else { return }
         dates.insert(roundedMinute(date))
     }
 
-    private static func roundedMinute(_ date: Date) -> Date {
+    nonisolated private static func roundedMinute(_ date: Date) -> Date {
         Date(timeIntervalSince1970: floor(date.timeIntervalSince1970 / 60) * 60)
     }
 }
 
 private extension BaWatchDashboardSnapshot {
-    static func widgetPreview(now: Date) -> BaWatchDashboardSnapshot {
+    nonisolated static func widgetPreview(now: Date) -> BaWatchDashboardSnapshot {
         BaWatchDashboardSnapshot(
             sourceUpdatedAt: now,
             generatedAt: now,
