@@ -80,6 +80,17 @@ nonisolated struct BaGuideCatalogEntry: Identifiable, Codable, Hashable, Sendabl
         contentId
     }
 
+    var identityKeys: Set<Int64> {
+        var keys: Set<Int64> = []
+        if contentId > 0 {
+            keys.insert(contentId)
+        }
+        if entryId > 0 {
+            keys.insert(Int64(entryId))
+        }
+        return keys
+    }
+
     func matches(query: String) -> Bool {
         let keyword = query.trimmingCharacters(in: .whitespacesAndNewlines)
         return matches(trimmedQuery: keyword)

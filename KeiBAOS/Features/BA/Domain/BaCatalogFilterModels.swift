@@ -267,12 +267,55 @@ nonisolated struct BaCatalogFilterSelection: Hashable, Sendable {
     }
 
     func matches(_ entry: BaGuideCatalogEntry, groups: [BaCatalogFilterGroup]) -> Bool {
-        guard isEmpty == false else { return true }
-        guard let metadata = entry.metadata else { return false }
-        for (kind, optionIDs) in selectedOptionIDsByKind where optionIDs.isEmpty == false {
-            guard let group = groups.first(where: { $0.kind == kind }) else { return false }
+        BaCatalogFilterPlan(selection: self, groups: groups).matches(entry)
+    }
+}
+
+nonisolated struct BaCatalogFilterPlan: Hashable, Sendable {
+    private let selectedOptionsByKind: [BaCatalogFilterKind: [BaCatalogFilterOption]]
+    private let rejectsAllEntries: Bool
+
+    init(selection: BaCatalogFilterSelection, groups: [BaCatalogFilterGroup]) {
+        guard selection.isEmpty == false else {
+            selectedOptionsByKind = [:]
+            rejectsAllEntries = false
+            return
+        }
+
+        var groupsByKind: [BaCatalogFilterKind: BaCatalogFilterGroup] = [:]
+        groupsByKind.reserveCapacity(groups.count)
+        for group in groups where groupsByKind[group.kind] == nil {
+            groupsByKind[group.kind] = group
+        }
+
+        var nextSelectedOptions: [BaCatalogFilterKind: [BaCatalogFilterOption]] = [:]
+        nextSelectedOptions.reserveCapacity(selection.selectedOptionIDsByKind.count)
+        var foundInvalidSelection = false
+        for (kind, optionIDs) in selection.selectedOptionIDsByKind where optionIDs.isEmpty == false {
+            guard let group = groupsByKind[kind] else {
+                foundInvalidSelection = true
+                continue
+            }
             let selectedOptions = group.options.filter { optionIDs.contains($0.id) }
-            guard selectedOptions.isEmpty == false else { return false }
+            guard selectedOptions.isEmpty == false else {
+                foundInvalidSelection = true
+                continue
+            }
+            nextSelectedOptions[kind] = selectedOptions
+        }
+        selectedOptionsByKind = nextSelectedOptions
+        rejectsAllEntries = foundInvalidSelection
+    }
+
+    var isEmpty: Bool {
+        rejectsAllEntries == false && selectedOptionsByKind.isEmpty
+    }
+
+    func matches(_ entry: BaGuideCatalogEntry) -> Bool {
+        guard isEmpty == false else { return true }
+        guard rejectsAllEntries == false else { return false }
+        guard let metadata = entry.metadata else { return false }
+        for (kind, selectedOptions) in selectedOptionsByKind {
             guard selectedOptions.contains(where: { metadata.matches(option: $0, kind: kind) }) else {
                 return false
             }

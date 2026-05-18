@@ -17,6 +17,20 @@ extension BaAppModel {
         return dutyIdentityKeys(for: entry).contains(dutyStudent.contentId)
     }
 
+    func currentDutyStudentIdentityKeys() -> Set<Int64> {
+        guard let dutyStudent = settings.dutyStudent else { return [] }
+        var keys: Set<Int64> = [dutyStudent.contentId]
+        if let match = catalogState.value?.entries.first(where: { $0.identityKeys.contains(dutyStudent.contentId) }) {
+            keys.formUnion(match.identityKeys)
+        }
+        for (requestedContentID, state) in studentDetailStates {
+            guard let info = state.value, info.contentId == dutyStudent.contentId else { continue }
+            keys.insert(requestedContentID)
+            keys.insert(info.contentId)
+        }
+        return keys
+    }
+
     func toggleDutyStudent(_ entry: BaGuideCatalogEntry) async {
         guard canSetDutyStudent(entry) else { return }
         if isDutyStudent(entry) {

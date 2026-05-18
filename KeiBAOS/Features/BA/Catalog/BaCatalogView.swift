@@ -15,9 +15,9 @@ struct BaCatalogView: View {
     @State private var filterSelection = BaCatalogFilterSelection()
     @State private var searchText = ""
 
-    private var snapshot: BaCatalogViewSnapshot {
+    private func snapshot(filterGroups: [BaCatalogFilterGroup]) -> BaCatalogViewSnapshot {
         let favoriteIDs = model.settings.favoriteContentIDs
-        let filterGroups = currentFilterGroups
+        let dutyIdentityKeys = model.currentDutyStudentIdentityKeys()
         let rows = model.entries(
             for: selectedCategory,
             query: searchText,
@@ -28,14 +28,15 @@ struct BaCatalogView: View {
             BaCatalogEntryRowDisplayModel(
                 entry: entry,
                 isFavorite: favoriteIDs.contains(entry.contentId),
-                isDutyStudent: model.isDutyStudent(entry)
+                isDutyStudent: entry.identityKeys.isDisjoint(with: dutyIdentityKeys) == false
             )
         }
         return BaCatalogViewSnapshot(rows: rows)
     }
 
     var body: some View {
-        let snapshot = snapshot
+        let filterGroups = currentFilterGroups
+        let snapshot = snapshot(filterGroups: filterGroups)
 
         BaAdaptiveGeometry { metrics in
             catalogLayout(snapshot: snapshot, metrics: metrics)
@@ -53,7 +54,7 @@ struct BaCatalogView: View {
                     selectedCategory: $selectedCategory,
                     sortMode: $sortMode,
                     filterSelection: $filterSelection,
-                    filterGroups: currentFilterGroups
+                    filterGroups: filterGroups
                 )
             }
         }

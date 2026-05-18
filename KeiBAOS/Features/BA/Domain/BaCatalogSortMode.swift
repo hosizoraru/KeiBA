@@ -30,10 +30,16 @@ nonisolated enum BaCatalogSortMode: String, CaseIterable, Codable, Hashable, Ide
 
 nonisolated extension Array where Element == BaGuideCatalogEntry {
     func sorted(using mode: BaCatalogSortMode, favoriteContentIDs: Set<Int64>) -> [BaGuideCatalogEntry] {
-        let sortedBase = enumerated()
-            .map { IndexedCatalogEntry(index: $0.offset, entry: $0.element) }
-            .sorted { mode.isInIncreasingOrder($0, $1) }
-            .map(\.entry)
+        let sortedBase: [BaGuideCatalogEntry]
+        switch mode {
+        case .defaultOrder:
+            sortedBase = self
+        case .releaseDateDescending, .releaseDateAscending:
+            sortedBase = enumerated()
+                .map { IndexedCatalogEntry(index: $0.offset, entry: $0.element) }
+                .sorted { mode.isInIncreasingOrder($0, $1) }
+                .map(\.entry)
+        }
 
         guard favoriteContentIDs.isEmpty == false else { return sortedBase }
 

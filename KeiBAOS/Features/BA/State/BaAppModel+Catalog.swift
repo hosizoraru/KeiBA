@@ -85,10 +85,14 @@ extension BaAppModel {
         case .favorites:
             source = favoriteCatalogEntries(from: bundle)
         }
-        return source
-            .filter { $0.matches(trimmedQuery: keyword) }
-            .filter { filterSelection.matches($0, groups: filterGroups) }
-            .sorted(using: sortMode, favoriteContentIDs: settings.favoriteContentIDs)
+        let queriedEntries = keyword.isEmpty
+            ? source
+            : source.filter { $0.matches(trimmedQuery: keyword) }
+        let filterPlan = BaCatalogFilterPlan(selection: filterSelection, groups: filterGroups)
+        let filteredEntries = filterPlan.isEmpty
+            ? queriedEntries
+            : queriedEntries.filter { filterPlan.matches($0) }
+        return filteredEntries.sorted(using: sortMode, favoriteContentIDs: settings.favoriteContentIDs)
     }
 
     private func loadCachedCatalog() async {

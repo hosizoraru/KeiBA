@@ -88,14 +88,7 @@ extension BaAppModel {
     }
 
     nonisolated func favoriteIdentityKeys(for entry: BaGuideCatalogEntry) -> Set<Int64> {
-        var keys: Set<Int64> = []
-        if entry.contentId > 0 {
-            keys.insert(entry.contentId)
-        }
-        if entry.entryId > 0 {
-            keys.insert(Int64(entry.entryId))
-        }
-        return keys
+        entry.identityKeys
     }
 
     private func canonicalFavoriteEntry(for entry: BaGuideCatalogEntry) -> BaGuideCatalogEntry {
