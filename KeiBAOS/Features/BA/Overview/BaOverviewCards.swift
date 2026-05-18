@@ -51,7 +51,7 @@ struct BaOverviewIdentityCard: View {
     var body: some View {
         BaGlassCard(tint: BaDesign.blue) {
             VStack(alignment: .leading, spacing: BaOverviewMetricStyle.cardSpacing) {
-                BaOverviewSectionTitle(title: BaL10n.string("ba.office.overview.title"), asset: .schale)
+                identityHeader
 
                 if metrics.usesCompactOverviewIdentityLayout {
                     compactIdentityContent
@@ -66,6 +66,17 @@ struct BaOverviewIdentityCard: View {
         "\(settings.nickname) \(BaL10n.string("ba.office.nickname.suffix"))"
     }
 
+    private var identityHeader: some View {
+        HStack(alignment: .center, spacing: 10) {
+            BaOverviewSectionTitle(title: BaOfficeTerminology.overviewTitle(for: settings), asset: .schale)
+                .layoutPriority(1)
+
+            Spacer(minLength: 4)
+
+            watchStatusButton
+        }
+    }
+
     private var regularIdentityContent: some View {
         HStack(alignment: .top, spacing: 14) {
             BaOverviewIdentityAvatar(dutyStudent: settings.dutyStudent)
@@ -78,8 +89,6 @@ struct BaOverviewIdentityCard: View {
                     isCopied: copiedFriendCode,
                     onCopy: copyFriendCode
                 )
-
-                watchStatusButton
             }
             .layoutPriority(1)
 
@@ -107,8 +116,6 @@ struct BaOverviewIdentityCard: View {
                 isCopied: copiedFriendCode,
                 onCopy: copyFriendCode
             )
-
-            watchStatusButton
         }
     }
 
@@ -147,15 +154,16 @@ struct BaOverviewIdentityCard: View {
                 Text(BaWatchSyncStatusPresenter.compactTitle(for: watchSyncState))
                     .foregroundStyle(BaWatchSyncStatusPresenter.foregroundStyle(for: watchSyncState))
                     .lineLimit(1)
-                    .minimumScaleFactor(0.78)
+                    .minimumScaleFactor(0.72)
             }
             .font(.caption.weight(.semibold))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 6)
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
         .liquidGlassSurface(cornerRadius: 14, tint: BaDesign.blue.opacity(0.045), isInteractive: true)
+        .fixedSize(horizontal: true, vertical: false)
         .accessibilityLabel(
             Text(
                 String(

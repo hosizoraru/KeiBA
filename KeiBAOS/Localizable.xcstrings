@@ -6258,6 +6258,94 @@
         }
       }
     },
+    "ba.office.name.cn" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schale Office (China)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シャーレ（中国版）"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "沙勒办公室"
+          }
+        }
+      }
+    },
+    "ba.office.name.default" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schale Office"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シャーレオフィス"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "夏莱办公室"
+          }
+        }
+      }
+    },
+    "ba.office.name.global" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schale Office (Global)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シャーレ（グローバル版）"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "夏萊行政室"
+          }
+        }
+      }
+    },
+    "ba.office.name.jp" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schale Office (Japan)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シャーレオフィス"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "夏莱办公室"
+          }
+        }
+      }
+    },
     "ba.office.overview.title" : {
       "localizations" : {
         "en" : {
@@ -6276,6 +6364,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "夏莱办公室总览"
+          }
+        }
+      }
+    },
+    "ba.office.overview.title.format" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Overview"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@概要"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@总览"
           }
         }
       }
@@ -9575,50 +9685,6 @@
         }
       }
     },
-    "ba.settings.watch.content.section" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Watch Snapshot"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Watchスナップショット"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Watch 快照"
-          }
-        }
-      }
-    },
-    "ba.settings.watch.content.summary" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Office, AP, cafe, events, pools, and notification preferences"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "オフィス、AP、カフェ、イベント、募集、通知設定"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "办公室、AP、咖啡厅、活动、卡池、通知偏好"
-          }
-        }
-      }
-    },
     "ba.settings.watch.content.activities" : {
       "localizations" : {
         "en" : {
@@ -9747,6 +9813,51 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "卡池"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.content.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch Snapshot"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watchスナップショット"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch 快照"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.content.summary" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Office, AP, cafe, events, pools, and notification preferences"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オフィス、AP、カフェ、イベント、募集、通知設定"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "办公室、AP、咖啡厅、活动、卡池、通知偏好"
           }
         }
       }

@@ -6,8 +6,15 @@
 //
 
 import SwiftUI
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
 struct BaAboutView: View {
+    @Environment(BaAppModel.self) private var model
+
     private let acknowledgements = BaAboutAcknowledgement.defaultItems
 
     var body: some View {
@@ -111,10 +118,7 @@ struct BaAboutView: View {
 
     private var aboutHero: some View {
         HStack(spacing: 16) {
-            BaGameAssetIcon(.schale, size: 64)
-                .padding(10)
-                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .accessibilityHidden(true)
+            BaAboutAppIconView(choice: model.envelope.globalSettings.appIcon, size: 84)
 
             VStack(alignment: .leading, spacing: 6) {
                 Text("KeiBAOS")
@@ -252,6 +256,146 @@ struct BaAboutView: View {
                 url: acknowledgement.url
             )
         }
+    }
+}
+
+private struct BaAboutAppIconView: View {
+    let choice: BaAppIconChoice
+    let size: CGFloat
+
+    var body: some View {
+        Group {
+            if let image = appIconImage {
+                image
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                fallbackIcon
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(RoundedRectangle(cornerRadius: size * 0.22, style: .continuous))
+        .shadow(color: .black.opacity(0.18), radius: 10, y: 4)
+        .accessibilityHidden(true)
+    }
+
+    private var appIconImage: Image? {
+        #if os(iOS)
+            guard let uiImage = UIImage(named: choice.previewAssetName) else { return nil }
+            return Image(uiImage: uiImage)
+        #elseif os(macOS)
+            if let nsImage = NSImage(named: choice.previewAssetName) {
+                return Image(nsImage: nsImage)
+            }
+            guard let appIcon = NSApp.applicationIconImage, appIcon.isValid else { return nil }
+            return Image(nsImage: appIcon)
+        #else
+            return nil
+        #endif
+    }
+
+    @ViewBuilder
+    private var fallbackIcon: some View {
+        switch choice {
+        case .modern:
+            BaModernAppIconFallback()
+        case .classic:
+            BaGameAssetIcon(.schale, size: size * 0.54)
+                .frame(width: size, height: size)
+                .background(.thinMaterial)
+        }
+    }
+}
+
+private extension BaAppIconChoice {
+    var previewAssetName: String {
+        switch self {
+        case .modern:
+            "keios"
+        case .classic:
+            "AppIcon"
+        }
+    }
+}
+
+private struct BaModernAppIconFallback: View {
+    var body: some View {
+        GeometryReader { geometry in
+            let length = min(geometry.size.width, geometry.size.height)
+
+            ZStack {
+                LinearGradient(
+                    colors: [
+                        Color(red: 1.0, green: 0.95, blue: 0.97),
+                        Color(red: 1.0, green: 0.82, blue: 0.89)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+
+                BaModernAppIconMotif()
+                    .frame(width: length, height: length)
+            }
+            .frame(width: length, height: length)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+}
+
+private struct BaModernAppIconMotif: View {
+    var body: some View {
+        Canvas { context, size in
+            let scale = min(size.width, size.height) / 340
+            let transform = CGAffineTransform(scaleX: scale, y: scale)
+            let color = GraphicsContext.Shading.color(BaDesign.pink)
+
+            var strokedSquare = Path()
+            strokedSquare.addRect(CGRect(x: 62, y: 68, width: 150, height: 150))
+            context.stroke(
+                strokedSquare.applying(transform),
+                with: color,
+                lineWidth: 22 * scale
+            )
+
+            fillCutoutRect(
+                outer: CGRect(x: 164, y: 106, width: 140, height: 147),
+                inner: CGRect(x: 183, y: 125, width: 102, height: 109),
+                transform: transform,
+                context: &context,
+                color: color
+            )
+            fillCutoutRect(
+                outer: CGRect(x: 90, y: 187, width: 104, height: 109),
+                inner: CGRect(x: 109, y: 206, width: 66, height: 71),
+                transform: transform,
+                context: &context,
+                color: color
+            )
+            fillCutoutRect(
+                outer: CGRect(x: 236, y: 66, width: 57, height: 34),
+                inner: CGRect(x: 249, y: 79, width: 31, height: 8),
+                transform: transform,
+                context: &context,
+                color: color
+            )
+
+            var topBar = Path()
+            topBar.addRect(CGRect(x: 137, y: 69, width: 46, height: 18))
+            context.fill(topBar.applying(transform), with: color)
+        }
+    }
+
+    private func fillCutoutRect(
+        outer: CGRect,
+        inner: CGRect,
+        transform: CGAffineTransform,
+        context: inout GraphicsContext,
+        color: GraphicsContext.Shading
+    ) {
+        var path = Path()
+        path.addRect(outer)
+        path.addRect(inner)
+        context.fill(path.applying(transform), with: color, style: FillStyle(eoFill: true))
     }
 }
 
@@ -415,4 +559,5 @@ private enum BaAppVersionInfo {
         BaAboutView()
             .navigationTitle(BaPresentedSheet.about.title)
     }
+    .environment(BaAppModel.live())
 }

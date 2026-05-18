@@ -120,6 +120,31 @@ final class BaOverviewSettingsTests: XCTestCase {
         XCTAssertEqual(store.loadEnvelope().globalSettings.appIcon, .classic)
     }
 
+    func testOfficeTerminologyUsesServerSpecificSimplifiedChineseNames() {
+        var settings = BaAppSettings.defaults(now: Date(timeIntervalSince1970: 1_700_000_000))
+        settings.appLanguage = .simplifiedChinese
+
+        settings.server = .cn
+        XCTAssertEqual(BaOfficeTerminology.overviewTitle(for: settings), "沙勒办公室总览")
+
+        settings.server = .global
+        XCTAssertEqual(BaOfficeTerminology.overviewTitle(for: settings), "夏萊行政室总览")
+
+        settings.server = .jp
+        XCTAssertEqual(BaOfficeTerminology.overviewTitle(for: settings), "夏莱办公室总览")
+    }
+
+    func testOfficeTerminologyKeepsGenericTitleOutsideSimplifiedChinese() {
+        var settings = BaAppSettings.defaults(now: Date(timeIntervalSince1970: 1_700_000_000))
+        settings.server = .global
+
+        settings.appLanguage = .english
+        XCTAssertEqual(BaOfficeTerminology.overviewTitle(for: settings), "Schale Office Overview")
+
+        settings.appLanguage = .japanese
+        XCTAssertEqual(BaOfficeTerminology.overviewTitle(for: settings), "シャーレオフィス概要")
+    }
+
     func testCafeAPStorageUsesSingleSharedCafeBucket() {
         let base = Date(timeIntervalSince1970: 1_700_000_000)
         var profile = BaServerProfile.defaults(now: base)
