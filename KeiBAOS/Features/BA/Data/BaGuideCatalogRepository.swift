@@ -17,16 +17,21 @@ struct BaGuideCatalogRepository {
     func fetchCatalog(now: Date = Date()) async throws -> BaRepositorySnapshot<BaGuideCatalogBundle> {
         async let students = fetchEntries(pid: BaCatalogCategory.students.gameKeePID, category: .students)
         async let npcSatellite = fetchEntries(pid: BaCatalogCategory.npcSatellite.gameKeePID, category: .npcSatellite)
-        async let filterGroupsResult = fetchStudentFilterGroups()
+        async let filterPayloadResult = fetchStudentFilterPayload()
         async let metadataDataResult = fetchStudentMetadataData()
         let (studentEntries, npcSatelliteEntries) = try await (students, npcSatellite)
-        let filterGroups = await filterGroupsResult
+        let filterPayload = await filterPayloadResult
         let metadataData = await metadataDataResult
         let studentMetadata = metadataData.value.flatMap { data in
-            try? parseStudentMetadata(data: data, filterGroups: filterGroups.value)
+            try? parseStudentMetadata(data: data, filterGroups: filterPayload.value.groups)
         } ?? [:]
         let enrichedStudentEntries = studentEntries.map { entry in
-            entry.withMetadata(studentMetadata[entry.contentId])
+            entry.withMetadata(
+                mergedMetadata(
+                    bulkMetadata: studentMetadata[entry.contentId],
+                    filterMetadata: filterPayload.value.metadataByEntryID[entry.entryId]
+                )
+            )
         }
         let entries = (enrichedStudentEntries + npcSatelliteEntries)
             .sorted { lhs, rhs in
@@ -34,29 +39,34 @@ struct BaGuideCatalogRepository {
                     return lhs.category.rawValue < rhs.category.rawValue
                 }
                 return lhs.order < rhs.order
-            }
+        }
         return BaRepositorySnapshot(
-            value: BaGuideCatalogBundle(entries: entries, syncedAt: now, studentFilterGroups: filterGroups.value),
+            value: BaGuideCatalogBundle(entries: entries, syncedAt: now, studentFilterGroups: filterPayload.value.groups),
             syncedAt: now,
-            sourceErrors: [filterGroups.error, metadataData.error].compactMap { $0 }
+            sourceErrors: [filterPayload.error, metadataData.error].compactMap { $0 }
         )
     }
 
     func fetchStudentCatalog(now: Date = Date()) async throws -> BaRepositorySnapshot<[BaGuideCatalogEntry]> {
         async let entries = fetchEntries(pid: BaCatalogCategory.students.gameKeePID, category: .students)
-        async let filterGroupsResult = fetchStudentFilterGroups()
+        async let filterPayloadResult = fetchStudentFilterPayload()
         async let metadataDataResult = fetchStudentMetadataData()
-        let (studentEntries, filterGroups, metadataData) = try await (entries, filterGroupsResult, metadataDataResult)
+        let (studentEntries, filterPayload, metadataData) = try await (entries, filterPayloadResult, metadataDataResult)
         let studentMetadata = metadataData.value.flatMap { data in
-            try? parseStudentMetadata(data: data, filterGroups: filterGroups.value)
+            try? parseStudentMetadata(data: data, filterGroups: filterPayload.value.groups)
         } ?? [:]
         let enrichedEntries = studentEntries.map { entry in
-            entry.withMetadata(studentMetadata[entry.contentId])
+            entry.withMetadata(
+                mergedMetadata(
+                    bulkMetadata: studentMetadata[entry.contentId],
+                    filterMetadata: filterPayload.value.metadataByEntryID[entry.entryId]
+                )
+            )
         }
         return BaRepositorySnapshot(
             value: enrichedEntries,
             syncedAt: now,
-            sourceErrors: [filterGroups.error, metadataData.error].compactMap { $0 }
+            sourceErrors: [filterPayload.error, metadataData.error].compactMap { $0 }
         )
     }
 
@@ -100,6 +110,13 @@ struct BaGuideCatalogRepository {
         try BaCatalogMetadataParser.parseFilterGroups(data: data)
     }
 
+    func parseFilterAttributeMetadata(
+        data: Data,
+        filterGroups: [BaCatalogFilterGroup]
+    ) throws -> [Int: BaGuideCatalogMetadata] {
+        try BaCatalogMetadataParser.parseFilterAttributeMetadata(data: data, filterGroups: filterGroups)
+    }
+
     func parseStudentMetadata(
         data: Data,
         filterGroups: [BaCatalogFilterGroup]
@@ -107,7 +124,7 @@ struct BaGuideCatalogRepository {
         try BaCatalogMetadataParser.parseStudentMetadata(data: data, filterGroups: filterGroups)
     }
 
-    private func fetchStudentFilterGroups() async -> CatalogPartial<[BaCatalogFilterGroup]> {
+    private func fetchStudentFilterPayload() async -> CatalogPartial<CatalogFilterPayload> {
         do {
             let data = try await client.fetchJSONData(
                 GameKeeRequest(
@@ -116,9 +133,14 @@ struct BaGuideCatalogRepository {
                     extraHeaders: GameKeeClient.baHeaders
                 )
             )
-            return CatalogPartial(value: try parseFilterGroups(data: data), error: nil)
+            let groups = try parseFilterGroups(data: data)
+            let metadataByEntryID = try parseFilterAttributeMetadata(data: data, filterGroups: groups)
+            return CatalogPartial(
+                value: CatalogFilterPayload(groups: groups, metadataByEntryID: metadataByEntryID),
+                error: nil
+            )
         } catch {
-            return CatalogPartial(value: [], error: "catalog-filter:\(error.localizedDescription)")
+            return CatalogPartial(value: CatalogFilterPayload(), error: "catalog-filter:\(error.localizedDescription)")
         }
     }
 
@@ -144,9 +166,24 @@ struct BaGuideCatalogRepository {
             .filter { $0.isEmpty == false }
             .joined(separator: " · ")
     }
+
+    private func mergedMetadata(
+        bulkMetadata: BaGuideCatalogMetadata?,
+        filterMetadata: BaGuideCatalogMetadata?
+    ) -> BaGuideCatalogMetadata? {
+        if let bulkMetadata, let filterMetadata {
+            return bulkMetadata.mergingMissingFields(with: filterMetadata)
+        }
+        return bulkMetadata ?? filterMetadata
+    }
 }
 
 private struct CatalogPartial<Value> {
     let value: Value
     let error: String?
+}
+
+private struct CatalogFilterPayload {
+    var groups: [BaCatalogFilterGroup] = []
+    var metadataByEntryID: [Int: BaGuideCatalogMetadata] = [:]
 }

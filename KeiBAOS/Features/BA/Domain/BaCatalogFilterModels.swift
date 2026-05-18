@@ -131,6 +131,7 @@ nonisolated struct BaGuideCatalogMetadata: Codable, Hashable, Sendable {
     var club: String? = nil
     var globalRating: String? = nil
     var cnRating: String? = nil
+    var filterOptionIDsByKind: [BaCatalogFilterKind: Set<Int>] = [:]
 
     var needsDetailHydration: Bool {
         attackType == nil ||
@@ -179,6 +180,9 @@ nonisolated struct BaGuideCatalogMetadata: Codable, Hashable, Sendable {
     }
 
     func matches(option: BaCatalogFilterOption, kind: BaCatalogFilterKind) -> Bool {
+        if let optionIDs = filterOptionIDsByKind[kind], optionIDs.isEmpty == false {
+            return optionIDs.contains(option.id)
+        }
         guard let value = value(for: kind) else { return false }
         return BaCatalogFilterMatcher.matches(value: value, optionTitle: option.title, kind: kind)
     }
@@ -200,8 +204,19 @@ nonisolated struct BaGuideCatalogMetadata: Codable, Hashable, Sendable {
             school: school ?? patch.school,
             club: club ?? patch.club,
             globalRating: globalRating ?? patch.globalRating,
-            cnRating: cnRating ?? patch.cnRating
+            cnRating: cnRating ?? patch.cnRating,
+            filterOptionIDsByKind: filterOptionIDsByKind.mergingOptionIDs(with: patch.filterOptionIDsByKind)
         )
+    }
+}
+
+private extension Dictionary where Key == BaCatalogFilterKind, Value == Set<Int> {
+    nonisolated func mergingOptionIDs(with patch: [BaCatalogFilterKind: Set<Int>]) -> [BaCatalogFilterKind: Set<Int>] {
+        var result = self
+        for (kind, optionIDs) in patch where optionIDs.isEmpty == false {
+            result[kind, default: []].formUnion(optionIDs)
+        }
+        return result
     }
 }
 

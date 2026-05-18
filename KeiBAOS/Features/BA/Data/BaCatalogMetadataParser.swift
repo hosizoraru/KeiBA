@@ -35,6 +35,26 @@ enum BaCatalogMetadataParser {
         }
     }
 
+    nonisolated static func parseFilterAttributeMetadata(
+        data: Data,
+        filterGroups: [BaCatalogFilterGroup]
+    ) throws -> [Int: BaGuideCatalogMetadata] {
+        let dataObject = try GameKeeJSON.dataObject(from: data)
+        guard let attrObject = dataObject["entry_filter_attr"] as? BaJSONObject else { return [:] }
+        var result: [Int: BaGuideCatalogMetadata] = [:]
+        result.reserveCapacity(attrObject.count)
+        for (entryIDText, value) in attrObject {
+            guard let entryID = Int(entryIDText),
+                  let rows = value as? [BaJSONObject],
+                  let metadata = metadata(fromFilterAttributeRows: rows, filterGroups: filterGroups)
+            else {
+                continue
+            }
+            result[entryID] = metadata
+        }
+        return result
+    }
+
     nonisolated static func parseStudentMetadata(
         data: Data,
         filterGroups: [BaCatalogFilterGroup]
@@ -87,6 +107,29 @@ enum BaCatalogMetadataParser {
         return metadata.isEffectivelyEmpty ? nil : metadata
     }
 
+    private nonisolated static func metadata(
+        fromFilterAttributeRows rows: [BaJSONObject],
+        filterGroups: [BaCatalogFilterGroup]
+    ) -> BaGuideCatalogMetadata? {
+        var metadata = BaGuideCatalogMetadata()
+        let groupsByID = Dictionary(uniqueKeysWithValues: filterGroups.map { ($0.id, $0) })
+        for row in rows {
+            guard let inputID = row.int("input_id"),
+                  let group = groupsByID[inputID]
+            else {
+                continue
+            }
+            let optionIDs = optionIDs(from: row["value"])
+            guard optionIDs.isEmpty == false else { continue }
+            metadata.filterOptionIDsByKind[group.kind, default: []].formUnion(optionIDs)
+            let optionTitles = group.options
+                .filter { optionIDs.contains($0.id) }
+                .map(\.title)
+            apply(optionTitles: optionTitles, kind: group.kind, to: &metadata)
+        }
+        return metadata.isEffectivelyEmpty ? nil : metadata
+    }
+
     private nonisolated static func apply(row: BaGuideRow, to metadata: inout BaGuideCatalogMetadata) {
         let key = BaCatalogFilterMatcher.normalized(row.title)
         let value = clean(row.value)
@@ -123,6 +166,49 @@ enum BaCatalogMetadataParser {
         } else if key.contains("外服") || key.contains("日服") || key.contains("国际服") {
             fill(\.globalRating, with: value, in: &metadata)
         } else if key.contains("国服") {
+            fill(\.cnRating, with: value, in: &metadata)
+        }
+    }
+
+    private nonisolated static func apply(
+        optionTitles: [String],
+        kind: BaCatalogFilterKind,
+        to metadata: inout BaGuideCatalogMetadata
+    ) {
+        let value = optionTitles.joined(separator: " / ")
+        guard value.isEmpty == false else { return }
+        switch kind {
+        case .rarity:
+            fill(\.rarity, with: value, in: &metadata)
+        case .availability:
+            fill(\.availability, with: value, in: &metadata)
+        case .attackType:
+            fill(\.attackType, with: value, in: &metadata)
+        case .defenseType:
+            fill(\.defenseType, with: value, in: &metadata)
+        case .squadPosition:
+            fill(\.squadPosition, with: value, in: &metadata)
+        case .combatRole:
+            fill(\.combatRole, with: value, in: &metadata)
+        case .rangePosition:
+            fill(\.rangePosition, with: value, in: &metadata)
+        case .weaponType:
+            fill(\.weaponType, with: value, in: &metadata)
+        case .terrainStreet:
+            fill(\.terrainStreet, with: value, in: &metadata)
+        case .terrainOutdoor:
+            fill(\.terrainOutdoor, with: value, in: &metadata)
+        case .terrainIndoor:
+            fill(\.terrainIndoor, with: value, in: &metadata)
+        case .coverInteraction:
+            fill(\.coverInteraction, with: value, in: &metadata)
+        case .school:
+            fill(\.school, with: value, in: &metadata)
+        case .club:
+            fill(\.club, with: value, in: &metadata)
+        case .globalRating:
+            fill(\.globalRating, with: value, in: &metadata)
+        case .cnRating:
             fill(\.cnRating, with: value, in: &metadata)
         }
     }
@@ -175,6 +261,28 @@ enum BaCatalogMetadataParser {
         return []
     }
 
+    private nonisolated static func optionIDs(from any: Any?) -> Set<Int> {
+        if let array = any as? [Any] {
+            return Set(array.compactMap(optionID(from:)))
+        }
+        if let value = optionID(from: any) {
+            return [value]
+        }
+        return []
+    }
+
+    private nonisolated static func optionID(from any: Any?) -> Int? {
+        if let int = any as? Int, int > 0 { return int }
+        if let number = any as? NSNumber, number.intValue > 0 { return number.intValue }
+        if let string = any as? String,
+           let int = Int(string.trimmingCharacters(in: .whitespacesAndNewlines)),
+           int > 0
+        {
+            return int
+        }
+        return nil
+    }
+
     private nonisolated static func fill(
         _ keyPath: WritableKeyPath<BaGuideCatalogMetadata, String?>,
         with value: String?,
@@ -225,6 +333,6 @@ private extension BaGuideCatalogMetadata {
             club,
             globalRating,
             cnRating,
-        ].allSatisfy { $0 == nil }
+        ].allSatisfy { $0 == nil } && filterOptionIDsByKind.isEmpty
     }
 }

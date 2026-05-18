@@ -98,6 +98,53 @@ final class BaCatalogFilterTests: XCTestCase {
         XCTAssertNil(metadata?.club)
     }
 
+    func testParsesExactFilterAttributeMetadataForFes() throws {
+        let groups = [
+            BaCatalogFilterGroup(
+                id: 508,
+                title: "限定/常驻",
+                kind: .availability,
+                options: [
+                    BaCatalogFilterOption(id: 1980, title: "常驻", iconURL: nil),
+                    BaCatalogFilterOption(id: 509, title: "限定", iconURL: nil),
+                    BaCatalogFilterOption(id: 10779, title: "FES", iconURL: nil),
+                ]
+            ),
+            BaCatalogFilterGroup(
+                id: 72,
+                title: "攻击类型",
+                kind: .attackType,
+                options: [
+                    BaCatalogFilterOption(id: 75, title: "神秘", iconURL: nil),
+                ]
+            ),
+        ]
+        let data = Data(
+            """
+            {
+              "code": 0,
+              "data": {
+                "entry_filter": [],
+                "entry_filter_attr": {
+                  "100602": [
+                    { "input_id": 508, "value": ["509", "10779"] },
+                    { "input_id": 72, "value": ["75"] }
+                  ]
+                }
+              }
+            }
+            """.utf8
+        )
+
+        let metadata = try BaGuideCatalogRepository(client: GameKeeClient())
+            .parseFilterAttributeMetadata(data: data, filterGroups: groups)[100602]
+
+        XCTAssertEqual(metadata?.availability, "限定 / FES")
+        XCTAssertEqual(metadata?.attackType, "神秘")
+        XCTAssertEqual(metadata?.filterOptionIDsByKind[.availability], [509, 10779])
+        XCTAssertEqual(metadata?.filterOptionIDsByKind[.attackType], [75])
+    }
+
     func testFilterSelectionMatchesCanonicalizedValues() {
         let groups = [
             BaCatalogFilterGroup(
@@ -144,6 +191,42 @@ final class BaCatalogFilterTests: XCTestCase {
 
         XCTAssertTrue(selection.matches(matched, groups: groups))
         XCTAssertFalse(selection.matches(unknown, groups: groups))
+    }
+
+    func testFilterSelectionUsesExactOptionIDsBeforeTextFields() {
+        let groups = [
+            BaCatalogFilterGroup(
+                id: 508,
+                title: "限定/常驻",
+                kind: .availability,
+                options: [
+                    BaCatalogFilterOption(id: 1980, title: "常驻", iconURL: nil),
+                    BaCatalogFilterOption(id: 10779, title: "FES", iconURL: nil),
+                ]
+            ),
+        ]
+        let selection = BaCatalogFilterSelection(
+            selectedOptionIDsByKind: [
+                .availability: [10779],
+            ]
+        )
+        let matched = makeCatalogEntry(
+            contentId: 150695,
+            metadata: BaGuideCatalogMetadata(
+                availability: "限定 / FES",
+                filterOptionIDsByKind: [.availability: [509, 10779]]
+            )
+        )
+        let regular = makeCatalogEntry(
+            contentId: 53921,
+            metadata: BaGuideCatalogMetadata(
+                availability: "常驻",
+                filterOptionIDsByKind: [.availability: [1980]]
+            )
+        )
+
+        XCTAssertTrue(selection.matches(matched, groups: groups))
+        XCTAssertFalse(selection.matches(regular, groups: groups))
     }
 }
 
