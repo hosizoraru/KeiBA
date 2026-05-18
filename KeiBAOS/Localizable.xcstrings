@@ -6790,6 +6790,204 @@
         }
       }
     },
+    "ba.overview.watch.accessibility.format" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watch, %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watch、%@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watch，%@"
+          }
+        }
+      }
+    },
+    "ba.overview.watch.background" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Background"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "バックグラウンド"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后台"
+          }
+        }
+      }
+    },
+    "ba.overview.watch.checking" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "確認中"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "确认中"
+          }
+        }
+      }
+    },
+    "ba.overview.watch.connected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接続済み"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已连接"
+          }
+        }
+      }
+    },
+    "ba.overview.watch.error" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs check"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要確認"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需检查"
+          }
+        }
+      }
+    },
+    "ba.overview.watch.notInstalled" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未インストール"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未安装"
+          }
+        }
+      }
+    },
+    "ba.overview.watch.notPaired" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Watch"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未ペアリング"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未配对"
+          }
+        }
+      }
+    },
+    "ba.overview.watch.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch"
+          }
+        }
+      }
+    },
+    "ba.overview.watch.unavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unavailable"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "利用不可"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不可用"
+          }
+        }
+      }
+    },
     "ba.pool.action.filter" : {
       "localizations" : {
         "en" : {
@@ -6810,69 +7008,6 @@
             "value" : "筛选卡池"
           }
         }
-      }
-    },
-    "ba.overview.watch.accessibility.format" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Apple Watch, %@" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Apple Watch、%@" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Apple Watch，%@" } }
-      }
-    },
-    "ba.overview.watch.background" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Background" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "バックグラウンド" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "后台" } }
-      }
-    },
-    "ba.overview.watch.checking" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Checking" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "確認中" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "确认中" } }
-      }
-    },
-    "ba.overview.watch.connected" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Connected" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "接続済み" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已连接" } }
-      }
-    },
-    "ba.overview.watch.error" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Needs check" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "要確認" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "需检查" } }
-      }
-    },
-    "ba.overview.watch.notInstalled" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Install" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "未インストール" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未安装" } }
-      }
-    },
-    "ba.overview.watch.notPaired" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No Watch" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "未ペアリング" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未配对" } }
-      }
-    },
-    "ba.overview.watch.title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Watch" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Watch" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Watch" } }
-      }
-    },
-    "ba.overview.watch.unavailable" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unavailable" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "利用不可" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "不可用" } }
       }
     },
     "ba.pool.action.refresh" : {
@@ -8082,230 +8217,6 @@
         }
       }
     },
-    "ba.settings.watch.connection.activating" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Connecting" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "接続中" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在连接" } }
-      }
-    },
-    "ba.settings.watch.connection.background" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Background sync ready" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "バックグラウンド同期可" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "后台可同步" } }
-      }
-    },
-    "ba.settings.watch.connection.confirmingInstall" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Confirming Watch app" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Watch Appを確認中" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在确认 Watch App" } }
-      }
-    },
-    "ba.settings.watch.connection.error" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sync needs attention" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "同期を確認" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "同步需要处理" } }
-      }
-    },
-    "ba.settings.watch.connection.notInstalled" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Watch app not installed" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Watch App未インストール" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Watch App 未安装" } }
-      }
-    },
-    "ba.settings.watch.connection.notPaired" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No paired Apple Watch" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Apple Watch未ペアリング" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未配对 Apple Watch" } }
-      }
-    },
-    "ba.settings.watch.connection.reachable" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Connected" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "接続済み" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已连接" } }
-      }
-    },
-    "ba.settings.watch.connection.title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Connection" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "接続" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "连接状态" } }
-      }
-    },
-    "ba.settings.watch.connection.footer" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "KeiBAOS asks iOS for the paired Apple Watch state, then keeps a small grace period while Xcode or the Watch app finishes refreshing installation metadata." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "KeiBAOSはiOSからペアリング済みApple Watchの状態を取得し、XcodeやWatch Appがインストール情報を更新する間は短い確認時間を置きます。" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "KeiBAOS 会向 iOS 查询已配对 Apple Watch 状态，并在 Xcode 或 Watch App 刷新安装信息时保留一小段确认时间。" } }
-      }
-    },
-    "ba.settings.watch.connection.section" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Connection" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "接続" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "连接" } }
-      }
-    },
-    "ba.settings.watch.connection.unavailable" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unavailable on this device" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このデバイスでは利用不可" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "当前设备不可用" } }
-      }
-    },
-    "ba.settings.watch.content.summary" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Office, AP, cafe, events, pools, and notification preferences" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "オフィス、AP、カフェ、イベント、募集、通知設定" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "办公室、AP、咖啡厅、活动、卡池、通知偏好" } }
-      }
-    },
-    "ba.settings.watch.content.title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Synced content" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "同期内容" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "同步内容" } }
-      }
-    },
-    "ba.settings.watch.content.section" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Watch Snapshot" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Watchスナップショット" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Watch 快照" } }
-      }
-    },
-    "ba.settings.watch.dutyAvatar.missing" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No duty student selected" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "当番生未設定" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未设置值日生" } }
-      }
-    },
-    "ba.settings.watch.dutyAvatar.noImage" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Selected: %@" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "設定済み：%@" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已设置：%@" } }
-      }
-    },
-    "ba.settings.watch.dutyAvatar.ready" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Avatar included: %@" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "画像付き：%@" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已包含：%@" } }
-      }
-    },
-    "ba.settings.watch.dutyAvatar.title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Duty avatar" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "当番生アイコン" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "值日生头像" } }
-      }
-    },
-    "ba.settings.watch.error.title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Latest error" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "最新エラー" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近错误" } }
-      }
-    },
-    "ba.settings.watch.footer" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "KeiBAOS sends the latest snapshot to Apple Watch through WatchConnectivity. The Watch app icon uses the installed Watch bundle icon; the iPhone Home Screen icon selector applies to iPhone and iPad." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "KeiBAOSはWatchConnectivityで最新スナップショットをApple Watchへ送信します。Watch Appのアイコンはインストール済みWatchバンドルのアイコンを使用し、iPhoneホーム画面のアイコン設定はiPhoneとiPadに適用されます。" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "KeiBAOS 会通过 WatchConnectivity 把最新快照发送到 Apple Watch。Watch App 图标使用已安装 Watch bundle 的图标；iPhone 主屏幕图标选择应用在 iPhone 和 iPad 上。" } }
-      }
-    },
-    "ba.settings.watch.lastSent.title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Last sent" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "最終送信" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "上次发送" } }
-      }
-    },
-    "ba.settings.watch.never" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Waiting" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "待機中" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "等待同步" } }
-      }
-    },
-    "ba.settings.watch.openNotificationSettings.title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Notification Settings" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "通知設定を開く" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开通知设置" } }
-      }
-    },
-    "ba.settings.watch.queued.title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Queued" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キュー" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "后台队列" } }
-      }
-    },
-    "ba.settings.watch.actions.footer" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Use Sync Now after editing office or timeline data. Recheck refreshes the iOS pairing and installation status without changing data." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "オフィスや日程データを編集した後は今すぐ同期を使います。再確認はデータを変更せず、iOSのペアリングとインストール状態を更新します。" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "修改办公室或时间线数据后可使用立即同步。重新确认只刷新 iOS 配对和安装状态，不会修改数据。" } }
-      }
-    },
-    "ba.settings.watch.actions.section" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Actions" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "操作" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "操作" } }
-      }
-    },
-    "ba.settings.watch.recheck.title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Recheck Watch Status" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Watch状態を再確認" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重新确认 Watch 状态" } }
-      }
-    },
-    "ba.settings.watch.section" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Apple Watch" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Apple Watch" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Apple Watch" } }
-      }
-    },
-    "ba.settings.watch.syncNow.title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sync to Apple Watch Now" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Apple Watchへ今すぐ同期" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "立即同步到 Apple Watch" } }
-      }
-    },
-    "ba.settings.watch.timeline.summary.format" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Activity %d/%d · Pool %d/%d" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "イベント %d/%d · 募集 %d/%d" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "活动 %d/%d · 卡池 %d/%d" } }
-      }
-    },
-    "ba.settings.watch.timeline.title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Timeline" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "日程" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "活动/卡池" } }
-      }
-    },
-    "ba.settings.watch.title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Apple Watch" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Apple Watch" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Apple Watch" } }
-      }
-    },
     "ba.settings.arena.notifications.title" : {
       "localizations" : {
         "en" : {
@@ -9374,6 +9285,711 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "BA 设置"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.actions.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use Sync Now after editing office or timeline data. Recheck refreshes the iOS pairing and installation status without changing data."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オフィスや日程データを編集した後は今すぐ同期を使います。再確認はデータを変更せず、iOSのペアリングとインストール状態を更新します。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "修改办公室或时间线数据后可使用立即同步。重新确认只刷新 iOS 配对和安装状态，不会修改数据。"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.actions.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actions"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "操作"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "操作"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.connection.activating" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecting"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接続中"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在连接"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.connection.background" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Background sync ready"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "バックグラウンド同期可"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后台可同步"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.connection.confirmingInstall" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirming Watch app"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch Appを確認中"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在确认 Watch App"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.connection.error" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync needs attention"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同期を確認"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同步需要处理"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.connection.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KeiBAOS asks iOS for the paired Apple Watch state, then keeps a small grace period while Xcode or the Watch app finishes refreshing installation metadata."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KeiBAOSはiOSからペアリング済みApple Watchの状態を取得し、XcodeやWatch Appがインストール情報を更新する間は短い確認時間を置きます。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KeiBAOS 会向 iOS 查询已配对 Apple Watch 状态，并在 Xcode 或 Watch App 刷新安装信息时保留一小段确认时间。"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.connection.notInstalled" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch app not installed"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch App未インストール"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch App 未安装"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.connection.notPaired" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No paired Apple Watch"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watch未ペアリング"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未配对 Apple Watch"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.connection.reachable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接続済み"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已连接"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.connection.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接続"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.connection.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接続"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接状态"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.connection.unavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unavailable on this device"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このデバイスでは利用不可"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前设备不可用"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.content.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch Snapshot"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watchスナップショット"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch 快照"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.content.summary" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Office, AP, cafe, events, pools, and notification preferences"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オフィス、AP、カフェ、イベント、募集、通知設定"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "办公室、AP、咖啡厅、活动、卡池、通知偏好"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.content.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synced content"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同期内容"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同步内容"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.dutyAvatar.missing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No duty student selected"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当番生未設定"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未设置值日生"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.dutyAvatar.noImage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "設定済み：%@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已设置：%@"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.dutyAvatar.ready" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avatar included: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画像付き：%@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已包含：%@"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.dutyAvatar.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duty avatar"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当番生アイコン"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "值日生头像"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.error.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Latest error"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最新エラー"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近错误"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KeiBAOS sends the latest snapshot to Apple Watch through WatchConnectivity. The Watch app icon uses the installed Watch bundle icon; the iPhone Home Screen icon selector applies to iPhone and iPad."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KeiBAOSはWatchConnectivityで最新スナップショットをApple Watchへ送信します。Watch Appのアイコンはインストール済みWatchバンドルのアイコンを使用し、iPhoneホーム画面のアイコン設定はiPhoneとiPadに適用されます。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KeiBAOS 会通过 WatchConnectivity 把最新快照发送到 Apple Watch。Watch App 图标使用已安装 Watch bundle 的图标；iPhone 主屏幕图标选择应用在 iPhone 和 iPad 上。"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.lastSent.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last sent"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最終送信"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次发送"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.never" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "待機中"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待同步"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.openNotificationSettings.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Notification Settings"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知設定を開く"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开通知设置"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.queued.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queued"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キュー"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后台队列"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.recheck.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recheck Watch Status"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch状態を再確認"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新确认 Watch 状态"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.section" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watch"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watch"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watch"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.syncNow.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync to Apple Watch Now"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watchへ今すぐ同期"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立即同步到 Apple Watch"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.timeline.summary.format" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activity %d/%d · Pool %d/%d"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "イベント %d/%d · 募集 %d/%d"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "活动 %d/%d · 卡池 %d/%d"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.timeline.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Timeline"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "日程"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "活动/卡池"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watch"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watch"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watch"
           }
         }
       }

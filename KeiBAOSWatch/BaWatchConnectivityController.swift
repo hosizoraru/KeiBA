@@ -8,21 +8,25 @@
 import Foundation
 import WatchConnectivity
 
+@MainActor
 final class BaWatchConnectivityController: NSObject, WCSessionDelegate {
+    private var didAssignDelegate = false
+    private var didRequestActivation = false
+
     func activate() {
         guard WCSession.isSupported() else {
-            Task { @MainActor in
-                BaWatchSnapshotStore.shared.updatePhoneConnectionStatus(.unavailable)
-            }
+            BaWatchSnapshotStore.shared.updatePhoneConnectionStatus(.unavailable)
             return
         }
         let session = WCSession.default
-        session.delegate = self
-        session.activate()
-        publishPhoneConnectionStatus(for: session)
-        Task { @MainActor in
-            BaWatchSnapshotStore.shared.applyApplicationContext(session.receivedApplicationContext)
+        if didAssignDelegate == false {
+            session.delegate = self
+            didAssignDelegate = true
         }
+        publishPhoneConnectionStatus(for: session)
+        guard session.activationState == .notActivated, didRequestActivation == false else { return }
+        didRequestActivation = true
+        session.activate()
     }
 
     nonisolated func session(
@@ -31,9 +35,17 @@ final class BaWatchConnectivityController: NSObject, WCSessionDelegate {
         error: Error?
     ) {
         publishPhoneConnectionStatus(for: session, activationState: activationState)
-        guard activationState == .activated else { return }
+        guard activationState == .activated else {
+            Task { @MainActor in
+                self.didRequestActivation = false
+            }
+            return
+        }
         Task { @MainActor in
-            BaWatchSnapshotStore.shared.applyApplicationContext(session.receivedApplicationContext)
+            self.didRequestActivation = false
+            let applicationContext = session.receivedApplicationContext
+            guard applicationContext.isEmpty == false else { return }
+            BaWatchSnapshotStore.shared.applyApplicationContext(applicationContext)
         }
     }
 

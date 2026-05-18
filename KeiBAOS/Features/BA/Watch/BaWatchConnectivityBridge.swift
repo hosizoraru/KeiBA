@@ -67,6 +67,7 @@ final class BaWatchConnectivityBridge: NSObject, BaWatchSnapshotSyncing {
     private var pendingSnapshot: BaWatchDashboardSnapshot?
     private var pendingRequiresGuaranteedDelivery = false
     private var didAssignDelegate = false
+    private var didRequestActivation = false
     private var lastApplicationContextData: Data?
     private var lastQueuedGuaranteedSourceUpdatedAt: Date?
     private var watchAppMissingSince: Date?
@@ -83,8 +84,9 @@ final class BaWatchConnectivityBridge: NSObject, BaWatchSnapshotSyncing {
             didAssignDelegate = true
         }
         updateState(from: session)
-        guard session.activationState == .notActivated else { return }
+        guard session.activationState == .notActivated, didRequestActivation == false else { return }
         state.availability = .activating
+        didRequestActivation = true
         session.activate()
     }
 
@@ -141,6 +143,10 @@ final class BaWatchConnectivityBridge: NSObject, BaWatchSnapshotSyncing {
             pendingSnapshot = nil
             pendingRequiresGuaranteedDelivery = false
         } catch {
+            if isCounterpartInstallError(error) {
+                noteCounterpartInstallMismatch()
+                return
+            }
             state.availability = .error
             state.lastErrorDescription = error.localizedDescription
             queueGuaranteedTransfer(payload: payload, snapshot: snapshot, session: session)
@@ -179,6 +185,21 @@ final class BaWatchConnectivityBridge: NSObject, BaWatchSnapshotSyncing {
         ]
     }
 
+    private func isCounterpartInstallError(_ error: Error) -> Bool {
+        let nsError = error as NSError
+        guard nsError.domain == WCErrorDomain else { return false }
+        return nsError.code == WCError.Code.watchAppNotInstalled.rawValue ||
+            nsError.code == WCError.Code.companionAppNotInstalled.rawValue
+    }
+
+    private func noteCounterpartInstallMismatch(now: Date = Date()) {
+        if watchAppMissingSince == nil {
+            watchAppMissingSince = now
+        }
+        state.availability = .confirmingInstall
+        state.lastErrorDescription = nil
+    }
+
     private func queueGuaranteedTransferIfNeeded(
         payload: [String: Any],
         snapshot: BaWatchDashboardSnapshot,
@@ -213,6 +234,7 @@ extension BaWatchConnectivityBridge: WCSessionDelegate {
         error: Error?
     ) {
         Task { @MainActor [weak self] in
+            self?.didRequestActivation = false
             self?.updateState(from: session)
             if let error {
                 self?.state.availability = .error
@@ -226,7 +248,10 @@ extension BaWatchConnectivityBridge: WCSessionDelegate {
     nonisolated func sessionDidBecomeInactive(_ session: WCSession) {}
 
     nonisolated func sessionDidDeactivate(_ session: WCSession) {
-        session.activate()
+        Task { @MainActor [weak self] in
+            self?.didRequestActivation = false
+            self?.activate()
+        }
     }
 
     nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
