@@ -212,7 +212,7 @@ final class BaWatchDashboardSnapshotTests: XCTestCase {
     }
 
     private static let onePixelPNGBase64 =
-        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII="
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR4nGP4DwQACfsD/fteaysAAAAASUVORK5CYII="
 }
 
 @MainActor

@@ -129,9 +129,27 @@ jobs:
             -scheme KeiBAOS \
             -destination 'platform=macOS' \
             -skip-testing:KeiBAOSTests/BaUserDataSyncTests \
+            -skip-testing:KeiBAOSTests/BaWatchDashboardSnapshotTests \
             -parallel-testing-enabled NO \
             -testLanguage en \
             -testRegion US \
+            -resultBundlePath "$RUNNER_TEMP/KeiBAOS-macOS-unit.xcresult" \
+            -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests-macOS" \
+            MARKETING_VERSION="$APP_MARKETING_VERSION" \
+            CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Run watch snapshot tests
+        run: |
+          xcodebuild test-without-building \
+            -project KeiBAOS.xcodeproj \
+            -scheme KeiBAOS \
+            -destination 'platform=macOS' \
+            -only-testing:KeiBAOSTests/BaWatchDashboardSnapshotTests \
+            -parallel-testing-enabled NO \
+            -testLanguage en \
+            -testRegion US \
+            -resultBundlePath "$RUNNER_TEMP/KeiBAOS-watch-snapshot.xcresult" \
             -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests-macOS" \
             MARKETING_VERSION="$APP_MARKETING_VERSION" \
             CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
@@ -147,10 +165,20 @@ jobs:
             -parallel-testing-enabled NO \
             -testLanguage en \
             -testRegion US \
+            -resultBundlePath "$RUNNER_TEMP/KeiBAOS-user-data-sync.xcresult" \
             -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests-macOS" \
             MARKETING_VERSION="$APP_MARKETING_VERSION" \
             CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
             CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload Xcode test results
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: KeiBAOS-Xcode-test-results
+          path: ${{ runner.temp }}/KeiBAOS-*.xcresult
+          if-no-files-found: ignore
+          retention-days: 7
 
   package-ios-ipa:
     name: Build unsigned iOS IPA
