@@ -460,10 +460,8 @@ final class BaOverviewSettingsTests: XCTestCase {
         XCTAssertEqual(loaded.profile(for: .cn).cafeApNotifyThreshold, 330)
     }
 
-    @MainActor
     func testFavoriteNPCEntryPersistsAsCatalogSnapshotAndMigratesLegacyEntryID() throws {
         let defaults = try makeIsolatedDefaults()
-        let model = makeOverviewAppModel(defaults: defaults)
         let canonical = makeOverviewCatalogEntry(
             entryId: 174_603,
             pid: BaCatalogCategory.npcSatellite.gameKeePID,
@@ -478,20 +476,40 @@ final class BaOverviewSettingsTests: XCTestCase {
             name: "爱丽丝(冬装)",
             category: .npcSatellite
         )
-        model.catalogState = BaLoadableState(
-            value: BaGuideCatalogBundle(entries: [canonical], syncedAt: Date(timeIntervalSince1970: 1_700_000_000))
+        let catalogBundle = BaGuideCatalogBundle(
+            entries: [canonical],
+            syncedAt: Date(timeIntervalSince1970: 1_700_000_000)
+        )
+        let selection = BaFavoriteCatalogResolver.toggledSelection(
+            for: staleEntry,
+            catalogEntries: catalogBundle.entries,
+            storedContentIDs: [],
+            storedSnapshots: []
+        )
+        var envelope = BaSettingsEnvelope.defaults(now: Date(timeIntervalSince1970: 1_700_000_000))
+        envelope.globalSettings.favoriteContentIDs = selection.contentIDs
+        envelope.globalSettings.favoriteCatalogEntries = selection.catalogEntries
+        BaSettingsStore(defaults: defaults).saveEnvelope(envelope)
+
+        let loaded = BaSettingsStore(defaults: defaults).loadEnvelope()
+        let favoriteEntries = BaFavoriteCatalogResolver.favoriteCatalogEntries(
+            from: catalogBundle,
+            contentIDs: loaded.globalSettings.favoriteContentIDs,
+            snapshots: loaded.globalSettings.favoriteCatalogEntries
         )
 
-        model.toggleFavorite(staleEntry)
+        XCTAssertEqual(loaded.globalSettings.favoriteContentIDs, [647_097])
+        XCTAssertEqual(loaded.globalSettings.favoriteCatalogEntries.first?.contentId, 647_097)
+        XCTAssertEqual(favoriteEntries.map(\.contentId), [647_097])
+        XCTAssertEqual(loaded.globalSettings.favoriteCatalogEntries.first?.entryId, 174_603)
+        XCTAssertEqual(loaded.globalSettings.favoriteCatalogEntries.first?.category, .npcSatellite)
 
-        XCTAssertEqual(model.settings.favoriteContentIDs, [647_097])
-        XCTAssertEqual(model.settings.favoriteCatalogEntries.first?.contentId, 647_097)
-        XCTAssertEqual(model.entries(for: .favorites).map(\.contentId), [647_097])
-
-        let reloaded = BaSettingsStore(defaults: defaults).loadEnvelope()
-        XCTAssertEqual(reloaded.globalSettings.favoriteContentIDs, [647_097])
-        XCTAssertEqual(reloaded.globalSettings.favoriteCatalogEntries.first?.entryId, 174_603)
-        XCTAssertEqual(reloaded.globalSettings.favoriteCatalogEntries.first?.category, .npcSatellite)
+        var legacySettings = BaGlobalSettings.defaults()
+        legacySettings.favoriteContentIDs = [Int64(staleEntry.entryId)]
+        legacySettings.favoriteCatalogEntries = [staleEntry]
+        let reconciledSettings = BaFavoriteCatalogResolver.reconciledSettings(legacySettings, with: catalogBundle)
+        XCTAssertEqual(reconciledSettings.favoriteContentIDs, [647_097])
+        XCTAssertEqual(reconciledSettings.favoriteCatalogEntries.first?.contentId, 647_097)
     }
 
     @MainActor
