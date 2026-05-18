@@ -45,9 +45,10 @@ struct GameKeeClient: @unchecked Sendable {
 
     private let session: URLSession
     private let retryAttempts: Int
+    private nonisolated static let defaultSession = makeSession()
 
     nonisolated init(
-        session: URLSession = GameKeeClient.makeSession(),
+        session: URLSession = GameKeeClient.defaultSession,
         retryAttempts: Int = 2
     ) {
         self.session = session
