@@ -16,6 +16,7 @@ struct BaCatalogGridView: View {
     let favoriteActionTitle: (Bool) -> String
     let dutyStudentActionTitle: (Bool) -> String
     let canSetDutyStudent: (BaGuideCatalogEntry) -> Bool
+    let onOpenEntry: (BaGuideCatalogEntry) -> Void
     let onToggleFavorite: (BaGuideCatalogEntry) -> Void
     let onToggleDutyStudent: (BaGuideCatalogEntry) -> Void
 
@@ -57,8 +58,8 @@ struct BaCatalogGridView: View {
             LazyVGrid(columns: columns, alignment: .leading, spacing: 14) {
                 ForEach(rows) { row in
                     ZStack(alignment: .topTrailing) {
-                        NavigationLink {
-                            BaStudentDetailView(entry: row.entry)
+                        Button {
+                            onOpenEntry(row.entry)
                         } label: {
                             BaCatalogEntryGridCard(row: row)
                                 .equatable()
@@ -134,6 +135,7 @@ private struct BaCatalogEntryGridCard: View, Equatable {
     @Environment(\.baAdaptiveMetrics) private var metrics
 
     let row: BaCatalogEntryRowDisplayModel
+    private let actionReserveWidth: CGFloat = 38
 
     static func == (lhs: BaCatalogEntryGridCard, rhs: BaCatalogEntryGridCard) -> Bool {
         lhs.row == rhs.row
@@ -180,12 +182,9 @@ private struct BaCatalogEntryGridCard: View, Equatable {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
+            .padding(.trailing, actionReserveWidth)
 
-            Spacer(minLength: 6)
-
-            Image(systemName: "chevron.right")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.tertiary)
+            Spacer(minLength: 0)
         }
         .padding(.horizontal, metrics.catalogCardHorizontalPadding)
         .padding(.vertical, metrics.catalogCardVerticalPadding)

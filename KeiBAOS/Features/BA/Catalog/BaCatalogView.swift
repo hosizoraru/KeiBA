@@ -15,6 +15,7 @@ struct BaCatalogView: View {
     @State private var filterSelection = BaCatalogFilterSelection()
     @State private var searchText = ""
     @State private var isOptionsPanelPresented = false
+    @State private var selectedDetailEntry: BaGuideCatalogEntry?
 
     private func snapshot(filterGroups: [BaCatalogFilterGroup]) -> BaCatalogViewSnapshot {
         let favoriteIDs = model.settings.favoriteContentIDs
@@ -103,6 +104,9 @@ struct BaCatalogView: View {
         .refreshable {
             await model.refreshCatalog(force: true)
         }
+        .navigationDestination(item: $selectedDetailEntry) { entry in
+            BaStudentDetailView(entry: entry)
+        }
     }
 
     @ViewBuilder
@@ -120,6 +124,7 @@ struct BaCatalogView: View {
                 favoriteActionTitle: favoriteActionTitle(isFavorite:),
                 dutyStudentActionTitle: dutyStudentActionTitle(isDutyStudent:),
                 canSetDutyStudent: model.canSetDutyStudent,
+                onOpenEntry: openDetail,
                 onToggleFavorite: { model.toggleFavorite($0) },
                 onToggleDutyStudent: toggleDutyStudent
             )
@@ -155,8 +160,8 @@ struct BaCatalogView: View {
             )
         } else {
             ForEach(snapshot.rows) { row in
-                NavigationLink {
-                    BaStudentDetailView(entry: row.entry)
+                Button {
+                    openDetail(row.entry)
                 } label: {
                     BaCatalogEntryRow(
                         row: row,
@@ -165,6 +170,8 @@ struct BaCatalogView: View {
                     )
                     .equatable()
                 }
+                .buttonStyle(.plain)
+                .contentShape(Rectangle())
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                     if model.canSetDutyStudent(row.entry) {
                         Button {
@@ -240,6 +247,10 @@ struct BaCatalogView: View {
         Task {
             await model.toggleDutyStudent(entry)
         }
+    }
+
+    private func openDetail(_ entry: BaGuideCatalogEntry) {
+        selectedDetailEntry = entry
     }
 
     private func usesContentAnchoredOptionsPanel(for metrics: BaAdaptiveMetrics) -> Bool {
