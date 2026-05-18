@@ -7,6 +7,9 @@
 
 import Foundation
 import Observation
+#if canImport(WidgetKit)
+import WidgetKit
+#endif
 
 enum BaWatchPhoneConnectionStatus: Equatable, Sendable {
     case waiting
@@ -92,6 +95,8 @@ final class BaWatchSnapshotStore {
         if defaults.data(forKey: snapshotKey) != data {
             defaults.set(data, forKey: snapshotKey)
         }
+        BaDashboardSnapshotSharing.save(data)
+        reloadWidgetTimelines()
         guard snapshot != decoded else { return }
         snapshot = decoded
     }
@@ -103,5 +108,12 @@ final class BaWatchSnapshotStore {
     func updatePhoneConnectionStatus(_ status: BaWatchPhoneConnectionStatus) {
         guard phoneConnectionStatus != status else { return }
         phoneConnectionStatus = status
+    }
+
+    private func reloadWidgetTimelines() {
+        #if canImport(WidgetKit)
+        WidgetCenter.shared.reloadTimelines(ofKind: BaDashboardWidgetKind.resources)
+        WidgetCenter.shared.reloadTimelines(ofKind: BaDashboardWidgetKind.timeline)
+        #endif
     }
 }

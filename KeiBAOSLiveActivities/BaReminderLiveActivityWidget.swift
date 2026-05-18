@@ -14,6 +14,8 @@ import WidgetKit
 struct KeiBAOSLiveActivityWidgets: WidgetBundle {
     var body: some Widget {
         BaReminderLiveActivityWidget()
+        BaDashboardResourcesWidget()
+        BaDashboardTimelineWidget()
     }
 }
 

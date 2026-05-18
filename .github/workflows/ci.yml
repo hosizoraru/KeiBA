@@ -77,7 +77,9 @@ jobs:
       - name: Validate localized strings
         run: |
           jq empty KeiBAOS/Localizable.xcstrings
+          jq empty KeiBAOSLiveActivities/Localizable.xcstrings
           jq empty KeiBAOSWatch/Localizable.xcstrings
+          jq empty KeiBAOSWatchWidgets/Localizable.xcstrings
 
       - name: Resolve Swift packages
         run: |
@@ -98,6 +100,18 @@ jobs:
             CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
             CODE_SIGNING_ALLOWED=NO
 
+      - name: Build iOS widgets and Live Activities extension
+        run: |
+          xcodebuild build \
+            -project KeiBAOS.xcodeproj \
+            -scheme KeiBAOSLiveActivities \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/KeiBAOS-live-activities" \
+            -clonedSourcePackagesDirPath "$SWIFTPM_CACHE_PATH" \
+            MARKETING_VERSION="$APP_MARKETING_VERSION" \
+            CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
+            CODE_SIGNING_ALLOWED=NO
+
       - name: Build watchOS simulator
         run: |
           xcodebuild build \
@@ -105,6 +119,18 @@ jobs:
             -scheme KeiBAOSWatch \
             -destination 'generic/platform=watchOS Simulator' \
             -derivedDataPath "$RUNNER_TEMP/KeiBAOS-watchOS" \
+            -clonedSourcePackagesDirPath "$SWIFTPM_CACHE_PATH" \
+            MARKETING_VERSION="$APP_MARKETING_VERSION" \
+            CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Build watchOS widgets extension
+        run: |
+          xcodebuild build \
+            -project KeiBAOS.xcodeproj \
+            -scheme KeiBAOSWatchWidgets \
+            -destination 'generic/platform=watchOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/KeiBAOS-watchOS-widgets" \
             -clonedSourcePackagesDirPath "$SWIFTPM_CACHE_PATH" \
             MARKETING_VERSION="$APP_MARKETING_VERSION" \
             CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
@@ -150,6 +176,22 @@ jobs:
             -testLanguage en \
             -testRegion US \
             -resultBundlePath "$RUNNER_TEMP/KeiBAOS-watch-snapshot.xcresult" \
+            -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests-macOS" \
+            MARKETING_VERSION="$APP_MARKETING_VERSION" \
+            CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Run widget snapshot tests
+        run: |
+          xcodebuild test-without-building \
+            -project KeiBAOS.xcodeproj \
+            -scheme KeiBAOS \
+            -destination 'platform=macOS' \
+            -only-testing:KeiBAOSTests/BaDashboardWidgetSnapshotTests \
+            -parallel-testing-enabled NO \
+            -testLanguage en \
+            -testRegion US \
+            -resultBundlePath "$RUNNER_TEMP/KeiBAOS-widget-snapshot.xcresult" \
             -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests-macOS" \
             MARKETING_VERSION="$APP_MARKETING_VERSION" \
             CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \

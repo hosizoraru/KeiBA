@@ -10,10 +10,10 @@ music in an Apple-native interface.
 ## Status
 
 KeiBAOS is in active development. The current app target supports iOS,
-iPadOS, and macOS 26. A watchOS 26 companion app is in development and is
-already part of the local build and CI verification path. The data model is
-being shaped with future iCloud sync and lightweight cross-device surfaces in
-mind.
+iPadOS, and macOS 26. A watchOS 26 companion app and WidgetKit glance
+surfaces are in development and are already part of the local build and CI
+verification path. The data model is being shaped with future iCloud sync and
+lightweight cross-device surfaces in mind.
 
 ## Platform Baseline
 
@@ -37,9 +37,10 @@ Build baseline for the current project:
 - Office overview for AP, cafe AP, daily reset timing, and player identity.
 - Activity and recruitment-pool timelines with local notifications and
   Live Activities.
+- WidgetKit widgets for office resources, activities, and recruitment pools.
 - Apple Watch companion app in development for office identity, AP, cafe AP,
-  timeline highlights, notification status, connection state, and synced duty
-  avatar.
+  Smart Stack widgets, timeline highlights, notification status, connection
+  state, and synced duty avatar.
 - Student catalog with search, sorting, implemented-student filters, and
   NPC or satellite filters.
 - Student detail pages with profile, skills, weapon data, gallery media, and
@@ -54,10 +55,13 @@ Build baseline for the current project:
 
 ```text
 KeiBAOS/                App source, feature modules, localization, app assets
-KeiBAOSLiveActivities/  Widget extension for Live Activities and Dynamic Island
+KeiBAOSLiveActivities/  Widget extension for widgets, Live Activities,
+                        and Dynamic Island
 KeiBAOSShared/          Types shared by the app and extension
 KeiBAOSWatch/           watchOS companion app source and watch assets
 KeiBAOSWatchShared/     Codable snapshot models shared by iPhone and Watch
+KeiBAOSWatchWidgets/    watchOS WidgetKit extension for Smart Stack surfaces
+KeiBAOSWidgetsShared/   Shared WidgetKit widget views and timeline providers
 KeiBAOSTests/           Unit tests for parsing, settings, notifications,
                         media, and layout
 Docs/                   Project notes and feature coverage
@@ -72,14 +76,28 @@ day. It currently focuses on:
 - Teacher identity, server-aware office naming, friend code, and duty student.
 - AP and cafe AP values with local full-time calculation on the Watch.
 - Activity and recruitment-pool glance summaries synced from the iPhone app.
+- Smart Stack widgets for AP, cafe AP, activity, and recruitment highlights.
 - Notification preference status and iPhone-Watch connection state.
 - Duty-student avatar thumbnail sync through the shared dashboard snapshot.
 
 The iPhone app owns the main settings and sends a compact Watch dashboard
 snapshot through WatchConnectivity. The Watch app keeps the last received
-snapshot locally so recent AP and timeline data remain readable between syncs.
-Future Widget work is expected to share more timeline data with the Watch
-surface.
+snapshot locally and shares it with the watchOS widget extension through App
+Groups, so recent AP and timeline data remain readable between syncs.
+
+## Widgets
+
+The WidgetKit extension currently provides:
+
+- Office Resources: AP, cafe AP, full-time hints, and compact Lock Screen or
+  Smart Stack accessory variants.
+- Events & Recruitment: featured activity and recruitment-pool highlights with
+  running/upcoming counts.
+
+The app writes the same lightweight dashboard snapshot to the App Group used
+by the iOS widget extension and the watchOS widget extension. Widget timelines
+refresh around AP regeneration, cafe AP hourly changes, and timeline boundary
+dates, while app-side data changes request targeted WidgetKit reloads.
 
 ## Dependencies
 
@@ -105,7 +123,8 @@ Release install on a connected iPhone or iPad from Xcode:
 2. Open `Product > Scheme > Edit Scheme...`.
 3. Select `Run > Info`, set `Build Configuration` to `Release`, then close the sheet.
 4. Confirm `Signing & Capabilities` has the Apple team selected for the app,
-   Live Activities extension, and Watch companion.
+   Widget/Live Activities extension, Watch companion, and Watch widget
+   extension.
 5. Use `Product > Run` to build, sign, install, and launch the Release build on
    the device.
 
@@ -158,7 +177,7 @@ xcodebuild test \
 
 GitHub Actions runs localization validation, iOS simulator build, watchOS
 simulator build, macOS build, macOS unit tests, focused Watch snapshot tests,
-and user-data sync tests on `macos-26`.
+widget snapshot-sharing tests, and user-data sync tests on `macos-26`.
 See [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 Pushes to `main` and manual workflow runs also upload side-load test artifacts:
@@ -198,8 +217,9 @@ belong to their respective rights holders.
 
 The app stores user preferences locally today, including office settings,
 favorites, cached media metadata, Watch dashboard snapshots, synced duty-avatar
-thumbnails, and notification preferences. Future iCloud sync work should keep
-account-level preferences portable across Apple devices.
+thumbnails, widget dashboard snapshots, and notification preferences. Future
+iCloud sync work should keep account-level preferences portable across Apple
+devices.
 
 ## License
 

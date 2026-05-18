@@ -6,6 +6,9 @@
 //
 
 import Foundation
+#if os(iOS) && canImport(WidgetKit)
+import WidgetKit
+#endif
 
 extension BaWatchDashboardSnapshot {
     init(
@@ -173,6 +176,7 @@ extension BaAppModel {
             now: now,
             timeline: watchTimelineGlanceSnapshot(now: now)
         )
+        persistDashboardSnapshotForWidgets(snapshot)
         watchSnapshotSyncer.sync(snapshot)
         watchSyncState = watchSnapshotSyncer.state
         scheduleWatchAvatarSnapshotSyncIfNeeded(snapshot)
@@ -226,6 +230,7 @@ extension BaAppModel {
                 var enrichedSnapshot = snapshot
                 enrichedSnapshot.generatedAt = Date()
                 enrichedSnapshot.dutyStudentAvatarImageData = avatarData
+                self.persistDashboardSnapshotForWidgets(enrichedSnapshot)
                 watchSnapshotSyncer.sync(enrichedSnapshot)
                 watchSyncState = watchSnapshotSyncer.state
             } catch {
@@ -241,5 +246,13 @@ extension BaAppModel {
         case .unavailable, .notPaired, .appNotInstalled, .error:
             false
         }
+    }
+
+    private func persistDashboardSnapshotForWidgets(_ snapshot: BaWatchDashboardSnapshot) {
+        BaDashboardSnapshotSharing.save(snapshot)
+        #if os(iOS) && canImport(WidgetKit)
+        WidgetCenter.shared.reloadTimelines(ofKind: BaDashboardWidgetKind.resources)
+        WidgetCenter.shared.reloadTimelines(ofKind: BaDashboardWidgetKind.timeline)
+        #endif
     }
 }
