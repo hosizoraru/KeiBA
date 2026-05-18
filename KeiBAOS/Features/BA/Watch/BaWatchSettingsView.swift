@@ -82,11 +82,7 @@ struct BaWatchSettingsView: View {
                     .multilineTextAlignment(.trailing)
             }
 
-            LabeledContent(BaL10n.string("ba.settings.watch.content.title")) {
-                Text(BaL10n.string("ba.settings.watch.content.summary"))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.trailing)
-            }
+            BaWatchSyncedContentRow()
 
             LabeledContent(BaL10n.string("ba.settings.watch.timeline.title")) {
                 Text(watchTimelineStatus(snapshot.timeline))
@@ -134,7 +130,9 @@ struct BaWatchSettingsView: View {
         guard let dutyStudentName = snapshot.dutyStudentName, dutyStudentName.isEmpty == false else {
             return BaL10n.string("ba.settings.watch.dutyAvatar.missing")
         }
-        if snapshot.dutyStudentAvatarURLString?.isEmpty == false {
+        if snapshot.dutyStudentAvatarImageData?.isEmpty == false ||
+            snapshot.dutyStudentAvatarURLString?.isEmpty == false
+        {
             return String(format: BaL10n.string("ba.settings.watch.dutyAvatar.ready"), dutyStudentName)
         }
         return String(format: BaL10n.string("ba.settings.watch.dutyAvatar.noImage"), dutyStudentName)
@@ -163,6 +161,44 @@ struct BaWatchSettingsView: View {
         UIApplication.shared.open(url)
     }
     #endif
+}
+
+private struct BaWatchSyncedContentRow: View {
+    private let items = [
+        "ba.settings.watch.content.office",
+        "ba.settings.watch.content.ap",
+        "ba.settings.watch.content.cafe",
+        "ba.settings.watch.content.activities",
+        "ba.settings.watch.content.pools",
+        "ba.settings.watch.content.notifications",
+    ]
+
+    private let columns = [
+        GridItem(.adaptive(minimum: 72, maximum: 124), spacing: 8, alignment: .leading),
+    ]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(BaL10n.string("ba.settings.watch.content.title"))
+                .font(.body)
+                .foregroundStyle(.primary)
+
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
+                ForEach(items, id: \.self) { item in
+                    Text(BaL10n.string(item))
+                        .font(.caption.weight(.semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.82)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 5)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .background(.thinMaterial, in: Capsule())
+                }
+            }
+        }
+        .padding(.vertical, 2)
+    }
 }
 
 enum BaWatchSyncStatusPresenter {

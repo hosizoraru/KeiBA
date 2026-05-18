@@ -10,8 +10,8 @@ music in an Apple-native interface.
 ## Status
 
 KeiBAOS is in active development. The current app target supports iOS,
-iPadOS, and macOS 26. The data model is being shaped with future iCloud
-sync and a planned watchOS 26 companion surface in mind.
+iPadOS, macOS, and watchOS 26. The data model is being shaped with future
+iCloud sync and lightweight cross-device surfaces in mind.
 
 ## Platform Baseline
 
@@ -20,7 +20,7 @@ Deployment targets:
 - iOS 26.0+
 - iPadOS 26.0+
 - macOS 26.0+
-- watchOS 26.0+ planned companion target
+- watchOS 26.0+ companion target
 
 Build baseline for the current project:
 
@@ -35,6 +35,8 @@ Build baseline for the current project:
 - Office overview for AP, cafe AP, daily reset timing, and player identity.
 - Activity and recruitment-pool timelines with local notifications and
   Live Activities.
+- Apple Watch companion app for office identity, AP, cafe AP, timeline
+  highlights, notification status, connection state, and synced duty avatar.
 - Student catalog with search, sorting, implemented-student filters, and
   NPC or satellite filters.
 - Student detail pages with profile, skills, weapon data, gallery media, and
@@ -51,6 +53,8 @@ Build baseline for the current project:
 KeiBAOS/                App source, feature modules, localization, app assets
 KeiBAOSLiveActivities/  Widget extension for Live Activities and Dynamic Island
 KeiBAOSShared/          Types shared by the app and extension
+KeiBAOSWatch/           watchOS companion app source and watch assets
+KeiBAOSWatchShared/     Codable snapshot models shared by iPhone and Watch
 KeiBAOSTests/           Unit tests for parsing, settings, notifications,
                         media, and layout
 Docs/                   Project notes and feature coverage
@@ -100,6 +104,11 @@ xcodebuild build \
   -project KeiBAOS.xcodeproj \
   -scheme KeiBAOS \
   -destination 'generic/platform=macOS'
+
+xcodebuild build \
+  -project KeiBAOS.xcodeproj \
+  -scheme KeiBAOSWatch \
+  -destination 'generic/platform=watchOS Simulator'
 ```
 
 ## Tests
@@ -126,15 +135,15 @@ xcodebuild test \
 
 ## CI
 
-GitHub Actions runs localization validation, iOS simulator build, macOS build,
-and macOS unit tests on `macos-26`.
+GitHub Actions runs localization validation, iOS simulator build, watchOS
+simulator build, macOS build, and macOS unit tests on `macos-26`.
 See [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 Pushes to `main` and manual workflow runs also upload side-load test artifacts:
 
-- `KeiBAOS-iOS-<version>-unsigned.ipa` is an unsigned iOS device payload. It needs
-  re-signing with a valid Apple certificate and provisioning profile before
-  installation on a physical device.
+- `KeiBAOS-iOS-<version>-unsigned.ipa` is an unsigned iOS device payload with
+  the embedded Watch app content. It needs re-signing with a valid Apple
+  certificate and provisioning profile before installation on a physical device.
 - `KeiBAOS-macOS-<version>-unsigned.dmg` is an unsigned, unnotarized
   macOS build for local smoke testing.
 
@@ -166,8 +175,9 @@ belong to their respective rights holders.
 ## Privacy
 
 The app stores user preferences locally today, including office settings,
-favorites, cached media metadata, and notification preferences. Future iCloud
-sync work should keep account-level preferences portable across Apple devices.
+favorites, cached media metadata, Watch dashboard snapshots, synced duty-avatar
+thumbnails, and notification preferences. Future iCloud sync work should keep
+account-level preferences portable across Apple devices.
 
 ## License
 

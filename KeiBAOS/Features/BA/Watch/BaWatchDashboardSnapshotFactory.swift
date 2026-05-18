@@ -160,14 +160,14 @@ extension BaAppModel {
 
     func syncWatchSnapshot(updatedAt: Date = Date(), now: Date = Date()) {
         let userData = envelope.userData(updatedAt: updatedAt)
-        watchSnapshotSyncer.sync(
-            BaWatchDashboardSnapshot(
-                userData: userData,
-                now: now,
-                timeline: watchTimelineGlanceSnapshot(now: now)
-            )
+        let snapshot = BaWatchDashboardSnapshot(
+            userData: userData,
+            now: now,
+            timeline: watchTimelineGlanceSnapshot(now: now)
         )
+        watchSnapshotSyncer.sync(snapshot)
         watchSyncState = watchSnapshotSyncer.state
+        scheduleWatchAvatarSnapshotSyncIfNeeded(snapshot)
     }
 
     func requestWatchSnapshotSync() {
@@ -191,5 +191,47 @@ extension BaAppModel {
             poolIsShowingCache: poolState.isShowingCache,
             now: now
         )
+    }
+
+    private func scheduleWatchAvatarSnapshotSyncIfNeeded(_ snapshot: BaWatchDashboardSnapshot) {
+        watchAvatarSnapshotTask?.cancel()
+        guard shouldPrepareWatchAvatarSnapshot,
+              snapshot.dutyStudentAvatarImageData == nil,
+              let urlString = snapshot.dutyStudentAvatarURLString,
+              let url = URL(string: urlString)
+        else {
+            watchAvatarSnapshotTask = nil
+            return
+        }
+
+        watchAvatarSnapshotTask = Task { [weak self, snapshot, url] in
+            guard let self else { return }
+            do {
+                let data = try await imageData(for: url)
+                guard Task.isCancelled == false else { return }
+                guard let avatarData = await BaWatchAvatarThumbnailEncoder.encodedThumbnailData(from: data) else {
+                    return
+                }
+                guard Task.isCancelled == false else { return }
+                guard settings.dutyStudent?.avatarURL?.absoluteString == url.absoluteString else { return }
+
+                var enrichedSnapshot = snapshot
+                enrichedSnapshot.generatedAt = Date()
+                enrichedSnapshot.dutyStudentAvatarImageData = avatarData
+                watchSnapshotSyncer.sync(enrichedSnapshot)
+                watchSyncState = watchSnapshotSyncer.state
+            } catch {
+                guard Task.isCancelled == false else { return }
+            }
+        }
+    }
+
+    private var shouldPrepareWatchAvatarSnapshot: Bool {
+        switch watchSyncState.availability {
+        case .activating, .confirmingInstall, .reachable, .background:
+            true
+        case .unavailable, .notPaired, .appNotInstalled, .error:
+            false
+        }
     }
 }

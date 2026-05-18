@@ -9619,6 +9619,138 @@
         }
       }
     },
+    "ba.settings.watch.content.activities" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Events"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "イベント"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "活动"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.content.ap" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AP"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AP"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AP"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.content.cafe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cafe"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カフェ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "咖啡厅"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.content.notifications" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.content.office" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Office"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オフィス"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "办公室"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.content.pools" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pools"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "募集"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卡池"
+          }
+        }
+      }
+    },
     "ba.settings.watch.content.title" : {
       "localizations" : {
         "en" : {
@@ -9756,19 +9888,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "KeiBAOS sends the latest snapshot to Apple Watch through WatchConnectivity. The Watch app icon uses the installed Watch bundle icon; the iPhone Home Screen icon selector applies to iPhone and iPad."
+            "value" : "KeiBAOS sends a compact snapshot to Apple Watch through WatchConnectivity."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "KeiBAOSはWatchConnectivityで最新スナップショットをApple Watchへ送信します。Watch Appのアイコンはインストール済みWatchバンドルのアイコンを使用し、iPhoneホーム画面のアイコン設定はiPhoneとiPadに適用されます。"
+            "value" : "KeiBAOSはWatchConnectivityで軽量スナップショットをApple Watchへ送信します。"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "KeiBAOS 会通过 WatchConnectivity 把最新快照发送到 Apple Watch。Watch App 图标使用已安装 Watch bundle 的图标；iPhone 主屏幕图标选择应用在 iPhone 和 iPad 上。"
+            "value" : "KeiBAOS 会通过 WatchConnectivity 把轻量快照发送到 Apple Watch。"
           }
         }
       }

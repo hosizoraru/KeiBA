@@ -32,6 +32,7 @@ final class BaAppModel {
     @ObservationIgnored let watchSnapshotSyncer: any BaWatchSnapshotSyncing
     @ObservationIgnored var notificationSyncTask: Task<Void, Never>?
     @ObservationIgnored var studentDetailRequests: [Int64: StudentDetailRequest] = [:]
+    @ObservationIgnored var watchAvatarSnapshotTask: Task<Void, Never>?
 
     init(
         settingsStore: BaSettingsStore,
@@ -69,9 +70,7 @@ final class BaAppModel {
         let loadedUserData = loadedEnvelope.userData(
             updatedAt: settingsStore.userDataUpdatedAt(fallback: Date())
         )
-        self.watchSnapshotSyncer.sync(
-            BaWatchDashboardSnapshot(userData: loadedUserData, now: Date())
-        )
+        syncWatchSnapshot(updatedAt: loadedUserData.updatedAt, now: Date())
     }
 
     static func live() -> BaAppModel {

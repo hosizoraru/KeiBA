@@ -75,7 +75,9 @@ jobs:
             ${{ runner.os }}-xcode-26.4.1-spm-
 
       - name: Validate localized strings
-        run: jq empty KeiBAOS/Localizable.xcstrings
+        run: |
+          jq empty KeiBAOS/Localizable.xcstrings
+          jq empty KeiBAOSWatch/Localizable.xcstrings
 
       - name: Resolve Swift packages
         run: |
@@ -91,6 +93,18 @@ jobs:
             -scheme KeiBAOS \
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath "$RUNNER_TEMP/KeiBAOS-iOS" \
+            -clonedSourcePackagesDirPath "$SWIFTPM_CACHE_PATH" \
+            MARKETING_VERSION="$APP_MARKETING_VERSION" \
+            CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Build watchOS simulator
+        run: |
+          xcodebuild build \
+            -project KeiBAOS.xcodeproj \
+            -scheme KeiBAOSWatch \
+            -destination 'generic/platform=watchOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/KeiBAOS-watchOS" \
             -clonedSourcePackagesDirPath "$SWIFTPM_CACHE_PATH" \
             MARKETING_VERSION="$APP_MARKETING_VERSION" \
             CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \

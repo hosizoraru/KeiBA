@@ -8,7 +8,7 @@
 import Foundation
 
 nonisolated struct BaWatchDashboardSnapshot: Codable, Equatable, Sendable {
-    static let currentSchemaVersion = 1
+    static let currentSchemaVersion = 2
     static let applicationContextKey = "ba.watch.dashboardSnapshot.v1"
 
     var schemaVersion: Int
@@ -19,6 +19,7 @@ nonisolated struct BaWatchDashboardSnapshot: Codable, Equatable, Sendable {
     var friendCode: String
     var dutyStudentName: String?
     var dutyStudentAvatarURLString: String?
+    var dutyStudentAvatarImageData: Data?
     var apBaseValue: Double
     var apLimit: Int
     var apRegenBaseAt: Date
@@ -46,6 +47,7 @@ nonisolated struct BaWatchDashboardSnapshot: Codable, Equatable, Sendable {
         case friendCode
         case dutyStudentName
         case dutyStudentAvatarURLString
+        case dutyStudentAvatarImageData
         case apBaseValue
         case apLimit
         case apRegenBaseAt
@@ -74,6 +76,7 @@ nonisolated struct BaWatchDashboardSnapshot: Codable, Equatable, Sendable {
         friendCode: String,
         dutyStudentName: String? = nil,
         dutyStudentAvatarURLString: String? = nil,
+        dutyStudentAvatarImageData: Data? = nil,
         apBaseValue: Double,
         apLimit: Int,
         apRegenBaseAt: Date,
@@ -100,6 +103,7 @@ nonisolated struct BaWatchDashboardSnapshot: Codable, Equatable, Sendable {
         self.friendCode = friendCode
         self.dutyStudentName = dutyStudentName
         self.dutyStudentAvatarURLString = dutyStudentAvatarURLString
+        self.dutyStudentAvatarImageData = dutyStudentAvatarImageData
         self.apBaseValue = BaWatchTimeMath.normalizedAP(apBaseValue)
         self.apLimit = min(max(apLimit, 0), BaWatchTimeMath.apLimitMax)
         self.apRegenBaseAt = apRegenBaseAt
@@ -129,6 +133,7 @@ nonisolated struct BaWatchDashboardSnapshot: Codable, Equatable, Sendable {
         friendCode = try container.decode(String.self, forKey: .friendCode)
         dutyStudentName = try container.decodeIfPresent(String.self, forKey: .dutyStudentName)
         dutyStudentAvatarURLString = try container.decodeIfPresent(String.self, forKey: .dutyStudentAvatarURLString)
+        dutyStudentAvatarImageData = try container.decodeIfPresent(Data.self, forKey: .dutyStudentAvatarImageData)
         apBaseValue = BaWatchTimeMath.normalizedAP(try container.decode(Double.self, forKey: .apBaseValue))
         apLimit = min(max(try container.decode(Int.self, forKey: .apLimit), 0), BaWatchTimeMath.apLimitMax)
         apRegenBaseAt = try container.decode(Date.self, forKey: .apRegenBaseAt)
@@ -159,6 +164,7 @@ nonisolated struct BaWatchDashboardSnapshot: Codable, Equatable, Sendable {
         try container.encode(friendCode, forKey: .friendCode)
         try container.encodeIfPresent(dutyStudentName, forKey: .dutyStudentName)
         try container.encodeIfPresent(dutyStudentAvatarURLString, forKey: .dutyStudentAvatarURLString)
+        try container.encodeIfPresent(dutyStudentAvatarImageData, forKey: .dutyStudentAvatarImageData)
         try container.encode(apBaseValue, forKey: .apBaseValue)
         try container.encode(apLimit, forKey: .apLimit)
         try container.encode(apRegenBaseAt, forKey: .apRegenBaseAt)

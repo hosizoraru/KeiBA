@@ -44,11 +44,47 @@ final class BaWatchDashboardSnapshotTests: XCTestCase {
         XCTAssertEqual(decoded.friendCode, "BA26TEST")
         XCTAssertEqual(decoded.dutyStudentName, "爱丽丝")
         XCTAssertEqual(decoded.dutyStudentAvatarURLString, "https://cdnimg.gamekee.com/student/alice.png")
+        XCTAssertNil(decoded.dutyStudentAvatarImageData)
         XCTAssertEqual(decoded.favoriteStudentCount, 3)
         XCTAssertEqual(decoded.currentAP(at: later), 13)
         XCTAssertEqual(decoded.currentCafeAP(at: base.addingTimeInterval(2 * 60 * 60)), 161)
         XCTAssertFalse(json.contains("favoriteCatalogEntries"))
         XCTAssertFalse(json.contains("serverProfiles"))
+    }
+
+    func testDashboardSnapshotCanCarrySmallDutyAvatarThumbnail() async throws {
+        let sourcePNG = try XCTUnwrap(Data(base64Encoded: Self.onePixelPNGBase64))
+        let encodedAvatarData = await BaWatchAvatarThumbnailEncoder.encodedThumbnailData(from: sourcePNG)
+        let avatarData = try XCTUnwrap(encodedAvatarData)
+
+        let snapshot = BaWatchDashboardSnapshot(
+            sourceUpdatedAt: Date(timeIntervalSince1970: 1_800_000_000),
+            serverName: "日服",
+            teacherName: "Kei",
+            friendCode: "ARISUKEI",
+            dutyStudentName: "夏莱",
+            dutyStudentAvatarURLString: "https://cdnimg.gamekee.com/student/schale.png",
+            dutyStudentAvatarImageData: avatarData,
+            apBaseValue: 67,
+            apLimit: 240,
+            apRegenBaseAt: Date(timeIntervalSince1970: 1_800_000_000),
+            apNotificationsEnabled: true,
+            apNotifyThreshold: 120,
+            cafeLevel: 10,
+            cafeAPBaseValue: 120,
+            cafeStorageBaseAt: Date(timeIntervalSince1970: 1_800_000_000),
+            cafeAPNotificationsEnabled: true,
+            cafeAPNotifyThreshold: 120,
+            activityNotificationsEnabled: true,
+            poolNotificationsEnabled: true,
+            favoriteStudentCount: 4
+        )
+
+        let encoded = try BaWatchDashboardSnapshotCoding.encode(snapshot)
+        let decoded = try BaWatchDashboardSnapshotCoding.decode(encoded)
+
+        XCTAssertLessThanOrEqual(avatarData.count, BaWatchAvatarThumbnailEncoder.maxPayloadBytes)
+        XCTAssertEqual(decoded.dutyStudentAvatarImageData, avatarData)
     }
 
     func testTimelineGlanceSnapshotKeepsActivityAndPoolHighlightsSmall() {
@@ -153,6 +189,9 @@ final class BaWatchDashboardSnapshotTests: XCTestCase {
         defaults.removePersistentDomain(forName: suiteName)
         return defaults
     }
+
+    private static let onePixelPNGBase64 =
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII="
 }
 
 @MainActor

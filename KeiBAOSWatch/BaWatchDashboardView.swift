@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct BaWatchDashboardView: View {
     let store: BaWatchSnapshotStore
@@ -179,7 +182,11 @@ private struct BaWatchDutyAvatar: View {
             Circle()
                 .fill(.tint.opacity(0.22))
 
-            if let urlString = snapshot.dutyStudentAvatarURLString,
+            if let image = syncedAvatarImage {
+                image
+                    .resizable()
+                    .scaledToFill()
+            } else if let urlString = snapshot.dutyStudentAvatarURLString,
                let url = URL(string: urlString)
             {
                 AsyncImage(url: url) { phase in
@@ -199,6 +206,16 @@ private struct BaWatchDutyAvatar: View {
         .frame(width: 38, height: 38)
         .clipShape(Circle())
         .accessibilityHidden(true)
+    }
+
+    private var syncedAvatarImage: Image? {
+        guard let data = snapshot.dutyStudentAvatarImageData else { return nil }
+        #if canImport(UIKit)
+            guard let uiImage = UIImage(data: data) else { return nil }
+            return Image(uiImage: uiImage)
+        #else
+            return nil
+        #endif
     }
 
     private var fallback: some View {
