@@ -14,7 +14,6 @@ struct BaCatalogView: View {
     @State private var sortMode: BaCatalogSortMode = .defaultOrder
     @State private var filterSelection = BaCatalogFilterSelection()
     @State private var searchText = ""
-    @State private var isOptionsPanelPresented = false
     @State private var selectedDetailEntry: BaGuideCatalogEntry?
 
     private func snapshot(filterGroups: [BaCatalogFilterGroup]) -> BaCatalogViewSnapshot {
@@ -48,7 +47,6 @@ struct BaCatalogView: View {
                             selectedCategory: $selectedCategory,
                             sortMode: $sortMode,
                             filterSelection: $filterSelection,
-                            isPanelPresented: $isOptionsPanelPresented,
                             filterGroups: filterGroups,
                             usesSheetPresentation: usesOptionsSheet(for: metrics)
                         )
@@ -237,7 +235,7 @@ private struct BaCatalogViewOptionsControl: View {
     @Binding var selectedCategory: BaCatalogCategory
     @Binding var sortMode: BaCatalogSortMode
     @Binding var filterSelection: BaCatalogFilterSelection
-    @Binding var isPanelPresented: Bool
+    @State private var isPanelPresented = false
 
     let filterGroups: [BaCatalogFilterGroup]
     let usesSheetPresentation: Bool

@@ -43,9 +43,6 @@ final class BaWatchConnectivityController: NSObject, WCSessionDelegate {
         }
         Task { @MainActor in
             self.didRequestActivation = false
-            let applicationContext = session.receivedApplicationContext
-            guard applicationContext.isEmpty == false else { return }
-            BaWatchSnapshotStore.shared.applyApplicationContext(applicationContext)
         }
     }
 

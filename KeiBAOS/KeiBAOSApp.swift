@@ -6,10 +6,16 @@
 //
 
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 @main
 struct KeiBAOSApp: App {
     @State private var baModel: BaAppModel
+    #if os(iOS)
+    @UIApplicationDelegateAdaptor(BaIOSAppDelegate.self) private var appDelegate
+    #endif
 
     init() {
         _baModel = State(initialValue: BaAppModel.live())
@@ -41,3 +47,18 @@ struct KeiBAOSApp: App {
         #endif
     }
 }
+
+#if os(iOS)
+final class BaIOSAppDelegate: NSObject, UIApplicationDelegate {
+    func application(
+        _ application: UIApplication,
+        configurationForConnecting connectingSceneSession: UISceneSession,
+        options: UIScene.ConnectionOptions
+    ) -> UISceneConfiguration {
+        UISceneConfiguration(
+            name: "Default Configuration",
+            sessionRole: connectingSceneSession.role
+        )
+    }
+}
+#endif
