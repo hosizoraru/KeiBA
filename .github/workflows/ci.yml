@@ -24,9 +24,20 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
+      - name: Select Xcode 26.5
+        run: |
+          xcode_path="/Applications/Xcode_26.5.app/Contents/Developer"
+          if [ ! -d "$xcode_path" ]; then
+            echo "::error::Xcode 26.5 is required for project file format 100."
+            find /Applications -maxdepth 1 -name 'Xcode*.app' -print || true
+            exit 1
+          fi
+          echo "DEVELOPER_DIR=$xcode_path" >> "$GITHUB_ENV"
+
       - name: Show toolchain
         run: |
           sw_vers
+          echo "DEVELOPER_DIR=$DEVELOPER_DIR"
           xcodebuild -version
           xcode-select -p
 
