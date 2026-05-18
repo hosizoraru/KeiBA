@@ -36,6 +36,41 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "咖啡厅 AP" } }
       }
     },
+    "ba.watch.connection.background" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Background" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "バックグラウンド" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "后台同步" } }
+      }
+    },
+    "ba.watch.connection.connected" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Connected" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "接続済み" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已连接" } }
+      }
+    },
+    "ba.watch.connection.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "iPhone" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "iPhone" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "iPhone" } }
+      }
+    },
+    "ba.watch.connection.unavailable" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unavailable" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "利用不可" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "不可用" } }
+      }
+    },
+    "ba.watch.connection.waiting" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Waiting" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "待機中" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "等待连接" } }
+      }
+    },
     "ba.watch.empty.message" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Open KeiBAOS on iPhone once to sync your Schale office snapshot." } },
@@ -118,6 +153,13 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Summary" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "概要" } },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "摘要" } }
+      }
+    },
+    "ba.watch.section.sync" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sync" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "同期" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "同步" } }
       }
     },
     "ba.watch.status.full" : {

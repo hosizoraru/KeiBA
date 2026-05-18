@@ -43,6 +43,7 @@ final class BaWatchDashboardSnapshotTests: XCTestCase {
         XCTAssertEqual(decoded.teacherName, "Voyager")
         XCTAssertEqual(decoded.friendCode, "BA26TEST")
         XCTAssertEqual(decoded.dutyStudentName, "爱丽丝")
+        XCTAssertEqual(decoded.dutyStudentAvatarURLString, "https://cdnimg.gamekee.com/student/alice.png")
         XCTAssertEqual(decoded.favoriteStudentCount, 3)
         XCTAssertEqual(decoded.currentAP(at: later), 13)
         XCTAssertEqual(decoded.currentCafeAP(at: base.addingTimeInterval(2 * 60 * 60)), 161)

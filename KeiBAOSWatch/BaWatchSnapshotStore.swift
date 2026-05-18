@@ -8,6 +8,39 @@
 import Foundation
 import Observation
 
+enum BaWatchPhoneConnectionStatus: Equatable, Sendable {
+    case waiting
+    case connected
+    case background
+    case unavailable
+
+    var localizedValue: String {
+        switch self {
+        case .waiting:
+            String(localized: "ba.watch.connection.waiting")
+        case .connected:
+            String(localized: "ba.watch.connection.connected")
+        case .background:
+            String(localized: "ba.watch.connection.background")
+        case .unavailable:
+            String(localized: "ba.watch.connection.unavailable")
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .waiting:
+            "iphone.gen3.slash"
+        case .connected:
+            "iphone.gen3.radiowaves.left.and.right"
+        case .background:
+            "arrow.triangle.2.circlepath"
+        case .unavailable:
+            "exclamationmark.triangle.fill"
+        }
+    }
+}
+
 @Observable
 @MainActor
 final class BaWatchSnapshotStore {
@@ -19,6 +52,7 @@ final class BaWatchSnapshotStore {
 
     var snapshot: BaWatchDashboardSnapshot?
     var lastSyncError: String?
+    var phoneConnectionStatus: BaWatchPhoneConnectionStatus = .waiting
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -64,5 +98,10 @@ final class BaWatchSnapshotStore {
 
     private func recordSyncError(_ error: Error) {
         lastSyncError = error.localizedDescription
+    }
+
+    func updatePhoneConnectionStatus(_ status: BaWatchPhoneConnectionStatus) {
+        guard phoneConnectionStatus != status else { return }
+        phoneConnectionStatus = status
     }
 }

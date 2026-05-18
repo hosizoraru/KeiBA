@@ -14,7 +14,10 @@ struct BaWatchDashboardView: View {
         NavigationStack {
             Group {
                 if let snapshot = store.snapshot {
-                    BaWatchDashboardContent(snapshot: snapshot)
+                    BaWatchDashboardContent(
+                        snapshot: snapshot,
+                        phoneConnectionStatus: store.phoneConnectionStatus
+                    )
                 } else {
                     BaWatchEmptyState(error: store.lastSyncError)
                 }
@@ -26,6 +29,7 @@ struct BaWatchDashboardView: View {
 
 private struct BaWatchDashboardContent: View {
     let snapshot: BaWatchDashboardSnapshot
+    let phoneConnectionStatus: BaWatchPhoneConnectionStatus
 
     var body: some View {
         List {
@@ -86,6 +90,12 @@ private struct BaWatchDashboardContent: View {
             }
 
             Section {
+                BaWatchStatusRow(
+                    title: Text("ba.watch.connection.title"),
+                    value: phoneConnectionStatus.localizedValue,
+                    systemImage: phoneConnectionStatus.systemImage
+                )
+
                 VStack(alignment: .leading, spacing: 4) {
                     Text("ba.watch.sync.updatedAt")
                         .font(.caption2)
@@ -94,6 +104,8 @@ private struct BaWatchDashboardContent: View {
                         .font(.caption)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+            } header: {
+                Text("ba.watch.section.sync")
             }
         }
     }
@@ -358,6 +370,7 @@ private extension BaWatchSnapshotStore {
             poolNotificationsEnabled: false,
             favoriteStudentCount: 12
         )
+        store.phoneConnectionStatus = .connected
         return store
     }
 }

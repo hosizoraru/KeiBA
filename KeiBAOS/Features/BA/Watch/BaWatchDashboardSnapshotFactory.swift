@@ -51,8 +51,24 @@ extension BaWatchDashboardSnapshot {
 }
 
 extension BaAppModel {
+    var watchSyncState: BaWatchSyncState {
+        watchSnapshotSyncer.state
+    }
+
+    var currentWatchDashboardSnapshot: BaWatchDashboardSnapshot {
+        BaWatchDashboardSnapshot(
+            userData: envelope.userData(updatedAt: settingsStore.userDataUpdatedAt(fallback: Date())),
+            now: Date()
+        )
+    }
+
     func syncWatchSnapshot(updatedAt: Date = Date(), now: Date = Date()) {
         let userData = envelope.userData(updatedAt: updatedAt)
         watchSnapshotSyncer.sync(BaWatchDashboardSnapshot(userData: userData, now: now))
+    }
+
+    func requestWatchSnapshotSync() {
+        watchSnapshotSyncer.activate()
+        syncWatchSnapshot(updatedAt: Date(), now: Date())
     }
 }

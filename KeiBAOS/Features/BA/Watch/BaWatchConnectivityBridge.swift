@@ -13,12 +13,36 @@ import WatchConnectivity
 
 @MainActor
 protocol BaWatchSnapshotSyncing: AnyObject {
+    var state: BaWatchSyncState { get }
+
     func activate()
     func sync(_ snapshot: BaWatchDashboardSnapshot)
 }
 
+nonisolated enum BaWatchSyncAvailability: String, Equatable, Sendable {
+    case unavailable
+    case activating
+    case notPaired
+    case appNotInstalled
+    case reachable
+    case background
+    case error
+}
+
+nonisolated struct BaWatchSyncState: Equatable, Sendable {
+    var availability: BaWatchSyncAvailability
+    var lastApplicationContextSentAt: Date?
+    var lastGuaranteedTransferQueuedAt: Date?
+    var lastSnapshotSourceUpdatedAt: Date?
+    var lastErrorDescription: String?
+
+    static let unavailable = BaWatchSyncState(availability: .unavailable)
+}
+
 @MainActor
 final class BaNoopWatchSnapshotSyncer: BaWatchSnapshotSyncing {
+    let state = BaWatchSyncState.unavailable
+
     func activate() {}
     func sync(_ snapshot: BaWatchDashboardSnapshot) {}
 }
@@ -26,6 +50,7 @@ final class BaNoopWatchSnapshotSyncer: BaWatchSnapshotSyncing {
 #if os(iOS) && canImport(WatchConnectivity)
 @MainActor
 final class BaWatchConnectivityBridge: NSObject, BaWatchSnapshotSyncing {
+    private(set) var state = BaWatchSyncState.unavailable
     private var pendingSnapshot: BaWatchDashboardSnapshot?
     private var pendingRequiresGuaranteedDelivery = false
     private var didAssignDelegate = false
@@ -33,13 +58,18 @@ final class BaWatchConnectivityBridge: NSObject, BaWatchSnapshotSyncing {
     private var lastQueuedGuaranteedSourceUpdatedAt: Date?
 
     func activate() {
-        guard WCSession.isSupported() else { return }
+        guard WCSession.isSupported() else {
+            state.availability = .unavailable
+            return
+        }
         let session = WCSession.default
         if didAssignDelegate == false {
             session.delegate = self
             didAssignDelegate = true
         }
+        updateState(from: session)
         guard session.activationState == .notActivated else { return }
+        state.availability = .activating
         session.activate()
     }
 
@@ -50,16 +80,29 @@ final class BaWatchConnectivityBridge: NSObject, BaWatchSnapshotSyncing {
     }
 
     private func flushPendingSnapshot() {
-        guard WCSession.isSupported() else { return }
+        guard WCSession.isSupported() else {
+            state.availability = .unavailable
+            return
+        }
         activate()
 
         let session = WCSession.default
+        updateState(from: session)
+
         guard session.activationState == .activated,
               session.isPaired,
               session.isWatchAppInstalled,
-              let snapshot = pendingSnapshot,
-              let data = try? BaWatchDashboardSnapshotCoding.encode(snapshot)
+              let snapshot = pendingSnapshot
         else {
+            return
+        }
+
+        let data: Data
+        do {
+            data = try BaWatchDashboardSnapshotCoding.encode(snapshot)
+        } catch {
+            state.availability = .error
+            state.lastErrorDescription = error.localizedDescription
             return
         }
 
@@ -68,13 +111,35 @@ final class BaWatchConnectivityBridge: NSObject, BaWatchSnapshotSyncing {
             if data != lastApplicationContextData {
                 try session.updateApplicationContext(payload)
                 lastApplicationContextData = data
+                state.lastApplicationContextSentAt = Date()
             }
             queueGuaranteedTransferIfNeeded(payload: payload, snapshot: snapshot, session: session)
+            state.lastSnapshotSourceUpdatedAt = snapshot.sourceUpdatedAt
+            state.lastErrorDescription = nil
+            updateState(from: session)
             pendingSnapshot = nil
             pendingRequiresGuaranteedDelivery = false
         } catch {
+            state.availability = .error
+            state.lastErrorDescription = error.localizedDescription
             queueGuaranteedTransfer(payload: payload, snapshot: snapshot, session: session)
         }
+    }
+
+    private func updateState(from session: WCSession) {
+        guard session.activationState == .activated else {
+            state.availability = .activating
+            return
+        }
+        guard session.isPaired else {
+            state.availability = .notPaired
+            return
+        }
+        guard session.isWatchAppInstalled else {
+            state.availability = .appNotInstalled
+            return
+        }
+        state.availability = session.isReachable ? .reachable : .background
     }
 
     private func payload(for snapshot: BaWatchDashboardSnapshot, data: Data) -> [String: Any] {
@@ -106,6 +171,7 @@ final class BaWatchConnectivityBridge: NSObject, BaWatchSnapshotSyncing {
         guard lastQueuedGuaranteedSourceUpdatedAt != snapshot.sourceUpdatedAt else { return }
         session.transferUserInfo(payload)
         lastQueuedGuaranteedSourceUpdatedAt = snapshot.sourceUpdatedAt
+        state.lastGuaranteedTransferQueuedAt = Date()
         #endif
     }
 }
@@ -116,8 +182,13 @@ extension BaWatchConnectivityBridge: WCSessionDelegate {
         activationDidCompleteWith activationState: WCSessionActivationState,
         error: Error?
     ) {
-        guard activationState == .activated else { return }
         Task { @MainActor [weak self] in
+            self?.updateState(from: session)
+            if let error {
+                self?.state.availability = .error
+                self?.state.lastErrorDescription = error.localizedDescription
+            }
+            guard activationState == .activated else { return }
             self?.flushPendingSnapshot()
         }
     }
@@ -130,6 +201,14 @@ extension BaWatchConnectivityBridge: WCSessionDelegate {
 
     nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
         Task { @MainActor [weak self] in
+            self?.updateState(from: session)
+            self?.flushPendingSnapshot()
+        }
+    }
+
+    nonisolated func sessionWatchStateDidChange(_ session: WCSession) {
+        Task { @MainActor [weak self] in
+            self?.updateState(from: session)
             self?.flushPendingSnapshot()
         }
     }
