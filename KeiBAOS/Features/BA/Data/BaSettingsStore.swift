@@ -51,6 +51,10 @@ struct BaSettingsStore {
         loadEnvelope().userData(updatedAt: userDataUpdatedAt(fallback: fallbackUpdatedAt))
     }
 
+    func userDataUpdatedAt(fallback: Date = .distantPast) -> Date {
+        defaults.object(forKey: userDataUpdatedAtKey) as? Date ?? fallback
+    }
+
     func saveUserData(_ userData: BaUserDataEnvelope) {
         let normalized = userData.normalized()
         saveEnvelope(normalized.settingsEnvelope(), updatedAt: normalized.updatedAt)
@@ -67,7 +71,4 @@ struct BaSettingsStore {
         return userData
     }
 
-    private func userDataUpdatedAt(fallback: Date) -> Date {
-        defaults.object(forKey: userDataUpdatedAtKey) as? Date ?? fallback
-    }
 }

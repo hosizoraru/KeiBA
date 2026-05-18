@@ -205,6 +205,7 @@ extension BaAppModel {
             poolState = BaLoadableState()
         }
         refreshOfficeSnapshot()
+        syncWatchSnapshot(updatedAt: updatedAt)
         guard refreshNotifications, outcome.shouldRefreshNotifications else { return }
         scheduleNotificationRefresh(requestAuthorizationIfNeeded: outcome.shouldRequestNotificationAuthorization)
     }

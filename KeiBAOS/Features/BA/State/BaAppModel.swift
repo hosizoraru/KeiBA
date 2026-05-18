@@ -28,6 +28,7 @@ final class BaAppModel {
     let studentRepository: BaStudentGuideRepository
     let officeRepository: BaOfficeRepository
     let notificationCoordinator: any BaNotificationCoordinating
+    @ObservationIgnored let watchSnapshotSyncer: any BaWatchSnapshotSyncing
     @ObservationIgnored var notificationSyncTask: Task<Void, Never>?
     @ObservationIgnored var studentDetailRequests: [Int64: StudentDetailRequest] = [:]
 
@@ -40,7 +41,8 @@ final class BaAppModel {
         catalogReleaseDateHydrator: BaCatalogReleaseDateHydrator,
         studentRepository: BaStudentGuideRepository,
         officeRepository: BaOfficeRepository,
-        notificationCoordinator: (any BaNotificationCoordinating)? = nil
+        notificationCoordinator: (any BaNotificationCoordinating)? = nil,
+        watchSnapshotSyncer: (any BaWatchSnapshotSyncing)? = nil
     ) {
         self.settingsStore = settingsStore
         self.cacheStore = cacheStore
@@ -51,18 +53,32 @@ final class BaAppModel {
         self.studentRepository = studentRepository
         self.officeRepository = officeRepository
         self.notificationCoordinator = notificationCoordinator ?? BaNoopNotificationCoordinator()
+        self.watchSnapshotSyncer = watchSnapshotSyncer ?? BaNoopWatchSnapshotSyncer()
         let loadedEnvelope = settingsStore.loadEnvelope()
         let loadedSettings = loadedEnvelope.flattenedSettings()
         envelope = loadedEnvelope
         settings = loadedSettings
         officeSnapshot = officeRepository.snapshot(settings: loadedSettings)
         BaL10n.configure(appLanguage: loadedEnvelope.globalSettings.appLanguage)
+        self.watchSnapshotSyncer.activate()
+        let loadedUserData = loadedEnvelope.userData(
+            updatedAt: settingsStore.userDataUpdatedAt(fallback: Date())
+        )
+        self.watchSnapshotSyncer.sync(
+            BaWatchDashboardSnapshot(userData: loadedUserData, now: Date())
+        )
     }
 
     static func live() -> BaAppModel {
         let client = GameKeeClient()
         let cacheStore = BaCacheStore()
         let imageCache = BaImageCache(client: client)
+        let watchSnapshotSyncer: any BaWatchSnapshotSyncing
+        #if os(iOS) && canImport(WatchConnectivity)
+        watchSnapshotSyncer = BaWatchConnectivityBridge()
+        #else
+        watchSnapshotSyncer = BaNoopWatchSnapshotSyncer()
+        #endif
         return BaAppModel(
             settingsStore: BaSettingsStore(),
             cacheStore: cacheStore,
@@ -75,7 +91,8 @@ final class BaAppModel {
             ),
             studentRepository: BaStudentGuideRepository(client: client),
             officeRepository: BaOfficeRepository(),
-            notificationCoordinator: BaNotificationCoordinator()
+            notificationCoordinator: BaNotificationCoordinator(),
+            watchSnapshotSyncer: watchSnapshotSyncer
         )
     }
 
