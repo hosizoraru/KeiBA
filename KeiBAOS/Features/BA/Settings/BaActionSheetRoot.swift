@@ -25,12 +25,32 @@ struct BaActionSheetRoot: View {
             BaNotificationSettingsSheet()
         case .settings:
             BaSettingsSheet()
+        case .watch:
+            BaWatchSettingsSheet()
         case .about:
             BaAboutSheet()
         case .editOffice:
             BaEditOfficeSheet()
         case .debugTools:
             BaDebugToolsSheet()
+        }
+    }
+}
+
+private struct BaWatchSettingsSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            BaWatchSettingsView()
+                .navigationTitle(BaPresentedSheet.watch.title)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(BaL10n.string("ba.common.done")) {
+                            dismiss()
+                        }
+                    }
+                }
         }
     }
 }
@@ -917,7 +937,7 @@ private extension BaPresentedSheet {
         switch self {
         case .settings, .about:
             [.large]
-        case .notifications, .editOffice, .debugTools:
+        case .notifications, .watch, .editOffice, .debugTools:
             [.medium, .large]
         }
     }
@@ -932,6 +952,8 @@ private extension BaPresentedSheet {
             680
         case .settings:
             760
+        case .watch:
+            620
         case .about:
             680
         case .editOffice:
@@ -947,6 +969,8 @@ private extension BaPresentedSheet {
             660
         case .settings:
             720
+        case .watch:
+            560
         case .about:
             680
         case .editOffice:

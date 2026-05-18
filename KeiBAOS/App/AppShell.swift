@@ -163,7 +163,10 @@ private struct BaNavigationRoot: View {
     private var rootContent: some View {
         switch tab {
         case .overview:
-            BaOverviewView(onOpenTab: onSelectTab)
+            BaOverviewView(
+                onOpenTab: onSelectTab,
+                onOpenSheet: { presentedSheet = $0 }
+            )
         case .activity:
             BaActivityView(statusFilter: $activityFilter)
         case .pool:
@@ -266,6 +269,15 @@ private struct BaNavigationRoot: View {
             ) {
                 presentedSheet = .settings
             }
+
+            #if os(iOS)
+            BaMenuActionButton(
+                title: BaPresentedSheet.watch.title,
+                systemImage: BaPresentedSheet.watch.systemImage
+            ) {
+                presentedSheet = .watch
+            }
+            #endif
 
             BaMenuActionButton(
                 title: BaPresentedSheet.about.title,
