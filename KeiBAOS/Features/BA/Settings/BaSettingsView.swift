@@ -91,21 +91,28 @@ struct BaSettingsView: View {
                     }
 
                     macSettingsRow(BaL10n.string("ba.office.nickname.label")) {
-                        TextField(
-                            BaL10n.string("ba.office.nickname.label"),
-                            text: profileStringBinding(\.nickname),
-                            prompt: Text(BaL10n.string("ba.office.nickname.prompt"))
-                        )
+                        BaDeferredTextField(
+                            title: BaL10n.string("ba.office.nickname.label"),
+                            value: model.currentProfile.nickname,
+                            prompt: BaL10n.string("ba.office.nickname.prompt")
+                        ) { value in
+                            model.updateCurrentProfile { $0.nickname = value }
+                        }
+                        .baNicknameTextInput()
                         .textFieldStyle(.roundedBorder)
                         .frame(width: 300)
                     }
 
                     macSettingsRow(BaL10n.string("ba.office.friendCode.label")) {
-                        TextField(
-                            BaL10n.string("ba.office.friendCode.label"),
-                            text: friendCodeBinding,
-                            prompt: Text(BaL10n.string("ba.office.friendCode.prompt"))
-                        )
+                        BaDeferredTextField(
+                            title: BaL10n.string("ba.office.friendCode.label"),
+                            value: model.currentProfile.friendCode,
+                            prompt: BaL10n.string("ba.office.friendCode.prompt"),
+                            sanitizeDraft: BaFriendCodeFormat.sanitizedDraft,
+                            normalizeCommit: BaFriendCodeFormat.normalized
+                        ) { value in
+                            model.updateCurrentProfile { $0.friendCode = value }
+                        }
                         .textFieldStyle(.roundedBorder)
                         .baFriendCodeTextInput()
                         .frame(width: 180)
@@ -330,16 +337,24 @@ struct BaSettingsView: View {
                 isOn: globalBoolBinding(\.identityIndependentByServer)
             )
 
-            TextField(
-                BaL10n.string("ba.office.nickname.label"),
-                text: profileStringBinding(\.nickname),
-                prompt: Text(BaL10n.string("ba.office.nickname.prompt"))
-            )
-            TextField(
-                BaL10n.string("ba.office.friendCode.label"),
-                text: friendCodeBinding,
-                prompt: Text(BaL10n.string("ba.office.friendCode.prompt"))
-            )
+            BaDeferredTextField(
+                title: BaL10n.string("ba.office.nickname.label"),
+                value: model.currentProfile.nickname,
+                prompt: BaL10n.string("ba.office.nickname.prompt")
+            ) { value in
+                model.updateCurrentProfile { $0.nickname = value }
+            }
+            .baNicknameTextInput()
+
+            BaDeferredTextField(
+                title: BaL10n.string("ba.office.friendCode.label"),
+                value: model.currentProfile.friendCode,
+                prompt: BaL10n.string("ba.office.friendCode.prompt"),
+                sanitizeDraft: BaFriendCodeFormat.sanitizedDraft,
+                normalizeCommit: BaFriendCodeFormat.normalized
+            ) { value in
+                model.updateCurrentProfile { $0.friendCode = value }
+            }
             .baFriendCodeTextInput()
         } header: {
             Text(BaL10n.string("ba.settings.identity.section"))
@@ -597,24 +612,6 @@ struct BaSettingsView: View {
             get: { model.currentProfile[keyPath: keyPath] },
             set: { value in
                 model.updateCurrentProfile { $0[keyPath: keyPath] = value }
-            }
-        )
-    }
-
-    private func profileStringBinding(_ keyPath: WritableKeyPath<BaServerProfile, String>) -> Binding<String> {
-        Binding(
-            get: { model.currentProfile[keyPath: keyPath] },
-            set: { value in
-                model.updateCurrentProfile { $0[keyPath: keyPath] = value }
-            }
-        )
-    }
-
-    private var friendCodeBinding: Binding<String> {
-        Binding(
-            get: { model.currentProfile.friendCode },
-            set: { value in
-                model.updateCurrentProfile { $0.friendCode = BaFriendCodeFormat.sanitizedDraft(value) }
             }
         )
     }

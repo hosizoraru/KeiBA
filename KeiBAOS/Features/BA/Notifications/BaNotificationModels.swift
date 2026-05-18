@@ -90,6 +90,44 @@ nonisolated struct BaNotificationPreferenceSnapshot: Equatable, Sendable {
     }
 }
 
+nonisolated struct BaNotificationScheduleSnapshot: Equatable, Sendable {
+    var selectedServer: BaServer
+    var preferences: BaNotificationPreferenceSnapshot
+    var appLanguage: BaAppLanguage
+    var calendarPoolNotifyLead: BaCalendarPoolNotifyLead
+    var apCurrent: Double
+    var apLimit: Int
+    var apRegenBaseAt: Date
+    var apNotifyThreshold: Int
+    var cafeLevel: Int
+    var cafeApCurrent: Double
+    var cafeStorageBaseAt: Date
+    var cafeApNotifyThreshold: Int
+    var lastHeadpatAt: Date?
+    var lastInviteTicket1At: Date?
+    var lastInviteTicket2At: Date?
+
+    init(envelope: BaSettingsEnvelope) {
+        let normalized = envelope.normalized()
+        let settings = normalized.flattenedSettings()
+        selectedServer = normalized.selectedServer
+        preferences = BaNotificationPreferenceSnapshot(envelope: normalized)
+        appLanguage = normalized.globalSettings.appLanguage
+        calendarPoolNotifyLead = normalized.globalSettings.calendarPoolNotifyLead
+        apCurrent = settings.apCurrent
+        apLimit = settings.apLimit
+        apRegenBaseAt = settings.apRegenBaseAt
+        apNotifyThreshold = settings.apNotifyThreshold
+        cafeLevel = settings.cafeLevel
+        cafeApCurrent = settings.cafeApCurrent
+        cafeStorageBaseAt = settings.cafeStorageBaseAt
+        cafeApNotifyThreshold = settings.cafeApNotifyThreshold
+        lastHeadpatAt = settings.lastHeadpatAt
+        lastInviteTicket1At = settings.lastInviteTicket1At
+        lastInviteTicket2At = settings.lastInviteTicket2At
+    }
+}
+
 nonisolated struct BaLiveActivityCandidate: Equatable, Sendable {
     enum Kind: String, Equatable, Sendable {
         case ap

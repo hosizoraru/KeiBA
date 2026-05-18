@@ -12,6 +12,7 @@ nonisolated struct BaSettingsPersistenceOutcome {
     let settings: BaAppSettings
     let shouldResetServerScopedTimelineState: Bool
     let shouldRequestNotificationAuthorization: Bool
+    let shouldRefreshNotifications: Bool
 }
 
 nonisolated enum BaSettingsPersistenceTransition {
@@ -26,12 +27,17 @@ nonisolated enum BaSettingsPersistenceTransition {
             BaNotificationPreferenceSnapshot(envelope: normalizedEnvelope)
                 .becameEnabled(from: BaNotificationPreferenceSnapshot(envelope: $0))
         } ?? false
+        let shouldRefreshNotifications = previousEnvelope.map {
+            BaNotificationScheduleSnapshot(envelope: normalizedEnvelope) !=
+                BaNotificationScheduleSnapshot(envelope: $0)
+        } ?? true
 
         return BaSettingsPersistenceOutcome(
             envelope: normalizedEnvelope,
             settings: settings,
             shouldResetServerScopedTimelineState: previousServer != settings.server,
-            shouldRequestNotificationAuthorization: shouldRequestAuthorization
+            shouldRequestNotificationAuthorization: shouldRequestAuthorization,
+            shouldRefreshNotifications: shouldRefreshNotifications
         )
     }
 }

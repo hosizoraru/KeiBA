@@ -645,6 +645,7 @@ private struct BaEditOfficeSheet: View {
                                 text: $draft.nickname,
                                 prompt: Text(BaL10n.string("ba.office.nickname.prompt"))
                             )
+                            .baNicknameTextInput()
                             .textFieldStyle(.roundedBorder)
                             .frame(width: 280)
                         }
@@ -778,6 +779,7 @@ private struct BaEditOfficeSheet: View {
                         text: $draft.nickname,
                         prompt: Text(BaL10n.string("ba.office.nickname.prompt"))
                     )
+                    .baNicknameTextInput()
                     TextField(
                         BaL10n.string("ba.office.friendCode.label"),
                         text: $draft.friendCode,
