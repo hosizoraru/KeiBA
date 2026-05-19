@@ -90,6 +90,28 @@
         }
       }
     },
+    "ba.widget.cafeAP.shortTitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cafe"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カフェ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "咖啡厅"
+          }
+        }
+      }
+    },
     "ba.widget.empty.inline" : {
       "localizations" : {
         "en" : {

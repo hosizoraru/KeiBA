@@ -171,25 +171,9 @@ private struct BaResourceMediumWidget: View {
 
     var body: some View {
         if let snapshot = entry.snapshot {
-            HStack(alignment: .top, spacing: 16) {
-                VStack(alignment: .leading, spacing: 12) {
-                    BaWidgetHeader(snapshot: snapshot)
-                    BaResourceValueBlock(
-                        title: Text("ba.widget.ap.title"),
-                        value: "\(snapshot.currentAP(at: entry.date))/\(snapshot.apLimit)",
-                        footnote: BaWidgetFullTimeText(date: snapshot.apFullAt(from: entry.date), now: entry.date),
-                        systemImage: "bolt.fill",
-                        tint: BaWidgetPalette.ap
-                    )
-                    BaResourceValueBlock(
-                        title: Text("ba.widget.cafeAP.title"),
-                        value: "\(snapshot.currentCafeAP(at: entry.date))/\(snapshot.cafeAPCapacity)",
-                        footnote: BaWidgetFullTimeText(date: snapshot.cafeAPFullAt(from: entry.date), now: entry.date),
-                        systemImage: "cup.and.saucer.fill",
-                        tint: BaWidgetPalette.cafeAP
-                    )
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+            HStack(alignment: .top, spacing: 14) {
+                BaResourceMediumColumn(snapshot: snapshot, date: entry.date)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
 
                 VStack(alignment: .leading, spacing: 10) {
                     BaTimelineFeaturedCompactSection(
@@ -212,6 +196,36 @@ private struct BaResourceMediumWidget: View {
             .baWidgetRootFrame()
         } else {
             BaWidgetNoDataView()
+        }
+    }
+}
+
+private struct BaResourceMediumColumn: View {
+    let snapshot: BaWatchDashboardSnapshot
+    let date: Date
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            BaWidgetCompactHeader(snapshot: snapshot)
+
+            BaResourceMediumPrimaryBlock(
+                title: Text("ba.widget.ap.title"),
+                value: "\(snapshot.currentAP(at: date))/\(snapshot.apLimit)",
+                footnote: BaWidgetFullTimeText(date: snapshot.apFullAt(from: date), now: date),
+                systemImage: "bolt.fill",
+                tint: BaWidgetPalette.ap,
+                meterValue: Double(snapshot.currentAP(at: date)),
+                meterLimit: Double(max(snapshot.apLimit, 1))
+            )
+
+            BaResourceMediumSecondaryRow(
+                title: Text("ba.widget.cafeAP.title"),
+                shortTitle: Text("ba.widget.cafeAP.shortTitle"),
+                value: "\(snapshot.currentCafeAP(at: date))/\(snapshot.cafeAPCapacity)",
+                footnote: BaWidgetFullTimeText(date: snapshot.cafeAPFullAt(from: date), now: date),
+                systemImage: "cup.and.saucer.fill",
+                tint: BaWidgetPalette.cafeAP
+            )
         }
     }
 }
@@ -479,6 +493,34 @@ private struct BaWidgetHeader: View {
     }
 }
 
+private struct BaWidgetCompactHeader: View {
+    let snapshot: BaWatchDashboardSnapshot
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "sparkles.rectangle.stack.fill")
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(.tint)
+                .frame(width: 18, height: 18)
+                .background(.tint.opacity(0.14), in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 0) {
+                Text(snapshot.officeShortName)
+                    .font(.caption.weight(.semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                Text(snapshot.teacherName)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.76)
+            }
+
+            Spacer(minLength: 0)
+        }
+    }
+}
+
 private struct BaResourceValueBlock<Footnote: View>: View {
     let title: Text
     let value: String
@@ -528,6 +570,89 @@ private struct BaResourceValueBlock<Footnote: View>: View {
     }
 }
 
+private struct BaResourceMediumPrimaryBlock<Footnote: View>: View {
+    let title: Text
+    let value: String
+    let footnote: Footnote
+    let systemImage: String
+    let tint: Color
+    let meterValue: Double
+    let meterLimit: Double
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(alignment: .firstTextBaseline, spacing: 5) {
+                Image(systemName: systemImage)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(tint)
+                title
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+
+                Spacer(minLength: 4)
+
+                Text(value)
+                    .font(.title3.monospacedDigit().weight(.bold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+                    .contentTransition(.numericText())
+            }
+
+            footnote
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+
+            BaWidgetCompactMeter(value: meterValue, limit: meterLimit, tint: tint)
+                .frame(height: 5)
+        }
+    }
+}
+
+private struct BaResourceMediumSecondaryRow<Footnote: View>: View {
+    let title: Text
+    let shortTitle: Text
+    let value: String
+    let footnote: Footnote
+    let systemImage: String
+    let tint: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(alignment: .firstTextBaseline, spacing: 5) {
+                Image(systemName: systemImage)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(tint)
+
+                ViewThatFits(in: .horizontal) {
+                    title
+                    shortTitle
+                }
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.76)
+
+                Spacer(minLength: 4)
+
+                Text(value)
+                    .font(.callout.monospacedDigit().weight(.bold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+                    .layoutPriority(1)
+            }
+
+            footnote
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+        }
+    }
+}
+
 private struct BaWidgetCafeLine: View {
     let snapshot: BaWatchDashboardSnapshot
     let date: Date
@@ -536,10 +661,13 @@ private struct BaWidgetCafeLine: View {
         HStack(spacing: 6) {
             Image(systemName: "cup.and.saucer.fill")
                 .foregroundStyle(BaWidgetPalette.cafeAP)
-            Text("ba.widget.cafeAP.title")
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.72)
+            ViewThatFits(in: .horizontal) {
+                Text("ba.widget.cafeAP.title")
+                Text("ba.widget.cafeAP.shortTitle")
+            }
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.72)
             Spacer(minLength: 4)
             Text("\(snapshot.currentCafeAP(at: date))/\(snapshot.cafeAPCapacity)")
                 .monospacedDigit()
@@ -721,25 +849,41 @@ private struct BaResourceMiniPill: View {
     let tint: Color
 
     var body: some View {
-        HStack(spacing: 7) {
+        HStack(spacing: 6) {
             Image(systemName: systemImage)
+                .font(.caption.weight(.bold))
                 .foregroundStyle(tint)
-            VStack(alignment: .leading, spacing: 1) {
-                title
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.72)
-                Text(value)
-                    .font(.caption.monospacedDigit().weight(.semibold))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.72)
-                    .layoutPriority(1)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 6) {
+                    title
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.72)
+                    Text(value)
+                        .font(.caption.monospacedDigit().weight(.semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.72)
+                        .layoutPriority(1)
+                }
+
+                VStack(alignment: .leading, spacing: 1) {
+                    title
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.72)
+                    Text(value)
+                        .font(.caption.monospacedDigit().weight(.semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.72)
+                        .layoutPriority(1)
+                }
             }
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 9)
+        .padding(.vertical, 5)
         .background(.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 }
