@@ -705,6 +705,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(BUILD_DIR)/../../SourcePackages/checkouts/AudioStreaming/AudioCodecs/include",
+					"$(PROJECT_DIR)/.build/xcode-sourcepackages/checkouts/AudioStreaming/AudioCodecs/include",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -778,6 +779,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(BUILD_DIR)/../../SourcePackages/checkouts/AudioStreaming/AudioCodecs/include",
+					"$(PROJECT_DIR)/.build/xcode-sourcepackages/checkouts/AudioStreaming/AudioCodecs/include",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
