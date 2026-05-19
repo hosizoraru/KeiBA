@@ -46,11 +46,18 @@ nonisolated enum BaDashboardSnapshotSharing {
         sharedDefaults?.removeObject(forKey: sharedSnapshotKey)
     }
 
-    private static var sharedDefaults: UserDefaults? {
+    private static let sharedDefaults = makeSharedDefaults()
+
+    private static func makeSharedDefaults() -> UserDefaults? {
         #if os(iOS) || os(watchOS)
-        UserDefaults(suiteName: appGroupIdentifier)
+        guard FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: appGroupIdentifier
+        ) != nil else {
+            return nil
+        }
+        return UserDefaults(suiteName: appGroupIdentifier)
         #else
-        nil
+        return nil
         #endif
     }
 

@@ -39,7 +39,6 @@ actor BaImageCache {
         if let data = try? Data(contentsOf: fileURL), data.isEmpty == false {
             if Self.looksLikeImageData(data) {
                 hitCount += 1
-                logger.debug("image cache hit \(url.host ?? "unknown", privacy: .public)")
                 return data
             }
             try? fileManager.removeItem(at: fileURL)

@@ -50,6 +50,7 @@ final class BaWatchConnectivityController: NSObject, WCSessionDelegate {
         _ session: WCSession,
         didReceiveApplicationContext applicationContext: [String: Any]
     ) {
+        guard applicationContext[BaWatchDashboardSnapshot.applicationContextKey] is Data else { return }
         Task { @MainActor in
             BaWatchSnapshotStore.shared.applyApplicationContext(applicationContext)
         }
@@ -57,8 +58,9 @@ final class BaWatchConnectivityController: NSObject, WCSessionDelegate {
 
     nonisolated func session(
         _ session: WCSession,
-        didReceiveUserInfo userInfo: [String: Any] = [:]
+        didReceiveUserInfo userInfo: [String: Any]
     ) {
+        guard userInfo[BaWatchDashboardSnapshot.applicationContextKey] is Data else { return }
         Task { @MainActor in
             BaWatchSnapshotStore.shared.applyApplicationContext(userInfo)
         }

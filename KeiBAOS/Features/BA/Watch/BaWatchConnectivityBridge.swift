@@ -71,7 +71,9 @@ final class BaWatchConnectivityBridge: NSObject, BaWatchSnapshotSyncing {
     private var lastApplicationContextData: Data?
     private var lastQueuedGuaranteedSourceUpdatedAt: Date?
     private var watchAppMissingSince: Date?
+    private var counterpartRetryAfter: Date?
     private let watchAppInstallGraceInterval: TimeInterval = 45
+    private let counterpartInstallRetryInterval: TimeInterval = 30
 
     func activate() {
         guard WCSession.isSupported() else {
@@ -112,6 +114,11 @@ final class BaWatchConnectivityBridge: NSObject, BaWatchSnapshotSyncing {
         let session = WCSession.default
         updateState(from: session)
 
+        if let counterpartRetryAfter, Date() < counterpartRetryAfter {
+            state.availability = .confirmingInstall
+            return
+        }
+
         guard session.activationState == .activated,
               session.isPaired,
               session.isWatchAppInstalled,
@@ -139,6 +146,7 @@ final class BaWatchConnectivityBridge: NSObject, BaWatchSnapshotSyncing {
             queueGuaranteedTransferIfNeeded(payload: payload, snapshot: snapshot, session: session)
             state.lastSnapshotSourceUpdatedAt = snapshot.sourceUpdatedAt
             state.lastErrorDescription = nil
+            counterpartRetryAfter = nil
             updateState(from: session)
             pendingSnapshot = nil
             pendingRequiresGuaranteedDelivery = false
@@ -196,6 +204,7 @@ final class BaWatchConnectivityBridge: NSObject, BaWatchSnapshotSyncing {
         if watchAppMissingSince == nil {
             watchAppMissingSince = now
         }
+        counterpartRetryAfter = now.addingTimeInterval(counterpartInstallRetryInterval)
         state.availability = .confirmingInstall
         state.lastErrorDescription = nil
     }
@@ -219,6 +228,7 @@ final class BaWatchConnectivityBridge: NSObject, BaWatchSnapshotSyncing {
         _ = snapshot
         _ = session
         #else
+        guard session.isPaired, session.isWatchAppInstalled else { return }
         guard lastQueuedGuaranteedSourceUpdatedAt != snapshot.sourceUpdatedAt else { return }
         session.transferUserInfo(payload)
         lastQueuedGuaranteedSourceUpdatedAt = snapshot.sourceUpdatedAt

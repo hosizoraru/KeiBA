@@ -29,7 +29,7 @@ enum BaMenuActionDispatcher {
 
     static func perform(_ action: BaDelayedMenuAction) {
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(80))
+            try? await Task.sleep(for: .milliseconds(160))
             action()
         }
     }
