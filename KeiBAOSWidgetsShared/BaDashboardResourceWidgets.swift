@@ -36,10 +36,10 @@ private struct BaResourceSmallWidget: View {
 
     var body: some View {
         if let snapshot = entry.snapshot {
-            VStack(alignment: .leading, spacing: 8) {
-                BaWidgetHeader(snapshot: snapshot)
+            VStack(alignment: .leading, spacing: 0) {
+                BaWidgetCompactHeader(snapshot: snapshot)
 
-                Spacer(minLength: 0)
+                Spacer(minLength: 8)
 
                 BaResourceSummaryTable(snapshot: snapshot, date: entry.date, style: .small)
             }
@@ -55,9 +55,9 @@ private struct BaResourceMediumWidget: View {
 
     var body: some View {
         if let snapshot = entry.snapshot {
-            HStack(alignment: .top, spacing: 14) {
+            HStack(alignment: .top, spacing: 12) {
                 BaResourceMediumColumn(snapshot: snapshot, date: entry.date)
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 
                 VStack(alignment: .leading, spacing: 10) {
                     BaTimelineFeaturedCompactSection(
@@ -75,7 +75,7 @@ private struct BaResourceMediumWidget: View {
                         date: entry.date
                     )
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
             .baWidgetRootFrame()
         } else {
@@ -89,10 +89,12 @@ private struct BaResourceMediumColumn: View {
     let date: Date
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 7) {
+        VStack(alignment: .leading, spacing: 0) {
             BaWidgetCompactHeader(snapshot: snapshot)
+            Spacer(minLength: 8)
             BaResourceSummaryTable(snapshot: snapshot, date: date, style: .medium)
         }
+        .frame(maxHeight: .infinity, alignment: .topLeading)
     }
 }
 
@@ -241,7 +243,7 @@ private struct BaResourceSummaryRow<Footnote: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: style.rowSpacing) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: style.headerSpacing) {
                 BaWidgetResourceLabel(
                     title: title,
                     shortTitle: shortTitle,
@@ -251,25 +253,35 @@ private struct BaResourceSummaryRow<Footnote: View>: View {
 
                 Spacer(minLength: 6)
 
-                Text(value)
-                    .font(style.valueFont)
+                ViewThatFits(in: .horizontal) {
+                    Text(value)
+                        .font(style.valueFont)
+                        .allowsTightening(true)
+                    Text(value)
+                        .font(style.compactValueFont)
+                        .allowsTightening(true)
+                    Text(value)
+                        .font(style.minimumValueFont)
+                        .allowsTightening(true)
+                }
                     .lineLimit(1)
                     .minimumScaleFactor(style.valueMinimumScale)
                     .multilineTextAlignment(.trailing)
-                    .layoutPriority(1)
+                    .layoutPriority(2)
                     .contentTransition(.numericText())
             }
 
-            HStack(alignment: .center, spacing: 7) {
+            HStack(alignment: .center, spacing: style.meterSpacing) {
                 BaWidgetCompactMeter(value: meterValue, limit: meterLimit, tint: tint)
+                    .frame(minWidth: style.meterMinimumWidth, maxWidth: .infinity)
                     .frame(height: style.meterHeight)
 
                 footnote
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.64)
-                    .layoutPriority(1)
+                    .minimumScaleFactor(style.footnoteMinimumScale)
+                    .layoutPriority(2)
             }
         }
     }
@@ -298,6 +310,7 @@ private struct BaWidgetResourceLabel: View {
             .lineLimit(1)
             .minimumScaleFactor(0.72)
         }
+        .layoutPriority(0)
     }
 }
 
@@ -306,15 +319,38 @@ private enum BaResourceSummaryTableStyle {
     case medium
 
     var rowSpacing: CGFloat {
-        2
+        switch self {
+        case .small:
+            3
+        case .medium:
+            2
+        }
     }
 
     var itemSpacing: CGFloat {
         switch self {
         case .small:
-            7
+            8
         case .medium:
+            9
+        }
+    }
+
+    var headerSpacing: CGFloat {
+        switch self {
+        case .small:
             6
+        case .medium:
+            8
+        }
+    }
+
+    var meterSpacing: CGFloat {
+        switch self {
+        case .small:
+            6
+        case .medium:
+            7
         }
     }
 
@@ -323,16 +359,34 @@ private enum BaResourceSummaryTableStyle {
         case .small:
             .title3.monospacedDigit().weight(.bold)
         case .medium:
+            .title2.monospacedDigit().weight(.bold)
+        }
+    }
+
+    var compactValueFont: Font {
+        switch self {
+        case .small:
+            .headline.monospacedDigit().weight(.bold)
+        case .medium:
             .title3.monospacedDigit().weight(.bold)
+        }
+    }
+
+    var minimumValueFont: Font {
+        switch self {
+        case .small:
+            .subheadline.monospacedDigit().weight(.bold)
+        case .medium:
+            .headline.monospacedDigit().weight(.bold)
         }
     }
 
     var valueMinimumScale: CGFloat {
         switch self {
         case .small:
-            0.72
+            0.58
         case .medium:
-            0.7
+            0.62
         }
     }
 
@@ -342,6 +396,24 @@ private enum BaResourceSummaryTableStyle {
             5
         case .medium:
             4
+        }
+    }
+
+    var meterMinimumWidth: CGFloat {
+        switch self {
+        case .small:
+            42
+        case .medium:
+            56
+        }
+    }
+
+    var footnoteMinimumScale: CGFloat {
+        switch self {
+        case .small:
+            0.58
+        case .medium:
+            0.64
         }
     }
 }

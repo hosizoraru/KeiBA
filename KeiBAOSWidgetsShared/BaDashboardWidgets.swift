@@ -19,6 +19,7 @@ struct BaDashboardResourcesWidget: Widget {
         }
         .configurationDisplayName("ba.widget.resources.name")
         .description("ba.widget.resources.description")
+        .contentMarginsDisabled()
         #if os(watchOS)
         .supportedFamilies([.accessoryCircular, .accessoryRectangular, .accessoryInline])
         #else
@@ -38,6 +39,7 @@ struct BaDashboardTimelineWidget: Widget {
         }
         .configurationDisplayName("ba.widget.timeline.name")
         .description("ba.widget.timeline.description")
+        .contentMarginsDisabled()
         #if os(watchOS)
         .supportedFamilies([.accessoryRectangular, .accessoryInline])
         #else

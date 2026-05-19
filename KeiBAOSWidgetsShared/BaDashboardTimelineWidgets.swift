@@ -34,7 +34,7 @@ private struct BaTimelineMediumWidget: View {
 
     var body: some View {
         if let snapshot = entry.snapshot {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 10) {
                 BaWidgetHeader(snapshot: snapshot)
 
                 HStack(alignment: .top, spacing: 14) {
@@ -45,6 +45,7 @@ private struct BaTimelineMediumWidget: View {
                         tint: BaWidgetPalette.activity,
                         date: entry.date
                     )
+                    .frame(maxHeight: .infinity, alignment: .topLeading)
                     BaTimelineFeaturedSection(
                         title: Text("ba.widget.pool.title"),
                         section: snapshot.timeline.pools,
@@ -52,7 +53,9 @@ private struct BaTimelineMediumWidget: View {
                         tint: BaWidgetPalette.pool,
                         date: entry.date
                     )
+                    .frame(maxHeight: .infinity, alignment: .topLeading)
                 }
+                .frame(maxHeight: .infinity, alignment: .topLeading)
             }
             .baWidgetRootFrame()
         } else {
@@ -66,23 +69,29 @@ private struct BaTimelineLargeWidget: View {
 
     var body: some View {
         if let snapshot = entry.snapshot {
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 10) {
                 BaWidgetHeader(snapshot: snapshot)
 
-                BaTimelineFeaturedSection(
-                    title: Text("ba.widget.activity.title"),
-                    section: snapshot.timeline.activities,
-                    systemImage: "calendar.badge.clock",
-                    tint: BaWidgetPalette.activity,
-                    date: entry.date
-                )
-                BaTimelineFeaturedSection(
-                    title: Text("ba.widget.pool.title"),
-                    section: snapshot.timeline.pools,
-                    systemImage: "sparkles",
-                    tint: BaWidgetPalette.pool,
-                    date: entry.date
-                )
+                VStack(alignment: .leading, spacing: 10) {
+                    BaTimelineFeaturedSection(
+                        title: Text("ba.widget.activity.title"),
+                        section: snapshot.timeline.activities,
+                        systemImage: "calendar.badge.clock",
+                        tint: BaWidgetPalette.activity,
+                        date: entry.date
+                    )
+                    .frame(maxHeight: .infinity, alignment: .topLeading)
+
+                    BaTimelineFeaturedSection(
+                        title: Text("ba.widget.pool.title"),
+                        section: snapshot.timeline.pools,
+                        systemImage: "sparkles",
+                        tint: BaWidgetPalette.pool,
+                        date: entry.date
+                    )
+                    .frame(maxHeight: .infinity, alignment: .topLeading)
+                }
+                .frame(maxHeight: .infinity, alignment: .topLeading)
 
                 Divider()
 
@@ -227,7 +236,7 @@ struct BaTimelineFeaturedCompactSection: View {
                 Text(item.title)
                     .font(.caption.weight(.semibold))
                     .lineLimit(2)
-                    .minimumScaleFactor(0.78)
+                    .minimumScaleFactor(0.72)
 
                 HStack(spacing: 5) {
                     BaTimelineStatusLabel(status: item.status)
@@ -275,7 +284,8 @@ private struct BaTimelineFeaturedSection: View {
                     Text(item.title)
                         .font(.subheadline.weight(.semibold))
                         .lineLimit(2)
-                        .minimumScaleFactor(0.78)
+                        .minimumScaleFactor(0.72)
+                        .allowsTightening(true)
                         .fixedSize(horizontal: false, vertical: true)
 
                     HStack(spacing: 6) {
@@ -285,6 +295,8 @@ private struct BaTimelineFeaturedSection: View {
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
+                            .minimumScaleFactor(0.68)
+                            .allowsTightening(true)
                     }
 
                     BaWidgetCompactMeter(
@@ -298,6 +310,7 @@ private struct BaTimelineFeaturedSection: View {
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
+                    .minimumScaleFactor(0.78)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -324,6 +337,7 @@ private struct BaTimelineSectionHeader: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
+                .allowsTightening(true)
 
             Spacer(minLength: 4)
 
@@ -332,7 +346,8 @@ private struct BaTimelineSectionHeader: View {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.66)
+                    .minimumScaleFactor(0.6)
+                    .allowsTightening(true)
                     .multilineTextAlignment(.trailing)
                     .layoutPriority(1)
             }

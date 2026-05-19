@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import WidgetKit
 
 struct BaWidgetHeader: View {
     let snapshot: BaWatchDashboardSnapshot
@@ -178,6 +179,56 @@ enum BaWidgetPalette {
 
 extension View {
     func baWidgetRootFrame(alignment: Alignment = .topLeading) -> some View {
-        frame(maxWidth: .infinity, maxHeight: .infinity, alignment: alignment)
+        modifier(BaWidgetRootFrameModifier(alignment: alignment))
+    }
+}
+
+private struct BaWidgetRootFrameModifier: ViewModifier {
+    let alignment: Alignment
+
+    @Environment(\.widgetFamily) private var family
+    @Environment(\.widgetContentMargins) private var contentMargins
+
+    func body(content: Content) -> some View {
+        content
+            .padding(resolvedPadding)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: alignment)
+    }
+
+    private var resolvedPadding: EdgeInsets {
+        let margins = contentMargins
+
+        switch family {
+        case .systemSmall:
+            return EdgeInsets(
+                top: clipped(margins.top, preferred: 10),
+                leading: clipped(margins.leading, preferred: 10),
+                bottom: clipped(margins.bottom, preferred: 10),
+                trailing: clipped(margins.trailing, preferred: 10)
+            )
+        case .systemMedium:
+            return EdgeInsets(
+                top: clipped(margins.top, preferred: 12),
+                leading: clipped(margins.leading, preferred: 14),
+                bottom: clipped(margins.bottom, preferred: 12),
+                trailing: clipped(margins.trailing, preferred: 14)
+            )
+        case .systemLarge:
+            return EdgeInsets(
+                top: clipped(margins.top, preferred: 14),
+                leading: clipped(margins.leading, preferred: 14),
+                bottom: clipped(margins.bottom, preferred: 14),
+                trailing: clipped(margins.trailing, preferred: 14)
+            )
+        default:
+            return EdgeInsets()
+        }
+    }
+
+    private func clipped(_ systemValue: CGFloat, preferred: CGFloat) -> CGFloat {
+        guard systemValue > 0 else {
+            return preferred
+        }
+        return max(8, min(systemValue, preferred))
     }
 }
