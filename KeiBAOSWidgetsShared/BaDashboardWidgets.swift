@@ -138,26 +138,12 @@ private struct BaResourceSmallWidget: View {
 
     var body: some View {
         if let snapshot = entry.snapshot {
-            VStack(alignment: .leading, spacing: 9) {
+            VStack(alignment: .leading, spacing: 8) {
                 BaWidgetHeader(snapshot: snapshot)
 
                 Spacer(minLength: 0)
 
-                BaResourceValueBlock(
-                    title: Text("ba.widget.ap.title"),
-                    value: "\(snapshot.currentAP(at: entry.date))/\(snapshot.apLimit)",
-                    footnote: BaWidgetFullTimeText(date: snapshot.apFullAt(from: entry.date), now: entry.date),
-                    systemImage: "bolt.fill",
-                    tint: BaWidgetPalette.ap
-                )
-
-                BaWidgetCompactMeter(
-                    value: Double(snapshot.currentAP(at: entry.date)),
-                    limit: Double(max(snapshot.apLimit, 1)),
-                    tint: BaWidgetPalette.ap
-                )
-
-                BaWidgetCafeLine(snapshot: snapshot, date: entry.date)
+                BaResourceSummaryTable(snapshot: snapshot, date: entry.date, style: .small)
             }
             .baWidgetRootFrame()
         } else {
@@ -207,25 +193,7 @@ private struct BaResourceMediumColumn: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 7) {
             BaWidgetCompactHeader(snapshot: snapshot)
-
-            BaResourceMediumPrimaryBlock(
-                title: Text("ba.widget.ap.title"),
-                value: "\(snapshot.currentAP(at: date))/\(snapshot.apLimit)",
-                footnote: BaWidgetFullTimeText(date: snapshot.apFullAt(from: date), now: date),
-                systemImage: "bolt.fill",
-                tint: BaWidgetPalette.ap,
-                meterValue: Double(snapshot.currentAP(at: date)),
-                meterLimit: Double(max(snapshot.apLimit, 1))
-            )
-
-            BaResourceMediumSecondaryRow(
-                title: Text("ba.widget.cafeAP.title"),
-                shortTitle: Text("ba.widget.cafeAP.shortTitle"),
-                value: "\(snapshot.currentCafeAP(at: date))/\(snapshot.cafeAPCapacity)",
-                footnote: BaWidgetFullTimeText(date: snapshot.cafeAPFullAt(from: date), now: date),
-                systemImage: "cup.and.saucer.fill",
-                tint: BaWidgetPalette.cafeAP
-            )
+            BaResourceSummaryTable(snapshot: snapshot, date: date, style: .medium)
         }
     }
 }
@@ -235,15 +203,29 @@ private struct BaAPCircularWidget: View {
 
     var body: some View {
         if let snapshot = entry.snapshot {
-            Gauge(value: Double(snapshot.currentAP(at: entry.date)), in: 0...Double(max(snapshot.apLimit, 1))) {
+            let current = snapshot.currentAP(at: entry.date)
+            Gauge(value: Double(current), in: 0...Double(max(snapshot.apLimit, 1))) {
                 Image(systemName: "bolt.fill")
                     .foregroundStyle(BaWidgetPalette.ap)
             } currentValueLabel: {
-                Text("\(snapshot.currentAP(at: entry.date))")
-                    .font(.caption2.monospacedDigit().weight(.bold))
+                VStack(spacing: -1) {
+                    Text("ba.widget.ap.title")
+                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+
+                    Text("\(current)")
+                        .font(.system(size: 16, weight: .bold, design: .rounded).monospacedDigit())
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.52)
+                        .contentTransition(.numericText())
+                }
             }
             .gaugeStyle(.accessoryCircularCapacity)
             .tint(BaWidgetPalette.ap)
+            .widgetAccentable()
+            .accessibilityLabel(Text("ba.widget.ap.title"))
+            .accessibilityValue(Text("\(current)/\(snapshot.apLimit)"))
         } else {
             Image(systemName: "bolt.slash.fill")
         }
@@ -267,20 +249,48 @@ private struct BaAPRectangularWidget: View {
 
     var body: some View {
         if let snapshot = entry.snapshot {
+            let current = snapshot.currentAP(at: entry.date)
             VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 5) {
+                HStack(alignment: .firstTextBaseline, spacing: 5) {
                     Image(systemName: "bolt.fill")
+                        .font(.caption.weight(.bold))
                         .foregroundStyle(BaWidgetPalette.ap)
+
                     Text("ba.widget.ap.title")
-                        .font(.caption.weight(.semibold))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+
+                    Spacer(minLength: 4)
+
+                    Text("\(current)/\(snapshot.apLimit)")
+                        .font(.callout.monospacedDigit().weight(.bold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .layoutPriority(1)
+                        .contentTransition(.numericText())
                 }
-                Text("\(snapshot.currentAP(at: entry.date))/\(snapshot.apLimit)")
-                    .font(.title3.monospacedDigit().weight(.bold))
-                    .contentTransition(.numericText())
-                BaWidgetFullTimeText(date: snapshot.apFullAt(from: entry.date), now: entry.date)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+
+                HStack(alignment: .center, spacing: 7) {
+                    BaWidgetCompactMeter(
+                        value: Double(current),
+                        limit: Double(max(snapshot.apLimit, 1)),
+                        tint: BaWidgetPalette.ap
+                    )
+                    .frame(width: 42, height: 4)
+
+                    BaWidgetFullTimeText(date: snapshot.apFullAt(from: entry.date), now: entry.date)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.74)
+                }
             }
+            .padding(.horizontal, 1)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .widgetAccentable()
+            .accessibilityLabel(Text("ba.widget.ap.title"))
+            .accessibilityValue(Text("\(current)/\(snapshot.apLimit)"))
         } else {
             BaWidgetNoDataCompactView()
         }
@@ -521,163 +531,155 @@ private struct BaWidgetCompactHeader: View {
     }
 }
 
-private struct BaResourceValueBlock<Footnote: View>: View {
-    let title: Text
-    let value: String
-    let footnote: Footnote
-    let systemImage: String
-    let tint: Color
-
-    init(
-        title: Text,
-        value: String,
-        footnote: Footnote,
-        systemImage: String,
-        tint: Color
-    ) {
-        self.title = title
-        self.value = value
-        self.footnote = footnote
-        self.systemImage = systemImage
-        self.tint = tint
-    }
+private struct BaResourceSummaryTable: View {
+    let snapshot: BaWatchDashboardSnapshot
+    let date: Date
+    let style: BaResourceSummaryTableStyle
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 5) {
-                Image(systemName: systemImage)
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(tint)
-                title
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.78)
+        VStack(alignment: .leading, spacing: style.rowSpacing) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                BaWidgetResourceLabel(
+                    title: Text("ba.widget.ap.title"),
+                    systemImage: "bolt.fill",
+                    tint: BaWidgetPalette.ap
+                )
+
+                Spacer(minLength: 6)
+
+                BaWidgetResourceLabel(
+                    title: Text("ba.widget.cafeAP.title"),
+                    shortTitle: Text("ba.widget.cafeAP.shortTitle"),
+                    systemImage: "cup.and.saucer.fill",
+                    tint: BaWidgetPalette.cafeAP
+                )
+                .multilineTextAlignment(.trailing)
             }
 
-            Text(value)
-                .font(.title2.monospacedDigit().weight(.bold))
-                .lineLimit(1)
-                .minimumScaleFactor(0.72)
-                .contentTransition(.numericText())
-
-            footnote
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
-        }
-    }
-}
-
-private struct BaResourceMediumPrimaryBlock<Footnote: View>: View {
-    let title: Text
-    let value: String
-    let footnote: Footnote
-    let systemImage: String
-    let tint: Color
-    let meterValue: Double
-    let meterLimit: Double
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            HStack(alignment: .firstTextBaseline, spacing: 5) {
-                Image(systemName: systemImage)
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(tint)
-                title
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text("\(snapshot.currentAP(at: date))/\(snapshot.apLimit)")
+                    .font(style.primaryValueFont)
                     .lineLimit(1)
+                    .minimumScaleFactor(style.primaryMinimumScale)
+                    .contentTransition(.numericText())
 
-                Spacer(minLength: 4)
+                Spacer(minLength: 6)
 
-                Text(value)
-                    .font(.title3.monospacedDigit().weight(.bold))
+                Text("\(snapshot.currentCafeAP(at: date))/\(snapshot.cafeAPCapacity)")
+                    .font(style.secondaryValueFont)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.72)
+                    .minimumScaleFactor(0.66)
+                    .multilineTextAlignment(.trailing)
+                    .layoutPriority(1)
                     .contentTransition(.numericText())
             }
 
-            footnote
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.72)
+            HStack(spacing: 10) {
+                BaWidgetCompactMeter(
+                    value: Double(snapshot.currentAP(at: date)),
+                    limit: Double(max(snapshot.apLimit, 1)),
+                    tint: BaWidgetPalette.ap
+                )
 
-            BaWidgetCompactMeter(value: meterValue, limit: meterLimit, tint: tint)
-                .frame(height: 5)
+                BaWidgetCompactMeter(
+                    value: Double(snapshot.currentCafeAP(at: date)),
+                    limit: Double(max(snapshot.cafeAPCapacity, 1)),
+                    tint: BaWidgetPalette.cafeAP
+                )
+            }
+            .frame(height: style.meterHeight)
+
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) {
+                    BaWidgetFullTimeText(date: snapshot.apFullAt(from: date), now: date)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    BaWidgetFullTimeText(date: snapshot.cafeAPFullAt(from: date), now: date)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+
+                BaWidgetFullTimeText(date: snapshot.apFullAt(from: date), now: date)
+            }
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.66)
         }
     }
 }
 
-private struct BaResourceMediumSecondaryRow<Footnote: View>: View {
+private struct BaWidgetResourceLabel: View {
     let title: Text
-    let shortTitle: Text
-    let value: String
-    let footnote: Footnote
+    var shortTitle: Text?
     let systemImage: String
     let tint: Color
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack(alignment: .firstTextBaseline, spacing: 5) {
-                Image(systemName: systemImage)
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(tint)
+        HStack(spacing: 5) {
+            Image(systemName: systemImage)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(tint)
 
-                ViewThatFits(in: .horizontal) {
-                    title
+            ViewThatFits(in: .horizontal) {
+                title
+                if let shortTitle {
                     shortTitle
                 }
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.76)
-
-                Spacer(minLength: 4)
-
-                Text(value)
-                    .font(.callout.monospacedDigit().weight(.bold))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.72)
-                    .layoutPriority(1)
             }
-
-            footnote
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.72)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.72)
         }
     }
 }
 
-private struct BaWidgetCafeLine: View {
-    let snapshot: BaWatchDashboardSnapshot
-    let date: Date
+private enum BaResourceSummaryTableStyle {
+    case small
+    case medium
 
-    var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "cup.and.saucer.fill")
-                .foregroundStyle(BaWidgetPalette.cafeAP)
-            ViewThatFits(in: .horizontal) {
-                Text("ba.widget.cafeAP.title")
-                Text("ba.widget.cafeAP.shortTitle")
-            }
-            .foregroundStyle(.secondary)
-            .lineLimit(1)
-            .minimumScaleFactor(0.72)
-            Spacer(minLength: 4)
-            Text("\(snapshot.currentCafeAP(at: date))/\(snapshot.cafeAPCapacity)")
-                .monospacedDigit()
-                .fontWeight(.semibold)
-                .lineLimit(1)
-                .layoutPriority(1)
+    var rowSpacing: CGFloat {
+        switch self {
+        case .small:
+            4
+        case .medium:
+            3
         }
-        .font(.caption)
-        .lineLimit(1)
-        .minimumScaleFactor(0.75)
+    }
+
+    var primaryValueFont: Font {
+        switch self {
+        case .small:
+            .title2.monospacedDigit().weight(.bold)
+        case .medium:
+            .title3.monospacedDigit().weight(.bold)
+        }
+    }
+
+    var secondaryValueFont: Font {
+        switch self {
+        case .small:
+            .headline.monospacedDigit().weight(.semibold)
+        case .medium:
+            .callout.monospacedDigit().weight(.semibold)
+        }
+    }
+
+    var primaryMinimumScale: CGFloat {
+        switch self {
+        case .small:
+            0.62
+        case .medium:
+            0.7
+        }
+    }
+
+    var meterHeight: CGFloat {
+        switch self {
+        case .small:
+            5
+        case .medium:
+            4
+        }
     }
 }
 
@@ -710,7 +712,12 @@ private struct BaTimelineFeaturedSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            BaTimelineSectionHeader(title: title, systemImage: systemImage, tint: tint)
+            BaTimelineSectionHeader(
+                title: title,
+                systemImage: systemImage,
+                tint: tint,
+                countSummary: countSummary
+            )
 
             if let item = section.featuredItem {
                 VStack(alignment: .leading, spacing: 5) {
@@ -741,14 +748,12 @@ private struct BaTimelineFeaturedSection: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
             }
-
-            Text(String(format: String(localized: "ba.widget.timeline.counts.format"), section.runningCount, section.upcomingCount))
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.78)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var countSummary: String {
+        String(format: String(localized: "ba.widget.timeline.counts.format"), section.runningCount, section.upcomingCount)
     }
 }
 
@@ -761,7 +766,12 @@ private struct BaTimelineFeaturedCompactSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
-            BaTimelineSectionHeader(title: title, systemImage: systemImage, tint: tint)
+            BaTimelineSectionHeader(
+                title: title,
+                systemImage: systemImage,
+                tint: tint,
+                countSummary: countSummary
+            )
 
             if let item = section.featuredItem {
                 Text(item.title)
@@ -788,12 +798,17 @@ private struct BaTimelineFeaturedCompactSection: View {
             }
         }
     }
+
+    private var countSummary: String {
+        String(format: String(localized: "ba.widget.timeline.counts.format"), section.runningCount, section.upcomingCount)
+    }
 }
 
 private struct BaTimelineSectionHeader: View {
     let title: Text
     let systemImage: String
     let tint: Color
+    var countSummary: String?
 
     var body: some View {
         HStack(spacing: 5) {
@@ -805,6 +820,18 @@ private struct BaTimelineSectionHeader: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
+
+            Spacer(minLength: 4)
+
+            if let countSummary {
+                Text(countSummary)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.66)
+                    .multilineTextAlignment(.trailing)
+                    .layoutPriority(1)
+            }
         }
     }
 }
