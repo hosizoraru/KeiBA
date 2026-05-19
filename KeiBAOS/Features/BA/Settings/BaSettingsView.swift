@@ -29,6 +29,7 @@ struct BaSettingsView: View {
                 mediaSection
             }
             .baAdaptiveReadableContent(maxWidth: 760)
+            .scrollDismissesKeyboard(.interactively)
             .scrollContentBackground(.hidden)
             .background(AppBackground())
         }

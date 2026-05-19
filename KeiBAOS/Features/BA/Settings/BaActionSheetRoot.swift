@@ -837,6 +837,7 @@ private struct BaEditOfficeSheet: View {
                 }
             }
             .navigationTitle(BaPresentedSheet.editOffice.title)
+            .scrollDismissesKeyboard(.interactively)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(BaL10n.string("ba.common.cancel")) {
@@ -935,9 +936,9 @@ extension View {
 private extension BaPresentedSheet {
     var presentationDetents: Set<PresentationDetent> {
         switch self {
-        case .settings, .about:
+        case .settings, .editOffice, .about:
             [.large]
-        case .notifications, .watch, .editOffice, .debugTools:
+        case .notifications, .watch, .debugTools:
             [.medium, .large]
         }
     }

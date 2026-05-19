@@ -48,6 +48,7 @@ struct BaOverviewAPEditorSheet: View {
                 }
             }
             .navigationTitle(BaL10n.string("ba.overview.ap.editor.title"))
+            .scrollDismissesKeyboard(.interactively)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(BaL10n.string("ba.common.cancel")) {
@@ -60,7 +61,7 @@ struct BaOverviewAPEditorSheet: View {
             }
         }
         #if os(iOS)
-        .presentationDetents([.height(380), .medium])
+        .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
         #else
         .frame(minWidth: 360, minHeight: 300)
