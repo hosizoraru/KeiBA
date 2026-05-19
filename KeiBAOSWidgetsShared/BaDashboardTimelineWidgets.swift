@@ -69,11 +69,11 @@ private struct BaTimelineLargeWidget: View {
 
     var body: some View {
         if let snapshot = entry.snapshot {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 9) {
                 BaWidgetHeader(snapshot: snapshot)
 
-                VStack(alignment: .leading, spacing: 10) {
-                    BaTimelineFeaturedSection(
+                VStack(alignment: .leading, spacing: 8) {
+                    BaTimelineLargeSection(
                         title: Text("ba.widget.activity.title"),
                         section: snapshot.timeline.activities,
                         systemImage: "calendar.badge.clock",
@@ -82,7 +82,7 @@ private struct BaTimelineLargeWidget: View {
                     )
                     .frame(maxHeight: .infinity, alignment: .topLeading)
 
-                    BaTimelineFeaturedSection(
+                    BaTimelineLargeSection(
                         title: Text("ba.widget.pool.title"),
                         section: snapshot.timeline.pools,
                         systemImage: "sparkles",
@@ -114,6 +114,86 @@ private struct BaTimelineLargeWidget: View {
         } else {
             BaWidgetNoDataView()
         }
+    }
+}
+
+private struct BaTimelineLargeSection: View {
+    let title: Text
+    let section: BaTimelineGlanceSection
+    let systemImage: String
+    let tint: Color
+    let date: Date
+
+    private var items: ArraySlice<BaTimelineGlanceItem> {
+        section.displayItems.prefix(2)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            BaTimelineSectionHeader(
+                title: title,
+                systemImage: systemImage,
+                tint: tint,
+                countSummary: countSummary
+            )
+
+            if items.isEmpty {
+                Text("ba.widget.timeline.empty")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.78)
+            } else {
+                VStack(alignment: .leading, spacing: 7) {
+                    ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+                        BaTimelineLargeItemRow(item: item, tint: tint, date: date, isPrimary: index == 0)
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var countSummary: String {
+        String(format: String(localized: "ba.widget.timeline.counts.format"), section.runningCount, section.upcomingCount)
+    }
+}
+
+private struct BaTimelineLargeItemRow: View {
+    let item: BaTimelineGlanceItem
+    let tint: Color
+    let date: Date
+    let isPrimary: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(item.title)
+                    .font(titleFont)
+                    .lineLimit(isPrimary ? 2 : 1)
+                    .minimumScaleFactor(isPrimary ? 0.74 : 0.70)
+                    .allowsTightening(true)
+                    .layoutPriority(2)
+
+                Spacer(minLength: 4)
+
+                Text(item.endAt, style: item.status == .running ? .relative : .date)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.62)
+                    .allowsTightening(true)
+            }
+
+            HStack(alignment: .center, spacing: 6) {
+                BaTimelineStatusLabel(status: item.status)
+                BaWidgetCompactMeter(value: item.progress(at: date), limit: 1, tint: tint)
+            }
+        }
+    }
+
+    private var titleFont: Font {
+        isPrimary ? .subheadline.weight(.semibold) : .caption.weight(.semibold)
     }
 }
 

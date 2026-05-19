@@ -8,7 +8,7 @@
 import Foundation
 
 nonisolated struct BaWatchDashboardSnapshot: Codable, Equatable, Sendable {
-    static let currentSchemaVersion = 4
+    static let currentSchemaVersion = 5
     static let applicationContextKey = "ba.watch.dashboardSnapshot.v1"
 
     var schemaVersion: Int

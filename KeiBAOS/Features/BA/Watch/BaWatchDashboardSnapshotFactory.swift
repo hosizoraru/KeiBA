@@ -124,36 +124,45 @@ extension BaTimelineGlanceSnapshot {
             }
         }
 
-        let featuredItem: BaTimelineGlanceItem?
-        if let runningEntry = running.min(by: { lhs, rhs in
-            lhs[keyPath: endKeyPath] < rhs[keyPath: endKeyPath]
-        }) {
-            featuredItem = BaTimelineGlanceItem(
-                title: runningEntry[keyPath: titleKeyPath],
-                status: .running,
-                startAt: runningEntry[keyPath: startKeyPath],
-                endAt: runningEntry[keyPath: endKeyPath],
-                relatedItemCount: running.count - 1
-            )
-        } else if let upcomingEntry = upcoming.min(by: { lhs, rhs in
-            lhs[keyPath: startKeyPath] < rhs[keyPath: startKeyPath]
-        }) {
-            featuredItem = BaTimelineGlanceItem(
-                title: upcomingEntry[keyPath: titleKeyPath],
-                status: .upcoming,
-                startAt: upcomingEntry[keyPath: startKeyPath],
-                endAt: upcomingEntry[keyPath: endKeyPath],
-                relatedItemCount: upcoming.count - 1
-            )
-        } else {
-            featuredItem = nil
+        let runningItems = running
+            .sorted { lhs, rhs in
+                lhs[keyPath: endKeyPath] < rhs[keyPath: endKeyPath]
+            }
+            .map { entry in
+                BaTimelineGlanceItem(
+                    title: entry[keyPath: titleKeyPath],
+                    status: .running,
+                    startAt: entry[keyPath: startKeyPath],
+                    endAt: entry[keyPath: endKeyPath]
+                )
+            }
+
+        let upcomingItems = upcoming
+            .sorted { lhs, rhs in
+                lhs[keyPath: startKeyPath] < rhs[keyPath: startKeyPath]
+            }
+            .map { entry in
+                BaTimelineGlanceItem(
+                    title: entry[keyPath: titleKeyPath],
+                    status: .upcoming,
+                    startAt: entry[keyPath: startKeyPath],
+                    endAt: entry[keyPath: endKeyPath]
+                )
+            }
+
+        var displayItems = Array((runningItems + upcomingItems).prefix(4))
+        if displayItems.indices.contains(0) {
+            let firstStatus = displayItems[0].status
+            let sameStatusCount = firstStatus == .running ? runningItems.count : upcomingItems.count
+            displayItems[0].relatedItemCount = max(sameStatusCount - 1, 0)
         }
 
         return BaTimelineGlanceSection(
             runningCount: running.count,
             upcomingCount: upcoming.count,
             endedCount: endedCount,
-            featuredItem: featuredItem,
+            featuredItem: displayItems.first,
+            items: displayItems,
             lastSyncAt: lastSyncAt,
             isShowingCache: isShowingCache
         )

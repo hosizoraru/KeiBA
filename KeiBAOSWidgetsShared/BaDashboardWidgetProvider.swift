@@ -70,10 +70,8 @@ private enum BaDashboardWidgetSchedule {
 
         add(snapshot.apFullAt(from: now), to: &dates, now: now)
         add(snapshot.cafeAPFullAt(from: now), to: &dates, now: now)
-        add(snapshot.timeline.activities.featuredItem?.startAt, to: &dates, now: now)
-        add(snapshot.timeline.activities.featuredItem?.endAt, to: &dates, now: now)
-        add(snapshot.timeline.pools.featuredItem?.startAt, to: &dates, now: now)
-        add(snapshot.timeline.pools.featuredItem?.endAt, to: &dates, now: now)
+        addTimelineDates(snapshot.timeline.activities, to: &dates, now: now)
+        addTimelineDates(snapshot.timeline.pools, to: &dates, now: now)
 
         return Array(dates)
             .filter { $0 >= now.addingTimeInterval(-60) }
@@ -85,6 +83,17 @@ private enum BaDashboardWidgetSchedule {
     nonisolated private static func add(_ date: Date?, to dates: inout Set<Date>, now: Date) {
         guard let date, date > now else { return }
         dates.insert(roundedMinute(date))
+    }
+
+    nonisolated private static func addTimelineDates(
+        _ section: BaTimelineGlanceSection,
+        to dates: inout Set<Date>,
+        now: Date
+    ) {
+        for item in section.displayItems {
+            add(item.startAt, to: &dates, now: now)
+            add(item.endAt, to: &dates, now: now)
+        }
     }
 
     nonisolated private static func roundedMinute(_ date: Date) -> Date {
@@ -130,6 +139,21 @@ private extension BaWatchDashboardSnapshot {
                         endAt: now.addingTimeInterval(20 * 60 * 60),
                         relatedItemCount: 1
                     ),
+                    items: [
+                        BaTimelineGlanceItem(
+                            title: "特别委托活动",
+                            status: .running,
+                            startAt: now.addingTimeInterval(-2 * 24 * 60 * 60),
+                            endAt: now.addingTimeInterval(20 * 60 * 60),
+                            relatedItemCount: 1
+                        ),
+                        BaTimelineGlanceItem(
+                            title: "大决战「市街地战・黑影」",
+                            status: .running,
+                            startAt: now.addingTimeInterval(-8 * 60 * 60),
+                            endAt: now.addingTimeInterval(5 * 60 * 60)
+                        ),
+                    ],
                     lastSyncAt: now,
                     isShowingCache: false
                 ),
@@ -142,6 +166,20 @@ private extension BaWatchDashboardSnapshot {
                         startAt: now.addingTimeInterval(-6 * 60 * 60),
                         endAt: now.addingTimeInterval(3 * 24 * 60 * 60)
                     ),
+                    items: [
+                        BaTimelineGlanceItem(
+                            title: "FES 招募",
+                            status: .running,
+                            startAt: now.addingTimeInterval(-6 * 60 * 60),
+                            endAt: now.addingTimeInterval(3 * 24 * 60 * 60)
+                        ),
+                        BaTimelineGlanceItem(
+                            title: "限定复刻招募",
+                            status: .upcoming,
+                            startAt: now.addingTimeInterval(5 * 24 * 60 * 60),
+                            endAt: now.addingTimeInterval(12 * 24 * 60 * 60)
+                        ),
+                    ],
                     lastSyncAt: now,
                     isShowingCache: false
                 )

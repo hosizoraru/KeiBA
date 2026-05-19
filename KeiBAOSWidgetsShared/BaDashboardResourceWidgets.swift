@@ -36,10 +36,8 @@ private struct BaResourceSmallWidget: View {
 
     var body: some View {
         if let snapshot = entry.snapshot {
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 10) {
                 BaWidgetCompactHeader(snapshot: snapshot)
-
-                Spacer(minLength: 8)
 
                 BaResourceSummaryTable(snapshot: snapshot, date: entry.date, style: .small)
             }
@@ -89,9 +87,8 @@ private struct BaResourceMediumColumn: View {
     let date: Date
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 10) {
             BaWidgetCompactHeader(snapshot: snapshot)
-            Spacer(minLength: 8)
             BaResourceSummaryTable(snapshot: snapshot, date: date, style: .medium)
         }
         .frame(maxHeight: .infinity, alignment: .topLeading)
@@ -224,7 +221,8 @@ private struct BaResourceSummaryTable: View {
                 tint: BaWidgetPalette.cafeAP,
                 meterValue: Double(snapshot.currentCafeAP(at: date)),
                 meterLimit: Double(max(snapshot.cafeAPCapacity, 1)),
-                style: style
+                style: style,
+                labelDisplayMode: style.cafeLabelDisplayMode
             )
         }
     }
@@ -240,6 +238,7 @@ private struct BaResourceSummaryRow<Footnote: View>: View {
     let meterValue: Double
     let meterLimit: Double
     let style: BaResourceSummaryTableStyle
+    var labelDisplayMode: BaWidgetResourceLabel.DisplayMode = .text
 
     var body: some View {
         VStack(alignment: .leading, spacing: style.rowSpacing) {
@@ -248,10 +247,11 @@ private struct BaResourceSummaryRow<Footnote: View>: View {
                     title: title,
                     shortTitle: shortTitle,
                     systemImage: systemImage,
-                    tint: tint
+                    tint: tint,
+                    displayMode: labelDisplayMode
                 )
 
-                Spacer(minLength: 6)
+                Spacer(minLength: style.valueSpacing)
 
                 ViewThatFits(in: .horizontal) {
                     Text(value)
@@ -288,10 +288,16 @@ private struct BaResourceSummaryRow<Footnote: View>: View {
 }
 
 private struct BaWidgetResourceLabel: View {
+    enum DisplayMode {
+        case iconOnly
+        case text
+    }
+
     let title: Text
     var shortTitle: Text? = nil
     let systemImage: String
     let tint: Color
+    var displayMode: DisplayMode = .text
 
     var body: some View {
         HStack(spacing: 5) {
@@ -299,16 +305,18 @@ private struct BaWidgetResourceLabel: View {
                 .font(.caption.weight(.bold))
                 .foregroundStyle(tint)
 
-            ViewThatFits(in: .horizontal) {
-                title
-                if let shortTitle {
-                    shortTitle
+            if displayMode == .text {
+                ViewThatFits(in: .horizontal) {
+                    title
+                    if let shortTitle {
+                        shortTitle
+                    }
                 }
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
             }
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(.secondary)
-            .lineLimit(1)
-            .minimumScaleFactor(0.72)
         }
         .layoutPriority(0)
     }
@@ -339,9 +347,18 @@ private enum BaResourceSummaryTableStyle {
     var headerSpacing: CGFloat {
         switch self {
         case .small:
-            6
+            4
         case .medium:
             8
+        }
+    }
+
+    var valueSpacing: CGFloat {
+        switch self {
+        case .small:
+            4
+        case .medium:
+            6
         }
     }
 
@@ -414,6 +431,15 @@ private enum BaResourceSummaryTableStyle {
             0.58
         case .medium:
             0.64
+        }
+    }
+
+    var cafeLabelDisplayMode: BaWidgetResourceLabel.DisplayMode {
+        switch self {
+        case .small:
+            .iconOnly
+        case .medium:
+            .text
         }
     }
 }

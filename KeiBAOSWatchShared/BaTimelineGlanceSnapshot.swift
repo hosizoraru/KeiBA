@@ -45,14 +45,26 @@ nonisolated struct BaTimelineGlanceSection: Codable, Equatable, Sendable {
     var upcomingCount: Int
     var endedCount: Int
     var featuredItem: BaTimelineGlanceItem?
+    var items: [BaTimelineGlanceItem]
     var lastSyncAt: Date?
     var isShowingCache: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case runningCount
+        case upcomingCount
+        case endedCount
+        case featuredItem
+        case items
+        case lastSyncAt
+        case isShowingCache
+    }
 
     init(
         runningCount: Int = 0,
         upcomingCount: Int = 0,
         endedCount: Int = 0,
         featuredItem: BaTimelineGlanceItem? = nil,
+        items: [BaTimelineGlanceItem] = [],
         lastSyncAt: Date? = nil,
         isShowingCache: Bool = false
     ) {
@@ -60,12 +72,52 @@ nonisolated struct BaTimelineGlanceSection: Codable, Equatable, Sendable {
         self.upcomingCount = max(upcomingCount, 0)
         self.endedCount = max(endedCount, 0)
         self.featuredItem = featuredItem
+        self.items = Self.normalizedItems(items, featuredItem: featuredItem)
         self.lastSyncAt = lastSyncAt
         self.isShowingCache = isShowingCache
     }
 
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        runningCount = max(try container.decode(Int.self, forKey: .runningCount), 0)
+        upcomingCount = max(try container.decode(Int.self, forKey: .upcomingCount), 0)
+        endedCount = max(try container.decode(Int.self, forKey: .endedCount), 0)
+        featuredItem = try container.decodeIfPresent(BaTimelineGlanceItem.self, forKey: .featuredItem)
+        items = Self.normalizedItems(
+            try container.decodeIfPresent([BaTimelineGlanceItem].self, forKey: .items) ?? [],
+            featuredItem: featuredItem
+        )
+        lastSyncAt = try container.decodeIfPresent(Date.self, forKey: .lastSyncAt)
+        isShowingCache = try container.decode(Bool.self, forKey: .isShowingCache)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(runningCount, forKey: .runningCount)
+        try container.encode(upcomingCount, forKey: .upcomingCount)
+        try container.encode(endedCount, forKey: .endedCount)
+        try container.encodeIfPresent(featuredItem, forKey: .featuredItem)
+        try container.encode(items, forKey: .items)
+        try container.encodeIfPresent(lastSyncAt, forKey: .lastSyncAt)
+        try container.encode(isShowingCache, forKey: .isShowingCache)
+    }
+
     var hasContent: Bool {
-        runningCount > 0 || upcomingCount > 0 || endedCount > 0 || featuredItem != nil
+        runningCount > 0 || upcomingCount > 0 || endedCount > 0 || featuredItem != nil || items.isEmpty == false
+    }
+
+    var displayItems: [BaTimelineGlanceItem] {
+        items.isEmpty ? featuredItem.map { [$0] } ?? [] : items
+    }
+
+    private static func normalizedItems(
+        _ items: [BaTimelineGlanceItem],
+        featuredItem: BaTimelineGlanceItem?
+    ) -> [BaTimelineGlanceItem] {
+        if items.isEmpty, let featuredItem {
+            return [featuredItem]
+        }
+        return Array(items.prefix(4))
     }
 }
 
