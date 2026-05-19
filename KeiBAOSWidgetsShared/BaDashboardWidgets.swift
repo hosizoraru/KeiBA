@@ -537,79 +537,83 @@ private struct BaResourceSummaryTable: View {
     let style: BaResourceSummaryTableStyle
 
     var body: some View {
+        VStack(alignment: .leading, spacing: style.itemSpacing) {
+            BaResourceSummaryRow(
+                title: Text("ba.widget.ap.title"),
+                value: "\(snapshot.currentAP(at: date))/\(snapshot.apLimit)",
+                footnote: BaWidgetFullTimeText(date: snapshot.apFullAt(from: date), now: date),
+                systemImage: "bolt.fill",
+                tint: BaWidgetPalette.ap,
+                meterValue: Double(snapshot.currentAP(at: date)),
+                meterLimit: Double(max(snapshot.apLimit, 1)),
+                style: style
+            )
+
+            BaResourceSummaryRow(
+                title: Text("ba.widget.cafeAP.title"),
+                shortTitle: Text("ba.widget.cafeAP.shortTitle"),
+                value: "\(snapshot.currentCafeAP(at: date))/\(snapshot.cafeAPCapacity)",
+                footnote: BaWidgetFullTimeText(date: snapshot.cafeAPFullAt(from: date), now: date),
+                systemImage: "cup.and.saucer.fill",
+                tint: BaWidgetPalette.cafeAP,
+                meterValue: Double(snapshot.currentCafeAP(at: date)),
+                meterLimit: Double(max(snapshot.cafeAPCapacity, 1)),
+                style: style
+            )
+        }
+    }
+}
+
+private struct BaResourceSummaryRow<Footnote: View>: View {
+    let title: Text
+    var shortTitle: Text? = nil
+    let value: String
+    let footnote: Footnote
+    let systemImage: String
+    let tint: Color
+    let meterValue: Double
+    let meterLimit: Double
+    let style: BaResourceSummaryTableStyle
+
+    var body: some View {
         VStack(alignment: .leading, spacing: style.rowSpacing) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 BaWidgetResourceLabel(
-                    title: Text("ba.widget.ap.title"),
-                    systemImage: "bolt.fill",
-                    tint: BaWidgetPalette.ap
+                    title: title,
+                    shortTitle: shortTitle,
+                    systemImage: systemImage,
+                    tint: tint
                 )
 
                 Spacer(minLength: 6)
 
-                BaWidgetResourceLabel(
-                    title: Text("ba.widget.cafeAP.title"),
-                    shortTitle: Text("ba.widget.cafeAP.shortTitle"),
-                    systemImage: "cup.and.saucer.fill",
-                    tint: BaWidgetPalette.cafeAP
-                )
-                .multilineTextAlignment(.trailing)
-            }
-
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text("\(snapshot.currentAP(at: date))/\(snapshot.apLimit)")
-                    .font(style.primaryValueFont)
+                Text(value)
+                    .font(style.valueFont)
                     .lineLimit(1)
-                    .minimumScaleFactor(style.primaryMinimumScale)
-                    .contentTransition(.numericText())
-
-                Spacer(minLength: 6)
-
-                Text("\(snapshot.currentCafeAP(at: date))/\(snapshot.cafeAPCapacity)")
-                    .font(style.secondaryValueFont)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.66)
+                    .minimumScaleFactor(style.valueMinimumScale)
                     .multilineTextAlignment(.trailing)
                     .layoutPriority(1)
                     .contentTransition(.numericText())
             }
 
-            HStack(spacing: 10) {
-                BaWidgetCompactMeter(
-                    value: Double(snapshot.currentAP(at: date)),
-                    limit: Double(max(snapshot.apLimit, 1)),
-                    tint: BaWidgetPalette.ap
-                )
+            HStack(alignment: .center, spacing: 7) {
+                BaWidgetCompactMeter(value: meterValue, limit: meterLimit, tint: tint)
+                    .frame(height: style.meterHeight)
 
-                BaWidgetCompactMeter(
-                    value: Double(snapshot.currentCafeAP(at: date)),
-                    limit: Double(max(snapshot.cafeAPCapacity, 1)),
-                    tint: BaWidgetPalette.cafeAP
-                )
+                footnote
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.64)
+                    .layoutPriority(1)
             }
-            .frame(height: style.meterHeight)
-
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 8) {
-                    BaWidgetFullTimeText(date: snapshot.apFullAt(from: date), now: date)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    BaWidgetFullTimeText(date: snapshot.cafeAPFullAt(from: date), now: date)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                }
-
-                BaWidgetFullTimeText(date: snapshot.apFullAt(from: date), now: date)
-            }
-            .font(.caption2)
-            .foregroundStyle(.secondary)
-            .lineLimit(1)
-            .minimumScaleFactor(0.66)
         }
     }
 }
 
 private struct BaWidgetResourceLabel: View {
     let title: Text
-    var shortTitle: Text?
+    var shortTitle: Text? = nil
     let systemImage: String
     let tint: Color
 
@@ -638,36 +642,31 @@ private enum BaResourceSummaryTableStyle {
     case medium
 
     var rowSpacing: CGFloat {
+        2
+    }
+
+    var itemSpacing: CGFloat {
         switch self {
         case .small:
-            4
+            7
         case .medium:
-            3
+            6
         }
     }
 
-    var primaryValueFont: Font {
+    var valueFont: Font {
         switch self {
         case .small:
-            .title2.monospacedDigit().weight(.bold)
+            .title3.monospacedDigit().weight(.bold)
         case .medium:
             .title3.monospacedDigit().weight(.bold)
         }
     }
 
-    var secondaryValueFont: Font {
+    var valueMinimumScale: CGFloat {
         switch self {
         case .small:
-            .headline.monospacedDigit().weight(.semibold)
-        case .medium:
-            .callout.monospacedDigit().weight(.semibold)
-        }
-    }
-
-    var primaryMinimumScale: CGFloat {
-        switch self {
-        case .small:
-            0.62
+            0.72
         case .medium:
             0.7
         }
