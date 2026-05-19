@@ -40,6 +40,7 @@ enum BaOverviewMetricStyle {
 
 struct BaOverviewIdentityCard: View {
     @Environment(\.baAdaptiveMetrics) private var metrics
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     let settings: BaAppSettings
     let watchSyncState: BaWatchSyncState
@@ -147,6 +148,7 @@ struct BaOverviewIdentityCard: View {
                 Image(systemName: BaWatchSyncStatusPresenter.systemImage(for: watchSyncState))
                     .font(.caption.weight(.semibold))
                     .frame(width: 16)
+                    .baSymbolBounce(value: watchSyncState)
 
                 Text(BaL10n.string("ba.overview.watch.title"))
                     .foregroundStyle(.secondary)
@@ -161,7 +163,8 @@ struct BaOverviewIdentityCard: View {
             .padding(.vertical, 6)
             .contentShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(BaPressButtonStyle(scale: 0.96))
+        .baMotion(BaMotion.quick, value: watchSyncState)
         .liquidGlassSurface(cornerRadius: 14, tint: BaDesign.blue.opacity(0.045), isInteractive: true)
         .fixedSize(horizontal: true, vertical: false)
         .accessibilityLabel(
@@ -184,11 +187,15 @@ struct BaOverviewIdentityCard: View {
 
     private func copyFriendCode() {
         BaPasteboard.copy(settings.friendCode)
-        copiedFriendCode = true
+        withAnimation(BaMotion.resolved(BaMotion.quick, reduceMotion: reduceMotion)) {
+            copiedFriendCode = true
+        }
         Task {
             try? await Task.sleep(for: .seconds(1.4))
             guard Task.isCancelled == false else { return }
-            copiedFriendCode = false
+            withAnimation(BaMotion.resolved(BaMotion.quick, reduceMotion: reduceMotion)) {
+                copiedFriendCode = false
+            }
         }
     }
 }
@@ -204,6 +211,7 @@ private struct BaFriendCodeCopyLine: View {
 
             Button(action: onCopy) {
                 Label(copyTitle, systemImage: isCopied ? "checkmark.circle.fill" : "doc.on.doc")
+                    .baSymbolBounce(value: isCopied)
             }
             .buttonStyle(.borderless)
             .labelStyle(.iconOnly)
@@ -234,6 +242,7 @@ private struct BaFriendCodeCopyPill: View {
             Button(action: onCopy) {
                 Label(copyTitle, systemImage: isCopied ? "checkmark.circle.fill" : "doc.on.doc")
                     .labelStyle(.iconOnly)
+                    .baSymbolBounce(value: isCopied)
             }
             .buttonStyle(.glass)
             .foregroundStyle(isCopied ? BaDesign.green : BaDesign.blue)
@@ -337,10 +346,10 @@ struct BaOverviewAPCard: View {
                     if tile.isAction {
                         Button {
                             presentEditor()
-                        } label: {
-                            metricTile(tile)
-                        }
-                        .buttonStyle(.plain)
+                    } label: {
+                        metricTile(tile)
+                    }
+                        .buttonStyle(BaPressButtonStyle())
                         .accessibilityLabel(BaL10n.string("ba.overview.ap.edit.title"))
                     } else {
                         metricTile(tile)
@@ -706,7 +715,7 @@ struct BaOverviewTimelineSummaryCard: View {
                     } label: {
                         timelineTile(for: destination)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(BaPressButtonStyle())
                     .accessibilityLabel(destination.accessibilityLabel)
                 }
             }

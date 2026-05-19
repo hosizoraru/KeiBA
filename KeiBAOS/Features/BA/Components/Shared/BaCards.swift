@@ -133,6 +133,7 @@ struct BaSummaryMetric: View {
             Text(value)
                 .font(.title3.monospacedDigit().weight(.semibold))
                 .foregroundStyle(tint)
+                .baNumericTextTransition(value: value)
 
             Text(title)
                 .font(.caption)
@@ -215,6 +216,7 @@ struct BaMetricRow: View {
                 .multilineTextAlignment(.trailing)
                 .lineLimit(2)
                 .minimumScaleFactor(0.82)
+                .baNumericTextTransition(value: value)
         }
         .padding(.vertical, 10)
     }
@@ -247,6 +249,7 @@ struct BaTimelineDatePair: View {
                 ProgressView(value: progress)
                     .tint(tint)
                     .controlSize(.small)
+                    .baMotion(BaMotion.numeric, value: progress)
             }
             if detail.isEmpty == false {
                 Text(detail)
@@ -289,6 +292,7 @@ struct BaTimelineStatusPill: View {
             .padding(.horizontal, 9)
             .padding(.vertical, 5)
             .background(tint.opacity(0.10), in: Capsule())
+            .baMotion(BaMotion.quick, value: title)
     }
 }
 
@@ -324,6 +328,7 @@ struct BaValueChip: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 7)
             .liquidGlassSurface(cornerRadius: 999, tint: tint.opacity(0.09), isInteractive: false)
+            .baNumericTextTransition(value: value)
     }
 }
 
@@ -369,8 +374,10 @@ struct BaRemoteImageSurface: View {
                     .resizable()
                     .aspectRatio(contentMode: contentMode)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .transition(.opacity)
             } else {
                 placeholder
+                    .transition(.opacity)
             }
         }
         .frame(maxWidth: width == nil ? .infinity : nil)
@@ -382,6 +389,7 @@ struct BaRemoteImageSurface: View {
             tint: tint,
             usesGlassSurface: usesGlassSurface
         )
+        .baMotion(BaMotion.standard, value: phase.motionKey)
         .task(id: cacheTaskID) {
             await loadImage()
         }
@@ -473,6 +481,7 @@ struct BaRemoteIconSurface: View {
                 image
                     .resizable()
                     .scaledToFit()
+                    .transition(.opacity)
             case .loading:
                 ZStack {
                     fallbackIcon(systemImage: fallbackSystemImage, tint: tint.opacity(0.55))
@@ -485,9 +494,11 @@ struct BaRemoteIconSurface: View {
                 fallbackIcon(systemImage: fallbackSystemImage, tint: .secondary)
             case .placeholder:
                 fallbackIcon(systemImage: fallbackSystemImage, tint: tint)
+                    .transition(.opacity)
             }
         }
         .frame(width: width ?? size, height: size)
+        .baMotion(BaMotion.standard, value: phase.motionKey)
         .task(id: cacheTaskID) {
             await loadImage()
         }
@@ -577,6 +588,21 @@ private enum BaRemoteImagePhase {
     case loading
     case failed
     case success(Image)
+
+    var motionKey: String {
+        switch self {
+        case .placeholder:
+            "placeholder"
+        case .hidden:
+            "hidden"
+        case .loading:
+            "loading"
+        case .failed:
+            "failed"
+        case .success:
+            "success"
+        }
+    }
 }
 
 private enum BaRemoteIconPhase {
@@ -585,6 +611,21 @@ private enum BaRemoteIconPhase {
     case loading
     case failed
     case success(Image)
+
+    var motionKey: String {
+        switch self {
+        case .placeholder:
+            "placeholder"
+        case .hidden:
+            "hidden"
+        case .loading:
+            "loading"
+        case .failed:
+            "failed"
+        case .success:
+            "success"
+        }
+    }
 }
 
 private enum BaStillImageDecodeWorker {

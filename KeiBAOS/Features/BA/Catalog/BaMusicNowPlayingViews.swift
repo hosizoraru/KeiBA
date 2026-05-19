@@ -99,6 +99,7 @@ struct BaMusicMiniNowPlayingBar: View {
                             Image(systemName: "waveform")
                                 .font(.caption2.weight(.semibold))
                                 .foregroundStyle(accent)
+                                .baSymbolBounce(value: session.player.isPlaying)
                                 .accessibilityHidden(true)
                         }
                     }
@@ -127,6 +128,7 @@ struct BaMusicMiniNowPlayingBar: View {
                 .foregroundStyle(.primary)
                 .frame(width: 40, height: 40)
                 .contentShape(Circle())
+                .baSymbolBounce(value: session.player.isPlaying)
         }
         .buttonStyle(BaMusicControlButtonStyle())
         .accessibilityLabel(Text(session.player.isPlaying ? BaL10n.string("ba.music.action.pause") : BaL10n.string("ba.music.action.play")))
@@ -141,6 +143,7 @@ struct BaMusicMiniNowPlayingBar: View {
                 .foregroundStyle(.primary)
                 .frame(width: 40, height: 40)
                 .contentShape(Circle())
+                .baSymbolBounce(value: session.selectedTrack?.id)
         }
         .buttonStyle(BaMusicControlButtonStyle())
         .disabled(session.queue.count < 2)
@@ -257,6 +260,9 @@ struct BaMusicNowPlayingHero: View {
             maxPixelDimension: metrics.detailImageMaxPixelDimension,
             usesGlassSurface: false
         )
+        .id(track.id)
+        .transition(BaMotion.subtleTransition)
+        .baMotion(BaMotion.standard, value: track.id)
         .shadow(color: .black.opacity(0.08), radius: 16, x: 0, y: 10)
     }
 
@@ -267,6 +273,7 @@ struct BaMusicNowPlayingHero: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(accent)
                     .labelStyle(.titleAndIcon)
+                    .baSymbolBounce(value: session.player.isPlaying)
             }
 
             Text(track.title)
@@ -290,6 +297,9 @@ struct BaMusicNowPlayingHero: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .center)
+        .id(track.id)
+        .transition(BaMotion.subtleTransition)
+        .baMotion(BaMotion.standard, value: track.id)
     }
 
     @ViewBuilder
@@ -519,6 +529,8 @@ private struct BaMusicTransportButton: View {
                     .font(.system(size: fontSize, weight: .semibold))
                     .foregroundStyle(foregroundStyle)
                     .frame(width: size, height: size)
+                    .baSymbolBounce(value: systemImage)
+                    .baSymbolBounce(value: isActive)
                     .overlay {
                         Circle()
                             .strokeBorder(foregroundStyle.opacity(isActive ? 0.32 : 0), lineWidth: 1)
@@ -530,6 +542,8 @@ private struct BaMusicTransportButton: View {
         .buttonStyle(BaMusicControlButtonStyle())
         .disabled(isDisabled)
         .opacity(isDisabled ? 0.42 : 1)
+        .baMotion(BaMotion.quick, value: isDisabled)
+        .baMotion(BaMotion.quick, value: isActive)
         .accessibilityLabel(Text(accessibilityLabel))
     }
 
@@ -560,10 +574,12 @@ private struct BaMusicCacheButton: View {
                 if state.isCaching {
                     ProgressView()
                         .controlSize(.small)
+                        .transition(.opacity)
                 } else {
                     Image(systemName: state.systemImage)
                         .font(.system(size: fontSize, weight: .semibold))
                         .foregroundStyle(state.isCached ? accent : .primary)
+                        .baSymbolBounce(value: state)
                 }
             }
             .frame(width: size, height: size)
@@ -577,6 +593,7 @@ private struct BaMusicCacheButton: View {
         .buttonStyle(BaMusicControlButtonStyle())
         .disabled(track.audioURL == nil || state.isCaching)
         .opacity(track.audioURL == nil ? 0.42 : 1)
+        .baMotion(BaMotion.quick, value: state)
         .accessibilityLabel(Text(state.accessibilityTitle))
     }
 }
@@ -672,6 +689,7 @@ private struct BaMusicProgressControl: View {
                 onEditingChanged: handleEditingChanged
             )
             .tint(accent)
+            .baMotion(BaMotion.numeric, value: session.playbackProgressIdentity)
             .accessibilityLabel(Text(BaL10n.string("ba.music.progress.accessibility")))
             .accessibilityValue(Text("\(elapsedText) / \(durationText)"))
             .onAppear(perform: syncEditingProgress)
@@ -685,10 +703,12 @@ private struct BaMusicProgressControl: View {
 
             HStack {
                 Text(elapsedText)
+                    .baNumericTextTransition(value: elapsedText)
 
                 Spacer(minLength: 12)
 
                 Text(durationText)
+                    .baNumericTextTransition(value: durationText)
             }
             .font(.caption.monospacedDigit())
             .foregroundStyle(.secondary)

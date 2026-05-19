@@ -72,6 +72,7 @@ struct BaStudentVoiceRow: View {
             Image(systemName: BaStudentDetailSection.voice.systemImage)
                 .foregroundStyle(isCurrent ? BaDesign.cyan : .secondary)
                 .frame(width: 28)
+                .baSymbolBounce(value: isCurrent)
 
             VStack(alignment: .leading, spacing: 9) {
                 header
@@ -176,7 +177,7 @@ struct BaStudentVoiceRow: View {
                         progress: playback.progress
                     )
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(BaPressButtonStyle(scale: 0.94))
                 .accessibilityLabel(playbackAccessibilityLabel)
             } else {
                 Image(systemName: "waveform.badge.exclamationmark")
@@ -245,10 +246,13 @@ private struct BaVoicePlaybackButtonContent: View {
             } else {
                 Image(systemName: isCurrent && isPlaying ? "pause.circle.fill" : "play.circle.fill")
                     .font(.title3.weight(.semibold))
+                    .baSymbolBounce(value: isPlaying)
             }
         }
         .foregroundStyle(BaDesign.blue)
         .frame(width: 34, height: 34)
+        .baMotion(BaMotion.quick, value: isCurrent)
+        .baMotion(BaMotion.quick, value: isLoading)
         .overlay(alignment: .bottom) {
             if isCurrent, progress > 0 {
                 ProgressView(value: progress)
@@ -256,6 +260,7 @@ private struct BaVoicePlaybackButtonContent: View {
                     .controlSize(.mini)
                     .frame(width: 22)
                     .offset(y: 4)
+                    .transition(.opacity)
             }
         }
     }
@@ -327,6 +332,7 @@ private struct BaVoiceBadge: View {
                 Capsule()
                     .strokeBorder(badgeStroke, lineWidth: 0.8)
             }
+            .baMotion(BaMotion.quick, value: title)
     }
 
     private var badgeFill: Color {

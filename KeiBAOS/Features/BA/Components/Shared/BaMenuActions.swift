@@ -87,23 +87,28 @@ struct BaMenuIconButton: View {
     let systemImage: String
     let dimension: CGFloat
     let font: Font
+    let isActive: Bool
 
     init(
         systemImage: String = "ellipsis.circle",
         dimension: CGFloat = 36,
-        font: Font = .body.weight(.semibold)
+        font: Font = .body.weight(.semibold),
+        isActive: Bool = false
     ) {
         self.systemImage = systemImage
         self.dimension = dimension
         self.font = font
+        self.isActive = isActive
     }
 
     var body: some View {
         Image(systemName: systemImage)
             .font(font)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(isActive ? BaDesign.blue : .secondary)
             .frame(width: dimension, height: dimension)
             .contentShape(Circle())
+            .baSymbolBounce(value: isActive)
+            .baMotion(BaMotion.quick, value: isActive)
     }
 }
 

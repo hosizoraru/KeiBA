@@ -64,7 +64,7 @@ struct BaCatalogGridView: View {
                             BaCatalogEntryGridCard(row: row)
                                 .equatable()
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(BaPressButtonStyle())
 
                         BaCatalogGridActionMenu(
                             row: row,
@@ -77,6 +77,7 @@ struct BaCatalogGridView: View {
                         .padding(.top, 8)
                         .padding(.trailing, 8)
                     }
+                    .transition(BaMotion.subtleTransition)
                 }
             }
         }
@@ -120,7 +121,7 @@ private struct BaCatalogGridActionMenu: View {
                 onToggleFavorite(row.entry)
             }
         } label: {
-            BaMenuIconButton(dimension: 36)
+            BaMenuIconButton(dimension: 36, isActive: row.isFavorite || row.isDutyStudent)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(BaL10n.string("ba.action.more"))
@@ -159,12 +160,14 @@ private struct BaCatalogEntryGridCard: View, Equatable {
                         Image(systemName: "star.fill")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.yellow)
+                            .baSymbolBounce(value: row.isFavorite)
                     }
 
                     if row.isDutyStudent {
                         Image(systemName: "person.crop.circle.fill")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(BaDesign.blue)
+                            .baSymbolBounce(value: row.isDutyStudent)
                     }
                 }
 
@@ -187,5 +190,7 @@ private struct BaCatalogEntryGridCard: View, Equatable {
         .frame(maxWidth: .infinity, minHeight: metrics.catalogCardMinHeight, alignment: .leading)
         .contentShape(RoundedRectangle(cornerRadius: metrics.catalogCardCornerRadius, style: .continuous))
         .liquidGlassSurface(cornerRadius: metrics.catalogCardCornerRadius, tint: row.tint.opacity(0.035), isInteractive: true)
+        .baMotion(BaMotion.quick, value: row.isFavorite)
+        .baMotion(BaMotion.quick, value: row.isDutyStudent)
     }
 }

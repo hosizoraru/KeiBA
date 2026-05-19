@@ -26,7 +26,7 @@ struct BaMusicTrackRow: View {
                 Button(action: onPrimaryAction) {
                     rowContent(accent: accent)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(BaPressButtonStyle(scale: 0.985))
 
                 trackMenu
             }
@@ -38,6 +38,8 @@ struct BaMusicTrackRow: View {
                 tint: isCurrent ? accent.opacity(0.065) : Color.white.opacity(0.024),
                 isInteractive: true
             )
+            .baMotion(BaMotion.quick, value: isCurrent)
+            .baMotion(BaMotion.quick, value: cacheState)
         }
         .id(track.id)
     }
@@ -75,6 +77,7 @@ struct BaMusicTrackRow: View {
                         Image(systemName: "waveform")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(accent)
+                            .baSymbolBounce(value: isPlaying)
                             .accessibilityHidden(true)
                     }
                 }
@@ -87,6 +90,7 @@ struct BaMusicTrackRow: View {
             if track.availability == .loadingDetail {
                 ProgressView()
                     .controlSize(.small)
+                    .transition(.opacity)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -142,7 +146,11 @@ struct BaMusicTrackRow: View {
 
             cacheMenuItems
         } label: {
-            BaMenuIconButton(dimension: 36, font: .headline.weight(.semibold))
+            BaMenuIconButton(
+                dimension: 36,
+                font: .headline.weight(.semibold),
+                isActive: isCurrent || cacheState.isCached
+            )
         }
         .buttonStyle(BaMusicControlButtonStyle())
         .accessibilityLabel(Text(BaL10n.string("ba.music.action.moreTrack")))
@@ -210,6 +218,8 @@ struct BaMusicTrackRow: View {
                 .labelStyle(.titleAndIcon)
                 .foregroundStyle(cacheState.isCached ? accent : .secondary)
                 .lineLimit(1)
+                .baSymbolBounce(value: cacheState)
+                .transition(BaMotion.subtleTransition)
         }
     }
 
@@ -300,7 +310,7 @@ struct BaMusicQueueSection: View {
                     }
                     .disabled(hasCachedTracks == false)
                 } label: {
-                    BaMenuIconButton(dimension: 36, font: .headline.weight(.semibold))
+                    BaMenuIconButton(dimension: 36, font: .headline.weight(.semibold), isActive: hasCachedTracks)
                 }
                 .buttonStyle(BaMusicControlButtonStyle())
                 .accessibilityLabel(Text(BaL10n.string("ba.music.action.moreQueue")))
@@ -325,8 +335,10 @@ struct BaMusicQueueSection: View {
                     .task(id: track.id) {
                         await onRefreshCacheState(track)
                     }
+                    .transition(BaMotion.subtleTransition)
                 }
             }
+            .baMotion(BaMotion.standard, value: tracks.map(\.id))
         }
     }
 

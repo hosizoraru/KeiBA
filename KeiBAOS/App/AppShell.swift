@@ -194,6 +194,7 @@ private struct BaNavigationRoot: View {
                 Task { await model.refreshActivities(force: true) }
             } label: {
                 Label(BaL10n.string("ba.activity.action.refresh"), systemImage: "arrow.clockwise")
+                    .baSymbolBounce(value: model.activityState.isLoading)
             }
             .labelStyle(.iconOnly)
             .disabled(model.activityState.isLoading)
@@ -202,6 +203,7 @@ private struct BaNavigationRoot: View {
                 Task { await model.refreshPools(force: true) }
             } label: {
                 Label(BaL10n.string("ba.pool.action.refresh"), systemImage: "arrow.clockwise")
+                    .baSymbolBounce(value: model.poolState.isLoading)
             }
             .labelStyle(.iconOnly)
             .disabled(model.poolState.isLoading)
@@ -210,6 +212,7 @@ private struct BaNavigationRoot: View {
                 Task { await model.refreshCatalog(force: true) }
             } label: {
                 Label(BaL10n.string("ba.action.refresh"), systemImage: "arrow.clockwise")
+                    .baSymbolBounce(value: model.catalogState.isLoading)
             }
             .labelStyle(.iconOnly)
             .disabled(model.catalogState.isLoading)
@@ -218,6 +221,7 @@ private struct BaNavigationRoot: View {
                 Task { await model.refreshCatalog(force: true) }
             } label: {
                 Label(BaL10n.string("ba.action.refresh"), systemImage: "arrow.clockwise")
+                    .baSymbolBounce(value: model.catalogState.isLoading)
             }
             .labelStyle(.iconOnly)
             .disabled(model.catalogState.isLoading)
@@ -232,6 +236,7 @@ private struct BaNavigationRoot: View {
             pageSettingsMenu
         } label: {
             Label(BaL10n.string("ba.action.more.title"), systemImage: "ellipsis.circle")
+                .baSymbolBounce(value: tab)
         }
         .labelStyle(.iconOnly)
         .menuOrder(.fixed)

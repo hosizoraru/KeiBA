@@ -63,6 +63,7 @@ struct BaStudentVoiceSection: View {
                             selectedLanguage: snapshot.activeLanguage,
                             playback: playback
                         )
+                        .transition(BaMotion.subtleTransition)
                     }
                 }
             }
@@ -78,6 +79,7 @@ struct BaStudentVoiceSection: View {
         .onDisappear {
             playback.stop()
         }
+        .baMotion(BaMotion.standard, value: snapshot.filteredRows.map(\.id))
     }
 
     private func refreshSelections() {
@@ -199,6 +201,8 @@ private struct BaVoiceControlPanel: View {
 }
 
 private struct BaVoiceFilterMenu: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     @Binding var selection: BaVoiceSectionFilter
 
     let filters: [BaVoiceSectionFilter]
@@ -208,7 +212,9 @@ private struct BaVoiceFilterMenu: View {
             ForEach(filters) { filter in
                 Button {
                     BaMenuActionDispatcher.perform {
-                        selection = filter
+                        withAnimation(BaMotion.resolved(BaMotion.quick, reduceMotion: reduceMotion)) {
+                            selection = filter
+                        }
                     }
                 } label: {
                     if filter == selection {
@@ -227,6 +233,7 @@ private struct BaVoiceFilterMenu: View {
             )
         }
         .buttonStyle(.plain)
+        .baMotion(BaMotion.quick, value: selection)
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityLabel(BaL10n.string("ba.student.detail.voice.filter.category"))
         .accessibilityValue(selection.title)
@@ -253,6 +260,7 @@ private struct BaVoiceNowPlayingRow: View {
                 .font(.headline.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .frame(width: 28)
+                .baSymbolBounce(value: playback.isPlaying)
 
             VStack(alignment: .leading, spacing: 5) {
                 Text(BaL10n.string("ba.student.detail.voice.nowPlaying"))
@@ -270,6 +278,7 @@ private struct BaVoiceNowPlayingRow: View {
                 ProgressView(value: playback.progress)
                     .tint(BaDesign.cyan)
                     .controlSize(.small)
+                    .baMotion(BaMotion.numeric, value: playback.progress)
             }
 
             Button {
@@ -278,6 +287,7 @@ private struct BaVoiceNowPlayingRow: View {
                 Image(systemName: "stop.fill")
                     .font(.caption.weight(.semibold))
                     .frame(width: 34, height: 34)
+                    .baSymbolBounce(value: playback.isPlaying)
             }
             .buttonStyle(.glass)
             .accessibilityLabel(BaL10n.string("ba.student.detail.voice.stop"))

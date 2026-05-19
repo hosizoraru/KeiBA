@@ -77,6 +77,7 @@ struct BaStudentDetailView: View {
             .baStudentDetailSectionSpacing()
             .scrollContentBackground(.hidden)
             .background(AppBackground())
+            .baMotion(BaMotion.standard, value: activePage)
         }
         .navigationTitle(info?.title ?? entry.name)
         .toolbar {
@@ -286,6 +287,7 @@ private struct BaStudentDetailPageRailSection: View {
 
 private struct BaStudentDetailPageRail: View {
     @Environment(\.baAdaptiveMetrics) private var metrics
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @Binding var selection: BaStudentDetailPage
     let pages: [BaStudentDetailPage]
@@ -316,7 +318,7 @@ private struct BaStudentDetailPageRail: View {
                 proxy.scrollTo(selection, anchor: .center)
             }
             .onChange(of: selection) { _, page in
-                withAnimation(.easeOut(duration: 0.18)) {
+                withAnimation(BaMotion.resolved(BaMotion.quick, reduceMotion: reduceMotion)) {
                     proxy.scrollTo(page, anchor: .center)
                 }
             }
@@ -326,7 +328,9 @@ private struct BaStudentDetailPageRail: View {
     private func pageButtons(expandsItems: Bool) -> some View {
         ForEach(pages) { page in
             Button {
-                selection = page
+                withAnimation(BaMotion.resolved(BaMotion.standard, reduceMotion: reduceMotion)) {
+                    selection = page
+                }
             } label: {
                 BaStudentDetailPageRailItem(
                     title: page.title,
@@ -370,6 +374,7 @@ private struct BaStudentDetailPageRailItem: View {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .strokeBorder(tint.opacity(isSelected ? 0.20 : 0.10), lineWidth: 1)
             }
+            .baMotion(BaMotion.quick, value: isSelected)
             .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

@@ -173,7 +173,7 @@ struct BaOverviewMetricTile: View {
                 .foregroundStyle(tint)
                 .lineLimit(1)
                 .minimumScaleFactor(0.68)
-                .contentTransition(.numericText())
+                .baNumericTextTransition(value: value)
                 .frame(height: BaOverviewMetricStyle.compactValueHeight, alignment: .leading)
 
             Text(detail)
@@ -231,7 +231,7 @@ struct BaOverviewResourceReadout<Actions: View>: View {
                     .foregroundStyle(tint)
                     .lineLimit(1)
                     .minimumScaleFactor(0.72)
-                    .contentTransition(.numericText())
+                    .baNumericTextTransition(value: value)
 
                 Text(detail)
                     .font(BaOverviewTextToken.timeDetail)
@@ -258,6 +258,7 @@ struct BaOverviewIconGlassButton: View {
         Button(action: action) {
             Label(title, systemImage: systemImage)
                 .labelStyle(.iconOnly)
+                .baSymbolBounce(value: systemImage)
         }
         .buttonStyle(.glass)
         .accessibilityLabel(title)
@@ -274,7 +275,7 @@ struct BaOverviewActionTile: View {
             Button(action: onTap) {
                 tileContent
             }
-            .buttonStyle(.plain)
+            .buttonStyle(BaPressButtonStyle())
 
             Button(action: onReset) {
                 Image(systemName: "arrow.counterclockwise")
@@ -282,8 +283,9 @@ struct BaOverviewActionTile: View {
                     .foregroundStyle(.secondary)
                     .frame(width: 30, height: 30)
                     .contentShape(Circle())
+                    .baSymbolBounce(value: action.value)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(BaPressButtonStyle(scale: 0.94))
             .padding(.top, 8)
             .padding(.trailing, 8)
             .accessibilityLabel(BaL10n.string("ba.overview.action.resetCooldown"))
@@ -311,6 +313,7 @@ struct BaOverviewActionTile: View {
                     tint: action.isReady ? BaDesign.green : tint
                 )
                 .padding(.trailing, 30)
+                .baSymbolBounce(value: action.isReady)
             }
             .frame(height: BaOverviewMetricStyle.compactHeaderHeight, alignment: .leading)
 
@@ -319,7 +322,7 @@ struct BaOverviewActionTile: View {
                 .foregroundStyle(tint)
                 .lineLimit(1)
                 .minimumScaleFactor(0.68)
-                .contentTransition(.numericText())
+                .baNumericTextTransition(value: action.value)
                 .frame(height: BaOverviewMetricStyle.compactValueHeight, alignment: .leading)
 
             Text(action.detail)
@@ -405,7 +408,7 @@ struct BaOverviewTimelineTile: View {
                     .foregroundStyle(tint)
                     .lineLimit(1)
                     .minimumScaleFactor(0.78)
-                    .contentTransition(.numericText())
+                    .baNumericTextTransition(value: item.remainingText)
 
                 if let endLineText = item.endLineText {
                     Text(endLineText)

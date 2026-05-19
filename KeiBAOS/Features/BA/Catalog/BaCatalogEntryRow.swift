@@ -106,12 +106,14 @@ struct BaCatalogEntryRow: View, Equatable {
                         Image(systemName: "star.fill")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.yellow)
+                            .baSymbolBounce(value: row.isFavorite)
                     }
 
                     if row.isDutyStudent {
                         Image(systemName: "person.crop.circle.fill")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(BaDesign.blue)
+                            .baSymbolBounce(value: row.isDutyStudent)
                     }
                 }
 
@@ -127,5 +129,7 @@ struct BaCatalogEntryRow: View, Equatable {
             }
         }
         .padding(.vertical, 4)
+        .baMotion(BaMotion.quick, value: row.isFavorite)
+        .baMotion(BaMotion.quick, value: row.isDutyStudent)
     }
 }

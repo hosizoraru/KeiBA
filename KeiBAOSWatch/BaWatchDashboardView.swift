@@ -26,6 +26,7 @@ struct BaWatchDashboardView: View {
                 }
             }
             .navigationTitle(store.snapshot?.officeShortName ?? String(localized: "ba.watch.title"))
+            .baMotion(BaMotion.standard, value: store.snapshot?.generatedAt)
         }
     }
 }
@@ -163,14 +164,15 @@ private struct BaWatchTeacherHeader: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
-                Text(String(format: String(localized: "ba.watch.friendCode.format"), snapshot.friendCode))
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
+                    Text(String(format: String(localized: "ba.watch.friendCode.format"), snapshot.friendCode))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
             }
         }
         .padding(.vertical, 2)
+        .baMotion(BaMotion.standard, value: snapshot.dutyStudentName)
     }
 }
 
@@ -297,6 +299,7 @@ private struct BaWatchGaugeRow: View {
                     .font(.headline.monospacedDigit())
                     .lineLimit(1)
                     .minimumScaleFactor(0.82)
+                    .baNumericTextTransition(value: value)
                 status
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -304,6 +307,7 @@ private struct BaWatchGaugeRow: View {
             }
         }
         .padding(.vertical, 2)
+        .baMotion(BaMotion.numeric, value: value)
     }
 }
 
@@ -357,6 +361,7 @@ private struct BaWatchTimelineGlanceRow: View {
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.72)
+                            .baNumericTextTransition(value: countsText)
                     }
 
                     if let item = section.featuredItem {
@@ -381,6 +386,7 @@ private struct BaWatchTimelineGlanceRow: View {
                             ProgressView(value: item.progress(at: timeline.date))
                                 .tint(color)
                                 .controlSize(.mini)
+                                .baMotion(BaMotion.numeric, value: item.progress(at: timeline.date))
                         }
                     } else {
                         Text("ba.watch.timeline.empty")
@@ -429,7 +435,9 @@ private struct BaWatchStatusRow: View {
                 .font(.caption.weight(.semibold))
                 .lineLimit(1)
                 .minimumScaleFactor(0.82)
+                .baNumericTextTransition(value: value)
         }
+        .baMotion(BaMotion.quick, value: value)
     }
 }
 

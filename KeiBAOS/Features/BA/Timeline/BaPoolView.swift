@@ -82,6 +82,7 @@ struct BaPoolView: View {
             .platformInsetGroupedListStyle()
             .scrollContentBackground(.hidden)
             .background(AppBackground())
+            .baMotion(BaMotion.standard, value: snapshot.motionKey)
         }
         .task(id: model.settings.server) {
             await model.loadPoolsIfNeeded()
@@ -105,8 +106,9 @@ struct BaPoolView: View {
                         BaPoolNavigationCard(row: row)
                             .equatable()
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(BaPressButtonStyle(scale: 0.985))
                     .frame(maxWidth: .infinity, alignment: .top)
+                    .transition(BaMotion.subtleTransition)
                 }
                 ForEach(0 ..< max(metrics.timelineColumnCount - chunk.count, 0), id: \.self) { _ in
                     Color.clear
@@ -190,6 +192,10 @@ struct BaPoolView: View {
 private struct BaPoolListSnapshot {
     let rows: [BaPoolRowDisplayModel]
     let counts: [BaTimelineStatus: Int]
+
+    var motionKey: [BaPoolEntry.ID] {
+        rows.map(\.id)
+    }
 
     func count(for status: BaTimelineStatus) -> Int {
         counts[status] ?? 0

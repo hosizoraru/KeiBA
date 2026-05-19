@@ -80,6 +80,7 @@ struct BaActivityView: View {
             .platformInsetGroupedListStyle()
             .scrollContentBackground(.hidden)
             .background(AppBackground())
+            .baMotion(BaMotion.standard, value: snapshot.motionKey)
         }
         .task(id: model.settings.server) {
             await model.loadActivitiesIfNeeded()
@@ -96,6 +97,7 @@ struct BaActivityView: View {
                     BaActivityCard(row: row)
                         .equatable()
                         .frame(maxWidth: .infinity, alignment: .top)
+                        .transition(BaMotion.subtleTransition)
                 }
                 ForEach(0 ..< max(metrics.timelineColumnCount - chunk.count, 0), id: \.self) { _ in
                     Color.clear
@@ -170,6 +172,10 @@ struct BaActivityView: View {
 private struct BaActivityListSnapshot {
     let rows: [BaActivityRowDisplayModel]
     let counts: [BaTimelineStatus: Int]
+
+    var motionKey: [BaActivityEntry.ID] {
+        rows.map(\.id)
+    }
 
     func count(for status: BaTimelineStatus) -> Int {
         counts[status] ?? 0

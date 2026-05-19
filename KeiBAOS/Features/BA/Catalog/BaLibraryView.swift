@@ -45,6 +45,8 @@ struct BaLibraryView: View {
         BaAdaptiveGeometry { metrics in
             musicPage(snapshot: snapshot, metrics: metrics)
                 .background(AppBackground())
+                .baMotion(BaMotion.standard, value: playbackSession.selectedTrack?.id)
+                .baMotion(BaMotion.standard, value: snapshot.queueSignature)
         }
         .searchable(text: $searchText, prompt: Text(BaL10n.string("ba.music.search.prompt")))
         .navigationDestination(item: $selectedDetailEntry) { entry in

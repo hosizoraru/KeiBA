@@ -35,6 +35,8 @@ enum BaTimelineOptionsScope {
 }
 
 struct BaTimelineOptionsMenu: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     let scope: BaTimelineOptionsScope
     @Binding var statusFilter: BaTimelineStatus?
     @Binding var showsEnded: Bool
@@ -46,15 +48,19 @@ struct BaTimelineOptionsMenu: View {
                 title: BaL10n.string("ba.filter.all"),
                 isSelected: statusFilter == nil
             ) {
-                statusFilter = nil
+                withAnimation(BaMotion.resolved(BaMotion.quick, reduceMotion: reduceMotion)) {
+                    statusFilter = nil
+                }
             }
 
             ForEach(BaTimelineStatus.allCases) { status in
                 BaMenuSelectionButton(
                     title: status.title,
-                    isSelected: statusFilter == status
+                isSelected: statusFilter == status
                 ) {
-                    statusFilter = status
+                    withAnimation(BaMotion.resolved(BaMotion.quick, reduceMotion: reduceMotion)) {
+                        statusFilter = status
+                    }
                 }
             }
         }
@@ -64,7 +70,9 @@ struct BaTimelineOptionsMenu: View {
                 title: scope.showEndedMenuTitle,
                 isOn: showsEnded
             ) {
-                showsEnded.toggle()
+                withAnimation(BaMotion.resolved(BaMotion.quick, reduceMotion: reduceMotion)) {
+                    showsEnded.toggle()
+                }
             }
             .accessibilityLabel(Text(scope.showEndedTitle))
         }
@@ -73,9 +81,11 @@ struct BaTimelineOptionsMenu: View {
             ForEach(BaRefreshInterval.allCases) { interval in
                 BaMenuSelectionButton(
                     title: interval.title,
-                    isSelected: refreshInterval == interval
+                isSelected: refreshInterval == interval
                 ) {
-                    refreshInterval = interval
+                    withAnimation(BaMotion.resolved(BaMotion.quick, reduceMotion: reduceMotion)) {
+                        refreshInterval = interval
+                    }
                 }
             }
         }

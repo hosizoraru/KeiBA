@@ -41,6 +41,7 @@ struct BaCatalogView: View {
 
         BaAdaptiveGeometry { metrics in
             catalogLayout(snapshot: snapshot, metrics: metrics)
+                .baMotion(BaMotion.standard, value: snapshot.motionKey)
                 .toolbar {
                     ToolbarItem(placement: .primaryAction) {
                         BaCatalogViewOptionsControl(
@@ -135,8 +136,9 @@ struct BaCatalogView: View {
                     )
                     .equatable()
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(BaPressButtonStyle(scale: 0.985))
                 .contentShape(Rectangle())
+                .transition(BaMotion.subtleTransition)
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                     if model.canSetDutyStudent(row.entry) {
                         Button {
@@ -229,6 +231,10 @@ struct BaCatalogView: View {
 
 private struct BaCatalogViewSnapshot {
     let rows: [BaCatalogEntryRowDisplayModel]
+
+    var motionKey: [BaGuideCatalogEntry.ID] {
+        rows.map(\.id)
+    }
 }
 
 private struct BaCatalogViewOptionsControl: View {
@@ -308,6 +314,9 @@ private struct BaCatalogViewOptionsControl: View {
             BaL10n.string("ba.catalog.action.viewOptions"),
             systemImage: filterSelection.isEmpty ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill"
         )
+        .foregroundStyle(filterSelection.isEmpty ? Color.primary : BaDesign.blue)
+        .baSymbolBounce(value: filterSelection.activeFilterCount)
+        .baMotion(BaMotion.quick, value: filterSelection.activeFilterCount)
     }
 
     private var accessibilityValue: String {
@@ -320,6 +329,8 @@ private struct BaCatalogViewOptionsControl: View {
 }
 
 private struct BaCatalogViewOptionsPanel: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     @Binding var selectedCategory: BaCatalogCategory
     @Binding var sortMode: BaCatalogSortMode
     @Binding var filterSelection: BaCatalogFilterSelection
@@ -353,9 +364,12 @@ private struct BaCatalogViewOptionsPanel: View {
             if filterGroups.isEmpty == false {
                 Section(BaL10n.string("ba.catalog.action.filter")) {
                     Button {
-                        filterSelection.clear()
+                        withAnimation(BaMotion.resolved(BaMotion.standard, reduceMotion: reduceMotion)) {
+                            filterSelection.clear()
+                        }
                     } label: {
                         Label(BaL10n.string("ba.catalog.filter.clear"), systemImage: "xmark.circle")
+                            .baSymbolBounce(value: filterSelection.isEmpty)
                     }
                     .disabled(filterSelection.isEmpty)
 
@@ -366,6 +380,7 @@ private struct BaCatalogViewOptionsPanel: View {
                                     option.title,
                                     isOn: filterBinding(for: option, in: group)
                                 )
+                                .baMotion(BaMotion.quick, value: filterSelection.isSelected(option, in: group))
                             }
                         } label: {
                             VStack(alignment: .leading, spacing: 2) {
@@ -382,6 +397,7 @@ private struct BaCatalogViewOptionsPanel: View {
             }
         }
         .formStyle(.grouped)
+        .baMotion(BaMotion.standard, value: filterSelection.activeFilterCount)
         .accessibilityLabel(Text(BaL10n.string("ba.catalog.action.viewOptions")))
         .accessibilityValue(Text(verbatim: accessibilityValue))
     }
@@ -394,7 +410,9 @@ private struct BaCatalogViewOptionsPanel: View {
             set: { isOn in
                 let isSelected = filterSelection.isSelected(option, in: group)
                 if isOn != isSelected {
-                    filterSelection.toggle(option, in: group)
+                    withAnimation(BaMotion.resolved(BaMotion.quick, reduceMotion: reduceMotion)) {
+                        filterSelection.toggle(option, in: group)
+                    }
                 }
             }
         )
