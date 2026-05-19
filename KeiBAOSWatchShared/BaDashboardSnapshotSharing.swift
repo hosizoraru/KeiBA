@@ -16,10 +16,11 @@ nonisolated enum BaDashboardSnapshotSharing {
     static let appGroupIdentifier = "group.os.kei.KeiBAOS"
 
     private static let sharedSnapshotKey = "ba.shared.dashboardSnapshot.v1"
+    private static let sharedSnapshotFileName = "ba.shared.dashboardSnapshot.v1.data"
     private static let legacyWatchSnapshotKey = "ba.watch.cachedDashboardSnapshot.v1"
 
     static func loadSnapshot() -> BaWatchDashboardSnapshot? {
-        if let snapshot = loadSnapshot(from: sharedDefaults, key: sharedSnapshotKey) {
+        if let snapshot = loadSnapshotFromSharedFile() {
             return snapshot
         }
         if let snapshot = loadSnapshot(from: .standard, key: sharedSnapshotKey) {
@@ -30,40 +31,62 @@ nonisolated enum BaDashboardSnapshotSharing {
 
     static func save(_ snapshot: BaWatchDashboardSnapshot) {
         guard let data = try? BaWatchDashboardSnapshotCoding.encode(snapshot) else { return }
-        save(data, to: sharedDefaults, key: sharedSnapshotKey)
+        saveDataToSharedFile(data)
         save(data, to: .standard, key: sharedSnapshotKey)
     }
 
     static func save(_ data: Data) {
         guard (try? BaWatchDashboardSnapshotCoding.decode(data)) != nil else { return }
-        save(data, to: sharedDefaults, key: sharedSnapshotKey)
+        saveDataToSharedFile(data)
         save(data, to: .standard, key: sharedSnapshotKey)
     }
 
     static func clear(defaults: UserDefaults = .standard) {
         defaults.removeObject(forKey: sharedSnapshotKey)
         defaults.removeObject(forKey: legacyWatchSnapshotKey)
-        sharedDefaults?.removeObject(forKey: sharedSnapshotKey)
+        if let sharedSnapshotFileURL {
+            try? FileManager.default.removeItem(at: sharedSnapshotFileURL)
+        }
     }
 
-    private static let sharedDefaults = makeSharedDefaults()
-
-    private static func makeSharedDefaults() -> UserDefaults? {
+    private static var sharedSnapshotFileURL: URL? {
         #if os(iOS) || os(watchOS)
-        guard FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: appGroupIdentifier
-        ) != nil else {
-            return nil
-        }
-        return UserDefaults(suiteName: appGroupIdentifier)
+        FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier)?
+            .appendingPathComponent(sharedSnapshotFileName, isDirectory: false)
         #else
         return nil
         #endif
     }
 
+    private static func loadSnapshotFromSharedFile() -> BaWatchDashboardSnapshot? {
+        guard let sharedSnapshotFileURL,
+              let data = try? Data(contentsOf: sharedSnapshotFileURL)
+        else {
+            return nil
+        }
+        return try? BaWatchDashboardSnapshotCoding.decode(data)
+    }
+
     private static func loadSnapshot(from defaults: UserDefaults?, key: String) -> BaWatchDashboardSnapshot? {
         guard let data = defaults?.data(forKey: key) else { return nil }
         return try? BaWatchDashboardSnapshotCoding.decode(data)
+    }
+
+    private static func saveDataToSharedFile(_ data: Data) {
+        guard let sharedSnapshotFileURL else { return }
+        do {
+            try FileManager.default.createDirectory(
+                at: sharedSnapshotFileURL.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            if (try? Data(contentsOf: sharedSnapshotFileURL)) == data {
+                return
+            }
+            try data.write(to: sharedSnapshotFileURL, options: [.atomic])
+        } catch {
+            return
+        }
     }
 
     private static func save(_ data: Data, to defaults: UserDefaults?, key: String) {
