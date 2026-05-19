@@ -159,7 +159,7 @@ private struct BaResourceSmallWidget: View {
 
                 BaWidgetCafeLine(snapshot: snapshot, date: entry.date)
             }
-            .padding(14)
+            .baWidgetRootFrame()
         } else {
             BaWidgetNoDataView()
         }
@@ -209,7 +209,7 @@ private struct BaResourceMediumWidget: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(16)
+            .baWidgetRootFrame()
         } else {
             BaWidgetNoDataView()
         }
@@ -298,7 +298,7 @@ private struct BaTimelineMediumWidget: View {
                     )
                 }
             }
-            .padding(16)
+            .baWidgetRootFrame()
         } else {
             BaWidgetNoDataView()
         }
@@ -345,7 +345,7 @@ private struct BaTimelineLargeWidget: View {
                     )
                 }
             }
-            .padding(16)
+            .baWidgetRootFrame()
         } else {
             BaWidgetNoDataView()
         }
@@ -466,10 +466,12 @@ private struct BaWidgetHeader: View {
                 Text(snapshot.officeShortName)
                     .font(.caption.weight(.semibold))
                     .lineLimit(1)
+                    .minimumScaleFactor(0.82)
                 Text(snapshot.teacherName)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.82)
             }
 
             Spacer(minLength: 0)
@@ -507,6 +509,8 @@ private struct BaResourceValueBlock<Footnote: View>: View {
                 title
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.78)
             }
 
             Text(value)
@@ -534,10 +538,14 @@ private struct BaWidgetCafeLine: View {
                 .foregroundStyle(BaWidgetPalette.cafeAP)
             Text("ba.widget.cafeAP.title")
                 .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
             Spacer(minLength: 4)
             Text("\(snapshot.currentCafeAP(at: date))/\(snapshot.cafeAPCapacity)")
                 .monospacedDigit()
                 .fontWeight(.semibold)
+                .lineLimit(1)
+                .layoutPriority(1)
         }
         .font(.caption)
         .lineLimit(1)
@@ -579,9 +587,10 @@ private struct BaTimelineFeaturedSection: View {
             if let item = section.featuredItem {
                 VStack(alignment: .leading, spacing: 5) {
                     Text(item.title)
-                        .font(.headline.weight(.semibold))
+                        .font(.subheadline.weight(.semibold))
                         .lineLimit(2)
                         .minimumScaleFactor(0.78)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     HStack(spacing: 6) {
                         BaTimelineStatusLabel(status: item.status)
@@ -667,6 +676,7 @@ private struct BaTimelineSectionHeader: View {
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
+                .minimumScaleFactor(0.78)
         }
     }
 }
@@ -718,14 +728,19 @@ private struct BaResourceMiniPill: View {
                 title
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
                 Text(value)
                     .font(.caption.monospacedDigit().weight(.semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+                    .layoutPriority(1)
             }
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
-        .background(.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .background(.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 }
 
@@ -756,7 +771,6 @@ private struct BaWidgetNoDataView: View {
                 .lineLimit(3)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-        .padding(16)
     }
 }
 
@@ -775,6 +789,12 @@ private enum BaWidgetPalette {
     static let cafeAP = Color(red: 1.00, green: 0.42, blue: 0.74)
     static let activity = Color.orange
     static let pool = Color.pink
+}
+
+private extension View {
+    func baWidgetRootFrame(alignment: Alignment = .topLeading) -> some View {
+        frame(maxWidth: .infinity, maxHeight: .infinity, alignment: alignment)
+    }
 }
 
 private extension BaTimelineGlanceSnapshot {
