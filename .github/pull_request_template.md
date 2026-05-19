@@ -13,8 +13,9 @@
 - [ ] `jq empty KeiBAOS/Localizable.xcstrings`
 - [ ] `git diff --check`
 - [ ] iOS simulator build
-- [ ] macOS build
-- [ ] Relevant unit tests
+- [ ] iOS simulator unit tests
+- [ ] macOS build and unit tests
+- [ ] watchOS simulator build
 - [ ] Manual UI check, if visible UI changed
 
 ## Screenshots Or Recordings

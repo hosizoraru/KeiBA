@@ -88,6 +88,42 @@ jobs:
             -scheme KeiBAOS \
             -clonedSourcePackagesDirPath "$SWIFTPM_CACHE_PATH"
 
+      - name: Resolve iOS test simulator
+        id: ios-simulator
+        run: |
+          set -euo pipefail
+          ios_sim_udid="$(
+            xcrun simctl list devices available --json | jq -r '
+              [
+                .devices
+                | to_entries[]
+                | .value[]
+                | select(.isAvailable == true and .name == "iPhone 17 Pro")
+                | .udid
+              ][0] // empty
+            '
+          )"
+          if [ -z "$ios_sim_udid" ]; then
+            ios_sim_udid="$(
+              xcrun simctl list devices available --json | jq -r '
+                [
+                  .devices
+                  | to_entries[]
+                  | .value[]
+                  | select(.isAvailable == true and (.name | startswith("iPhone")))
+                  | .udid
+                ][0] // empty
+              '
+            )"
+          fi
+          if [ -z "$ios_sim_udid" ]; then
+            echo "::error::No available iPhone simulator found."
+            xcrun simctl list devices available
+            exit 1
+          fi
+          echo "destination=platform=iOS Simulator,id=$ios_sim_udid" >> "$GITHUB_OUTPUT"
+          xcrun simctl list devices available | grep "$ios_sim_udid" || true
+
       - name: Build iOS simulator
         run: |
           xcodebuild build \
@@ -96,6 +132,36 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath "$RUNNER_TEMP/KeiBAOS-iOS" \
             -clonedSourcePackagesDirPath "$SWIFTPM_CACHE_PATH" \
+            MARKETING_VERSION="$APP_MARKETING_VERSION" \
+            CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Build iOS tests
+        run: |
+          xcodebuild build-for-testing \
+            -project KeiBAOS.xcodeproj \
+            -scheme KeiBAOS \
+            -destination '${{ steps.ios-simulator.outputs.destination }}' \
+            -destination-timeout 60 \
+            -parallel-testing-enabled NO \
+            -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests-iOS" \
+            -clonedSourcePackagesDirPath "$SWIFTPM_CACHE_PATH" \
+            MARKETING_VERSION="$APP_MARKETING_VERSION" \
+            CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Run iOS unit tests
+        run: |
+          xcodebuild test-without-building \
+            -project KeiBAOS.xcodeproj \
+            -scheme KeiBAOS \
+            -destination '${{ steps.ios-simulator.outputs.destination }}' \
+            -destination-timeout 60 \
+            -parallel-testing-enabled NO \
+            -testLanguage en \
+            -testRegion US \
+            -resultBundlePath "$RUNNER_TEMP/KeiBAOS-iOS-unit.xcresult" \
+            -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests-iOS" \
             MARKETING_VERSION="$APP_MARKETING_VERSION" \
             CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
             CODE_SIGNING_ALLOWED=NO
@@ -154,60 +220,10 @@ jobs:
             -project KeiBAOS.xcodeproj \
             -scheme KeiBAOS \
             -destination 'platform=macOS' \
-            -skip-testing:KeiBAOSTests/BaUserDataSyncTests \
-            -skip-testing:KeiBAOSTests/BaWatchDashboardSnapshotTests \
             -parallel-testing-enabled NO \
             -testLanguage en \
             -testRegion US \
             -resultBundlePath "$RUNNER_TEMP/KeiBAOS-macOS-unit.xcresult" \
-            -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests-macOS" \
-            MARKETING_VERSION="$APP_MARKETING_VERSION" \
-            CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
-            CODE_SIGNING_ALLOWED=NO
-
-      - name: Run watch snapshot tests
-        run: |
-          xcodebuild test-without-building \
-            -project KeiBAOS.xcodeproj \
-            -scheme KeiBAOS \
-            -destination 'platform=macOS' \
-            -only-testing:KeiBAOSTests/BaWatchDashboardSnapshotTests \
-            -parallel-testing-enabled NO \
-            -testLanguage en \
-            -testRegion US \
-            -resultBundlePath "$RUNNER_TEMP/KeiBAOS-watch-snapshot.xcresult" \
-            -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests-macOS" \
-            MARKETING_VERSION="$APP_MARKETING_VERSION" \
-            CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
-            CODE_SIGNING_ALLOWED=NO
-
-      - name: Run widget snapshot tests
-        run: |
-          xcodebuild test-without-building \
-            -project KeiBAOS.xcodeproj \
-            -scheme KeiBAOS \
-            -destination 'platform=macOS' \
-            -only-testing:KeiBAOSTests/BaDashboardWidgetSnapshotTests \
-            -parallel-testing-enabled NO \
-            -testLanguage en \
-            -testRegion US \
-            -resultBundlePath "$RUNNER_TEMP/KeiBAOS-widget-snapshot.xcresult" \
-            -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests-macOS" \
-            MARKETING_VERSION="$APP_MARKETING_VERSION" \
-            CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
-            CODE_SIGNING_ALLOWED=NO
-
-      - name: Run user data sync tests
-        run: |
-          xcodebuild test-without-building \
-            -project KeiBAOS.xcodeproj \
-            -scheme KeiBAOS \
-            -destination 'platform=macOS' \
-            -only-testing:KeiBAOSTests/BaUserDataSyncTests \
-            -parallel-testing-enabled NO \
-            -testLanguage en \
-            -testRegion US \
-            -resultBundlePath "$RUNNER_TEMP/KeiBAOS-user-data-sync.xcresult" \
             -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests-macOS" \
             MARKETING_VERSION="$APP_MARKETING_VERSION" \
             CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
