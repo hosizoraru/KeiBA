@@ -18,7 +18,7 @@ struct KeiBAOSApp: App {
     #endif
 
     init() {
-        _baModel = State(initialValue: BaAppModel.live())
+        _baModel = State(initialValue: BaLaunchEnvironment.isRunningUnitTests ? .testHost() : .live())
     }
 
     var body: some Scene {
@@ -41,12 +41,26 @@ struct KeiBAOSApp: App {
         }
         #else
         WindowGroup {
-            AppShell()
-                .environment(baModel)
+            if BaLaunchEnvironment.isRunningUnitTests {
+                BaXCTestHostView()
+                    .environment(baModel)
+            } else {
+                AppShell()
+                    .environment(baModel)
+            }
         }
         #endif
     }
 }
+
+#if os(iOS)
+private struct BaXCTestHostView: View {
+    var body: some View {
+        Text(verbatim: "KeiBAOS Tests")
+            .accessibilityIdentifier("ba.xctest.host")
+    }
+}
+#endif
 
 #if os(iOS)
 final class BaIOSAppDelegate: NSObject, UIApplicationDelegate {

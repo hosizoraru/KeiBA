@@ -101,6 +101,27 @@ final class BaAppModel {
         )
     }
 
+    static func testHost() -> BaAppModel {
+        let client = GameKeeClient()
+        let cacheStore = BaCacheStore()
+        let defaults = UserDefaults(suiteName: "os.kei.KeiBAOS.xctest.\(UUID().uuidString)") ?? .standard
+        return BaAppModel(
+            settingsStore: BaSettingsStore(defaults: defaults),
+            cacheStore: cacheStore,
+            imageCache: BaImageCache(client: client),
+            activityPoolRepository: BaActivityPoolRepository(client: client),
+            catalogRepository: BaGuideCatalogRepository(client: client),
+            catalogReleaseDateHydrator: BaCatalogReleaseDateHydrator(
+                cacheStore: cacheStore,
+                studentRepository: BaStudentGuideRepository(client: client)
+            ),
+            studentRepository: BaStudentGuideRepository(client: client),
+            officeRepository: BaOfficeRepository(),
+            notificationCoordinator: BaNoopNotificationCoordinator(),
+            watchSnapshotSyncer: BaNoopWatchSnapshotSyncer()
+        )
+    }
+
     static let catalogCacheSchemaVersion = 6
     static let poolCacheSchemaVersion = 6
     static let studentCatalogPID = BaCatalogCategory.students.gameKeePID
