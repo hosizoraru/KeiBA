@@ -25,6 +25,10 @@ actor BaImageCache {
     private var failureCount = 0
     private let logger = Logger(subsystem: "os.kei.KeiBAOS", category: "BaImageCache")
     private let failureTTL: TimeInterval = 45
+    // Defensive cap so a long-running session never accumulates an unbounded
+    // backlog of failed URLs. Random eviction is fine because entries are
+    // short-lived (failureTTL) and only used to back off retries.
+    private let deferredFailureCap = 256
 
     init(fileManager: FileManager = .default, client: GameKeeClient) {
         self.fileManager = fileManager
@@ -81,8 +85,22 @@ actor BaImageCache {
 
     func recordFailure(for url: URL) {
         failureCount += 1
+        pruneExpiredFailures()
+        if deferredFailures.count >= deferredFailureCap {
+            // Drop an arbitrary entry; backoff windows naturally rotate as TTLs
+            // expire. Picking the first key is O(1) on Dictionary and avoids a
+            // sort over the whole map.
+            if let staleKey = deferredFailures.keys.first {
+                deferredFailures.removeValue(forKey: staleKey)
+            }
+        }
         deferredFailures[url] = Date().addingTimeInterval(failureTTL)
         logger.debug("image cache deferred \(url.host ?? "unknown", privacy: .public)")
+    }
+
+    private func pruneExpiredFailures() {
+        let now = Date()
+        deferredFailures = deferredFailures.filter { $0.value > now }
     }
 
     func clear() {

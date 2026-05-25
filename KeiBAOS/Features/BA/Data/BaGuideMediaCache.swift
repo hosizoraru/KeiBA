@@ -17,6 +17,7 @@ actor BaGuideMediaCache {
     private let rootDirectory: URL
     private var deferredFailures: [URL: Date] = [:]
     private let failureTTL: TimeInterval = 45
+    private let deferredFailureCap = 128
     private let logger = Logger(subsystem: "os.kei.KeiBAOS", category: "BaGuideMediaCache")
 
     init(fileManager: FileManager = .default, client: GameKeeClient) {
@@ -48,9 +49,20 @@ actor BaGuideMediaCache {
             logger.debug("guide media cache stored \(url.host ?? "unknown", privacy: .public) bytes=\(data.count, privacy: .public)")
             return fileURL
         } catch {
+            pruneExpiredFailures()
+            if deferredFailures.count >= deferredFailureCap,
+               let staleKey = deferredFailures.keys.first
+            {
+                deferredFailures.removeValue(forKey: staleKey)
+            }
             deferredFailures[url] = Date().addingTimeInterval(failureTTL)
             throw error
         }
+    }
+
+    private func pruneExpiredFailures() {
+        let now = Date()
+        deferredFailures = deferredFailures.filter { $0.value > now }
     }
 
     func data(for url: URL, refererPath: String = "/ba") async throws -> Data {

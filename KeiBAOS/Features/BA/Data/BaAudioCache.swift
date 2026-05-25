@@ -31,6 +31,7 @@ actor BaAudioCache: BaAudioCaching {
     private var deferredFailures: [URL: Date] = [:]
     private let logger = Logger(subsystem: "os.kei.KeiBAOS", category: "BaAudioCache")
     private let failureTTL: TimeInterval = 45
+    private let deferredFailureCap = 128
 
     init(fileManager: FileManager = .default, client: GameKeeClient) {
         self.fileManager = fileManager
@@ -122,8 +123,17 @@ actor BaAudioCache: BaAudioCaching {
     }
 
     private func recordFailure(for url: URL) {
+        pruneExpiredFailures()
+        if deferredFailures.count >= deferredFailureCap, let staleKey = deferredFailures.keys.first {
+            deferredFailures.removeValue(forKey: staleKey)
+        }
         deferredFailures[url] = Date().addingTimeInterval(failureTTL)
         logger.debug("audio cache deferred \(url.host ?? "unknown", privacy: .public)")
+    }
+
+    private func pruneExpiredFailures() {
+        let now = Date()
+        deferredFailures = deferredFailures.filter { $0.value > now }
     }
 
     private func cachedFileURL(for url: URL) -> URL {
