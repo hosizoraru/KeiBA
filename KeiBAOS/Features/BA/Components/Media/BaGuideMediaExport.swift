@@ -34,6 +34,16 @@ nonisolated struct BaGuideMediaExportMetadata: Hashable {
 }
 
 nonisolated enum BaGuideMediaExportBuilder {
+    // Compiled-once regex caches. Filename sanitization runs once per
+    // export request, but exports are often issued in bulk (gallery
+    // multi-save) so caching avoids per-item regex compilation.
+    fileprivate nonisolated(unsafe) static let forbiddenCharRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"[\\/:*?"<>|]"#)
+    }()
+    fileprivate nonisolated(unsafe) static let whitespaceRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"\s+"#)
+    }()
+
     static func metadata(for url: URL, title: String, prefix: String = "") -> BaGuideMediaExportMetadata {
         let ext = mediaExtension(for: url, title: title)
         let baseTitle = sanitizeTitle(title).ifBlank("BA_media")
@@ -73,20 +83,31 @@ nonisolated enum BaGuideMediaExportBuilder {
     }
 
     private static func sanitizeTitle(_ raw: String) -> String {
-        raw
-            .replacingOccurrences(of: #"[\\/:*?"<>|]"#, with: " ", options: .regularExpression)
-            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .prefix(96)
-            .description
+        sanitize(raw, prefixLimit: 96)
     }
 
     private static func sanitizeToken(_ raw: String) -> String {
-        raw
-            .replacingOccurrences(of: #"[\\/:*?"<>|]"#, with: " ", options: .regularExpression)
-            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+        sanitize(raw, prefixLimit: 48)
+    }
+
+    private static func sanitize(_ raw: String, prefixLimit: Int) -> String {
+        let stripped: String
+        if let regex = forbiddenCharRegex {
+            let range = NSRange(raw.startIndex ..< raw.endIndex, in: raw)
+            stripped = regex.stringByReplacingMatches(in: raw, range: range, withTemplate: " ")
+        } else {
+            stripped = raw.replacingOccurrences(of: #"[\\/:*?"<>|]"#, with: " ", options: .regularExpression)
+        }
+        let collapsed: String
+        if let regex = whitespaceRegex {
+            let range = NSRange(stripped.startIndex ..< stripped.endIndex, in: stripped)
+            collapsed = regex.stringByReplacingMatches(in: stripped, range: range, withTemplate: " ")
+        } else {
+            collapsed = stripped.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+        }
+        return collapsed
             .trimmingCharacters(in: .whitespacesAndNewlines)
-            .prefix(48)
+            .prefix(prefixLimit)
             .description
     }
 
