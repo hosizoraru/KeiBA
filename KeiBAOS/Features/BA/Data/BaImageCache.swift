@@ -50,16 +50,21 @@ actor BaImageCache {
     }
 
     func data(for url: URL, refererPath: String = "/ba") async throws -> Data {
-        // Fast path: in-memory hit. Avoids both the actor reschedule on the
-        // common case and the Data(contentsOf:) + signature scan that disk
-        // hits perform.
+        // Fast path: in-memory hit. NSCache is thread-safe, so this resolves
+        // without any actor hop and avoids both the disk read and the
+        // signature scan that disk hits perform.
         if let cached = memoryCache.object(forKey: url as NSURL) {
             memoryHitCount += 1
             return Data(referencing: cached)
         }
 
+        // Disk hit: read off the actor so a slow disk doesn't serialize every
+        // other image lookup behind it. SwiftUI grids reissue many thumbnail
+        // requests in parallel during scroll/recompose; running the
+        // Data(contentsOf:) + signature scan on the actor's serial executor
+        // turned that into a head-of-line block.
         let fileURL = cachedFileURL(for: url)
-        if let data = try? Data(contentsOf: fileURL), data.isEmpty == false {
+        if let data = await Self.readCachedImage(at: fileURL), data.isEmpty == false {
             if Self.looksLikeImageData(data) {
                 hitCount += 1
                 memoryCache.setObject(data as NSData, forKey: url as NSURL, cost: data.count)
@@ -175,5 +180,14 @@ actor BaImageCache {
         }
         let nsError = error as NSError
         return nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled
+    }
+
+    // Read the cache file off the actor so a slow disk doesn't serialize the
+    // rest of the actor's work. Returns nil for missing files; throws are
+    // swallowed because callers treat any failure as "no hit."
+    private nonisolated static func readCachedImage(at fileURL: URL) async -> Data? {
+        await Task.detached(priority: .utility) {
+            try? Data(contentsOf: fileURL)
+        }.value
     }
 }
