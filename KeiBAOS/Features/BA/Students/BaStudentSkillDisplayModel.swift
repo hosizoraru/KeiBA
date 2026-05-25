@@ -8,6 +8,45 @@
 import SwiftUI
 
 nonisolated struct BaStudentSkillDisplayModel: Identifiable, Hashable {
+    // Compiled-once regex cache. parseLevelNumber alone is called from
+    // levelOptions/defaultLevel computed properties — those run on every body
+    // recompose for every visible skill card.
+    fileprivate nonisolated(unsafe) static let levelDigitRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"\d{1,2}"#)
+    }()
+    fileprivate nonisolated(unsafe) static let glossaryNameRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"名词\d+"#)
+    }()
+    fileprivate nonisolated(unsafe) static let dimensionRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"/w_(\d{1,4})/h_(\d{1,4})/"#)
+    }()
+    fileprivate nonisolated(unsafe) static let levelKeyRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"(?i)^LV\.?\d{1,2}$"#)
+    }()
+    fileprivate nonisolated(unsafe) static let costPrefixRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"(?i)^COST:\s*"#)
+    }()
+    fileprivate nonisolated(unsafe) static let collapsedSpaceRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"\s{2,}"#)
+    }()
+    fileprivate nonisolated(unsafe) static let multiSpaceRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"\s+"#)
+    }()
+    fileprivate nonisolated(unsafe) static let ownedSkillRegex: NSRegularExpression? = {
+        try? NSRegularExpression(
+            pattern: #"^(「[^」]{1,40}」|『[^』]{1,40}』|【[^】]{1,40}】|[A-Za-z0-9\u{4E00}-\u{9FFF}·・\-\s]{1,40})\s*的\s*(.+)$"#
+        )
+    }()
+    fileprivate nonisolated(unsafe) static let trailingNumberRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"^(.*?)[\s\-_]*(\d{1,2})$"#)
+    }()
+    fileprivate nonisolated(unsafe) static let trailingDigitsRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"\d{1,2}$"#)
+    }()
+    fileprivate nonisolated(unsafe) static let bracketCaptureRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"[（(【\[]([^()（）【】\[\]]+)[)）】\]]"#)
+    }()
+
     let id: String
     let type: String
     let name: String
@@ -110,10 +149,23 @@ nonisolated struct BaStudentSkillDisplayModel: Identifiable, Hashable {
     }
 
     static func parseLevelNumber(_ label: String) -> Int? {
-        guard let range = label.range(of: #"\d{1,2}"#, options: .regularExpression) else {
-            return nil
+        let foundRange: Range<String.Index>?
+        if let regex = levelDigitRegex {
+            let range = NSRange(label.startIndex ..< label.endIndex, in: label)
+            foundRange = regex.firstMatch(in: label, range: range).flatMap { Range($0.range, in: label) }
+        } else {
+            foundRange = label.range(of: #"\d{1,2}"#, options: .regularExpression)
         }
+        guard let range = foundRange else { return nil }
         return Int(label[range])
+    }
+
+    static func matchesGlossaryName(_ value: String) -> Bool {
+        if let regex = glossaryNameRegex {
+            let range = NSRange(value.startIndex ..< value.endIndex, in: value)
+            return regex.firstMatch(in: value, range: range) != nil
+        }
+        return value.range(of: #"名词\d+"#, options: .regularExpression) != nil
     }
 
     private static func fallbackCards(from rows: [BaGuideRow]) -> [BaStudentSkillDisplayModel] {
@@ -326,7 +378,7 @@ nonisolated struct BaStudentSkillDisplayModel: Identifiable, Hashable {
                 inGlossary = false
                 continue
             }
-            if key == "名词图标" || key == "名词解释" || key.range(of: #"名词\d+"#, options: .regularExpression) != nil {
+            if key == "名词图标" || key == "名词解释" || Self.matchesGlossaryName(key) {
                 continue
             }
             if key.isEmpty == false, let imageURL = row.imageURL {
@@ -355,9 +407,14 @@ nonisolated struct BaStudentSkillDisplayModel: Identifiable, Hashable {
         if value.localizedCaseInsensitiveContains("data:image") {
             return true
         }
-        guard let match = value.range(of: #"/w_(\d{1,4})/h_(\d{1,4})/"#, options: .regularExpression) else {
-            return false
+        let matchedRange: Range<String.Index>?
+        if let regex = dimensionRegex {
+            let range = NSRange(value.startIndex ..< value.endIndex, in: value)
+            matchedRange = regex.firstMatch(in: value, range: range).flatMap { Range($0.range, in: value) }
+        } else {
+            matchedRange = value.range(of: #"/w_(\d{1,4})/h_(\d{1,4})/"#, options: .regularExpression)
         }
+        guard let match = matchedRange else { return false }
         let matched = String(value[match])
         let numbers = matched
             .split { $0 == "/" || $0 == "_" }
@@ -369,7 +426,14 @@ nonisolated struct BaStudentSkillDisplayModel: Identifiable, Hashable {
     static func toDisplayLevelLabel(_ rawKey: String) -> String? {
         let key = rawKey.trimmingCharacters(in: .whitespacesAndNewlines)
             .replacingOccurrences(of: " ", with: "")
-        guard let range = key.range(of: #"(?i)^LV\.?\d{1,2}$"#, options: .regularExpression),
+        let matchedRange: Range<String.Index>?
+        if let regex = levelKeyRegex {
+            let range = NSRange(key.startIndex ..< key.endIndex, in: key)
+            matchedRange = regex.firstMatch(in: key, range: range).flatMap { Range($0.range, in: key) }
+        } else {
+            matchedRange = key.range(of: #"(?i)^LV\.?\d{1,2}$"#, options: .regularExpression)
+        }
+        guard let range = matchedRange,
               range.lowerBound == key.startIndex,
               range.upperBound == key.endIndex,
               let number = parseLevelNumber(key)
@@ -421,9 +485,15 @@ nonisolated struct BaStudentSkillDisplayModel: Identifiable, Hashable {
     }
 
     private static func normalizeCost(_ raw: String) -> String {
-        raw.replacingOccurrences(of: "：", with: ":")
-            .replacingOccurrences(of: #"(?i)^COST:\s*"#, with: "", options: .regularExpression)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalized = raw.replacingOccurrences(of: "：", with: ":")
+        let stripped: String
+        if let regex = costPrefixRegex {
+            let range = NSRange(normalized.startIndex ..< normalized.endIndex, in: normalized)
+            stripped = regex.stringByReplacingMatches(in: normalized, range: range, withTemplate: "")
+        } else {
+            stripped = normalized.replacingOccurrences(of: #"(?i)^COST:\s*"#, with: "", options: .regularExpression)
+        }
+        return stripped.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private static func circledNumber(_ index: Int) -> String? {
@@ -463,8 +533,7 @@ private nonisolated struct BaStudentSkillTypeMeta: Hashable {
 
         var variantIndex: Int?
         var stateTags: [String] = []
-        let bracketPattern = #"[（(【\[]([^()（）【】\[\]]+)[)）】\]]"#
-        let bracketMatches = matches(in: cleaned, pattern: bracketPattern)
+        let bracketMatches = bracketCaptures(in: cleaned)
         for candidate in bracketMatches {
             let tokens = candidate
                 .components(separatedBy: CharacterSet(charactersIn: "、,，/／|｜+＋"))
@@ -480,10 +549,29 @@ private nonisolated struct BaStudentSkillTypeMeta: Hashable {
             }
         }
 
-        let baseCandidate = cleaned
-            .replacingOccurrences(of: bracketPattern, with: "", options: .regularExpression)
-            .replacingOccurrences(of: #"\s{2,}"#, with: " ", options: .regularExpression)
-            .trimmingCharacters(in: CharacterSet(charactersIn: " -_/／|｜"))
+        let bracketStripped: String
+        if let regex = BaStudentSkillDisplayModel.bracketCaptureRegex {
+            let range = NSRange(cleaned.startIndex ..< cleaned.endIndex, in: cleaned)
+            bracketStripped = regex.stringByReplacingMatches(in: cleaned, range: range, withTemplate: "")
+        } else {
+            bracketStripped = cleaned.replacingOccurrences(
+                of: #"[（(【\[]([^()（）【】\[\]]+)[)）】\]]"#,
+                with: "",
+                options: .regularExpression
+            )
+        }
+        let collapsed: String
+        if let regex = BaStudentSkillDisplayModel.collapsedSpaceRegex {
+            let range = NSRange(bracketStripped.startIndex ..< bracketStripped.endIndex, in: bracketStripped)
+            collapsed = regex.stringByReplacingMatches(in: bracketStripped, range: range, withTemplate: " ")
+        } else {
+            collapsed = bracketStripped.replacingOccurrences(
+                of: #"\s{2,}"#,
+                with: " ",
+                options: .regularExpression
+            )
+        }
+        let baseCandidate = collapsed.trimmingCharacters(in: CharacterSet(charactersIn: " -_/／|｜"))
         let owned = splitOwnedSkillType(baseCandidate.ifBlank(cleaned))
         let baseToken = owned?.skillType ?? baseCandidate.ifBlank(cleaned)
         let baseMeta = parseToken(baseToken)
@@ -499,8 +587,8 @@ private nonisolated struct BaStudentSkillTypeMeta: Hashable {
         )
     }
 
-    private static func matches(in value: String, pattern: String) -> [String] {
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+    private static func bracketCaptures(in value: String) -> [String] {
+        guard let regex = BaStudentSkillDisplayModel.bracketCaptureRegex else { return [] }
         let nsValue = value as NSString
         return regex.matches(in: value, range: NSRange(location: 0, length: nsValue.length)).compactMap { match in
             guard match.numberOfRanges > 1 else { return nil }
@@ -509,9 +597,25 @@ private nonisolated struct BaStudentSkillTypeMeta: Hashable {
     }
 
     private static func splitOwnedSkillType(_ raw: String) -> (ownerTag: String, skillType: String)? {
-        let normalized = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
-        guard let range = normalized.range(of: #"^(「[^」]{1,40}」|『[^』]{1,40}』|【[^】]{1,40}】|[A-Za-z0-9\u{4E00}-\u{9FFF}·・\-\s]{1,40})\s*的\s*(.+)$"#, options: .regularExpression) else {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalized: String
+        if let regex = BaStudentSkillDisplayModel.multiSpaceRegex {
+            let range = NSRange(trimmed.startIndex ..< trimmed.endIndex, in: trimmed)
+            normalized = regex.stringByReplacingMatches(in: trimmed, range: range, withTemplate: " ")
+        } else {
+            normalized = trimmed.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+        }
+        let foundRange: Range<String.Index>?
+        if let regex = BaStudentSkillDisplayModel.ownedSkillRegex {
+            let range = NSRange(normalized.startIndex ..< normalized.endIndex, in: normalized)
+            foundRange = regex.firstMatch(in: normalized, range: range).flatMap { Range($0.range, in: normalized) }
+        } else {
+            foundRange = normalized.range(
+                of: #"^(「[^」]{1,40}」|『[^』]{1,40}』|【[^】]{1,40}】|[A-Za-z0-9\u{4E00}-\u{9FFF}·・\-\s]{1,40})\s*的\s*(.+)$"#,
+                options: .regularExpression
+            )
+        }
+        guard let range = foundRange else {
             return nil
         }
         let matched = String(normalized[range])
@@ -535,9 +639,23 @@ private nonisolated struct BaStudentSkillTypeMeta: Hashable {
             let base = String(cleaned.dropLast()).trimmingCharacters(in: .whitespacesAndNewlines)
             return (base.ifBlank(cleaned), index + 1)
         }
-        if let range = cleaned.range(of: #"^(.*?)[\s\-_]*(\d{1,2})$"#, options: .regularExpression) {
+        let trailingMatchRange: Range<String.Index>?
+        if let regex = BaStudentSkillDisplayModel.trailingNumberRegex {
+            let nsRange = NSRange(cleaned.startIndex ..< cleaned.endIndex, in: cleaned)
+            trailingMatchRange = regex.firstMatch(in: cleaned, range: nsRange).flatMap { Range($0.range, in: cleaned) }
+        } else {
+            trailingMatchRange = cleaned.range(of: #"^(.*?)[\s\-_]*(\d{1,2})$"#, options: .regularExpression)
+        }
+        if let range = trailingMatchRange {
             let matched = String(cleaned[range])
-            guard let numberRange = matched.range(of: #"\d{1,2}$"#, options: .regularExpression),
+            let numberRange: Range<String.Index>?
+            if let regex = BaStudentSkillDisplayModel.trailingDigitsRegex {
+                let nsRange = NSRange(matched.startIndex ..< matched.endIndex, in: matched)
+                numberRange = regex.firstMatch(in: matched, range: nsRange).flatMap { Range($0.range, in: matched) }
+            } else {
+                numberRange = matched.range(of: #"\d{1,2}$"#, options: .regularExpression)
+            }
+            guard let numberRange,
                   let index = Int(matched[numberRange]),
                   index > 0
             else {
