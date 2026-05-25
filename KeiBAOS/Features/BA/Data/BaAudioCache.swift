@@ -42,7 +42,7 @@ actor BaAudioCache: BaAudioCaching {
     }
 
     func localURL(for url: URL, refererPath: String = "/ba") async throws -> URL {
-        if let cachedURL = validatedCachedFileURL(for: url) {
+        if let cachedURL = await validatedCachedFileURL(for: url) {
             logger.debug("audio cache hit \(url.host ?? "unknown", privacy: .public)")
             return cachedURL
         }
@@ -54,7 +54,7 @@ actor BaAudioCache: BaAudioCaching {
         let requestKey = RequestKey(url: url, refererPath: refererPath)
         if let inFlightRequest = inFlightRequests[requestKey] {
             let data = try await inFlightRequest.value
-            if let cachedURL = validatedCachedFileURL(for: url) {
+            if let cachedURL = await validatedCachedFileURL(for: url) {
                 return cachedURL
             }
             return try storeAudioData(data, for: url)
@@ -99,20 +99,26 @@ actor BaAudioCache: BaAudioCaching {
     }
 
     func cachedURL(for url: URL) async -> URL? {
-        validatedCachedFileURL(for: url)
+        await validatedCachedFileURL(for: url)
     }
 
-    private func validatedCachedFileURL(for url: URL) -> URL? {
+    private func validatedCachedFileURL(for url: URL) async -> URL? {
         let fileURL = cachedFileURL(for: url)
-        guard let data = try? Data(contentsOf: fileURL), data.isEmpty == false else {
-            return nil
-        }
-        guard Self.looksLikeAudioData(data, expectedExtension: url.pathExtension) else {
+        let pathExtension = url.pathExtension
+        // Run the disk read off the actor so a slow filesystem doesn't
+        // serialize every other audio lookup. The signature scan is also
+        // moved off-actor; both are pure functions of the file bytes.
+        let validation = await Self.validateAudioFile(at: fileURL, expectedExtension: pathExtension)
+        switch validation {
+        case .valid:
+            return fileURL
+        case .invalid:
             try? fileManager.removeItem(at: fileURL)
             logger.debug("audio cache invalidated \(url.host ?? "unknown", privacy: .public)")
             return nil
+        case .missing:
+            return nil
         }
-        return fileURL
     }
 
     func removeCachedAudio(for url: URL) async {
@@ -172,5 +178,27 @@ actor BaAudioCache: BaAudioCaching {
 
     nonisolated static func recognizesAudioDataForTesting(_ data: Data, expectedExtension: String) -> Bool {
         looksLikeAudioData(data, expectedExtension: expectedExtension)
+    }
+
+    private enum AudioFileValidation: Sendable {
+        case valid
+        case invalid
+        case missing
+    }
+
+    // Read + signature-validate off the actor. The disk read is the slow
+    // part on a cold cache, and looksLikeAudioData is a pure header-byte
+    // check. Hopping both to a detached task keeps actor-serialized work
+    // (in-flight bookkeeping, failure backoff) from queuing behind I/O.
+    private nonisolated static func validateAudioFile(
+        at fileURL: URL,
+        expectedExtension: String
+    ) async -> AudioFileValidation {
+        await Task.detached(priority: .utility) {
+            guard let data = try? Data(contentsOf: fileURL), data.isEmpty == false else {
+                return AudioFileValidation.missing
+            }
+            return looksLikeAudioData(data, expectedExtension: expectedExtension) ? .valid : .invalid
+        }.value
     }
 }
