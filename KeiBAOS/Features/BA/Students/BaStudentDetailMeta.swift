@@ -31,28 +31,30 @@ enum BaStudentGuideMeta {
     }()
 
     nonisolated static func profileMetaItems(from info: BaStudentGuideInfo) -> [BaGuideMetaItem] {
-        [
+        // Pre-concatenate once; each meta-item lookup walks the same set of
+        // rows + stats. Without this, every buildMetaItem allocates the array
+        // twice internally (once for the icon search, once for the value
+        // search), producing N×2 redundant allocations per refresh.
+        let allRows = info.profileDisplayRows + info.stats
+        return [
             buildMetaItem(
                 title: BaL10n.string("ba.student.detail.meta.rarity"),
                 role: .rarity,
                 valueKeywords: ["稀有度", "星级"],
-                rows: info.profileDisplayRows,
-                stats: info.stats
+                allRows: allRows
             ),
             buildMetaItem(
                 title: BaL10n.string("ba.student.detail.meta.academy"),
                 role: .academy,
                 valueKeywords: ["所属学园", "所属学院", "学园", "学院", "school"],
-                rows: info.profileDisplayRows,
-                stats: info.stats,
+                allRows: allRows,
                 valuePriority: academyValuePriority
             ),
             buildMetaItem(
                 title: BaL10n.string("ba.student.detail.meta.club"),
                 role: .club,
                 valueKeywords: ["所属社团", "社团"],
-                rows: info.profileDisplayRows,
-                stats: info.stats
+                allRows: allRows
             ),
         ]
     }
@@ -68,46 +70,44 @@ enum BaStudentGuideMeta {
     }
 
     nonisolated static func combatMetaItems(from info: BaStudentGuideInfo) -> [BaGuideMetaItem] {
-        let rows = info.profileDisplayRows + info.skillDisplayRows
+        // Combat meta-items query the same rows + stats union 7 times in a row.
+        // Allocate the merged buffer once and pass it down so each builder
+        // only references existing storage instead of re-concatenating.
+        let allRows = info.profileDisplayRows + info.skillDisplayRows + info.stats
         return [
-            tacticalPositionItem(info: info, rows: rows),
+            tacticalPositionItem(allRows: allRows),
             combatFieldItem(
                 title: BaL10n.string("ba.student.detail.meta.attackType"),
                 role: .attackType,
                 valueKeywords: ["攻击类型"],
-                rows: rows,
-                stats: info.stats
+                allRows: allRows
             ),
             combatFieldItem(
                 title: BaL10n.string("ba.student.detail.meta.defenseType"),
                 role: .defenseType,
                 valueKeywords: ["防御类型"],
-                rows: rows,
-                stats: info.stats
+                allRows: allRows
             ),
-            weaponTypeItem(rows: rows, stats: info.stats),
+            weaponTypeItem(allRows: allRows),
             combatFieldItem(
                 title: BaL10n.string("ba.student.detail.meta.street"),
                 role: .terrain,
                 valueKeywords: ["市街"],
-                rows: rows,
-                stats: info.stats,
+                allRows: allRows,
                 valuePriority: terrainValuePriority
             ),
             combatFieldItem(
                 title: BaL10n.string("ba.student.detail.meta.outdoor"),
                 role: .terrain,
                 valueKeywords: ["屋外"],
-                rows: rows,
-                stats: info.stats,
+                allRows: allRows,
                 valuePriority: terrainValuePriority
             ),
             combatFieldItem(
                 title: BaL10n.string("ba.student.detail.meta.indoor"),
                 role: .terrain,
                 valueKeywords: ["屋内", "室内"],
-                rows: rows,
-                stats: info.stats,
+                allRows: allRows,
                 valuePriority: terrainValuePriority
             ),
         ]
@@ -128,24 +128,22 @@ enum BaStudentGuideMeta {
     }
 
     private nonisolated static func tacticalPositionItem(
-        info: BaStudentGuideInfo,
-        rows: [BaGuideRow]
+        allRows: [BaGuideRow]
     ) -> BaGuideMetaItem {
-        let iconRows = rows + info.stats
         let tacticalRow = findBestRowByTitleKeywords(
-            rows: iconRows,
+            rows: allRows,
             keywords: ["战术位置作用", "战术作用"],
             requireImage: true,
             valuePriority: tacticalRoleValuePriority
         )
         let combinedRow = findBestRowByTitleKeywords(
-            rows: iconRows,
+            rows: allRows,
             keywords: ["战术位置作用", "战术作用", "作用"],
             requireImage: true,
             valuePriority: tacticalRoleValuePriority
         )
         let positionRow = findBestRowByTitleKeywords(
-            rows: iconRows,
+            rows: allRows,
             keywords: ["位置"],
             requireImage: true,
             valuePriority: positionValuePriority
@@ -156,8 +154,7 @@ enum BaStudentGuideMeta {
             role: .tacticalPosition,
             raw: findGuideFieldValue(
                 keywords: ["作用", "战术位置作用", "战术作用"],
-                rows: rows,
-                stats: info.stats,
+                allRows: allRows,
                 valuePriority: tacticalRoleValuePriority
             )
         )
@@ -165,8 +162,7 @@ enum BaStudentGuideMeta {
             role: .position,
             raw: findGuideFieldValue(
                 keywords: ["位置"],
-                rows: iconRows,
-                stats: info.stats,
+                allRows: allRows,
                 valuePriority: positionValuePriority
             )
         )
@@ -179,13 +175,12 @@ enum BaStudentGuideMeta {
         )
     }
 
-    private nonisolated static func weaponTypeItem(rows: [BaGuideRow], stats: [BaGuideRow]) -> BaGuideMetaItem {
+    private nonisolated static func weaponTypeItem(allRows: [BaGuideRow]) -> BaGuideMetaItem {
         let weapon = combatFieldItem(
             title: BaL10n.string("ba.student.detail.meta.weaponType"),
             role: .weaponType,
             valueKeywords: ["武器类型"],
-            rows: rows,
-            stats: stats
+            allRows: allRows
         )
         return BaGuideMetaItem(
             title: weapon.title,
@@ -199,52 +194,46 @@ enum BaStudentGuideMeta {
         title: String,
         role: MetaRole,
         valueKeywords: [String],
-        rows: [BaGuideRow],
-        stats: [BaGuideRow],
+        allRows: [BaGuideRow],
         valuePriority: ((String) -> Int)? = nil
     ) -> BaGuideMetaItem {
         buildMetaItem(
             title: title,
             role: role,
             valueKeywords: valueKeywords,
-            rows: rows,
-            stats: stats,
+            allRows: allRows,
             valuePriority: valuePriority
         )
     }
 
     private nonisolated static func npcSatelliteProfileMetaItems(from info: BaStudentGuideInfo) -> [BaGuideMetaItem] {
-        let rows = info.profileDisplayRows
-        let stats = info.stats
+        // Single allocation shared by every exact-profile lookup below.
+        let allRows = info.profileDisplayRows + info.stats
         let items = [
             buildExactProfileMetaItem(
                 title: BaL10n.string("ba.student.detail.meta.rarity"),
                 role: .rarity,
                 titleKeywords: ["稀有度", "星级"],
-                rows: rows,
-                stats: stats
+                allRows: allRows
             ),
             buildExactProfileMetaItem(
                 title: BaL10n.string("ba.student.detail.meta.belongs"),
                 role: .affiliation,
                 titleKeywords: ["所属", "阵营"],
-                rows: rows,
-                stats: stats
+                allRows: allRows
             ),
             buildExactProfileMetaItem(
                 title: BaL10n.string("ba.student.detail.meta.academy"),
                 role: .academy,
                 titleKeywords: ["所属学园", "所属学院", "学园", "学院", "school"],
-                rows: rows,
-                stats: stats,
+                allRows: allRows,
                 valuePriority: academyValuePriority
             ),
             buildExactProfileMetaItem(
                 title: BaL10n.string("ba.student.detail.meta.club"),
                 role: .club,
                 titleKeywords: ["所属社团", "社团"],
-                rows: rows,
-                stats: stats
+                allRows: allRows
             ),
         ]
             .compactMap(\.self)
@@ -256,11 +245,9 @@ enum BaStudentGuideMeta {
         title: String,
         role: MetaRole,
         titleKeywords: [String],
-        rows: [BaGuideRow],
-        stats: [BaGuideRow],
+        allRows: [BaGuideRow],
         valuePriority: ((String) -> Int)? = nil
     ) -> BaGuideMetaItem? {
-        let allRows = rows + stats
         let candidates = fieldCandidates(
             rows: allRows,
             keywords: titleKeywords,
@@ -321,12 +308,11 @@ enum BaStudentGuideMeta {
         title: String,
         role: MetaRole,
         valueKeywords: [String],
-        rows: [BaGuideRow],
-        stats: [BaGuideRow],
+        allRows: [BaGuideRow],
         valuePriority: ((String) -> Int)? = nil
     ) -> BaGuideMetaItem {
         let iconRow = findBestRowByTitleKeywords(
-            rows: rows + stats,
+            rows: allRows,
             keywords: valueKeywords,
             requireImage: true,
             valuePriority: valuePriority
@@ -335,8 +321,7 @@ enum BaStudentGuideMeta {
             role: role,
             raw: findGuideFieldValue(
                 keywords: valueKeywords,
-                rows: rows,
-                stats: stats,
+                allRows: allRows,
                 valuePriority: valuePriority
             )
         )
@@ -349,15 +334,13 @@ enum BaStudentGuideMeta {
 
     private nonisolated static func findGuideFieldValue(
         keywords: [String],
-        rows: [BaGuideRow],
-        stats: [BaGuideRow],
+        allRows: [BaGuideRow],
         valuePriority: ((String) -> Int)? = nil
     ) -> String {
         let normalizedKeywords = keywords
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { $0.isEmpty == false }
         guard normalizedKeywords.isEmpty == false else { return "-" }
-        let allRows = rows + stats
         let exactCandidates = fieldCandidates(
             rows: allRows,
             keywords: normalizedKeywords,
