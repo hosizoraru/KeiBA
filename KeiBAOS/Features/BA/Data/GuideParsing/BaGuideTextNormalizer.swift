@@ -8,6 +8,47 @@
 import Foundation
 
 enum BaGuideTextNormalizer {
+    // Compiled-once regex caches. Every JSON row ingest funnels through
+    // clean()/cleanDisplayText()/normalizeMediaURL(), so recompiling these
+    // patterns from string literals on each call shows up as a meaningful
+    // allocation hotspot during initial guide loads and search updates.
+    fileprivate nonisolated(unsafe) static let stripHTMLRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"<[^>]+>"#)
+    }()
+    fileprivate nonisolated(unsafe) static let displayMediaRegex: NSRegularExpression? = {
+        try? NSRegularExpression(
+            pattern: #"((?:https?:)?//[^\s"'<>\\]+|/[A-Za-z0-9_\-./%]+\.(?:png|jpe?g|webp|gif|mp3|m4a|wav|aac|ogg|oga|opus|flac|mp4|mov|m3u8)(?:\?[^\s"'<>\\]+)?)"#,
+            options: [.caseInsensitive]
+        )
+    }()
+    fileprivate nonisolated(unsafe) static let trailingSlashRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"\s*/\s*$"#)
+    }()
+    fileprivate nonisolated(unsafe) static let collapsedSpaceRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"\s{2,}"#)
+    }()
+    fileprivate nonisolated(unsafe) static let digitOnlyRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"^\d+$"#)
+    }()
+    fileprivate nonisolated(unsafe) static let dateRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"\d{4}[-/.]\d{1,2}[-/.]\d{1,2}"#)
+    }()
+    fileprivate nonisolated(unsafe) static let extractURLsRegex: NSRegularExpression? = {
+        try? NSRegularExpression(
+            pattern: #"((?:https?:)?//[^\s"'<>\\]+|/[A-Za-z0-9_\-./%]+(?:\?[^\s"'<>\\]+)?|[A-Za-z0-9_\-./%]+\.(?:png|jpe?g|webp|gif|mp3|m4a|wav|aac|ogg|oga|opus|flac|mp4|mov|m3u8)(?:\?[^\s"'<>\\]+)?)"#,
+            options: [.caseInsensitive]
+        )
+    }()
+    fileprivate nonisolated(unsafe) static let imgTagRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"<img\b[^>]*>"#, options: [.caseInsensitive, .dotMatchesLineSeparators])
+    }()
+    fileprivate nonisolated(unsafe) static let imgClassRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"\bclass\s*=\s*["']([^"']+)["']"#, options: [.caseInsensitive])
+    }()
+    fileprivate nonisolated(unsafe) static let imgSrcRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"\bsrc\s*=\s*["']([^"']+)["']"#, options: [.caseInsensitive])
+    }()
+
     nonisolated static func clean(_ raw: String) -> String {
         stripHTML(raw)
             .replacingOccurrences(of: "&nbsp;", with: " ")
@@ -21,12 +62,30 @@ enum BaGuideTextNormalizer {
     }
 
     nonisolated static func cleanDisplayText(_ raw: String) -> String {
-        let mediaPattern = #"((?:https?:)?//[^\s"'<>\\]+|/[A-Za-z0-9_\-./%]+\.(?:png|jpe?g|webp|gif|mp3|m4a|wav|aac|ogg|oga|opus|flac|mp4|mov|m3u8)(?:\?[^\s"'<>\\]+)?)"#
-        return clean(raw)
-            .replacingOccurrences(of: mediaPattern, with: "", options: [.regularExpression, .caseInsensitive])
-            .replacingOccurrences(of: #"\s*/\s*$"#, with: "", options: .regularExpression)
-            .replacingOccurrences(of: #"\s{2,}"#, with: " ", options: .regularExpression)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleaned = clean(raw)
+        let stripped: String
+        if let regex = displayMediaRegex {
+            let range = NSRange(cleaned.startIndex ..< cleaned.endIndex, in: cleaned)
+            stripped = regex.stringByReplacingMatches(in: cleaned, range: range, withTemplate: "")
+        } else {
+            let mediaPattern = #"((?:https?:)?//[^\s"'<>\\]+|/[A-Za-z0-9_\-./%]+\.(?:png|jpe?g|webp|gif|mp3|m4a|wav|aac|ogg|oga|opus|flac|mp4|mov|m3u8)(?:\?[^\s"'<>\\]+)?)"#
+            stripped = cleaned.replacingOccurrences(of: mediaPattern, with: "", options: [.regularExpression, .caseInsensitive])
+        }
+        let withoutTrailingSlash: String
+        if let regex = trailingSlashRegex {
+            let range = NSRange(stripped.startIndex ..< stripped.endIndex, in: stripped)
+            withoutTrailingSlash = regex.stringByReplacingMatches(in: stripped, range: range, withTemplate: "")
+        } else {
+            withoutTrailingSlash = stripped.replacingOccurrences(of: #"\s*/\s*$"#, with: "", options: .regularExpression)
+        }
+        let collapsed: String
+        if let regex = collapsedSpaceRegex {
+            let range = NSRange(withoutTrailingSlash.startIndex ..< withoutTrailingSlash.endIndex, in: withoutTrailingSlash)
+            collapsed = regex.stringByReplacingMatches(in: withoutTrailingSlash, range: range, withTemplate: " ")
+        } else {
+            collapsed = withoutTrailingSlash.replacingOccurrences(of: #"\s{2,}"#, with: " ", options: .regularExpression)
+        }
+        return collapsed.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     nonisolated static func normalizedKey(_ raw: String) -> String {
@@ -122,14 +181,20 @@ enum BaGuideTextNormalizer {
 
     nonisolated static func isPlaceholderMediaToken(_ raw: String) -> Bool {
         let value = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        return value.isEmpty ||
+        if value.isEmpty ||
             value == "n" ||
             value == "null" ||
             value == "undefined" ||
             value == "nan" ||
             value == "-" ||
-            value == "[]" ||
-            value.range(of: #"^\d+$"#, options: .regularExpression) != nil
+            value == "[]" {
+            return true
+        }
+        if let regex = digitOnlyRegex {
+            let range = NSRange(value.startIndex ..< value.endIndex, in: value)
+            return regex.firstMatch(in: value, range: range) != nil
+        }
+        return value.range(of: #"^\d+$"#, options: .regularExpression) != nil
     }
 
     nonisolated static func imageURLs(in any: Any?, sourceURL: URL?, depth: Int = 0) -> [URL] {
@@ -151,9 +216,9 @@ enum BaGuideTextNormalizer {
 
     nonisolated static func imageURLsFromHTMLClasses(_ raw: String, classKeywords: [String], sourceURL: URL?) -> [URL] {
         guard raw.isEmpty == false,
-              let tagRegex = try? NSRegularExpression(pattern: #"<img\b[^>]*>"#, options: [.caseInsensitive, .dotMatchesLineSeparators]),
-              let classRegex = try? NSRegularExpression(pattern: #"\bclass\s*=\s*["']([^"']+)["']"#, options: [.caseInsensitive]),
-              let srcRegex = try? NSRegularExpression(pattern: #"\bsrc\s*=\s*["']([^"']+)["']"#, options: [.caseInsensitive])
+              let tagRegex = imgTagRegex,
+              let classRegex = imgClassRegex,
+              let srcRegex = imgSrcRegex
         else {
             return []
         }
@@ -183,7 +248,14 @@ enum BaGuideTextNormalizer {
             .replacingOccurrences(of: "年", with: "-")
             .replacingOccurrences(of: "月", with: "-")
             .replacingOccurrences(of: "日", with: "")
-        guard let match = normalized.range(of: #"\d{4}[-/.]\d{1,2}[-/.]\d{1,2}"#, options: .regularExpression) else {
+        let foundRange: Range<String.Index>?
+        if let regex = dateRegex {
+            let range = NSRange(normalized.startIndex ..< normalized.endIndex, in: normalized)
+            foundRange = regex.firstMatch(in: normalized, range: range).flatMap { Range($0.range, in: normalized) }
+        } else {
+            foundRange = normalized.range(of: #"\d{4}[-/.]\d{1,2}[-/.]\d{1,2}"#, options: .regularExpression)
+        }
+        guard let match = foundRange else {
             return nil
         }
         let parts = normalized[match]
@@ -201,7 +273,11 @@ enum BaGuideTextNormalizer {
     }
 
     private nonisolated static func stripHTML(_ raw: String) -> String {
-        raw.replacingOccurrences(of: #"<[^>]+>"#, with: " ", options: .regularExpression)
+        if let regex = stripHTMLRegex {
+            let range = NSRange(raw.startIndex ..< raw.endIndex, in: raw)
+            return regex.stringByReplacingMatches(in: raw, range: range, withTemplate: " ")
+        }
+        return raw.replacingOccurrences(of: #"<[^>]+>"#, with: " ", options: .regularExpression)
     }
 
     private nonisolated static func urls(
@@ -224,8 +300,7 @@ enum BaGuideTextNormalizer {
     }
 
     private nonisolated static func extractURLs(_ raw: String, sourceURL: URL?) -> [URL] {
-        let pattern = #"((?:https?:)?//[^\s"'<>\\]+|/[A-Za-z0-9_\-./%]+(?:\?[^\s"'<>\\]+)?|[A-Za-z0-9_\-./%]+\.(?:png|jpe?g|webp|gif|mp3|m4a|wav|aac|ogg|oga|opus|flac|mp4|mov|m3u8)(?:\?[^\s"'<>\\]+)?)"#
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return [] }
+        guard let regex = extractURLsRegex else { return [] }
         let range = NSRange(raw.startIndex ..< raw.endIndex, in: raw)
         let urls = regex.matches(in: raw, range: range).compactMap { match -> URL? in
             guard let range = Range(match.range(at: 1), in: raw) else { return nil }
@@ -235,6 +310,10 @@ enum BaGuideTextNormalizer {
     }
 
     private nonisolated static func extractAttributeURLs(_ raw: String, attribute: String, sourceURL: URL?) -> [URL] {
+        // The attribute name is dynamic (passed as a parameter), so this
+        // regex stays inline. In practice it is only ever called with
+        // attribute == "src" from imageURLsFromHTML, but keep the dynamic
+        // shape so callers retain the flexibility.
         guard let regex = try? NSRegularExpression(pattern: #"\b\#(attribute)\s*=\s*["']([^"']+)["']"#, options: [.caseInsensitive]) else {
             return []
         }
