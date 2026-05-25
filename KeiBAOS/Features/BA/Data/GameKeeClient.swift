@@ -384,15 +384,29 @@ struct GameKeeClient: @unchecked Sendable {
         return "https://www.gamekee.com/\(raw)"
     }
 
+    // Compile once. resolveReferer runs on every HTTP fetch (image, audio,
+    // media, JSON, HTML), so paying the regex-compile cost per call shows up
+    // on the request hot path. Both patterns are tiny and Sendable.
+    private nonisolated static let detailAPIIDRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"/v1/content/detail/(\d+)"#)
+    }()
+    private nonisolated static let detailHTMLIDRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"/ba/tj/(\d+)\.html"#)
+    }()
+
     private nonisolated func detailContentID(_ hint: String) -> String? {
-        if let range = hint.range(of: #"/v1/content/detail/(\d+)"#, options: .regularExpression) {
-            return String(hint[range]).split(separator: "/").last.map(String.init)
+        let range = NSRange(hint.startIndex ..< hint.endIndex, in: hint)
+        if let match = Self.detailAPIIDRegex?.firstMatch(in: hint, range: range),
+           match.numberOfRanges >= 2,
+           let captureRange = Range(match.range(at: 1), in: hint)
+        {
+            return String(hint[captureRange])
         }
-        if let range = hint.range(of: #"/ba/tj/(\d+)\.html"#, options: .regularExpression) {
-            let matched = String(hint[range])
-            return matched
-                .replacingOccurrences(of: "/ba/tj/", with: "")
-                .replacingOccurrences(of: ".html", with: "")
+        if let match = Self.detailHTMLIDRegex?.firstMatch(in: hint, range: range),
+           match.numberOfRanges >= 2,
+           let captureRange = Range(match.range(at: 1), in: hint)
+        {
+            return String(hint[captureRange])
         }
         return nil
     }
