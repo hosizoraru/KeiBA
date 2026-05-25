@@ -81,7 +81,10 @@ enum BaGuideRichTextExtractor {
     private static func looksLikeMediaToken(_ raw: String, sourceURL: URL?) -> Bool {
         let value = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard value.isEmpty == false else { return false }
-        if value.range(of: #"\s"#, options: .regularExpression) != nil {
+        // CharacterSet membership avoids a per-call regex compile and
+        // gives the same answer as `\s`. Hit on every rich-text traversal
+        // node during student detail ingestion.
+        if value.rangeOfCharacter(from: .whitespacesAndNewlines) != nil {
             return false
         }
         guard let url = BaGuideTextNormalizer.normalizeMediaURL(value, sourceURL: sourceURL) else {

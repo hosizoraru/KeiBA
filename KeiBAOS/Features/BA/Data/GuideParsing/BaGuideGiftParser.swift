@@ -127,9 +127,22 @@ struct BaGuideGiftParser {
         return BaGuideTextNormalizer.dedupe(out)
     }
 
+    // Cached once. Hit per gift preference cell during student detail
+    // ingestion — every detail load fans out to multiple gift rows.
+    private nonisolated(unsafe) static let dimensionsRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"/w_(\d{1,4})/h_(\d{1,4})/"#)
+    }()
+
     private func isLikelyGiftPreferenceIcon(_ url: URL) -> Bool {
         let value = url.absoluteString
-        if let range = value.range(of: #"/w_(\d{1,4})/h_(\d{1,4})/"#, options: .regularExpression) {
+        let matchedRange: Range<String.Index>?
+        if let regex = Self.dimensionsRegex {
+            let nsRange = NSRange(value.startIndex ..< value.endIndex, in: value)
+            matchedRange = regex.firstMatch(in: value, range: nsRange).flatMap { Range($0.range, in: value) }
+        } else {
+            matchedRange = value.range(of: #"/w_(\d{1,4})/h_(\d{1,4})/"#, options: .regularExpression)
+        }
+        if let range = matchedRange {
             let matched = value[range]
             let numbers = matched.split(whereSeparator: { $0 < "0" || $0 > "9" }).compactMap { Int($0) }
             if numbers.count >= 2, (24 ... 120).contains(numbers[0]), (24 ... 120).contains(numbers[1]) {

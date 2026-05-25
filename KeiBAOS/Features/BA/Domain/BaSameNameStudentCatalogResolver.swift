@@ -46,14 +46,26 @@ nonisolated enum BaSameNameStudentCatalogResolver {
         return Set(candidates.map(normalizeName).filter { $0.isEmpty == false })
     }
 
+    // Compiled once. Hit per same-name role row during student detail recompose;
+    // an inline regex compile per call dominated when the body re-evaluated.
+    private nonisolated(unsafe) static let displayPrefixRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"^(?:★+\s*\d*|\d+\s*星|NPC|npc)\s*"#)
+    }()
+
     private static func stripDisplayPrefix(_ raw: String) -> String {
-        raw.trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        let stripped: String
+        if let regex = displayPrefixRegex {
+            let range = NSRange(trimmed.startIndex ..< trimmed.endIndex, in: trimmed)
+            stripped = regex.stringByReplacingMatches(in: trimmed, range: range, withTemplate: "")
+        } else {
+            stripped = trimmed.replacingOccurrences(
                 of: #"^(?:★+\s*\d*|\d+\s*星|NPC|npc)\s*"#,
                 with: "",
                 options: .regularExpression
             )
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return stripped.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private static func normalizeName(_ raw: String) -> String {

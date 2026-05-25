@@ -853,12 +853,12 @@ private extension BaGuideGalleryItem {
 
     private static func furnitureDisplayTitle(from raw: String) -> String {
         let value = raw.trimmed
-        if let match = value.firstRegexCaptureGroups(pattern: #"^互动家具\s*(\d)(\d)$"#),
+        if let match = value.firstRegexCaptureGroups(regex: BaProfileURLPatterns.furniturePairRegex),
            match.count == 2
         {
             return localizedFurnitureTitle(number: "\(match[0])-\(match[1])")
         }
-        if let match = value.firstRegexCaptureGroups(pattern: #"^互动家具\s*(\d+)$"#),
+        if let match = value.firstRegexCaptureGroups(regex: BaProfileURLPatterns.furnitureNumberRegex),
            let number = match.first
         {
             return localizedFurnitureTitle(number: number)
@@ -876,6 +876,21 @@ private enum BaProfileURLPatterns {
     // image URL is animated. Compile once.
     nonisolated(unsafe) static let gifSuffixRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"\.gif(?:[?#].*)?$"#)
+    }()
+
+    // String.regexNumberTokens is hit per profile string during card
+    // rendering — caching avoids recompiling \d+ on every recompose.
+    nonisolated(unsafe) static let digitsRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"\d+"#)
+    }()
+
+    // Furniture display titles parse the trailing digits of a 互动家具
+    // label per row. Both patterns compile once and reuse.
+    nonisolated(unsafe) static let furniturePairRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"^互动家具\s*(\d)(\d)$"#)
+    }()
+    nonisolated(unsafe) static let furnitureNumberRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"^互动家具\s*(\d+)$"#)
     }()
 }
 
@@ -913,7 +928,7 @@ private extension String {
     }
 
     var regexNumberTokens: [String] {
-        guard let regex = try? NSRegularExpression(pattern: #"\d+"#) else { return [] }
+        guard let regex = BaProfileURLPatterns.digitsRegex else { return [] }
         let range = NSRange(startIndex ..< endIndex, in: self)
         return regex.matches(in: self, range: range).compactMap { match in
             guard let range = Range(match.range, in: self) else { return nil }
@@ -923,6 +938,11 @@ private extension String {
 
     func firstRegexCaptureGroups(pattern: String) -> [String]? {
         guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return nil }
+        return firstRegexCaptureGroups(regex: regex)
+    }
+
+    func firstRegexCaptureGroups(regex: NSRegularExpression?) -> [String]? {
+        guard let regex else { return nil }
         let range = NSRange(startIndex ..< endIndex, in: self)
         guard let match = regex.firstMatch(in: self, range: range), match.numberOfRanges > 1 else { return nil }
         return (1 ..< match.numberOfRanges).compactMap { index in

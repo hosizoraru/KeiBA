@@ -346,10 +346,18 @@ struct BaGuideSupplementalContentParser {
         return []
     }
 
+    // Compiled once. Hit per text node during supplemental content walks
+    // for every student detail body recompose.
+    private nonisolated(unsafe) static let webURLRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"((?:https?:)?//[^\s"'<>\\]+|/[A-Za-z0-9_\-./%]+(?:\?[^\s"'<>\\]+)?)"#, options: [.caseInsensitive])
+    }()
+
+    private static let webURLMediaExtensions: Set<String> = [
+        "jpg", "jpeg", "png", "webp", "gif", "svg", "mp4", "mov", "m3u8", "mp3", "m4a", "wav", "aac", "ogg", "oga", "opus", "flac",
+    ]
+
     private func extractWebURLs(from raw: String, sourceURL: URL?) -> [URL] {
-        guard let regex = try? NSRegularExpression(pattern: #"((?:https?:)?//[^\s"'<>\\]+|/[A-Za-z0-9_\-./%]+(?:\?[^\s"'<>\\]+)?)"#, options: [.caseInsensitive]) else {
-            return []
-        }
+        guard let regex = Self.webURLRegex else { return [] }
         let range = NSRange(raw.startIndex ..< raw.endIndex, in: raw)
         let urls = regex.matches(in: raw, range: range).compactMap { match -> URL? in
             guard let matchRange = Range(match.range(at: 1), in: raw),
@@ -358,8 +366,7 @@ struct BaGuideSupplementalContentParser {
                 return nil
             }
             let pathExtension = url.pathExtension.lowercased()
-            let mediaExtensions = ["jpg", "jpeg", "png", "webp", "gif", "svg", "mp4", "mov", "m3u8", "mp3", "m4a", "wav", "aac", "ogg", "oga", "opus", "flac"]
-            return mediaExtensions.contains(pathExtension) ? nil : url
+            return Self.webURLMediaExtensions.contains(pathExtension) ? nil : url
         }
         return BaGuideTextNormalizer.dedupe(urls)
     }

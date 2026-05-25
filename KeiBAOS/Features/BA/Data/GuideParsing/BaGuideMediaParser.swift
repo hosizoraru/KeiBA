@@ -224,6 +224,13 @@ struct BaGuideMediaParser {
         return url
     }
 
+    // Compiled once. Hit per memory-hall lookup during student detail
+    // ingestion — running a regex compile per call dominated when many
+    // students were preloaded.
+    private nonisolated(unsafe) static let digitsRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"\d+"#)
+    }()
+
     private func findMemoryUnlockLevel(_ baseData: [[BaJSONObject]]) -> String {
         for row in baseData {
             guard let keyCell = row.first else { continue }
@@ -233,6 +240,14 @@ struct BaGuideMediaParser {
                 .compactMap { $0.string("value") }
                 .map(BaGuideTextNormalizer.clean)
                 .first { $0.isEmpty == false } ?? ""
+            if let regex = Self.digitsRegex {
+                let nsRange = NSRange(text.startIndex ..< text.endIndex, in: text)
+                if let match = regex.firstMatch(in: text, range: nsRange),
+                   let range = Range(match.range, in: text) {
+                    return String(text[range])
+                }
+                return text
+            }
             return text.range(of: #"\d+"#, options: .regularExpression).map { String(text[$0]) } ?? text
         }
         return ""

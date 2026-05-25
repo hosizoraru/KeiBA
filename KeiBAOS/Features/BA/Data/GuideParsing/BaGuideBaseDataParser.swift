@@ -268,9 +268,23 @@ struct BaGuideBaseDataParser {
         )
     }
 
+    // Compiled once. Hit per row during base-data ingestion — every
+    // detail body recompose iterates many rows, and each one was paying
+    // a fresh regex compile.
+    private nonisolated(unsafe) static let skillKeyLevelRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"^LV\.?\d{1,2}\b"#, options: [.caseInsensitive])
+    }()
+
     private func isSkillKey(_ value: String) -> Bool {
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.range(of: #"(?i)^LV\.?\d{1,2}\b"#, options: .regularExpression) != nil {
+        let matched: Bool
+        if let regex = Self.skillKeyLevelRegex {
+            let range = NSRange(trimmed.startIndex ..< trimmed.endIndex, in: trimmed)
+            matched = regex.firstMatch(in: trimmed, range: range) != nil
+        } else {
+            matched = trimmed.range(of: #"(?i)^LV\.?\d{1,2}\b"#, options: .regularExpression) != nil
+        }
+        if matched {
             return true
         }
         return BaGuideTextNormalizer.containsAny(

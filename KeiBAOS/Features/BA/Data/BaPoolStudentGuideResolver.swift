@@ -62,10 +62,8 @@ nonisolated struct BaPoolStudentGuideResolver {
         guard host == "www.gamekee.com" || host == "gamekee.com" else { return nil }
 
         let path = normalizedURL.path
-        for pattern in explicitGuidePathPatterns {
-            guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
-                continue
-            }
+        for regex in explicitGuidePathRegexes {
+            guard let regex else { continue }
             let range = NSRange(path.startIndex ..< path.endIndex, in: path)
             guard let match = regex.firstMatch(in: path, range: range),
                   let contentRange = Range(match.range(at: 1), in: path),
@@ -82,9 +80,7 @@ nonisolated struct BaPoolStudentGuideResolver {
     static func contentID(from url: URL?) -> Int64? {
         guard let canonicalURL = canonicalStudentGuideURL(from: url) else { return nil }
         let path = canonicalURL.path
-        guard let regex = try? NSRegularExpression(pattern: #"/ba/tj/(\d+)(?:\.html)?$"#) else {
-            return nil
-        }
+        guard let regex = canonicalContentIDRegex else { return nil }
         let range = NSRange(path.startIndex ..< path.endIndex, in: path)
         guard let match = regex.firstMatch(in: path, range: range),
               let contentRange = Range(match.range(at: 1), in: path)
@@ -116,6 +112,16 @@ nonisolated struct BaPoolStudentGuideResolver {
         #"/ba/tj/(\d+)(?:\.html)?$"#,
         #"/v1/content/detail/(\d+)$"#,
     ]
+
+    // Compiled once. Hit per pool entry resolution; without caching every
+    // resolve() walked the pattern list and recompiled each pattern.
+    private nonisolated(unsafe) static let explicitGuidePathRegexes: [NSRegularExpression?] = explicitGuidePathPatterns.map {
+        try? NSRegularExpression(pattern: $0, options: [.caseInsensitive])
+    }
+
+    private nonisolated(unsafe) static let canonicalContentIDRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"/ba/tj/(\d+)(?:\.html)?$"#)
+    }()
 
     private static let aliasSeparators = CharacterSet(charactersIn: ",，、/|｜;；·")
 }

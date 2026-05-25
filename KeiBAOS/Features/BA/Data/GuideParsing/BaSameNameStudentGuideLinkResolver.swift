@@ -45,16 +45,13 @@ nonisolated enum BaSameNameStudentGuideLinkResolver {
             candidates.append(source)
         } else if source.hasPrefix("www.") {
             candidates.append("https://\(source)")
-        } else if source.range(of: #"^\d{4,}$"#, options: .regularExpression) != nil {
+        } else if matchesNumericID(source) {
             candidates.append("https://www.gamekee.com/ba/tj/\(source).html")
         } else if source.hasPrefix("/") {
             candidates.append(GameKeeJSON.normalizeGameKeeLink(source, fallback: "")?.absoluteString ?? source)
         }
 
-        let embedded = regexMatches(
-            in: source,
-            pattern: #"https?://[^\s]+|/(?:ba/tj/\d+(?:\.html)?|ba/\d+(?:\.html)?|v1/content/detail/\d+)"#
-        )
+        let embedded = regexMatches(in: source, regex: embeddedLinkRegex, fallbackPattern: embeddedLinkPattern)
             .map(sanitize)
             .map { candidate in
                 if candidate.hasPrefix("/") {
@@ -67,10 +64,8 @@ nonisolated enum BaSameNameStudentGuideLinkResolver {
 
     private static func contentID(from url: URL) -> Int64? {
         let path = url.path
-        for pattern in contentIDPathPatterns {
-            guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
-                continue
-            }
+        for regex in contentIDRegexes {
+            guard let regex else { continue }
             let range = NSRange(path.startIndex ..< path.endIndex, in: path)
             guard let match = regex.firstMatch(in: path, range: range),
                   let idRange = Range(match.range(at: 1), in: path),
@@ -94,12 +89,25 @@ nonisolated enum BaSameNameStudentGuideLinkResolver {
             .trimmingCharacters(in: CharacterSet(charactersIn: ")]},。 ，,;；"))
     }
 
-    private static func regexMatches(in raw: String, pattern: String) -> [String] {
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
+    private static func matchesNumericID(_ raw: String) -> Bool {
+        if let regex = numericIDRegex {
+            let range = NSRange(raw.startIndex ..< raw.endIndex, in: raw)
+            return regex.firstMatch(in: raw, range: range) != nil
+        }
+        return raw.range(of: #"^\d{4,}$"#, options: .regularExpression) != nil
+    }
+
+    private static func regexMatches(in raw: String, regex: NSRegularExpression?, fallbackPattern: String) -> [String] {
+        let resolved: NSRegularExpression
+        if let regex {
+            resolved = regex
+        } else if let built = try? NSRegularExpression(pattern: fallbackPattern, options: [.caseInsensitive]) {
+            resolved = built
+        } else {
             return []
         }
         let range = NSRange(raw.startIndex ..< raw.endIndex, in: raw)
-        return regex.matches(in: raw, range: range).compactMap { match in
+        return resolved.matches(in: raw, range: range).compactMap { match in
             Range(match.range, in: raw).map { String(raw[$0]) }
         }
     }
@@ -114,4 +122,20 @@ nonisolated enum BaSameNameStudentGuideLinkResolver {
         #"/ba/(\d+)(?:\.html)?$"#,
         #"/v1/content/detail/(\d+)$"#,
     ]
+
+    // Compiled once. Hit per resolution attempt (often per same-name role row in
+    // a student detail body). Fallback to per-call compile only if the static
+    // initializer threw.
+    private nonisolated(unsafe) static let contentIDRegexes: [NSRegularExpression?] = contentIDPathPatterns.map {
+        try? NSRegularExpression(pattern: $0, options: [.caseInsensitive])
+    }
+
+    private static let embeddedLinkPattern = #"https?://[^\s]+|/(?:ba/tj/\d+(?:\.html)?|ba/\d+(?:\.html)?|v1/content/detail/\d+)"#
+    private nonisolated(unsafe) static let embeddedLinkRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: embeddedLinkPattern, options: [.caseInsensitive])
+    }()
+
+    private nonisolated(unsafe) static let numericIDRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"^\d{4,}$"#)
+    }()
 }
