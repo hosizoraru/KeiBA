@@ -61,14 +61,22 @@ nonisolated enum BaDashboardSnapshotSharing {
     }
 
     private static var sharedSnapshotFileURL: URL? {
+        sharedSnapshotFileURLCache
+    }
+
+    // Resolve the app-group container path once. The previous computed
+    // property re-asked FileManager on every save and every widget timeline
+    // build; the result is fixed for the process lifetime, so caching it
+    // turns each subsequent access into a single load.
+    nonisolated(unsafe) private static let sharedSnapshotFileURLCache: URL? = {
         #if os(iOS) || os(watchOS)
         FileManager.default
             .containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier)?
             .appendingPathComponent(sharedSnapshotFileName, isDirectory: false)
         #else
-        return nil
+        nil
         #endif
-    }
+    }()
 
     private static func loadSnapshotFromSharedFile() -> BaWatchDashboardSnapshot? {
         guard let sharedSnapshotFileURL,
