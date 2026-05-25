@@ -74,6 +74,14 @@ enum BaPlatformPerformanceProfile {
         musicSamplesRowAvatarAccent(for: currentClass)
     }
 
+    nonisolated static var imageMemoryCacheCountLimit: Int {
+        imageMemoryCacheCountLimit(for: currentClass)
+    }
+
+    nonisolated static var imageMemoryCacheCostLimit: Int {
+        imageMemoryCacheCostLimit(for: currentClass)
+    }
+
     nonisolated static func catalogReleaseDateFetchLimit(for platformClass: BaPlatformPerformanceClass) -> Int {
         switch platformClass {
         case .desktop:
@@ -208,6 +216,37 @@ enum BaPlatformPerformanceProfile {
             true
         case .phone, .watch:
             false
+        }
+    }
+
+    // Cap the in-memory image cache to a value that scales with the device's
+    // available memory. The previous flat 32 MB / 256 entries was generous on
+    // a desktop and aggressive on a watch (a single page of thumbnails would
+    // exceed it). NSCache uses these as soft hints, so the OS can still evict
+    // earlier under pressure.
+    nonisolated static func imageMemoryCacheCountLimit(for platformClass: BaPlatformPerformanceClass) -> Int {
+        switch platformClass {
+        case .desktop:
+            512
+        case .pad:
+            384
+        case .phone:
+            256
+        case .watch:
+            96
+        }
+    }
+
+    nonisolated static func imageMemoryCacheCostLimit(for platformClass: BaPlatformPerformanceClass) -> Int {
+        switch platformClass {
+        case .desktop:
+            96 * 1024 * 1024
+        case .pad:
+            64 * 1024 * 1024
+        case .phone:
+            32 * 1024 * 1024
+        case .watch:
+            8 * 1024 * 1024
         }
     }
 

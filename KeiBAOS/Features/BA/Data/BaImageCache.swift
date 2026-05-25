@@ -24,8 +24,8 @@ actor BaImageCache {
     private nonisolated let memoryCache: NSCache<NSURL, NSData> = {
         let cache = NSCache<NSURL, NSData>()
         cache.name = "os.kei.KeiBAOS.BaImageCache"
-        cache.countLimit = 256
-        cache.totalCostLimit = 32 * 1024 * 1024 // 32 MB
+        cache.countLimit = BaPlatformPerformanceProfile.imageMemoryCacheCountLimit
+        cache.totalCostLimit = BaPlatformPerformanceProfile.imageMemoryCacheCostLimit
         return cache
     }()
     private var inFlightRequests: [RequestKey: Task<Data, Error>] = [:]
