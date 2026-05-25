@@ -31,13 +31,19 @@ actor BaGuideMediaCache {
 
     func localURL(for url: URL, refererPath: String = "/ba") async throws -> URL {
         let fileURL = cachedFileURL(for: url)
-        if let data = try? Data(contentsOf: fileURL), data.isEmpty == false {
-            if Self.looksLikeRenderableMediaData(data) {
-                logger.debug("guide media cache hit \(url.host ?? "unknown", privacy: .public)")
-                return fileURL
-            }
+        // Read + signature-validate off the actor. The disk read is the slow
+        // part on a cold cache and looksLikeRenderableMediaData is pure;
+        // hopping both off the actor keeps in-flight bookkeeping unblocked.
+        let validation = await Self.validateMediaFile(at: fileURL)
+        switch validation {
+        case .valid:
+            logger.debug("guide media cache hit \(url.host ?? "unknown", privacy: .public)")
+            return fileURL
+        case .invalid:
             try? fileManager.removeItem(at: fileURL)
             logger.debug("guide media cache invalidated \(url.host ?? "unknown", privacy: .public)")
+        case .missing:
+            break
         }
         if let retryAt = deferredFailures[url], retryAt > Date() {
             throw GameKeeError.invalidResponse("Media retry deferred")
@@ -120,5 +126,20 @@ actor BaGuideMediaCache {
         if lower.contains("video") { return "mp4" }
         if lower.contains("audio") { return "ogg" }
         return "media"
+    }
+
+    private enum MediaFileValidation: Sendable {
+        case valid
+        case invalid
+        case missing
+    }
+
+    private nonisolated static func validateMediaFile(at fileURL: URL) async -> MediaFileValidation {
+        await Task.detached(priority: .utility) {
+            guard let data = try? Data(contentsOf: fileURL), data.isEmpty == false else {
+                return MediaFileValidation.missing
+            }
+            return looksLikeRenderableMediaData(data) ? .valid : .invalid
+        }.value
     }
 }
