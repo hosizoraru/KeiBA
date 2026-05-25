@@ -59,18 +59,22 @@ actor BaCacheStore {
 }
 
 extension JSONEncoder {
-    nonisolated static var ba: JSONEncoder {
+    // Shared encoder reused across cache writes. JSONEncoder is documented as safe
+    // to use from multiple threads as long as configuration is not mutated after
+    // creation; we never mutate it after this initial setup.
+    nonisolated(unsafe) static let ba: JSONEncoder = {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         return encoder
-    }
+    }()
 }
 
 extension JSONDecoder {
-    nonisolated static var ba: JSONDecoder {
+    // Shared decoder reused across cache reads. See note on JSONEncoder.ba.
+    nonisolated(unsafe) static let ba: JSONDecoder = {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         return decoder
-    }
+    }()
 }

@@ -161,9 +161,16 @@ enum GameKeeJSON {
             value.contains("upload")
     }
 
-    private nonisolated static func extractURLs(from raw: String) -> [URL] {
+    // NSRegularExpression is documented as thread-safe once created; reuse the
+    // compiled pattern across calls so URL extraction does not pay the
+    // compilation cost per invocation.
+    private nonisolated(unsafe) static let extractURLsRegex: NSRegularExpression? = {
         let pattern = #"((?:https?:)?//[^\s"'<>\\]+|/[A-Za-z0-9_\-./%]+(?:\?[^\s"'<>\\]+)?)"#
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+        return try? NSRegularExpression(pattern: pattern)
+    }()
+
+    private nonisolated static func extractURLs(from raw: String) -> [URL] {
+        guard let regex = extractURLsRegex else { return [] }
         let range = NSRange(raw.startIndex ..< raw.endIndex, in: raw)
         return regex.matches(in: raw, range: range).compactMap { match in
             guard let range = Range(match.range(at: 1), in: raw) else { return nil }

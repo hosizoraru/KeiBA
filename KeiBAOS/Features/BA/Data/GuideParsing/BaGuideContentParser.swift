@@ -77,11 +77,33 @@ struct BaGuideContentParser {
         firstHTMLMetaContent(html, names: ["og:image", "twitter:image"]).flatMap(GameKeeJSON.normalizeImageURL)
     }
 
-    private func firstHTMLMetaContent(_ html: String, names: [String]) -> String? {
+    // NSRegularExpression is thread-safe once created; reuse the compiled
+    // pattern instead of recompiling per call. The struct is not actor-isolated,
+    // so use nonisolated(unsafe) for the shared static (NSRegularExpression is
+    // not Sendable).
+    private nonisolated(unsafe) static let metaContentRegexCache: [String: NSRegularExpression] = {
+        let names = ["description", "og:description", "og:image", "twitter:image"]
+        var cache: [String: NSRegularExpression] = [:]
         for name in names {
             let pattern = #"<meta[^>]+(?:name|property)=["']\#(name)["'][^>]+content=["']([^"']+)["'][^>]*>"#
-            guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { continue }
-            let range = NSRange(html.startIndex ..< html.endIndex, in: html)
+            if let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) {
+                cache[name] = regex
+            }
+        }
+        return cache
+    }()
+
+    private func firstHTMLMetaContent(_ html: String, names: [String]) -> String? {
+        let range = NSRange(html.startIndex ..< html.endIndex, in: html)
+        for name in names {
+            let regex: NSRegularExpression?
+            if let cached = Self.metaContentRegexCache[name] {
+                regex = cached
+            } else {
+                let pattern = #"<meta[^>]+(?:name|property)=["']\#(name)["'][^>]+content=["']([^"']+)["'][^>]*>"#
+                regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive])
+            }
+            guard let regex else { continue }
             if let match = regex.firstMatch(in: html, range: range),
                let contentRange = Range(match.range(at: 1), in: html)
             {
