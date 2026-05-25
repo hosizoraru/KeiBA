@@ -18,10 +18,21 @@ actor BaImageCache {
     private let fileManager: FileManager
     private let client: GameKeeClient
     private let rootDirectory: URL
+    // NSCache is thread-safe so it lives outside actor isolation. The fast path
+    // can serve hits without bouncing through the actor, which matters when
+    // SwiftUI grids re-issue the same URL during scroll/recompose.
+    private nonisolated let memoryCache: NSCache<NSURL, NSData> = {
+        let cache = NSCache<NSURL, NSData>()
+        cache.name = "os.kei.KeiBAOS.BaImageCache"
+        cache.countLimit = 256
+        cache.totalCostLimit = 32 * 1024 * 1024 // 32 MB
+        return cache
+    }()
     private var inFlightRequests: [RequestKey: Task<Data, Error>] = [:]
     private var deferredFailures: [URL: Date] = [:]
     private var hitCount = 0
     private var missCount = 0
+    private var memoryHitCount = 0
     private var failureCount = 0
     private let logger = Logger(subsystem: "os.kei.KeiBAOS", category: "BaImageCache")
     private let failureTTL: TimeInterval = 45
@@ -39,10 +50,19 @@ actor BaImageCache {
     }
 
     func data(for url: URL, refererPath: String = "/ba") async throws -> Data {
+        // Fast path: in-memory hit. Avoids both the actor reschedule on the
+        // common case and the Data(contentsOf:) + signature scan that disk
+        // hits perform.
+        if let cached = memoryCache.object(forKey: url as NSURL) {
+            memoryHitCount += 1
+            return Data(referencing: cached)
+        }
+
         let fileURL = cachedFileURL(for: url)
         if let data = try? Data(contentsOf: fileURL), data.isEmpty == false {
             if Self.looksLikeImageData(data) {
                 hitCount += 1
+                memoryCache.setObject(data as NSData, forKey: url as NSURL, cost: data.count)
                 return data
             }
             try? fileManager.removeItem(at: fileURL)
@@ -73,6 +93,7 @@ actor BaImageCache {
             }
             throw error
         }
+        memoryCache.setObject(data as NSData, forKey: url as NSURL, cost: data.count)
         do {
             try? fileManager.createDirectory(at: rootDirectory, withIntermediateDirectories: true)
             try data.write(to: fileURL, options: [.atomic])
@@ -106,6 +127,7 @@ actor BaImageCache {
     func clear() {
         try? fileManager.removeItem(at: rootDirectory)
         try? fileManager.createDirectory(at: rootDirectory, withIntermediateDirectories: true)
+        memoryCache.removeAllObjects()
         for request in inFlightRequests.values {
             request.cancel()
         }
@@ -113,12 +135,13 @@ actor BaImageCache {
         deferredFailures.removeAll()
         hitCount = 0
         missCount = 0
+        memoryHitCount = 0
         failureCount = 0
     }
 
     func summary() -> String {
         let fileCount = (try? fileManager.contentsOfDirectory(at: rootDirectory, includingPropertiesForKeys: nil).count) ?? 0
-        return "files=\(fileCount) hits=\(hitCount) misses=\(missCount) failures=\(failureCount)"
+        return "files=\(fileCount) memHits=\(memoryHitCount) hits=\(hitCount) misses=\(missCount) failures=\(failureCount)"
     }
 
     private func cachedFileURL(for url: URL) -> URL {
