@@ -42,6 +42,13 @@ private struct BaStudentWeaponCard: View {
         card.statHeaders.contains(selectedStatLevel) ? selectedStatLevel : card.statHeaders.last ?? ""
     }
 
+    // The previous design called card.statHeaders.firstIndex(of: statLevel)
+    // inside value(for:) per stat row on every recompose — an O(N×rows)
+    // linear search whenever the user picked a level. Resolve once per body.
+    private var statLevelIndex: Int {
+        max(card.statHeaders.firstIndex(of: statLevel) ?? 0, 0)
+    }
+
     var body: some View {
         BaGlassCard(tint: tint) {
             VStack(alignment: .leading, spacing: 12) {
@@ -150,6 +157,7 @@ private struct BaStudentWeaponCard: View {
             }
 
             VStack(alignment: .leading, spacing: 6) {
+                let levelIndex = statLevelIndex
                 ForEach(card.statRows) { row in
                     HStack(alignment: .firstTextBaseline, spacing: 12) {
                         Text(row.title)
@@ -157,7 +165,7 @@ private struct BaStudentWeaponCard: View {
                             .foregroundStyle(.secondary)
                             .lineLimit(2)
                         Spacer(minLength: 12)
-                        Text(value(for: row))
+                        Text(value(for: row, levelIndex: levelIndex))
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.primary)
                             .multilineTextAlignment(.trailing)
@@ -171,15 +179,14 @@ private struct BaStudentWeaponCard: View {
         .liquidGlassSurface(cornerRadius: 18, tint: tint.opacity(0.045), isInteractive: false)
     }
 
-    private func value(for row: BaStudentWeaponStatRow) -> String {
+    private func value(for row: BaStudentWeaponStatRow, levelIndex: Int) -> String {
         guard row.values.isEmpty == false else {
             return "-"
         }
         guard card.statHeaders.isEmpty == false else {
             return row.values.joined(separator: " / ")
         }
-        let index = max(card.statHeaders.firstIndex(of: statLevel) ?? 0, 0)
-        return row.values.indices.contains(index) ? row.values[index] : row.values.last ?? "-"
+        return row.values.indices.contains(levelIndex) ? row.values[levelIndex] : row.values.last ?? "-"
     }
 }
 

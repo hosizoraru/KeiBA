@@ -57,50 +57,71 @@ nonisolated struct BaStudentSkillDisplayModel: Identifiable, Hashable {
     let glossaryIcons: [String: URL]
     let fallbackDescription: String
     let fallbackDescriptionIcons: [URL]
+    // Precomputed once per card. levelOptions/defaultLevel/typeMeta were
+    // hot computed properties — every body recompose for every visible
+    // skill card was sorting descriptionByLevel.keys and re-parsing the
+    // type string. Precompute them at init time so reads are O(1).
+    let levelOptions: [String]
+    let defaultLevel: String
+    let localizedType: String
+    let typeStateTags: [String]
+    let typeVariantBadge: String?
+
+    init(
+        id: String,
+        type: String,
+        name: String,
+        iconURL: URL?,
+        descriptionByLevel: [String: String],
+        descriptionIconsByLevel: [String: [URL]],
+        costByLevel: [String: String],
+        glossaryIcons: [String: URL],
+        fallbackDescription: String,
+        fallbackDescriptionIcons: [URL]
+    ) {
+        self.id = id
+        self.type = type
+        self.name = name
+        self.iconURL = iconURL
+        self.descriptionByLevel = descriptionByLevel
+        self.descriptionIconsByLevel = descriptionIconsByLevel
+        self.costByLevel = costByLevel
+        self.glossaryIcons = glossaryIcons
+        self.fallbackDescription = fallbackDescription
+        self.fallbackDescriptionIcons = fallbackDescriptionIcons
+
+        let sortedLevels = descriptionByLevel.keys.sorted {
+            (Self.parseLevelNumber($0) ?? Int.max, $0) < (Self.parseLevelNumber($1) ?? Int.max, $1)
+        }
+        self.levelOptions = sortedLevels
+        self.defaultLevel = sortedLevels.max {
+            (Self.parseLevelNumber($0) ?? Int.min, $0) < (Self.parseLevelNumber($1) ?? Int.min, $1)
+        } ?? sortedLevels.first ?? "Lv.1"
+
+        let typeMeta = BaStudentSkillTypeMeta.parse(type)
+        self.localizedType = Self.resolveLocalizedType(baseType: typeMeta.baseType)
+        self.typeStateTags = typeMeta.stateTags
+        self.typeVariantBadge = typeMeta.variantIndex.flatMap(Self.circledNumber)
+    }
 
     var displayName: String {
         name.ifBlank(BaL10n.string("ba.student.detail.skill.unnamed"))
     }
 
-    var levelOptions: [String] {
-        descriptionByLevel.keys.sorted {
-            (Self.parseLevelNumber($0) ?? Int.max, $0) < (Self.parseLevelNumber($1) ?? Int.max, $1)
-        }
-    }
-
-    var defaultLevel: String {
-        levelOptions.max {
-            (Self.parseLevelNumber($0) ?? Int.min, $0) < (Self.parseLevelNumber($1) ?? Int.min, $1)
-        } ?? levelOptions.first ?? "Lv.1"
-    }
-
-    var localizedType: String {
-        let base = typeMeta.baseType
-        if base.localizedCaseInsensitiveContains("EX") {
+    private static func resolveLocalizedType(baseType: String) -> String {
+        if baseType.localizedCaseInsensitiveContains("EX") {
             return "EX技能"
         }
-        if base.localizedCaseInsensitiveContains("普通") {
+        if baseType.localizedCaseInsensitiveContains("普通") {
             return BaL10n.string("ba.student.detail.skill.normal")
         }
-        if base.localizedCaseInsensitiveContains("被动") {
+        if baseType.localizedCaseInsensitiveContains("被动") {
             return BaL10n.string("ba.student.detail.skill.passive")
         }
-        if base.localizedCaseInsensitiveContains("辅助") {
+        if baseType.localizedCaseInsensitiveContains("辅助") {
             return BaL10n.string("ba.student.detail.skill.sub")
         }
-        return base.ifBlank(BaStudentDetailSection.skills.title)
-    }
-
-    var typeStateTags: [String] {
-        typeMeta.stateTags
-    }
-
-    var typeVariantBadge: String? {
-        typeMeta.variantIndex.flatMap(Self.circledNumber)
-    }
-
-    private var typeMeta: BaStudentSkillTypeMeta {
-        BaStudentSkillTypeMeta.parse(type)
+        return baseType.ifBlank(BaStudentDetailSection.skills.title)
     }
 
     func description(for level: String) -> String {

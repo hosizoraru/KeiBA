@@ -73,14 +73,29 @@ struct BaStudentSimulationCardsSection: View {
 private struct BaStudentSimulationAbilityCard: View {
     let data: BaStudentSimulationData
     let tint: Color
-    private let initialValueByKey: [String: String]
+    // Precomputed once on init. The previous design called
+    // BaGuideTextNormalizer.normalizedKey(row.title) inside the ForEach on
+    // every body recompose for every visible row, then re-derived the
+    // delta string each time the mode flipped. Bake the maximum-mode
+    // delta map at init so body recompose is a pure dictionary lookup.
+    private let maxDeltaByRowID: [String: String]
 
     @State private var mode: BaStudentSimulationAbilityMode = .maximum
 
     init(data: BaStudentSimulationData, tint: Color) {
         self.data = data
         self.tint = tint
-        self.initialValueByKey = Self.initialValuesByKey(from: data.initialRows)
+        let initialValueByKey = Self.initialValuesByKey(from: data.initialRows)
+        var deltaByRowID: [String: String] = [:]
+        for row in data.maximumRows.prefix(28) {
+            let key = BaGuideTextNormalizer.normalizedKey(row.title)
+            let initial = key.isEmpty ? nil : initialValueByKey[key]
+            deltaByRowID[row.id] = BaStudentSimulationDisplayModel.maxDeltaText(
+                maxValue: row.value,
+                initialValue: initial
+            )
+        }
+        self.maxDeltaByRowID = deltaByRowID
     }
 
     private var selectedRows: [BaGuideRow] {
@@ -147,12 +162,7 @@ private struct BaStudentSimulationAbilityCard: View {
                 } else {
                     VStack(spacing: 12) {
                         ForEach(selectedRows.prefix(28)) { row in
-                            let delta = mode == .maximum
-                                ? BaStudentSimulationDisplayModel.maxDeltaText(
-                                    maxValue: row.value,
-                                    initialValue: initialValueByKey[BaGuideTextNormalizer.normalizedKey(row.title)]
-                                )
-                                : ""
+                            let delta = mode == .maximum ? (maxDeltaByRowID[row.id] ?? "") : ""
                             BaStudentSimulationRowItem(row: row, tint: tint, valueDelta: delta)
                         }
                     }
@@ -167,9 +177,18 @@ private struct BaStudentSimulationWeaponCard: View {
     let rows: [BaGuideRow]
     let hint: String
     let tint: Color
+    // Computed once on init. The previous computed property re-walked the
+    // rows array on every recompose to derive the weapon stat layout.
+    private let viewData: BaStudentSimulationWeaponViewData
+    private let levelCapsule: String
 
-    private var viewData: BaStudentSimulationWeaponViewData {
-        BaStudentSimulationDisplayModel.weaponViewData(rows: rows)
+    init(title: String, rows: [BaGuideRow], hint: String, tint: Color) {
+        self.title = title
+        self.rows = rows
+        self.hint = hint
+        self.tint = tint
+        self.viewData = BaStudentSimulationDisplayModel.weaponViewData(rows: rows)
+        self.levelCapsule = BaStudentSimulationDisplayModel.levelCapsule(from: hint)
     }
 
     var body: some View {
@@ -177,7 +196,7 @@ private struct BaStudentSimulationWeaponCard: View {
             VStack(alignment: .leading, spacing: 14) {
                 BaStudentSimulationCardTitleRow(
                     title: title,
-                    capsule: BaStudentSimulationDisplayModel.levelCapsule(from: hint),
+                    capsule: levelCapsule,
                     tint: tint
                 )
 
@@ -214,9 +233,19 @@ private struct BaStudentSimulationEquipmentCard: View {
     let rows: [BaGuideRow]
     let hint: String
     let tint: Color
+    // Computed once per struct creation. equipmentGroups walks every row,
+    // and the previous computed property re-ran the grouping on every body
+    // recompose of the simulate page.
+    private let groups: [BaStudentSimulationEquipmentGroup]
+    private let levelCapsule: String
 
-    private var groups: [BaStudentSimulationEquipmentGroup] {
-        BaStudentSimulationDisplayModel.equipmentGroups(from: rows)
+    init(title: String, rows: [BaGuideRow], hint: String, tint: Color) {
+        self.title = title
+        self.rows = rows
+        self.hint = hint
+        self.tint = tint
+        self.groups = BaStudentSimulationDisplayModel.equipmentGroups(from: rows)
+        self.levelCapsule = BaStudentSimulationDisplayModel.levelCapsule(from: hint)
     }
 
     var body: some View {
@@ -224,7 +253,7 @@ private struct BaStudentSimulationEquipmentCard: View {
             VStack(alignment: .leading, spacing: 14) {
                 BaStudentSimulationCardTitleRow(
                     title: title,
-                    capsule: BaStudentSimulationDisplayModel.levelCapsule(from: hint),
+                    capsule: levelCapsule,
                     tint: tint
                 )
 
@@ -288,9 +317,16 @@ private struct BaStudentSimulationUnlockCard: View {
     let rows: [BaGuideRow]
     let hint: String
     let tint: Color
+    // Pre-resolve once on init. The previous computed-property design rebuilt
+    // the unlock view data (filtered+normalized rows) on every recompose.
+    private let viewData: BaStudentSimulationUnlockViewData
 
-    private var viewData: BaStudentSimulationUnlockViewData {
-        BaStudentSimulationDisplayModel.unlockViewData(rows: rows, hint: hint)
+    init(title: String, rows: [BaGuideRow], hint: String, tint: Color) {
+        self.title = title
+        self.rows = rows
+        self.hint = hint
+        self.tint = tint
+        self.viewData = BaStudentSimulationDisplayModel.unlockViewData(rows: rows, hint: hint)
     }
 
     var body: some View {
@@ -332,9 +368,18 @@ private struct BaStudentSimulationBondCard: View {
     let rows: [BaGuideRow]
     let hint: String
     let tint: Color
+    // Computed once on init. bondGroups walks every row to group by partner,
+    // and the previous computed-property design re-grouped on every recompose.
+    private let groups: [BaStudentSimulationBondGroup]
+    private let levelCapsule: String
 
-    private var groups: [BaStudentSimulationBondGroup] {
-        BaStudentSimulationDisplayModel.bondGroups(from: rows)
+    init(title: String, rows: [BaGuideRow], hint: String, tint: Color) {
+        self.title = title
+        self.rows = rows
+        self.hint = hint
+        self.tint = tint
+        self.groups = BaStudentSimulationDisplayModel.bondGroups(from: rows)
+        self.levelCapsule = BaStudentSimulationDisplayModel.levelCapsule(from: hint)
     }
 
     var body: some View {
@@ -342,7 +387,7 @@ private struct BaStudentSimulationBondCard: View {
             VStack(alignment: .leading, spacing: 14) {
                 BaStudentSimulationCardTitleRow(
                     title: title,
-                    capsule: BaStudentSimulationDisplayModel.levelCapsule(from: hint),
+                    capsule: levelCapsule,
                     tint: tint
                 )
 
@@ -390,13 +435,23 @@ private struct BaStudentSimulationGenericCard: View {
     let hint: String
     let emptyText: String
     let tint: Color
+    private let levelCapsule: String
+
+    init(title: String, rows: [BaGuideRow], hint: String, emptyText: String, tint: Color) {
+        self.title = title
+        self.rows = rows
+        self.hint = hint
+        self.emptyText = emptyText
+        self.tint = tint
+        self.levelCapsule = BaStudentSimulationDisplayModel.levelCapsule(from: hint)
+    }
 
     var body: some View {
         BaGlassCard(tint: tint) {
             VStack(alignment: .leading, spacing: 14) {
                 BaStudentSimulationCardTitleRow(
                     title: title,
-                    capsule: BaStudentSimulationDisplayModel.levelCapsule(from: hint),
+                    capsule: levelCapsule,
                     tint: tint
                 )
 
