@@ -123,8 +123,14 @@ enum GameKeeJSON {
     }
 
     nonisolated static func extractPlainText(from raw: String) -> String {
-        raw
-            .replacingOccurrences(of: #"<[^>]+>"#, with: " ", options: .regularExpression)
+        let stripped: String
+        if let regex = stripHTMLRegex {
+            let range = NSRange(raw.startIndex ..< raw.endIndex, in: raw)
+            stripped = regex.stringByReplacingMatches(in: raw, range: range, withTemplate: " ")
+        } else {
+            stripped = raw.replacingOccurrences(of: #"<[^>]+>"#, with: " ", options: .regularExpression)
+        }
+        return stripped
             .replacingOccurrences(of: "&nbsp;", with: " ")
             .replacingOccurrences(of: "&amp;", with: "&")
             .replacingOccurrences(of: "&lt;", with: "<")
@@ -167,6 +173,12 @@ enum GameKeeJSON {
     private nonisolated(unsafe) static let extractURLsRegex: NSRegularExpression? = {
         let pattern = #"((?:https?:)?//[^\s"'<>\\]+|/[A-Za-z0-9_\-./%]+(?:\?[^\s"'<>\\]+)?)"#
         return try? NSRegularExpression(pattern: pattern)
+    }()
+
+    // Cached for extractPlainText, which fans out from preferredText on
+    // every JSON row during list ingestion (announcements, news, gallery).
+    fileprivate nonisolated(unsafe) static let stripHTMLRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"<[^>]+>"#)
     }()
 
     private nonisolated static func extractURLs(from raw: String) -> [URL] {
