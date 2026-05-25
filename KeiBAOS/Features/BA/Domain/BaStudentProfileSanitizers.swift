@@ -7,6 +7,38 @@
 
 import Foundation
 
+// Compiled-once regex caches. The profile sanitizer pipeline runs once
+// per row on every student detail load, and several of these patterns
+// (additionalAttribute, tLevel, dataDigit, …) fan out to per-row checks
+// inside isSkillMigratedProfileRow / isProfileValuePlaceholder /
+// stripProfileInstructionNotes / stripProfileCopyHint. Allocating a
+// fresh NSRegularExpression on every check showed up during initial
+// detail loads.
+private nonisolated(unsafe) let additionalAttributeRegex: NSRegularExpression? =
+    try? NSRegularExpression(pattern: #"^附加属性\d+$"#)
+private nonisolated(unsafe) let tLevelRegex: NSRegularExpression? =
+    try? NSRegularExpression(pattern: #"^t\d+$"#, options: [.caseInsensitive])
+private nonisolated(unsafe) let tLevelEffectRegex: NSRegularExpression? =
+    try? NSRegularExpression(pattern: #"^t\d+(效果|所需升级材料|技能图标)$"#, options: [.caseInsensitive])
+private nonisolated(unsafe) let containsDigitRegex: NSRegularExpression? =
+    try? NSRegularExpression(pattern: #"\d"#)
+private nonisolated(unsafe) let placeholderPunctuationRegex: NSRegularExpression? =
+    try? NSRegularExpression(pattern: #"^[\\/|｜／,，;；:：._\-—~·*]+$"#)
+private nonisolated(unsafe) let instructionNoteRegex: NSRegularExpression? =
+    try? NSRegularExpression(pattern: #"(?:<-|←)?\s*(?:这个|这里|此处|这条)?\s*不用写"#)
+private nonisolated(unsafe) let copyHintRegex: NSRegularExpression? =
+    try? NSRegularExpression(pattern: #"(?:<-|←)?\s*大部分时候可以去别的图鉴复制"#)
+private nonisolated(unsafe) let voicePlaceholderRegex: NSRegularExpression? =
+    try? NSRegularExpression(pattern: #"被CC\d+"#)
+private nonisolated(unsafe) let simulateStatLabelRegex: NSRegularExpression? =
+    try? NSRegularExpression(pattern: #"^(初始|顶级|最大|基础)?(攻击力|防御力|生命值|治愈力|命中值|闪避值|暴击值|暴击伤害|稳定值|射程)"#)
+private nonisolated(unsafe) let httpURLRegex: NSRegularExpression? =
+    try? NSRegularExpression(pattern: #"https?://[^\s]+"#, options: [.caseInsensitive])
+private nonisolated(unsafe) let wwwURLRegex: NSRegularExpression? =
+    try? NSRegularExpression(pattern: #"www\.[^\s]+"#, options: [.caseInsensitive])
+private nonisolated(unsafe) let digitsRegex: NSRegularExpression? =
+    try? NSRegularExpression(pattern: #"\d+"#)
+
 nonisolated let profileInlineNoteStripFieldKeys = Set([
     "角色考据",
     "设计",
@@ -57,17 +89,17 @@ nonisolated func isSkillMigratedProfileRow(
 ) -> Bool {
     let key = normalizeProfileFieldKey(row.title)
     let value = normalizeProfileFieldKey(row.value)
-    if key.range(of: #"^附加属性\d+$"#, options: .regularExpression) != nil { return true }
+    if matchesEntireString(key, regex: additionalAttributeRegex, fallbackPattern: #"^附加属性\d+$"#) { return true }
     if key == normalizeProfileFieldKey("初始数据") { return true }
     if key == normalizeProfileFieldKey("顶级数据") { return true }
     if key == normalizeProfileFieldKey("25级") { return true }
-    if key.range(of: #"^t\d+$"#, options: [.regularExpression, .caseInsensitive]) != nil { return true }
-    if key.range(of: #"^t\d+(效果|所需升级材料|技能图标)$"#, options: [.regularExpression, .caseInsensitive]) != nil {
+    if matchesEntireString(key, regex: tLevelRegex, fallbackPattern: #"^t\d+$"#, options: [.caseInsensitive]) { return true }
+    if matchesEntireString(key, regex: tLevelEffectRegex, fallbackPattern: #"^t\d+(效果|所需升级材料|技能图标)$"#, options: [.caseInsensitive]) {
         return true
     }
     if isLikelySimulateStatLabel(row.title),
        isLikelySimulateStatLabel(row.value),
-       value.range(of: #"\d"#, options: .regularExpression) == nil
+       containsRegexMatch(value, regex: containsDigitRegex, fallbackPattern: #"\d"#) == false
     {
         return true
     }
@@ -123,7 +155,7 @@ nonisolated func isProfileValuePlaceholder(_ value: String) -> Bool {
         .replacingOccurrences(of: "　", with: "")
         .lowercased()
     if normalized.isEmpty { return true }
-    if compact.range(of: #"^[\\/|｜／,，;；:：._\-—~·*]+$"#, options: .regularExpression) != nil {
+    if matchesEntireString(compact, regex: placeholderPunctuationRegex, fallbackPattern: #"^[\\/|｜／,，;；:：._\-—~·*]+$"#) {
         return true
     }
     return normalized == "-" ||
@@ -140,12 +172,14 @@ nonisolated func isProfileValuePlaceholder(_ value: String) -> Bool {
 
 nonisolated func stripProfileInstructionNotes(_ raw: String) -> String {
     guard raw.baProfileIsBlank == false else { return "" }
-    let pattern = #"(?:<-|←)?\s*(?:这个|这里|此处|这条)?\s*不用写"#
-    guard raw.range(of: pattern, options: .regularExpression) != nil else { return raw.baProfileTrimmed }
+    let fallbackPattern = #"(?:<-|←)?\s*(?:这个|这里|此处|这条)?\s*不用写"#
+    guard containsRegexMatch(raw, regex: instructionNoteRegex, fallbackPattern: fallbackPattern) else {
+        return raw.baProfileTrimmed
+    }
     let segments = raw
         .components(separatedBy: CharacterSet(charactersIn: "/／|｜,，\n"))
-        .map {
-            $0.replacingOccurrences(of: pattern, with: "", options: .regularExpression)
+        .map { segment in
+            replaceMatches(segment, regex: instructionNoteRegex, fallbackPattern: fallbackPattern, replacement: "")
                 .trimmingCharacters(in: CharacterSet(charactersIn: " /／|｜,，;；"))
                 .baProfileTrimmed
         }
@@ -153,32 +187,35 @@ nonisolated func stripProfileInstructionNotes(_ raw: String) -> String {
     if segments.isEmpty == false {
         return segments.joined(separator: " / ").baProfileTrimmed
     }
-    return raw
-        .replacingOccurrences(of: pattern, with: "", options: .regularExpression)
+    return replaceMatches(raw, regex: instructionNoteRegex, fallbackPattern: fallbackPattern, replacement: "")
         .trimmingCharacters(in: CharacterSet(charactersIn: " /／|｜,，;；"))
         .baProfileTrimmed
 }
 
 nonisolated func isProfileInstructionPlaceholder(_ value: String) -> Bool {
     guard value.baProfileIsBlank == false else { return false }
-    let pattern = #"(?:<-|←)?\s*(?:这个|这里|此处|这条)?\s*不用写"#
-    guard value.range(of: pattern, options: .regularExpression) != nil else { return false }
+    let fallbackPattern = #"(?:<-|←)?\s*(?:这个|这里|此处|这条)?\s*不用写"#
+    guard containsRegexMatch(value, regex: instructionNoteRegex, fallbackPattern: fallbackPattern) else { return false }
     return isProfileValuePlaceholder(stripProfileInstructionNotes(value))
 }
 
 nonisolated func stripProfileCopyHint(_ raw: String) -> String {
     guard raw.baProfileIsBlank == false else { return "" }
-    let pattern = #"(?:<-|←)?\s*大部分时候可以去别的图鉴复制"#
-    guard raw.range(of: pattern, options: .regularExpression) != nil else { return raw.baProfileTrimmed }
+    let fallbackPattern = #"(?:<-|←)?\s*大部分时候可以去别的图鉴复制"#
+    guard containsRegexMatch(raw, regex: copyHintRegex, fallbackPattern: fallbackPattern) else {
+        return raw.baProfileTrimmed
+    }
     let segments = raw
         .components(separatedBy: CharacterSet(charactersIn: "/／|｜,，\n"))
         .map(\.baProfileTrimmed)
-        .filter { $0.baProfileIsNotBlank && $0.range(of: pattern, options: .regularExpression) == nil }
+        .filter {
+            $0.baProfileIsNotBlank &&
+                containsRegexMatch($0, regex: copyHintRegex, fallbackPattern: fallbackPattern) == false
+        }
     if segments.isEmpty == false {
         return segments.joined(separator: " / ").baProfileTrimmed
     }
-    return raw
-        .replacingOccurrences(of: pattern, with: "", options: .regularExpression)
+    return replaceMatches(raw, regex: copyHintRegex, fallbackPattern: fallbackPattern, replacement: "")
         .trimmingCharacters(in: CharacterSet(charactersIn: " /／|｜,，;；"))
         .baProfileTrimmed
 }
@@ -205,14 +242,17 @@ nonisolated func isGrowthTitleVoiceRow(_ row: BaGuideRow) -> Bool {
 
 nonisolated func isVoicePlaceholderRow(_ row: BaGuideRow) -> Bool {
     let merged = "\(row.title) \(row.value)".replacingOccurrences(of: " ", with: "")
-    return merged.range(of: #"被CC\d+"#, options: .regularExpression) != nil
+    return containsRegexMatch(merged, regex: voicePlaceholderRegex, fallbackPattern: #"被CC\d+"#)
 }
 
 nonisolated func isLikelySimulateStatLabel(_ raw: String) -> Bool {
     let key = normalizeProfileFieldKey(raw)
     return topDataStatKeys.contains(key) ||
-        key.range(of: #"^(初始|顶级|最大|基础)?(攻击力|防御力|生命值|治愈力|命中值|闪避值|暴击值|暴击伤害|稳定值|射程)"#,
-                  options: .regularExpression) != nil
+        containsRegexMatch(
+            key,
+            regex: simulateStatLabelRegex,
+            fallbackPattern: #"^(初始|顶级|最大|基础)?(攻击力|防御力|生命值|治愈力|命中值|闪避值|暴击值|暴击伤害|稳定值|射程)"#
+        )
 }
 
 nonisolated func extractProfileExternalURL(_ raw: String) -> URL? {
@@ -226,15 +266,15 @@ nonisolated func extractProfileExternalURL(_ raw: String) -> URL? {
         let normalized = source.hasPrefix("www.") ? "https://\(source)" : source
         return GameKeeJSON.normalizeGameKeeLink(normalized, fallback: "")
     }
-    guard let embedded = regexMatches(in: source, pattern: #"https?://[^\s]+"#).first else {
+    guard let embedded = firstRegexMatch(in: source, regex: httpURLRegex, fallbackPattern: #"https?://[^\s]+"#) else {
         return nil
     }
     return URL(string: sanitizeSameNameLinkToken(embedded))
 }
 
 nonisolated func containsGuideWebLink(_ raw: String) -> Bool {
-    raw.range(of: #"https?://[^\s]+"#, options: [.regularExpression, .caseInsensitive]) != nil ||
-        raw.range(of: #"www\.[^\s]+"#, options: [.regularExpression, .caseInsensitive]) != nil
+    containsRegexMatch(raw, regex: httpURLRegex, fallbackPattern: #"https?://[^\s]+"#) ||
+        containsRegexMatch(raw, regex: wwwURLRegex, fallbackPattern: #"www\.[^\s]+"#)
 }
 
 nonisolated func isChocolateGalleryItem(_ item: BaGuideGalleryItem) -> Bool {
@@ -252,7 +292,17 @@ nonisolated func hasRenderableGalleryMedia(_ item: BaGuideGalleryItem) -> Bool {
 }
 
 nonisolated func extractOrderedNumbers(_ raw: String) -> [Int] {
-    regexMatches(in: raw, pattern: #"\d+"#).compactMap(Int.init)
+    let matches: [String]
+    if let regex = digitsRegex {
+        let range = NSRange(raw.startIndex ..< raw.endIndex, in: raw)
+        matches = regex.matches(in: raw, range: range).compactMap { match in
+            guard let r = Range(match.range(at: 0), in: raw) else { return nil }
+            return String(raw[r])
+        }
+    } else {
+        matches = regexMatches(in: raw, pattern: #"\d+"#)
+    }
+    return matches.compactMap(Int.init)
 }
 
 nonisolated func sortKeyNumbers(_ raw: String) -> (Int, Int) {
@@ -269,4 +319,75 @@ nonisolated func regexMatches(in raw: String, pattern: String) -> [String] {
         guard let range = Range(match.range(at: 0), in: raw) else { return nil }
         return String(raw[range])
     }
+}
+
+// MARK: - Cached-regex helpers
+
+private nonisolated func matchesEntireString(
+    _ value: String,
+    regex: NSRegularExpression?,
+    fallbackPattern: String,
+    options: NSString.CompareOptions = []
+) -> Bool {
+    if let regex {
+        let range = NSRange(value.startIndex ..< value.endIndex, in: value)
+        guard let match = regex.firstMatch(in: value, range: range) else { return false }
+        return match.range.location == 0 && match.range.length == (value as NSString).length
+    }
+    var compareOptions: NSString.CompareOptions = options
+    compareOptions.insert(.regularExpression)
+    guard let matched = value.range(of: fallbackPattern, options: compareOptions) else { return false }
+    return matched.lowerBound == value.startIndex && matched.upperBound == value.endIndex
+}
+
+private nonisolated func containsRegexMatch(
+    _ value: String,
+    regex: NSRegularExpression?,
+    fallbackPattern: String,
+    options: NSString.CompareOptions = []
+) -> Bool {
+    if let regex {
+        let range = NSRange(value.startIndex ..< value.endIndex, in: value)
+        return regex.firstMatch(in: value, range: range) != nil
+    }
+    var compareOptions: NSString.CompareOptions = options
+    compareOptions.insert(.regularExpression)
+    return value.range(of: fallbackPattern, options: compareOptions) != nil
+}
+
+private nonisolated func firstRegexMatch(
+    in value: String,
+    regex: NSRegularExpression?,
+    fallbackPattern: String,
+    options: NSString.CompareOptions = []
+) -> String? {
+    if let regex {
+        let range = NSRange(value.startIndex ..< value.endIndex, in: value)
+        guard let match = regex.firstMatch(in: value, range: range),
+              let r = Range(match.range, in: value)
+        else {
+            return nil
+        }
+        return String(value[r])
+    }
+    var compareOptions: NSString.CompareOptions = options
+    compareOptions.insert(.regularExpression)
+    guard let r = value.range(of: fallbackPattern, options: compareOptions) else { return nil }
+    return String(value[r])
+}
+
+private nonisolated func replaceMatches(
+    _ value: String,
+    regex: NSRegularExpression?,
+    fallbackPattern: String,
+    replacement: String,
+    options: NSString.CompareOptions = []
+) -> String {
+    if let regex {
+        let range = NSRange(value.startIndex ..< value.endIndex, in: value)
+        return regex.stringByReplacingMatches(in: value, range: range, withTemplate: replacement)
+    }
+    var compareOptions: NSString.CompareOptions = options
+    compareOptions.insert(.regularExpression)
+    return value.replacingOccurrences(of: fallbackPattern, with: replacement, options: compareOptions)
 }
