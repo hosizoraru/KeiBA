@@ -138,9 +138,22 @@ private enum BaStudentDetailContentFormatter {
         return attributed
     }
 
+    // Cached so the per-row stat parser doesn't recompile its regex literal
+    // on every body recompose of the stat panel.
+    private nonisolated(unsafe) static let bonusValueRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"\(\+\s*[^)]+\)"#)
+    }()
+
     static func splitStatValue(_ value: String) -> (base: String, bonus: String?) {
         let normalized = value.replacingOccurrences(of: "（", with: "(").replacingOccurrences(of: "）", with: ")")
-        guard let range = normalized.range(of: #"\(\+\s*[^)]+\)"#, options: .regularExpression) else {
+        let foundRange: Range<String.Index>?
+        if let regex = bonusValueRegex {
+            let range = NSRange(normalized.startIndex ..< normalized.endIndex, in: normalized)
+            foundRange = regex.firstMatch(in: normalized, range: range).flatMap { Range($0.range, in: normalized) }
+        } else {
+            foundRange = normalized.range(of: #"\(\+\s*[^)]+\)"#, options: .regularExpression)
+        }
+        guard let range = foundRange else {
             return (normalized, nil)
         }
         let base = normalized[..<range.lowerBound]

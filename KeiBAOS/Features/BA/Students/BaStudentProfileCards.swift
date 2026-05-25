@@ -871,12 +871,25 @@ private extension BaGuideGalleryItem {
     }
 }
 
+private enum BaProfileURLPatterns {
+    // Hit on every body recompose for profile rows that probe whether an
+    // image URL is animated. Compile once.
+    nonisolated(unsafe) static let gifSuffixRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"\.gif(?:[?#].*)?$"#)
+    }()
+}
+
 private extension URL {
     var baIsAnimatedImageURL: Bool {
         let lower = absoluteString.lowercased()
-        return lower.range(of: #"\.gif(?:[?#].*)?$"#, options: .regularExpression) != nil ||
-            lower.contains("format=gif") ||
-            lower.contains("image/gif")
+        if lower.contains("format=gif") || lower.contains("image/gif") {
+            return true
+        }
+        if let regex = BaProfileURLPatterns.gifSuffixRegex {
+            let range = NSRange(lower.startIndex ..< lower.endIndex, in: lower)
+            return regex.firstMatch(in: lower, range: range) != nil
+        }
+        return lower.range(of: #"\.gif(?:[?#].*)?$"#, options: .regularExpression) != nil
     }
 }
 

@@ -299,14 +299,29 @@ private struct BaStudentWeaponStarEffectCard: View {
 }
 
 private struct BaWeaponStarBadgeRow: View {
+    // The star count parser is hit on every body recompose for visible weapon
+    // cards. Cache the compiled pattern instead of recompiling per call.
+    private nonisolated(unsafe) static let starCountRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"\d{1,2}"#)
+    }()
+
     let starLabel: String
     let iconSize: CGFloat
 
     private var count: Int {
-        guard let range = starLabel.range(of: #"\d{1,2}"#, options: .regularExpression) else {
+        guard let regex = Self.starCountRegex else {
+            guard let range = starLabel.range(of: #"\d{1,2}"#, options: .regularExpression) else {
+                return 0
+            }
+            return Int(starLabel[range]) ?? 0
+        }
+        let range = NSRange(starLabel.startIndex ..< starLabel.endIndex, in: starLabel)
+        guard let match = regex.firstMatch(in: starLabel, range: range),
+              let captureRange = Range(match.range, in: starLabel)
+        else {
             return 0
         }
-        return Int(starLabel[range]) ?? 0
+        return Int(starLabel[captureRange]) ?? 0
     }
 
     var body: some View {

@@ -8,6 +8,25 @@
 import Foundation
 
 nonisolated struct BaStudentWeaponDisplayModel: Identifiable, Hashable {
+    // Cache once. The weapon-row parsing path is hit per-row whenever a
+    // weapon panel rebuilds, so recompiling these literals adds up across
+    // every visible weapon card.
+    fileprivate nonisolated(unsafe) static let extraStatKeyRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"^附加属性\d+$"#)
+    }()
+    fileprivate nonisolated(unsafe) static let digitsRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"\d+"#)
+    }()
+    fileprivate nonisolated(unsafe) static let starPrefixRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"^★\d+"#)
+    }()
+    fileprivate nonisolated(unsafe) static let weaponLevelRegex: NSRegularExpression? = {
+        try? NSRegularExpression(
+            pattern: #"Lv\.?\s*\d{1,3}"#,
+            options: [.caseInsensitive]
+        )
+    }()
+
     let id: String
     let name: String
     let imageURL: URL?
@@ -227,10 +246,8 @@ nonisolated struct BaStudentWeaponDisplayModel: Identifiable, Hashable {
             return (label, description)
         }
         let normalizedKey = rawKey.replacingOccurrences(of: " ", with: "")
-        guard let range = normalizedKey.range(of: #"^附加属性\d+$"#, options: .regularExpression),
-              range.lowerBound == normalizedKey.startIndex,
-              range.upperBound == normalizedKey.endIndex,
-              let numberRange = normalizedKey.range(of: #"\d+"#, options: .regularExpression)
+        guard Self.matchesEntireString(normalizedKey, regex: Self.extraStatKeyRegex, fallbackPattern: #"^附加属性\d+$"#),
+              let numberRange = Self.firstMatchRange(in: normalizedKey, regex: Self.digitsRegex, fallbackPattern: #"\d+"#)
         else {
             return nil
         }
@@ -240,8 +257,41 @@ nonisolated struct BaStudentWeaponDisplayModel: Identifiable, Hashable {
         return (label, description)
     }
 
+    private static func matchesEntireString(
+        _ value: String,
+        regex: NSRegularExpression?,
+        fallbackPattern: String
+    ) -> Bool {
+        if let regex {
+            let range = NSRange(value.startIndex ..< value.endIndex, in: value)
+            guard let match = regex.firstMatch(in: value, range: range),
+                  let matchRange = Range(match.range, in: value)
+            else {
+                return false
+            }
+            return matchRange.lowerBound == value.startIndex && matchRange.upperBound == value.endIndex
+        }
+        guard let range = value.range(of: fallbackPattern, options: .regularExpression) else { return false }
+        return range.lowerBound == value.startIndex && range.upperBound == value.endIndex
+    }
+
+    private static func firstMatchRange(
+        in value: String,
+        regex: NSRegularExpression?,
+        fallbackPattern: String,
+        options: NSString.CompareOptions = []
+    ) -> Range<String.Index>? {
+        if let regex {
+            let range = NSRange(value.startIndex ..< value.endIndex, in: value)
+            return regex.firstMatch(in: value, range: range).flatMap { Range($0.range, in: value) }
+        }
+        var combined: NSString.CompareOptions = options
+        combined.insert(.regularExpression)
+        return value.range(of: fallbackPattern, options: combined)
+    }
+
     private static func extractStarLabel(_ rawKey: String) -> String? {
-        guard let range = rawKey.range(of: #"^★\d+"#, options: .regularExpression) else {
+        guard let range = firstMatchRange(in: rawKey, regex: starPrefixRegex, fallbackPattern: #"^★\d+"#) else {
             return nil
         }
         return String(rawKey[range]).trimmingCharacters(in: .whitespacesAndNewlines)
@@ -325,7 +375,12 @@ nonisolated struct BaStudentWeaponDisplayModel: Identifiable, Hashable {
         rows.compactMap { row -> String? in
             guard row.trimmedTitle == "专武" else { return nil }
             let value = row.trimmedValue
-            if let range = value.range(of: #"Lv\.?\s*\d{1,3}"#, options: [.regularExpression, .caseInsensitive]) {
+            if let range = firstMatchRange(
+                in: value,
+                regex: weaponLevelRegex,
+                fallbackPattern: #"Lv\.?\s*\d{1,3}"#,
+                options: [.caseInsensitive]
+            ) {
                 return String(value[range]).replacingOccurrences(of: " ", with: "")
             }
             return nil

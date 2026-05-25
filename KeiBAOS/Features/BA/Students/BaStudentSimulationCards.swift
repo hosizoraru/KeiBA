@@ -453,6 +453,15 @@ private struct BaStudentSimulationCapsule: View {
 }
 
 private struct BaStudentSimulationRowItem: View {
+    // Cached on the type so each body recompose of every visible simulation
+    // row reuses the same compiled regex instead of re-parsing the literal.
+    private nonisolated(unsafe) static let tierPrefixRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"(?i)^T\d+"#)
+    }()
+    private nonisolated(unsafe) static let levelPrefixRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"(?i)^Lv\d+"#)
+    }()
+
     let row: BaGuideRow
     let tint: Color
     var valueDelta = ""
@@ -530,10 +539,16 @@ private struct BaStudentSimulationRowItem: View {
 
     private var valueColor: Color {
         if value.contains("%") || value.contains("％") { return tint }
-        if value.range(of: #"(?i)^T\d+"#, options: .regularExpression) != nil { return tint }
-        if value.range(of: #"(?i)^Lv\d+"#, options: .regularExpression) != nil { return tint }
+        if Self.matches(value, regex: Self.tierPrefixRegex) { return tint }
+        if Self.matches(value, regex: Self.levelPrefixRegex) { return tint }
         if row.title.localizedCaseInsensitiveContains("COST") { return tint }
         return .primary
+    }
+
+    private static func matches(_ value: String, regex: NSRegularExpression?) -> Bool {
+        guard let regex else { return false }
+        let range = NSRange(value.startIndex ..< value.endIndex, in: value)
+        return regex.firstMatch(in: value, range: range) != nil
     }
 }
 

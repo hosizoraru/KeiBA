@@ -190,11 +190,25 @@ private extension BaStudentGalleryLayoutContext {
     }
 }
 
+private enum BaGalleryURLPatterns {
+    // Hit on every body recompose for visible gallery cells; cache once.
+    nonisolated(unsafe) static let dimensionsRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"/w_(\d+)/h_(\d+)/"#)
+    }()
+}
+
 extension URL {
     var baGalleryPixelSize: BaGalleryMediaPixelSize? {
-        guard let range = absoluteString.range(of: #"/w_(\d+)/h_(\d+)/"#, options: .regularExpression) else {
-            return nil
+        let absoluteString = absoluteString
+        let matchedRange: Range<String.Index>?
+        if let regex = BaGalleryURLPatterns.dimensionsRegex {
+            let range = NSRange(absoluteString.startIndex ..< absoluteString.endIndex, in: absoluteString)
+            matchedRange = regex.firstMatch(in: absoluteString, range: range)
+                .flatMap { Range($0.range, in: absoluteString) }
+        } else {
+            matchedRange = absoluteString.range(of: #"/w_(\d+)/h_(\d+)/"#, options: .regularExpression)
         }
+        guard let range = matchedRange else { return nil }
         let matched = String(absoluteString[range])
         let parts = matched.split(separator: "/").flatMap { part -> [Int] in
             if part.hasPrefix("w_") {
