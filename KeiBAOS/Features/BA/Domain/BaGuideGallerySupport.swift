@@ -8,15 +8,45 @@
 import Foundation
 
 nonisolated enum BaGuideGallerySupport {
+    // Compiled-once regex caches. normalizeTitle() fans out to nearly
+    // every gallery classification helper (categoryOrder, titleGroupKey,
+    // itemIndex, isExpression, isMemoryHall, etc.), and those are called
+    // once per gallery item per body recompose. Caching avoids a new
+    // NSRegularExpression compile on every helper call.
+    fileprivate nonisolated(unsafe) static let whitespaceRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"\s+"#)
+    }()
+    fileprivate nonisolated(unsafe) static let trailingDigitsRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"\d+$"#)
+    }()
+    fileprivate nonisolated(unsafe) static let lastDigitsRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"(\d+)(?!.*\d)"#)
+    }()
+    fileprivate nonisolated(unsafe) static let gifSuffixRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"\.gif(\?.*)?(#.*)?$"#)
+    }()
+
     static func normalizeTitle(_ raw: String) -> String {
-        raw.replacingOccurrences(of: #"\s+"#, with: "", options: .regularExpression)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let stripped: String
+        if let regex = whitespaceRegex {
+            let range = NSRange(raw.startIndex ..< raw.endIndex, in: raw)
+            stripped = regex.stringByReplacingMatches(in: raw, range: range, withTemplate: "")
+        } else {
+            stripped = raw.replacingOccurrences(of: #"\s+"#, with: "", options: .regularExpression)
+        }
+        return stripped.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     static func normalizeArrayTitle(_ raw: String) -> String {
-        let title = BaGuideTextNormalizer.clean(raw)
-            .replacingOccurrences(of: #"\s+"#, with: "", options: .regularExpression)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleaned = BaGuideTextNormalizer.clean(raw)
+        let stripped: String
+        if let regex = whitespaceRegex {
+            let range = NSRange(cleaned.startIndex ..< cleaned.endIndex, in: cleaned)
+            stripped = regex.stringByReplacingMatches(in: cleaned, range: range, withTemplate: "")
+        } else {
+            stripped = cleaned.replacingOccurrences(of: #"\s+"#, with: "", options: .regularExpression)
+        }
+        let title = stripped.trimmingCharacters(in: .whitespacesAndNewlines)
         guard title.isEmpty == false else { return "影画" }
         if title == "表情包" || title.hasPrefix("表情包(") || title.hasPrefix("表情包（") {
             return title.replacingOccurrences(of: "表情包", with: "角色表情包")
@@ -62,14 +92,30 @@ nonisolated enum BaGuideGallerySupport {
     }
 
     static func titleGroupKey(_ title: String) -> String {
-        normalizeTitle(title).replacingOccurrences(of: #"\d+$"#, with: "", options: .regularExpression)
+        let normalized = normalizeTitle(title)
+        if let regex = trailingDigitsRegex {
+            let range = NSRange(normalized.startIndex ..< normalized.endIndex, in: normalized)
+            return regex.stringByReplacingMatches(in: normalized, range: range, withTemplate: "")
+        }
+        return normalized.replacingOccurrences(of: #"\d+$"#, with: "", options: .regularExpression)
     }
 
     static func itemIndex(_ title: String) -> Int {
-        guard let range = normalizeTitle(title).range(of: #"(\d+)(?!.*\d)"#, options: .regularExpression) else {
-            return Int.max
+        // Compute normalizedTitle once — the original code called it twice,
+        // and the helper itself runs a regex strip on every call.
+        let normalized = normalizeTitle(title)
+        let foundRange: Range<String.Index>?
+        if let regex = lastDigitsRegex {
+            let nsRange = NSRange(normalized.startIndex ..< normalized.endIndex, in: normalized)
+            foundRange = regex.firstMatch(in: normalized, range: nsRange).flatMap { match in
+                guard match.numberOfRanges > 1 else { return nil }
+                return Range(match.range(at: 1), in: normalized)
+            }
+        } else {
+            foundRange = normalized.range(of: #"(\d+)(?!.*\d)"#, options: .regularExpression)
         }
-        return Int(normalizeTitle(title)[range]) ?? Int.max
+        guard let range = foundRange else { return Int.max }
+        return Int(normalized[range]) ?? Int.max
     }
 
     static func expressionOrder(title: String, fallback: Int) -> Int {
@@ -77,7 +123,8 @@ nonisolated enum BaGuideGallerySupport {
         if normalized == "角色表情" || normalized == "表情" || normalized == "差分" {
             return 1
         }
-        return itemIndex(title) == Int.max ? fallback : itemIndex(title)
+        let index = itemIndex(title)
+        return index == Int.max ? fallback : index
     }
 
     static func isRenderable(_ item: BaGuideGalleryItem) -> Bool {
@@ -108,7 +155,14 @@ nonisolated enum BaGuideGallerySupport {
 
     static func isGIFURL(_ url: URL) -> Bool {
         let lower = url.absoluteString.lowercased()
-        return lower.range(of: #"\.gif(\?.*)?(#.*)?$"#, options: .regularExpression) != nil ||
+        let matchesSuffix: Bool
+        if let regex = gifSuffixRegex {
+            let range = NSRange(lower.startIndex ..< lower.endIndex, in: lower)
+            matchesSuffix = regex.firstMatch(in: lower, range: range) != nil
+        } else {
+            matchesSuffix = lower.range(of: #"\.gif(\?.*)?(#.*)?$"#, options: .regularExpression) != nil
+        }
+        return matchesSuffix ||
             lower.contains("format=gif") ||
             lower.contains("image/gif")
     }
