@@ -229,12 +229,39 @@ final class BaMusicPlaybackSession: BaMusicSystemMediaCommandHandling {
 
     func updateQueue(_ tracks: [BaMusicTrack]) {
         queue = tracks
+        pruneCacheStates(retaining: tracks)
         guard let selectedTrack else { return }
         if let refreshed = tracks.first(where: { $0.id == selectedTrack.id }) {
             self.selectedTrack = selectedTrack.refreshed(with: refreshed)
             syncSystemMediaState()
         } else if tracks.isEmpty {
             stop()
+        }
+    }
+
+    /// Drops cache-state entries that are no longer reachable from the active
+    /// queue. Without this trim the dictionary monotonically grows for every
+    /// distinct track URL the user inspects across a session — long sessions
+    /// would leave thousands of stale `.notCached`/`.cached` markers around
+    /// even after the catalog/favorite set shrinks.
+    private func pruneCacheStates(retaining tracks: [BaMusicTrack]) {
+        guard cacheStates.isEmpty == false else { return }
+        var retained: Set<URL> = []
+        retained.reserveCapacity(tracks.count + 1)
+        for track in tracks {
+            if let audioURL = track.audioURL {
+                retained.insert(audioURL)
+            }
+        }
+        if let audioURL = selectedTrack?.audioURL {
+            retained.insert(audioURL)
+        }
+        cacheStates = cacheStates.filter { url, state in
+            // Keep entries whose URL is still reachable from the visible queue
+            // or the currently-selected track. Also keep in-flight `.caching`
+            // markers so a track that briefly drops out of the visible queue
+            // still completes its transition without losing UI feedback.
+            retained.contains(url) || state.isCaching
         }
     }
 
