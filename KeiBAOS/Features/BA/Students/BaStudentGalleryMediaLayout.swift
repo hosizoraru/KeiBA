@@ -95,7 +95,9 @@ struct BaStudentGalleryMediaLayout: Hashable {
         case .image, .unknown:
             if title.hasPrefix("回忆大厅") { return 1210 / 888 }
             if title.hasPrefix("官方衍生") || title.hasPrefix("PV") { return 16 / 9 }
-            if BaGuideGallerySupport.isExpressionTitleForLayout(title) { return 1 }
+            // The title argument is already the result of normalizeTitle();
+            // reuse the normalized fast path so we don't strip whitespace twice.
+            if BaGuideGallerySupport.isExpressionForNormalizedTitle(title) { return 1 }
             if title.hasPrefix("立绘") || title.hasPrefix("官方介绍") { return 0.75 }
             return 1.18
         }
@@ -112,7 +114,7 @@ struct BaStudentGalleryMediaLayout: Hashable {
         if kind == .live2d {
             return .init(minHeight: 310, maxHeight: 430, cornerRadius: 20, contentPadding: 8, maxPixelDimension: 1300, maxContentWidth: 620)
         }
-        if BaGuideGallerySupport.isExpressionTitleForLayout(title) {
+        if BaGuideGallerySupport.isExpressionForNormalizedTitle(title) {
             return .init(minHeight: 220, maxHeight: 252, cornerRadius: 18, contentPadding: 8, maxPixelDimension: 900, maxContentWidth: 360)
         }
         if title.hasPrefix("立绘") {
@@ -199,29 +201,29 @@ private enum BaGalleryURLPatterns {
 
 extension URL {
     var baGalleryPixelSize: BaGalleryMediaPixelSize? {
+        // The cached regex is built from a static literal that always
+        // succeeds; the previous .regularExpression fallback would have
+        // recompiled the same pattern per call when the cache happened
+        // to be missing. Bail early instead so we never pay that cost.
+        guard let regex = BaGalleryURLPatterns.dimensionsRegex else { return nil }
         let absoluteString = absoluteString
-        let matchedRange: Range<String.Index>?
-        if let regex = BaGalleryURLPatterns.dimensionsRegex {
-            let range = NSRange(absoluteString.startIndex ..< absoluteString.endIndex, in: absoluteString)
-            matchedRange = regex.firstMatch(in: absoluteString, range: range)
-                .flatMap { Range($0.range, in: absoluteString) }
-        } else {
-            matchedRange = absoluteString.range(of: #"/w_(\d+)/h_(\d+)/"#, options: .regularExpression)
-        }
-        guard let range = matchedRange else { return nil }
-        let matched = String(absoluteString[range])
-        let parts = matched.split(separator: "/").flatMap { part -> [Int] in
-            if part.hasPrefix("w_") {
-                return [Int(part.dropFirst(2)) ?? 0]
-            }
-            if part.hasPrefix("h_") {
-                return [Int(part.dropFirst(2)) ?? 0]
-            }
-            return []
-        }
-        guard parts.count == 2, parts[0] > 0, parts[1] > 0 else {
+        let range = NSRange(absoluteString.startIndex ..< absoluteString.endIndex, in: absoluteString)
+        guard let match = regex.firstMatch(in: absoluteString, range: range),
+              let matchedRange = Range(match.range, in: absoluteString)
+        else {
             return nil
         }
-        return BaGalleryMediaPixelSize(width: parts[0], height: parts[1])
+        let matched = absoluteString[matchedRange]
+        var width = 0
+        var height = 0
+        for part in matched.split(separator: "/") {
+            if part.hasPrefix("w_") {
+                width = Int(part.dropFirst(2)) ?? 0
+            } else if part.hasPrefix("h_") {
+                height = Int(part.dropFirst(2)) ?? 0
+            }
+        }
+        guard width > 0, height > 0 else { return nil }
+        return BaGalleryMediaPixelSize(width: width, height: height)
     }
 }

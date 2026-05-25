@@ -179,6 +179,13 @@ nonisolated enum BaGuideGallerySupport {
         isExpressionTitle(raw)
     }
 
+    /// Variant for callers that already hold a `normalizeTitle`-result string,
+    /// avoiding the redundant whitespace strip when the layout pipeline asks
+    /// the same classification questions back-to-back.
+    static func isExpressionForNormalizedTitle(_ normalizedTitle: String) -> Bool {
+        isExpressionTitleNormalized(normalizedTitle)
+    }
+
     static func isMemoryHall(_ item: BaGuideGalleryItem) -> Bool {
         let title = normalizeTitle(item.title)
         return title.hasPrefix("回忆大厅") &&
@@ -209,7 +216,10 @@ nonisolated enum BaGuideGallerySupport {
     }
 
     private static func isExpressionTitle(_ raw: String) -> Bool {
-        let title = normalizeTitle(raw)
+        isExpressionTitleNormalized(normalizeTitle(raw))
+    }
+
+    private static func isExpressionTitleNormalized(_ title: String) -> Bool {
         if title.hasPrefix("角色表情") { return true }
         if title.hasPrefix("表情") { return true }
         if title == "差分" { return true }
