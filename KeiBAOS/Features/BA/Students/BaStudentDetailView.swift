@@ -30,10 +30,6 @@ struct BaStudentDetailView: View {
         BaStudentDetailPageAvailability.pages(category: entry.category, info: info)
     }
 
-    private var activePage: BaStudentDetailPage {
-        availablePages.contains(selectedPage) ? selectedPage : availablePages.first ?? .overviewProfile
-    }
-
     var body: some View {
         detailList
             .navigationDestination(item: $selectedSameNameEntry) { entry in
@@ -55,11 +51,18 @@ struct BaStudentDetailView: View {
     }
 
     private var detailList: some View {
-        BaAdaptiveGeometry { _ in
+        // BaStudentDetailPageAvailability.pages re-runs five expensive scans
+        // (skill card build, simulation display build, gallery state…) each
+        // call. Resolve once per body and reuse across the rail, the active
+        // page switch, and the onChange/onAppear hooks instead of letting
+        // SwiftUI re-evaluate `availablePages` for every reference.
+        let pages = availablePages
+        let resolvedActivePage = pages.contains(selectedPage) ? selectedPage : pages.first ?? .overviewProfile
+        return BaAdaptiveGeometry { _ in
             List {
                 BaStudentDetailPageRailSection(
                     selection: $selectedPage,
-                    pages: availablePages,
+                    pages: pages,
                     tint: headerTint
                 )
 
@@ -71,13 +74,13 @@ struct BaStudentDetailView: View {
                     errorSection(error)
                 }
 
-                activePageSections
+                activePageSections(activePage: resolvedActivePage)
             }
             .platformInsetGroupedListStyle()
             .baStudentDetailSectionSpacing()
             .scrollContentBackground(.hidden)
             .background(AppBackground())
-            .baMotion(BaMotion.standard, value: activePage)
+            .baMotion(BaMotion.standard, value: resolvedActivePage)
         }
         .navigationTitle(info?.title ?? entry.name)
         .toolbar {
@@ -122,7 +125,7 @@ struct BaStudentDetailView: View {
                 .menuOrder(.fixed)
             }
         }
-        .modifier(BaStudentVoiceSearchModifier(isActive: activePage == .voice, text: $voiceSearchText))
+        .modifier(BaStudentVoiceSearchModifier(isActive: resolvedActivePage == .voice, text: $voiceSearchText))
         .task(id: entry.contentId) {
             await model.loadStudentDetail(entry: entry)
         }
@@ -130,10 +133,10 @@ struct BaStudentDetailView: View {
             await model.loadStudentDetail(entry: entry, force: true)
         }
         .onAppear {
-            clampSelectedPage(to: availablePages)
-        }
-        .onChange(of: availablePages) { _, pages in
             clampSelectedPage(to: pages)
+        }
+        .onChange(of: pages) { _, newPages in
+            clampSelectedPage(to: newPages)
         }
         .onChange(of: selectedPage) { _, page in
             if page != .voice {
@@ -143,7 +146,7 @@ struct BaStudentDetailView: View {
     }
 
     @ViewBuilder
-    private var activePageSections: some View {
+    private func activePageSections(activePage: BaStudentDetailPage) -> some View {
         switch activePage {
         case .overviewProfile:
             if let info {
