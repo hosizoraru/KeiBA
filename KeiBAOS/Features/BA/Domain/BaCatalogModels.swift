@@ -167,6 +167,12 @@ nonisolated struct BaGuideCatalogBundle: Codable, Hashable, Sendable {
     let studentFilterGroups: [BaCatalogFilterGroup]
     let npcSatelliteFilterGroups: [BaCatalogFilterGroup]
 
+    // Pre-bucketed by category. The catalog view, the pool resolver, and the
+    // student-detail same-name resolver all call entries(in:) on hot paths;
+    // bucketing once at init turns each repeat call into an O(1) dictionary
+    // lookup instead of a fresh O(catalog) filter walk.
+    private let entriesByCategory: [BaCatalogCategory: [BaGuideCatalogEntry]]
+
     init(
         entries: [BaGuideCatalogEntry],
         syncedAt: Date,
@@ -177,6 +183,7 @@ nonisolated struct BaGuideCatalogBundle: Codable, Hashable, Sendable {
         self.syncedAt = syncedAt
         self.studentFilterGroups = studentFilterGroups
         self.npcSatelliteFilterGroups = npcSatelliteFilterGroups
+        entriesByCategory = Self.bucketed(entries)
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -188,14 +195,16 @@ nonisolated struct BaGuideCatalogBundle: Codable, Hashable, Sendable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        entries = try container.decode([BaGuideCatalogEntry].self, forKey: .entries)
+        let decodedEntries = try container.decode([BaGuideCatalogEntry].self, forKey: .entries)
+        entries = decodedEntries
         syncedAt = try container.decode(Date.self, forKey: .syncedAt)
         studentFilterGroups = try container.decodeIfPresent([BaCatalogFilterGroup].self, forKey: .studentFilterGroups) ?? []
         npcSatelliteFilterGroups = try container.decodeIfPresent([BaCatalogFilterGroup].self, forKey: .npcSatelliteFilterGroups) ?? []
+        entriesByCategory = Self.bucketed(decodedEntries)
     }
 
     func entries(in category: BaCatalogCategory) -> [BaGuideCatalogEntry] {
-        entries.filter { $0.category == category }
+        entriesByCategory[category] ?? []
     }
 
     func filterGroups(for category: BaCatalogCategory) -> [BaCatalogFilterGroup] {
@@ -207,5 +216,25 @@ nonisolated struct BaGuideCatalogBundle: Codable, Hashable, Sendable {
         case .studentBgm, .favorites:
             []
         }
+    }
+
+    // Hashable: the bucketed dictionary is derived state, so omit it from
+    // hashing/equality. Two bundles are equal iff their stored fields match.
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(entries)
+        hasher.combine(syncedAt)
+        hasher.combine(studentFilterGroups)
+        hasher.combine(npcSatelliteFilterGroups)
+    }
+
+    static func == (lhs: BaGuideCatalogBundle, rhs: BaGuideCatalogBundle) -> Bool {
+        lhs.entries == rhs.entries &&
+            lhs.syncedAt == rhs.syncedAt &&
+            lhs.studentFilterGroups == rhs.studentFilterGroups &&
+            lhs.npcSatelliteFilterGroups == rhs.npcSatelliteFilterGroups
+    }
+
+    private static func bucketed(_ entries: [BaGuideCatalogEntry]) -> [BaCatalogCategory: [BaGuideCatalogEntry]] {
+        Dictionary(grouping: entries, by: \.category)
     }
 }
