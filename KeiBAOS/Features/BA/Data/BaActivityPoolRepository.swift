@@ -192,8 +192,12 @@ struct BaActivityPoolRepository {
         return .ended
     }
 
+    private nonisolated(unsafe) static let poolTagDigitRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"\d+"#)
+    }()
+
     private func parsePoolTagIDs(_ raw: String) -> [Int] {
-        guard let regex = try? NSRegularExpression(pattern: #"\d+"#) else { return [] }
+        guard let regex = Self.poolTagDigitRegex else { return [] }
         let range = NSRange(raw.startIndex ..< raw.endIndex, in: raw)
         return regex.matches(in: raw, range: range).compactMap { match in
             guard let range = Range(match.range, in: raw) else { return nil }
