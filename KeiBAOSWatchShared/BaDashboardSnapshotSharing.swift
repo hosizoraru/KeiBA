@@ -19,6 +19,14 @@ nonisolated enum BaDashboardSnapshotSharing {
     private static let sharedSnapshotFileName = "ba.shared.dashboardSnapshot.v1.data"
     private static let legacyWatchSnapshotKey = "ba.watch.cachedDashboardSnapshot.v1"
 
+    // Process-local memo so the main-actor save path doesn't re-read the
+    // existing app-group file on every dashboard push just to skip a no-op
+    // write. The first write seeds it; subsequent identical pushes short-
+    // circuit before any disk I/O. Synchronized via NSLock so it stays
+    // safe across the host app and extensions that share this enum.
+    private static let lastWrittenLock = NSLock()
+    nonisolated(unsafe) private static var lastWrittenSharedSnapshotData: Data?
+
     static func loadSnapshot() -> BaWatchDashboardSnapshot? {
         if let snapshot = loadSnapshotFromSharedFile() {
             return snapshot
@@ -47,6 +55,9 @@ nonisolated enum BaDashboardSnapshotSharing {
         if let sharedSnapshotFileURL {
             try? FileManager.default.removeItem(at: sharedSnapshotFileURL)
         }
+        lastWrittenLock.lock()
+        lastWrittenSharedSnapshotData = nil
+        lastWrittenLock.unlock()
     }
 
     private static var sharedSnapshotFileURL: URL? {
@@ -75,15 +86,25 @@ nonisolated enum BaDashboardSnapshotSharing {
 
     private static func saveDataToSharedFile(_ data: Data) {
         guard let sharedSnapshotFileURL else { return }
+        // Memoized fast path: skip the disk read used to dedupe identical
+        // payloads. The previous Data(contentsOf:) ran on every snapshot
+        // sync (which fires on every settings/timeline change), turning a
+        // no-op push into a full file read.
+        lastWrittenLock.lock()
+        if lastWrittenSharedSnapshotData == data {
+            lastWrittenLock.unlock()
+            return
+        }
+        lastWrittenLock.unlock()
         do {
             try FileManager.default.createDirectory(
                 at: sharedSnapshotFileURL.deletingLastPathComponent(),
                 withIntermediateDirectories: true
             )
-            if (try? Data(contentsOf: sharedSnapshotFileURL)) == data {
-                return
-            }
             try data.write(to: sharedSnapshotFileURL, options: [.atomic])
+            lastWrittenLock.lock()
+            lastWrittenSharedSnapshotData = data
+            lastWrittenLock.unlock()
         } catch {
             return
         }
