@@ -560,6 +560,29 @@ private nonisolated struct BaStudentSkillTypeMeta: Hashable {
 }
 
 enum BaStudentSkillTextNormalizer {
+    // The skill rich-text path is hit every time SwiftUI renders a skill
+    // description segment list, which happens on every body recompose for
+    // expanded skill cards. Compiling these regexes from a literal pattern
+    // each invocation showed up as a notable allocation hotspot.
+    private nonisolated(unsafe) static let descriptionNumberRegex: NSRegularExpression? = {
+        try? NSRegularExpression(
+            pattern: #"(?<![A-Za-z])[-+]?\d+(?:\.\d+)?\s*(?:%|％|秒|s|S|倍)?"#
+        )
+    }()
+    private nonisolated(unsafe) static let highlightedAttributedRegex: NSRegularExpression? = {
+        try? NSRegularExpression(
+            pattern: #"(?<![A-Za-z])[-+]?\d+(?:\.\d+)?\s*(?:%|％|秒|s|S|倍)?|COST[:：]?\s*\d+|Lv\.?\s*\d+"#
+        )
+    }()
+    private nonisolated(unsafe) static let glossaryWhitespaceRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"[\s\u{3000}]"#)
+    }()
+    private nonisolated(unsafe) static let glossaryPunctuationRegex: NSRegularExpression? = {
+        try? NSRegularExpression(
+            pattern: #"[，。、“”‘’：:；;（）()【】\[\]《》<>·•\-—_+*/\\|!?！？]"#
+        )
+    }()
+
     static func richTextSegments(
         description: String,
         glossaryIcons: [String: URL],
@@ -590,10 +613,7 @@ enum BaStudentSkillTextNormalizer {
             segments.append(.text(" "))
         }
 
-        guard let numberRegex = try? NSRegularExpression(
-            pattern: #"(?<![A-Za-z])[-+]?\d+(?:\.\d+)?\s*(?:%|％|秒|s|S|倍)?"#,
-            options: []
-        ) else {
+        guard let numberRegex = Self.descriptionNumberRegex else {
             segments.append(.text(trimmedDescription))
             return segments
         }
@@ -646,10 +666,7 @@ enum BaStudentSkillTextNormalizer {
 
     static func highlightedAttributedString(in text: String, tint: Color) -> AttributedString {
         var attributed = AttributedString(text)
-        guard let regex = try? NSRegularExpression(
-            pattern: #"(?<![A-Za-z])[-+]?\d+(?:\.\d+)?\s*(?:%|％|秒|s|S|倍)?|COST[:：]?\s*\d+|Lv\.?\s*\d+"#,
-            options: []
-        ) else {
+        guard let regex = Self.highlightedAttributedRegex else {
             return attributed
         }
         let nsText = text as NSString
@@ -668,10 +685,31 @@ enum BaStudentSkillTextNormalizer {
     }
 
     static func normalizeGlossaryToken(_ raw: String) -> String {
-        raw
-            .replacingOccurrences(of: #"[\s\u{3000}]"#, with: "", options: .regularExpression)
-            .replacingOccurrences(of: #"[，。、“”‘’：:；;（）()【】\[\]《》<>·•\-—_+*/\\|!?！？]"#, with: "", options: .regularExpression)
-            .lowercased()
+        let stripped = stripWithCachedRegex(
+            raw,
+            regex: Self.glossaryWhitespaceRegex,
+            fallbackPattern: #"[\s\u{3000}]"#
+        )
+        let cleaned = stripWithCachedRegex(
+            stripped,
+            regex: Self.glossaryPunctuationRegex,
+            fallbackPattern: #"[，。、“”‘’：:；;（）()【】\[\]《》<>·•\-—_+*/\\|!?！？]"#
+        )
+        return cleaned.lowercased()
+    }
+
+    private static func stripWithCachedRegex(
+        _ value: String,
+        regex: NSRegularExpression?,
+        fallbackPattern: String
+    ) -> String {
+        guard let regex else {
+            // Defensive fallback: pattern is constant so this branch should
+            // never fire in practice.
+            return value.replacingOccurrences(of: fallbackPattern, with: "", options: .regularExpression)
+        }
+        let range = NSRange(value.startIndex ..< value.endIndex, in: value)
+        return regex.stringByReplacingMatches(in: value, range: range, withTemplate: "")
     }
 
     private static func appendPlainText(_ text: String, to segments: inout [BaStudentSkillDescriptionSegment]) {
