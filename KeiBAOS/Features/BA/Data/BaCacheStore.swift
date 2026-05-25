@@ -38,23 +38,40 @@ actor BaCacheStore {
         rootDirectory = base.appendingPathComponent("BA", isDirectory: true)
     }
 
-    func load<Value: Codable>(_: Value.Type, for key: CacheKey) -> BaCacheEnvelope<Value>? {
+    func load<Value: Codable & Sendable>(_: Value.Type, for key: CacheKey) async -> BaCacheEnvelope<Value>? {
+        // Read + decode off the actor: the catalog hydrator and pool resolver
+        // iterate hundreds of cached student-detail files, and even though
+        // BaCacheStore runs on its own serial executor, every load() blocked
+        // every other cache user (timeline writes, image-cache bookkeeping
+        // that calls back into shared utilities). Hopping the work to a
+        // detached utility task keeps the actor free for short bookkeeping
+        // operations and lets the OS schedule decodes in parallel.
         let url = rootDirectory.appendingPathComponent(key.filename)
-        guard let data = try? Data(contentsOf: url) else { return nil }
-        return try? JSONDecoder.ba.decode(BaCacheEnvelope<Value>.self, from: data)
+        return await Self.readEnvelope(from: url)
     }
 
-    func save<Value: Codable>(_ value: Value, for key: CacheKey, schemaVersion: Int, syncedAt: Date = Date()) {
+    func save<Value: Codable & Sendable>(_ value: Value, for key: CacheKey, schemaVersion: Int, syncedAt: Date = Date()) async {
         let envelope = BaCacheEnvelope(schemaVersion: schemaVersion, syncedAt: syncedAt, value: value)
-        guard let data = try? JSONEncoder.ba.encode(envelope) else { return }
-        try? fileManager.createDirectory(at: rootDirectory, withIntermediateDirectories: true)
         let url = rootDirectory.appendingPathComponent(key.filename)
-        try? data.write(to: url, options: [.atomic])
+        let rootDirectory = self.rootDirectory
+        let fileManager = self.fileManager
+        await Task.detached(priority: .utility) {
+            guard let data = try? JSONEncoder.ba.encode(envelope) else { return }
+            try? fileManager.createDirectory(at: rootDirectory, withIntermediateDirectories: true)
+            try? data.write(to: url, options: [.atomic])
+        }.value
     }
 
     func clear() {
         try? fileManager.removeItem(at: rootDirectory)
         try? fileManager.createDirectory(at: rootDirectory, withIntermediateDirectories: true)
+    }
+
+    private nonisolated static func readEnvelope<Value: Codable & Sendable>(from url: URL) async -> BaCacheEnvelope<Value>? {
+        await Task.detached(priority: .utility) {
+            guard let data = try? Data(contentsOf: url) else { return nil }
+            return try? JSONDecoder.ba.decode(BaCacheEnvelope<Value>.self, from: data)
+        }.value
     }
 }
 
