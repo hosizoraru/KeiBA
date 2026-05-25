@@ -7,6 +7,42 @@
 
 import Foundation
 
+// Compiled-once regex caches. splitRoleRowTokens and
+// sameNameRoleNameCandidate run once per relation row during student
+// detail parsing; the originals compiled the same patterns from string
+// literals on every call.
+private nonisolated(unsafe) let roleRowLinkRegex: NSRegularExpression? =
+    try? NSRegularExpression(
+        pattern: #"https?://[^\s|｜]+|/(?:ba/tj/\d+(?:\.html)?|ba/\d+(?:\.html)?|v1/content/detail/\d+)|(?<![A-Za-z0-9])\d{4,}(?![A-Za-z0-9])"#,
+        options: [.caseInsensitive]
+    )
+private nonisolated(unsafe) let bareDomainURLRegex: NSRegularExpression? =
+    try? NSRegularExpression(pattern: #"https?://[^\s/／|｜]+"#, options: [.caseInsensitive])
+private nonisolated(unsafe) let plainURLRegex: NSRegularExpression? =
+    try? NSRegularExpression(pattern: #"https?://[^\s]+"#, options: [.caseInsensitive])
+private nonisolated(unsafe) let detailPathRegex: NSRegularExpression? =
+    try? NSRegularExpression(
+        pattern: #"/(?:ba/tj/\d+(?:\.html)?|ba/\d+(?:\.html)?|v1/content/detail/\d+)"#,
+        options: [.caseInsensitive]
+    )
+private nonisolated(unsafe) let standaloneIDRegex: NSRegularExpression? =
+    try? NSRegularExpression(pattern: #"(?<![A-Za-z0-9])\d{4,}(?![A-Za-z0-9])"#)
+
+private nonisolated func stripWithCachedRegex(
+    _ value: String,
+    regex: NSRegularExpression?,
+    fallbackPattern: String,
+    options: NSString.CompareOptions = []
+) -> String {
+    if let regex {
+        let range = NSRange(value.startIndex ..< value.endIndex, in: value)
+        return regex.stringByReplacingMatches(in: value, range: range, withTemplate: "")
+    }
+    var compareOptions: NSString.CompareOptions = options
+    compareOptions.insert(.regularExpression)
+    return value.replacingOccurrences(of: fallbackPattern, with: "", options: compareOptions)
+}
+
 nonisolated func buildGiftPreferenceItems(from rows: [BaGuideRow]) -> [BaStudentProfileGiftItem] {
     var seen = Set<String>()
     return rows.enumerated().compactMap { index, row in
@@ -162,8 +198,7 @@ nonisolated func isRelatedRoleHeaderKey(_ key: String) -> Bool {
 }
 
 nonisolated func splitRoleRowTokens(_ raw: String) -> [String] {
-    let linkPattern = #"https?://[^\s|｜]+|/(?:ba/tj/\d+(?:\.html)?|ba/\d+(?:\.html)?|v1/content/detail/\d+)|(?<![A-Za-z0-9])\d{4,}(?![A-Za-z0-9])"#
-    guard let regex = try? NSRegularExpression(pattern: linkPattern, options: [.caseInsensitive]) else {
+    guard let regex = roleRowLinkRegex else {
         return raw
             .components(separatedBy: CharacterSet(charactersIn: "/／|｜\n"))
             .map(\.baProfileTrimmed)
@@ -193,15 +228,29 @@ nonisolated func extractSameNameGuideURL(_ raw: String) -> URL? {
 }
 
 nonisolated func sameNameRoleNameCandidate(from raw: String) -> String {
-    let cleaned = raw
-        .replacingOccurrences(of: #"https?://[^\s/／|｜]+"#, with: "", options: [.regularExpression, .caseInsensitive])
-        .replacingOccurrences(of: #"https?://[^\s]+"#, with: "", options: [.regularExpression, .caseInsensitive])
-        .replacingOccurrences(
-            of: #"/(?:ba/tj/\d+(?:\.html)?|ba/\d+(?:\.html)?|v1/content/detail/\d+)"#,
-            with: "",
-            options: [.regularExpression, .caseInsensitive]
-        )
-        .replacingOccurrences(of: #"(?<![A-Za-z0-9])\d{4,}(?![A-Za-z0-9])"#, with: "", options: .regularExpression)
+    let stage1 = stripWithCachedRegex(
+        raw,
+        regex: bareDomainURLRegex,
+        fallbackPattern: #"https?://[^\s/／|｜]+"#,
+        options: [.caseInsensitive]
+    )
+    let stage2 = stripWithCachedRegex(
+        stage1,
+        regex: plainURLRegex,
+        fallbackPattern: #"https?://[^\s]+"#,
+        options: [.caseInsensitive]
+    )
+    let stage3 = stripWithCachedRegex(
+        stage2,
+        regex: detailPathRegex,
+        fallbackPattern: #"/(?:ba/tj/\d+(?:\.html)?|ba/\d+(?:\.html)?|v1/content/detail/\d+)"#,
+        options: [.caseInsensitive]
+    )
+    let cleaned = stripWithCachedRegex(
+        stage3,
+        regex: standaloneIDRegex,
+        fallbackPattern: #"(?<![A-Za-z0-9])\d{4,}(?![A-Za-z0-9])"#
+    )
         .trimmingCharacters(in: CharacterSet(charactersIn: " /／|｜,，;；"))
         .baProfileTrimmed
     guard cleaned.baProfileIsNotBlank,
