@@ -62,10 +62,14 @@ extension JSONEncoder {
     // Shared encoder reused across cache writes. JSONEncoder is documented as safe
     // to use from multiple threads as long as configuration is not mutated after
     // creation; we never mutate it after this initial setup.
+    //
+    // No `.prettyPrinted` — cache files are read by the app, never by humans.
+    // Pretty printing roughly doubles the on-disk size and the encode CPU cost,
+    // which matters for the catalog snapshot (hundreds of KB) and the per-student
+    // detail caches written on every refresh.
     nonisolated(unsafe) static let ba: JSONEncoder = {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         return encoder
     }()
 }
