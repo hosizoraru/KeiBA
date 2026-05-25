@@ -719,12 +719,21 @@ private struct BaStudentProfileGalleryRow: View {
     let item: BaGuideGalleryItem
     let tint: Color
 
-    private var kind: BaGuideMediaKind {
-        item.mediaKind ?? .image
-    }
+    // Pre-built once at init() instead of recomposing the joined string per
+    // body call. The previous computed property reran string concat, blank
+    // checks and a localized format on every SwiftUI re-evaluation of the
+    // gallery list.
+    private let kind: BaGuideMediaKind
+    private let previewURL: URL?
+    private let galleryDetail: String
 
-    private var previewURL: URL? {
-        item.imageURL ?? item.mediaURL
+    init(item: BaGuideGalleryItem, tint: Color) {
+        self.item = item
+        self.tint = tint
+        let resolvedKind = item.mediaKind ?? .image
+        self.kind = resolvedKind
+        self.previewURL = item.imageURL ?? item.mediaURL
+        self.galleryDetail = Self.makeGalleryDetail(item: item, kind: resolvedKind)
     }
 
     var body: some View {
@@ -782,7 +791,7 @@ private struct BaStudentProfileGalleryRow: View {
         }
     }
 
-    private var galleryDetail: String {
+    private static func makeGalleryDetail(item: BaGuideGalleryItem, kind: BaGuideMediaKind) -> String {
         var parts = [kind.title]
         if item.detail.isBlank == false, item.detail != kind.title {
             parts.append(item.detail)
