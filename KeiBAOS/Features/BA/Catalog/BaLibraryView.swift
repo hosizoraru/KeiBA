@@ -41,6 +41,12 @@ struct BaLibraryView: View {
 
     var body: some View {
         let snapshot = snapshot
+        // Compute the prefetch entries once per body recompose. The
+        // .task(id:) modifier and the task body would otherwise each
+        // rebuild the entry list (filter + map + prefix) — once for the
+        // signature, once for the prefetch call.
+        let prefetchEntries = musicDetailPrefetchEntries(snapshot: snapshot)
+        let prefetchSignature = musicDetailPrefetchSignature(entries: prefetchEntries)
 
         BaAdaptiveGeometry { metrics in
             musicPage(snapshot: snapshot, metrics: metrics)
@@ -58,8 +64,8 @@ struct BaLibraryView: View {
         .task(id: snapshot.queueSignature) {
             playbackSession.updateQueue(snapshot.playableTracks)
         }
-        .task(id: musicDetailPrefetchSignature(snapshot: snapshot)) {
-            await prefetchMusicDetails(snapshot: snapshot)
+        .task(id: prefetchSignature) {
+            await prefetchMusicDetails(entries: prefetchEntries)
         }
     }
 
@@ -279,8 +285,7 @@ struct BaLibraryView: View {
         )
     }
 
-    private func prefetchMusicDetails(snapshot: BaMusicLibrarySnapshot) async {
-        let entries = musicDetailPrefetchEntries(snapshot: snapshot)
+    private func prefetchMusicDetails(entries: [BaGuideCatalogEntry]) async {
         guard entries.isEmpty == false else { return }
         await model.loadStudentDetails(entries: entries)
     }
@@ -295,8 +300,8 @@ struct BaLibraryView: View {
         )
     }
 
-    private func musicDetailPrefetchSignature(snapshot: BaMusicLibrarySnapshot) -> String {
-        musicDetailPrefetchEntries(snapshot: snapshot)
+    private func musicDetailPrefetchSignature(entries: [BaGuideCatalogEntry]) -> String {
+        entries
             .map(\.contentId)
             .map(String.init)
             .joined(separator: "|")
