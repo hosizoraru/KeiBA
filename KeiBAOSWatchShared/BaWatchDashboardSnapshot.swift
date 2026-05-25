@@ -254,16 +254,29 @@ nonisolated struct BaWatchDashboardSnapshot: Codable, Equatable, Sendable {
 }
 
 nonisolated enum BaWatchDashboardSnapshotCoding {
-    static func encode(_ snapshot: BaWatchDashboardSnapshot) throws -> Data {
+    // Reuse the encoder/decoder across calls. JSONEncoder is documented as
+    // safe to use from multiple threads after initial configuration; we
+    // never mutate either after this setup. The previous code paid the
+    // configuration cost on every Watch sync (which can fire on every
+    // settings/timeline change) and on every widget timeline build.
+    nonisolated(unsafe) private static let sharedEncoder: JSONEncoder = {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
-        return try encoder.encode(snapshot)
+        return encoder
+    }()
+
+    nonisolated(unsafe) private static let sharedDecoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return decoder
+    }()
+
+    static func encode(_ snapshot: BaWatchDashboardSnapshot) throws -> Data {
+        try sharedEncoder.encode(snapshot)
     }
 
     static func decode(_ data: Data) throws -> BaWatchDashboardSnapshot {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode(BaWatchDashboardSnapshot.self, from: data)
+        try sharedDecoder.decode(BaWatchDashboardSnapshot.self, from: data)
     }
 }
 
