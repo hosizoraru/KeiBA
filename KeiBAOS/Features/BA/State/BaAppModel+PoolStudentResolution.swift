@@ -14,10 +14,20 @@ extension BaAppModel {
     }
 
     func studentCatalogEntry(forSameNameRole item: BaStudentProfileSameNameRoleItem) -> BaGuideCatalogEntry? {
-        let catalogEntries = catalogState.value?.entries.filter {
+        BaSameNameStudentCatalogResolver.catalogEntry(
+            for: item,
+            catalogEntries: sameNameCandidateCatalogEntries()
+        )
+    }
+
+    // Shared accessor so the detail view can hand the catalog slice directly
+    // to BaStudentProfileCardsSection. That lets the section build a single
+    // resolver index per init and answer all role-row lookups against it,
+    // rather than re-scanning the catalog through a closure per item.
+    func sameNameCandidateCatalogEntries() -> [BaGuideCatalogEntry] {
+        catalogState.value?.entries.filter {
             $0.category == .students || $0.category == .npcSatellite
         } ?? []
-        return BaSameNameStudentCatalogResolver.catalogEntry(for: item, catalogEntries: catalogEntries)
     }
 
     func resolvePoolStudentGuideURLs(

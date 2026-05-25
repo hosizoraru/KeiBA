@@ -18,20 +18,21 @@ struct BaStudentProfileCardsSection: View {
         info: BaStudentGuideInfo,
         category: BaCatalogCategory = .students,
         tint: Color,
-        sameNameEntryResolver: (BaStudentProfileSameNameRoleItem) -> BaGuideCatalogEntry?,
+        sameNameCatalogEntries: [BaGuideCatalogEntry],
         onOpenSameNameEntry: @escaping (BaGuideCatalogEntry) -> Void
     ) {
         self.tint = tint
         self.onOpenSameNameEntry = onOpenSameNameEntry
         let sections = info.profileSections(for: category)
         displaySections = sections.filter { $0.isEmpty == false }
-        sameNameEntriesByItemID = Dictionary(
-            sections
-                .flatMap(\.sameNameRoleItems)
-                .compactMap { item in
-                    sameNameEntryResolver(item).map { (item.id, $0) }
-                },
-            uniquingKeysWith: { first, _ in first }
+        // Resolve every same-name role item against a shared index built once.
+        // The previous closure-per-item path rebuilt each catalog entry's
+        // normalizedSameNameLookupTokens for every lookup — N items × M
+        // catalog entries of heavy string normalization. The bulk path is
+        // O(catalog) once, then O(1) per item.
+        sameNameEntriesByItemID = BaSameNameStudentCatalogResolver.resolveAll(
+            items: sections.flatMap(\.sameNameRoleItems),
+            catalogEntries: sameNameCatalogEntries
         )
     }
 

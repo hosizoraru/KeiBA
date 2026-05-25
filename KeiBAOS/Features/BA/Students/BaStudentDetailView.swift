@@ -163,7 +163,7 @@ struct BaStudentDetailView: View {
                     info: info,
                     category: entry.category,
                     tint: headerTint,
-                    sameNameEntryResolver: { model.studentCatalogEntry(forSameNameRole: $0) },
+                    sameNameCatalogEntries: model.sameNameCandidateCatalogEntries(),
                     onOpenSameNameEntry: { selectedSameNameEntry = $0 }
                 )
             } else if state.isLoading == false {
