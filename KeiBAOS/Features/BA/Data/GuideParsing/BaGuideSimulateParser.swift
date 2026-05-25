@@ -8,6 +8,20 @@
 import Foundation
 
 struct BaGuideSimulateParser {
+    // Compiled-once regex caches. parse() is called every time a student
+    // detail loads, and patchSupplementIcons() invokes these patterns once
+    // per row in the simulate block. Caching avoids repeated
+    // NSRegularExpression compilations during initial student loads.
+    fileprivate nonisolated(unsafe) static let equipmentSlotRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"^([123])号装备$"#)
+    }()
+    fileprivate nonisolated(unsafe) static let equipmentTitleRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"^装备([123])$"#)
+    }()
+    fileprivate nonisolated(unsafe) static let unlockLevelRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"^\d+级$"#)
+    }()
+
     private let sectionHeaders = [
         "初始数据",
         "顶级数据",
@@ -171,7 +185,7 @@ struct BaGuideSimulateParser {
                 }
             case "装备":
                 let normalizedKey = BaGuideTextNormalizer.normalizedKey(patched.title)
-                if let slot = firstRegexGroup(in: normalizedKey, pattern: #"^([123])号装备$"#) {
+                if let slot = firstRegexGroup(in: normalizedKey, regex: Self.equipmentSlotRegex, fallbackPattern: #"^([123])号装备$"#) {
                     currentEquipmentSlot = "\(slot)号装备"
                 }
                 if let icon = icons.equipmentSlotIcons[currentEquipmentSlot], patched.imageURL == nil {
@@ -191,7 +205,7 @@ struct BaGuideSimulateParser {
                 }
             case "能力解放":
                 let normalizedKey = BaGuideTextNormalizer.normalizedKey(patched.title)
-                if normalizedKey.range(of: #"^\d+级$"#, options: .regularExpression) != nil,
+                if matchesUnlockLevel(normalizedKey),
                    patched.imageURL == nil,
                    icons.unlockMaterialIcons.isEmpty == false
                 {
@@ -247,7 +261,7 @@ struct BaGuideSimulateParser {
             case BaGuideTextNormalizer.normalizedKey("能力解放所需材料"):
                 unlockMaterialIcons = images
             default:
-                if let slot = firstRegexGroup(in: normalizedKey, pattern: #"^装备([123])$"#) {
+                if let slot = firstRegexGroup(in: normalizedKey, regex: Self.equipmentTitleRegex, fallbackPattern: #"^装备([123])$"#) {
                     equipmentSlotIcons["\(slot)号装备"] = firstImage
                 }
             }
@@ -261,8 +275,22 @@ struct BaGuideSimulateParser {
         )
     }
 
-    private func firstRegexGroup(in value: String, pattern: String) -> String? {
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
+    private func firstRegexGroup(
+        in value: String,
+        regex cachedRegex: NSRegularExpression?,
+        fallbackPattern: String
+    ) -> String? {
+        if let regex = cachedRegex {
+            let range = NSRange(value.startIndex ..< value.endIndex, in: value)
+            guard let match = regex.firstMatch(in: value, range: range),
+                  match.numberOfRanges > 1,
+                  let groupRange = Range(match.range(at: 1), in: value)
+            else {
+                return nil
+            }
+            return String(value[groupRange])
+        }
+        guard let regex = try? NSRegularExpression(pattern: fallbackPattern) else { return nil }
         let range = NSRange(value.startIndex ..< value.endIndex, in: value)
         guard let match = regex.firstMatch(in: value, range: range),
               match.numberOfRanges > 1,
@@ -271,6 +299,14 @@ struct BaGuideSimulateParser {
             return nil
         }
         return String(value[groupRange])
+    }
+
+    private func matchesUnlockLevel(_ value: String) -> Bool {
+        if let regex = Self.unlockLevelRegex {
+            let range = NSRange(value.startIndex ..< value.endIndex, in: value)
+            return regex.firstMatch(in: value, range: range) != nil
+        }
+        return value.range(of: #"^\d+级$"#, options: .regularExpression) != nil
     }
 
     private func isLikelyStatLabel(_ raw: String) -> Bool {
