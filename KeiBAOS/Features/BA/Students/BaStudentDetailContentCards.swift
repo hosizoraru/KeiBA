@@ -114,12 +114,18 @@ private enum BaStudentDetailContentFormatter {
         return String(format: BaL10n.string("ba.student.detail.row.format"), index + 1)
     }
 
-    static func highlightedAttributedString(in text: String) -> AttributedString {
-        var attributed = AttributedString(text)
-        guard let regex = try? NSRegularExpression(
+    // Highlighted attributed strings render in every skill/profile row body
+    // recompose. Compile this regex once instead of building it per call.
+    private nonisolated(unsafe) static let highlightRegex: NSRegularExpression? = {
+        try? NSRegularExpression(
             pattern: #"\d+(?:\.\d+)?\s*(?:%|％|秒|s|S|倍)|COST[:：]?\s*\d+|Lv\.?\s*\d+"#,
             options: []
-        ) else {
+        )
+    }()
+
+    static func highlightedAttributedString(in text: String) -> AttributedString {
+        var attributed = AttributedString(text)
+        guard let regex = highlightRegex else {
             return attributed
         }
         let nsText = text as NSString

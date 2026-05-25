@@ -11,23 +11,25 @@ struct BaStudentGalleryCardsSection: View {
     let info: BaStudentGuideInfo?
     var onPreview: (BaStudentGalleryPreviewItem) -> Void = { _ in }
 
-    private var state: BaStudentGalleryDisplayState {
-        BaStudentGalleryDisplayState(info: info)
-    }
-
     var body: some View {
+        // BaStudentGalleryDisplayState scans the entire info to compute rows,
+        // hasRenderableContent and partition expression/video groups. The
+        // previous computed property re-ran the full classification on every
+        // body call (twice per recompose: once for the empty-state guard and
+        // again for the ForEach). Build it once per evaluation.
+        let state = BaStudentGalleryDisplayState(info: info)
         Section {
             if state.hasRenderableContent == false {
                 BaStudentDetailEmptyRow(section: .gallery)
                     .baGalleryListCardRow()
             } else {
-                galleryRows
+                galleryRows(state: state)
             }
         }
     }
 
     @ViewBuilder
-    private var galleryRows: some View {
+    private func galleryRows(state: BaStudentGalleryDisplayState) -> some View {
         ForEach(state.rows) { row in
             switch row {
             case let .item(item):
