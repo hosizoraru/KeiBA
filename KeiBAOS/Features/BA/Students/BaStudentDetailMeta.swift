@@ -20,6 +20,16 @@ struct BaGuideMetaItem: Identifiable, Hashable {
 }
 
 enum BaStudentGuideMeta {
+    // The meta-extraction path runs whenever the profile/skill summary
+    // sections refresh. These two patterns are tested per row, so cache them
+    // once instead of recompiling per call.
+    private nonisolated(unsafe) static let mediaFilenameSuffixRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"\.(png|jpe?g|webp|gif|svg)$"#)
+    }()
+    private nonisolated(unsafe) static let terrainGradeRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"^[SABCDE][+-]?$"#)
+    }()
+
     nonisolated static func profileMetaItems(from info: BaStudentGuideInfo) -> [BaGuideMetaItem] {
         [
             buildMetaItem(
@@ -477,7 +487,11 @@ enum BaStudentGuideMeta {
             .split(separator: "?")
             .first
             .map(String.init) ?? ""
-        return value.range(of: #"\.(png|jpe?g|webp|gif|svg)$"#, options: .regularExpression) != nil
+        guard let regex = mediaFilenameSuffixRegex else {
+            return value.range(of: #"\.(png|jpe?g|webp|gif|svg)$"#, options: .regularExpression) != nil
+        }
+        let range = NSRange(value.startIndex ..< value.endIndex, in: value)
+        return regex.firstMatch(in: value, range: range) != nil
     }
 
     private nonisolated static func fieldCandidates(
@@ -613,7 +627,12 @@ enum BaStudentGuideMeta {
     private nonisolated static func terrainValuePriority(_ value: String) -> Int {
         let compact = value.replacingOccurrences(of: " ", with: "")
         var score = 0
-        if compact.range(of: #"^[SABCDE][+-]?$"#, options: .regularExpression) != nil {
+        if let regex = terrainGradeRegex {
+            let range = NSRange(compact.startIndex ..< compact.endIndex, in: compact)
+            if regex.firstMatch(in: compact, range: range) != nil {
+                score += 200
+            }
+        } else if compact.range(of: #"^[SABCDE][+-]?$"#, options: .regularExpression) != nil {
             score += 200
         }
         if compact == "无" || compact == "-" {
