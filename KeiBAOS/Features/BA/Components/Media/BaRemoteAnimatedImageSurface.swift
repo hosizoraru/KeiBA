@@ -50,6 +50,7 @@ struct BaRemoteAnimatedImageSurface: View {
         .frame(maxWidth: width == nil ? .infinity : nil)
         .frame(width: width, height: height)
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+        .accessibilityHidden(true)
         .task(id: cacheTaskID) {
             await loadImage()
         }

@@ -141,6 +141,7 @@ private struct BaStudentGalleryItemCard: View, Equatable {
                     .buttonStyle(.plain)
                     .contentShape(RoundedRectangle(cornerRadius: presentation.layout.cornerRadius, style: .continuous))
                     .accessibilityLabel(BaL10n.string("ba.student.detail.media.preview"))
+                    .accessibilityHint(BaL10n.string("ba.student.detail.media.preview.hint"))
 
                     BaStudentGalleryPillRow(item: item)
                 }
@@ -204,6 +205,7 @@ private struct BaStudentGalleryExpressionCard: View {
                     .buttonStyle(.plain)
                     .contentShape(RoundedRectangle(cornerRadius: selectedPresentation.layout.cornerRadius, style: .continuous))
                     .accessibilityLabel(BaL10n.string("ba.student.detail.media.preview"))
+                    .accessibilityHint(BaL10n.string("ba.student.detail.media.preview.hint"))
                 }
             }
         }
@@ -283,6 +285,7 @@ private struct BaStudentGalleryVideoGroupCard: View {
                     .buttonStyle(.plain)
                     .contentShape(RoundedRectangle(cornerRadius: selectedPresentation.layout.cornerRadius, style: .continuous))
                     .accessibilityLabel(BaL10n.string("ba.student.detail.media.preview"))
+                    .accessibilityHint(BaL10n.string("ba.student.detail.media.preview.hint"))
                 }
             }
         }
@@ -341,6 +344,7 @@ struct BaStudentGalleryAudioCard: View {
                     }
                 }
                 .disabled(isCurrentItem == false || playback.canSeek == false)
+                .accessibilityLabel(BaL10n.string("ba.student.detail.gallery.audio.scrub"))
                     .tint(BaDesign.amber)
 
                 if let error = playback.errorMessage, error.isEmpty == false {
@@ -432,6 +436,7 @@ private struct BaStudentGalleryMemoryUnlockCard: View {
                     .font(.title3.weight(.semibold))
                     .foregroundStyle(BaDesign.blue)
                     .frame(width: 34)
+                    .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(BaL10n.string("ba.student.detail.gallery.memory.unlock.title"))
@@ -479,6 +484,7 @@ private struct BaStudentGalleryRelatedLinksCard: View {
                                     .foregroundStyle(BaDesign.green)
                                     .frame(width: 30, height: 30)
                                     .background(BaDesign.green.opacity(0.10), in: Circle())
+                                    .accessibilityHidden(true)
                             }
                             .padding(12)
                             .background(BaDesign.green.opacity(0.07), in: RoundedRectangle(cornerRadius: 16, style: .continuous))

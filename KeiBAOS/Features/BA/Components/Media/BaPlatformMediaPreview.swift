@@ -131,6 +131,7 @@ struct BaPlatformMediaPreviewSheet: View {
             )
         } else if isLoading {
             ProgressView()
+                .accessibilityLabel(BaL10n.string("ba.student.detail.media.previewLoading"))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             ContentUnavailableView(
@@ -191,6 +192,7 @@ private struct BaPlatformMediaPreviewContent: View {
             Image(systemName: kind.systemImage)
                 .font(.largeTitle.weight(.semibold))
                 .foregroundStyle(.secondary)
+                .accessibilityLabel(Text(kind.title))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
@@ -319,10 +321,13 @@ private struct BaZoomableLocalMediaView: View {
         Group {
             if let image {
                 BaPlatformZoomableImageView(image: image)
+                    .accessibilityLabel(Text(kind.title))
+                    .accessibilityHint(Text("ba.media.zoomable.hint"))
             } else {
                 Image(systemName: kind.systemImage)
                     .font(.largeTitle.weight(.semibold))
                     .foregroundStyle(.secondary)
+                    .accessibilityLabel(Text(kind.title))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
