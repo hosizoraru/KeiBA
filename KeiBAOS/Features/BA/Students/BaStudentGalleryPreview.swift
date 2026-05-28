@@ -35,61 +35,17 @@ struct BaStudentGalleryPreviewItem: Identifiable, Hashable {
 }
 
 struct BaStudentGalleryPreviewSheet: View {
-    @Environment(\.dismiss) private var dismiss
     let item: BaStudentGalleryPreviewItem
 
     var body: some View {
-        let galleryItem = BaGuideGalleryItem(
-            id: item.id,
-            title: item.title,
-            detail: item.detail,
-            imageURL: item.previewURL,
-            mediaURL: item.mediaURL,
-            mediaKind: item.kind
+        BaPlatformMediaPreviewSheet(
+            request: BaPlatformMediaPreviewRequest(
+                id: item.id,
+                title: item.title,
+                detail: item.detail,
+                sourceURL: item.mediaURL ?? item.previewURL,
+                kind: item.kind
+            )
         )
-        let presentation = BaStudentGalleryCardPresentation(item: galleryItem)
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    switch item.kind {
-                    case .video:
-                        BaStudentGalleryPreviewMediaSurface(presentation: presentation)
-                    case .audio:
-                        BaStudentGalleryAudioCard(item: galleryItem)
-                    case .image, .live2d, .unknown:
-                        BaStudentGalleryPreviewMediaSurface(presentation: presentation)
-                    }
-
-                    if item.detail.baGalleryIsBlank == false {
-                        Text(item.detail)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-                .padding(18)
-            }
-            .navigationTitle(item.title)
-            .platformInlineNavigationTitle()
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(BaL10n.string("ba.common.done")) {
-                        dismiss()
-                    }
-                }
-                ToolbarItemGroup(placement: .primaryAction) {
-                    if let shareURL = item.mediaURL ?? item.previewURL {
-                        ShareLink(item: shareURL) {
-                            Image(systemName: "square.and.arrow.up")
-                        }
-                        .accessibilityLabel(BaL10n.string("ba.action.share"))
-                    }
-
-                    BaGalleryMediaSaveButton(url: item.mediaURL ?? item.previewURL, title: item.title)
-                }
-            }
-        }
-        .presentationDetents([.medium, .large])
-        .presentationDragIndicator(.visible)
     }
 }

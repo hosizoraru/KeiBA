@@ -11895,6 +11895,28 @@
         }
       }
     },
+    "ba.student.detail.media.previewFailed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preview failed"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プレビュー失敗"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "预览失败"
+          }
+        }
+      }
+    },
     "ba.student.detail.media.saveFailed" : {
       "localizations" : {
         "en" : {

@@ -481,7 +481,7 @@ private struct BaStudentProfileFurnitureRowCard: View, Equatable {
             }
         }
         .sheet(item: $selectedItem) { item in
-            BaStudentProfileFurniturePreviewSheet(item: item, tint: tint)
+            BaStudentProfileFurniturePreviewSheet(item: item)
         }
     }
 }
@@ -596,52 +596,29 @@ private struct BaStudentProfileFurnitureMediaSurface: View {
 }
 
 private struct BaStudentProfileFurniturePreviewSheet: View {
-    @Environment(\.dismiss) private var dismiss
-
     let item: BaGuideGalleryItem
-    let tint: Color
 
     private var kind: BaGuideMediaKind {
         item.mediaKind ?? .image
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    BaStudentProfileFurnitureMediaSurface(
-                        url: item.furniturePreviewURL,
-                        kind: kind,
-                        tint: tint,
-                        height: 420,
-                        showsBackdrop: item.isAnimatedFurniturePreview == false,
-                        maxPixelDimension: item.furniturePreviewMaxPixelDimension
-                    )
+        BaPlatformMediaPreviewSheet(
+            request: BaPlatformMediaPreviewRequest(
+                id: "furniture|\(item.id)",
+                title: item.furnitureDisplayTitle,
+                detail: furnitureDetail,
+                sourceURL: item.furnitureSaveURL,
+                kind: kind
+            )
+        )
+    }
 
-                    if item.note?.isBlank == false {
-                        Text(item.note ?? "")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-                .padding(18)
-            }
-            .navigationTitle(item.furnitureDisplayTitle)
-            .platformInlineNavigationTitle()
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(BaL10n.string("ba.common.done")) {
-                        dismiss()
-                    }
-                }
-                ToolbarItem(placement: .primaryAction) {
-                    BaGuideMediaSaveButton(url: item.furnitureSaveURL, title: item.furnitureDisplayTitle)
-                }
-            }
+    private var furnitureDetail: String {
+        if let note = item.note, note.isBlank == false {
+            return note
         }
-        .presentationDetents([.medium, .large])
-        .presentationDragIndicator(.visible)
+        return item.furnitureDetailLine(kind: kind)
     }
 }
 
