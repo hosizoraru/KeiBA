@@ -7,6 +7,20 @@
 
 import SwiftUI
 
+#if os(macOS)
+    private struct BaFocusedTabKey: FocusedValueKey {
+        typealias Value = AppTab
+        static var defaultValue: AppTab { .overview }
+    }
+
+    extension FocusedValues {
+        var baFocusedTab: AppTab? {
+            get { self[BaFocusedTabKey.self] }
+            set { self[BaFocusedTabKey.self] = newValue }
+        }
+    }
+#endif
+
 struct AppShell: View {
     @Environment(BaAppModel.self) private var model
     @Environment(\.scenePhase) private var scenePhase
@@ -78,6 +92,7 @@ struct AppShell: View {
                         }
                         .tag(tab)
                         .accessibilityIdentifier(tab.accessibilityIdentifier)
+                        .keyboardShortcut(tab.goKeyboardShortcut, modifiers: .command)
                     }
                 }
                 .navigationTitle("KeiBAOS")
@@ -93,6 +108,7 @@ struct AppShell: View {
                 .baMusicMiniPlayerAccessory(session: musicPlaybackSession, selectedTab: selectedTab)
             }
             .navigationSplitViewStyle(.balanced)
+            .focusedSceneValue(\.baFocusedTab, selectedTab)
         }
     #endif
 
@@ -129,6 +145,20 @@ struct AppShell: View {
         )
     }
 }
+
+#if os(macOS)
+extension AppTab {
+    var goKeyboardShortcut: KeyEquivalent {
+        switch self {
+        case .overview: "1"
+        case .activity: "2"
+        case .pool: "3"
+        case .catalog: "4"
+        case .library: "5"
+        }
+    }
+}
+#endif
 
 private struct BaNavigationRoot: View {
     @Environment(BaAppModel.self) private var model

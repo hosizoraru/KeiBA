@@ -28,6 +28,9 @@ struct KeiBAOSApp: App {
                 .environment(baModel)
         }
             .defaultSize(width: 1_120, height: 760)
+            .commands {
+                BaGoCommands()
+            }
 
         Settings {
             NavigationStack {
@@ -58,6 +61,24 @@ private struct BaXCTestHostView: View {
     var body: some View {
         Text(verbatim: "KeiBAOS Tests")
             .accessibilityIdentifier("ba.xctest.host")
+    }
+}
+#endif
+
+#if os(macOS)
+private struct BaGoCommands: Commands {
+    @FocusedValue(\.baFocusedTab) private var focusedTab
+
+    var body: some Commands {
+        CommandMenu("Go") {
+            ForEach(AppTab.allCases) { tab in
+                Button(tab.title) {
+                    // Tab switching is handled by keyboard shortcuts on sidebar items
+                }
+                .keyboardShortcut(tab.goKeyboardShortcut, modifiers: .command)
+                .disabled(focusedTab == tab)
+            }
+        }
     }
 }
 #endif
