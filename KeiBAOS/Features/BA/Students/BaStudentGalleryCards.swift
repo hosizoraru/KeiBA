@@ -584,6 +584,7 @@ private struct BaStudentGalleryRelatedLinksCard: View {
 
             private var appliedRows: [BaStudentGalleryDisplayRow] = []
             private var appliedColumnCount = 0
+            private var cachedHeight: CGFloat = 0
 
             init(
                 height: Binding<CGFloat>,
@@ -651,12 +652,12 @@ private struct BaStudentGalleryRelatedLinksCard: View {
                 collectionView.layoutIfNeeded()
                 let contentHeight = collectionView.collectionViewLayout.collectionViewContentSize.height
                 guard contentHeight.isFinite, contentHeight > 0 else { return }
-                guard abs(height.wrappedValue - contentHeight) > 1 else { return }
+                guard abs(cachedHeight - contentHeight) > 1 else { return }
+                cachedHeight = contentHeight
 
-                DispatchQueue.main.async { [weak self] in
-                    guard let self else { return }
-                    self.height.wrappedValue = contentHeight.rounded(.up)
-                }
+                let rounded = contentHeight.rounded(.up)
+                guard abs(height.wrappedValue - rounded) > 1 else { return }
+                height.wrappedValue = rounded
             }
         }
     }

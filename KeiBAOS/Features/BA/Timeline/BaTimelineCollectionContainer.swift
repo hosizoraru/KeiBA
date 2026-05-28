@@ -93,6 +93,7 @@ import SwiftUI
             private var appliedItems: [Item] = []
             private var appliedColumnCount = 0
             private var appliedSpacing: CGFloat = 0
+            private var cachedHeight: CGFloat = 0
 
             init(height: Binding<CGFloat>, card: @escaping (Item) -> Card) {
                 self.height = height
@@ -159,12 +160,12 @@ import SwiftUI
                 collectionView.layoutIfNeeded()
                 let contentHeight = collectionView.collectionViewLayout.collectionViewContentSize.height
                 guard contentHeight.isFinite, contentHeight > 0 else { return }
-                guard abs(height.wrappedValue - contentHeight) > 1 else { return }
+                guard abs(cachedHeight - contentHeight) > 1 else { return }
+                cachedHeight = contentHeight
 
-                DispatchQueue.main.async { [weak self] in
-                    guard let self else { return }
-                    self.height.wrappedValue = contentHeight.rounded(.up)
-                }
+                let rounded = contentHeight.rounded(.up)
+                guard abs(height.wrappedValue - rounded) > 1 else { return }
+                height.wrappedValue = rounded
             }
         }
     }
