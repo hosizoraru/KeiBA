@@ -180,7 +180,7 @@ SwiftUI 压力点：
 
 | ID | 任务 | 状态 | 目标文件/范围 | 验收标准 |
 | --- | --- | --- | --- | --- |
-| INTEROP-010 | iPadOS/macOS 实测验收矩阵 | 待办 | 图鉴、音乐、活动、卡池、学生详情、媒体预览 | iPad 侧边栏/顶栏、iPad mini 窄宽、macOS 常规/宽窗口均无漂移、裁切、异常遮挡 |
+| INTEROP-010 | iPadOS/macOS 实测验收矩阵 | 进行中 | 图鉴、音乐、活动、卡池、学生详情、媒体预览 | 已完成首批 iPad mini 顶栏与 macOS 常规窗口基线；继续补 iPad Pro 宽窗口、媒体预览和学生详情 |
 | INTEROP-011 | 媒体预览回归验收 | 待办 | `BaPlatformMediaPreview.swift`、`BaGuideMediaExport.swift`、gallery/profile 调用点 | 图片/GIF/视频/音频打开、缩放、保存、分享、关闭、快速切换均稳定 |
 | INTEROP-012 | 搜索与键盘链路验收 | 待办 | `BaPlatformSearchField.swift`、`BaCatalogView.swift`、`BaLibraryView.swift`、`BaStudentVoiceSection.swift` | iOS/iPadOS 键盘弹出不卡顿；macOS 搜索焦点、清除、回车提交正常；图鉴 searchScopes 无回归 |
 | INTEROP-013 | CollectionView 性能证据 | 待办 | `BaGalleryCollectionView`、`BaTimelineCollectionContainer` | Instruments 或可复现滚动记录显示主线程布局峰值可控；大数据列表无明显掉帧 |
@@ -207,6 +207,27 @@ SwiftUI 压力点：
   - Allocations
   - Core Animation FPS
 
+## INTEROP-010 验收记录
+
+2026-05-29 首批验收：
+
+| 平台 | 覆盖范围 | 证据 | 结果 |
+| --- | --- | --- | --- |
+| iPad mini (A17 Pro) simulator | 顶部栏模式、总览、图鉴、音乐空状态 | `build_run_sim` 成功；UI hierarchy 可识别顶部栏、复制好友码、Watch 状态、图鉴卡片更多菜单、音乐搜索框 | 通过；作为窄 iPad 顶栏基线 |
+| macOS 常规窗口 | 侧边栏模式、总览、图鉴 collection、筛选 popover | macOS build 成功；本机启动后图鉴 collection 显示 3 列；筛选 popover 锚定工具栏按钮 | 通过；作为桌面常规窗口基线 |
+
+本批验证命令：
+
+- `xcodebuild -quiet build -project KeiBAOS.xcodeproj -scheme KeiBAOS -destination 'platform=iOS Simulator,name=iPad mini (A17 Pro)' -derivedDataPath /tmp/KeiBAOSDerivedData-interop010-ipadmini CODE_SIGNING_ALLOWED=NO`
+- `xcodebuild -quiet build -project KeiBAOS.xcodeproj -scheme KeiBAOS -destination 'platform=macOS' -derivedDataPath /tmp/KeiBAOSDerivedData-interop010-macos CODE_SIGNING_ALLOWED=NO`
+
+剩余验收：
+
+- iPad Pro 11/13 寸宽窗口与侧边栏模式。
+- iPad mini 竖屏窄窗口与搜索键盘焦点。
+- 活动、卡池、学生详情、媒体预览的跨平台交互。
+- macOS 宽窗口、分屏、保存面板与 Quick Look 预览。
+
 ## 追踪表
 
 | ID | 任务 | 状态 | 目标文件 | 备注 |
@@ -220,7 +241,7 @@ SwiftUI 压力点：
 | INTEROP-007 | macOS Quick Look / 保存面板优化 | 已完成 | `Features/BA/Components/Media/BaGuideMediaExport.swift`、`Features/BA/Components/Media/BaPlatformMediaPreview.swift`、`Features/BA/Students/BaStudentGalleryCardComponents.swift`、`Features/BA/Students/BaStudentProfileCards.swift` | 导出按钮已收敛到 `BaGuideMediaSaveAction`；macOS 使用当前窗口锚定 `NSSavePanel`，iOS/iPadOS 保持 `fileExporter`，Quick Look 预览继续保留平台桥接 |
 | INTEROP-008 | 搜索输入平台桥接试点 | 已完成 | `Features/BA/Components/Shared/BaPlatformSearchField.swift`、`Features/BA/Catalog/BaLibraryView.swift`、`Features/BA/Students/BaStudentVoiceSection.swift` | 音乐与语音搜索已改为小型 `UISearchTextField` / `NSSearchField` bridge；SwiftUI 继续拥有搜索文本状态，图鉴主搜索保留 `.searchable + searchScopes` 的系统链路 |
 | INTEROP-009 | SDWebImageSwiftUI 依赖评估 | 已完成 | `Docs/SwiftUI-UIKit-AppKit-Interop-Plan.md` | 暂不接入依赖；当前 ImageIO + Quick Look 链路覆盖 GIF、静图、预览与缩放，第三方图片栈仅在 WebP/AVIF/SVG、GIF 内存或解码性能出现明确证据时启用 |
-| INTEROP-010 | iPadOS/macOS 实测验收矩阵 | 待办 | 图鉴、音乐、活动、卡池、学生详情、媒体预览 | 进入跨平台验收阶段 |
+| INTEROP-010 | iPadOS/macOS 实测验收矩阵 | 进行中 | 图鉴、音乐、活动、卡池、学生详情、媒体预览 | 首批基线已覆盖 iPad mini 顶栏、macOS 常规窗口、图鉴筛选 popover、音乐空状态搜索框 |
 | INTEROP-011 | 媒体预览回归验收 | 待办 | `BaPlatformMediaPreview.swift`、`BaGuideMediaExport.swift` | 验证系统预览、缩放、保存、分享 |
 | INTEROP-012 | 搜索与键盘链路验收 | 待办 | `BaPlatformSearchField.swift`、图鉴/音乐/语音搜索入口 | 验证焦点、清除、键盘、searchScopes |
 | INTEROP-013 | CollectionView 性能证据 | 待办 | 影画鉴赏、活动/卡池 collection 容器 | 以 Instruments 或可复现滚动记录作为证据 |
