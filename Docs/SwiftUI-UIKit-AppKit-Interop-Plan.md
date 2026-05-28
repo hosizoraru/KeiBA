@@ -192,7 +192,7 @@ SwiftUI 压力点：
 | INTEROP-001 | 建立 Quick Look 媒体预览桥 | 进行中 | `Features/BA/Components/Media/BaPlatformMediaPreview.swift` | 第一版已接入影画与互动家具预览，下载后使用平台预览 |
 | INTEROP-002 | 建立 Zoomable 图片/GIF bridge | 进行中 | `Features/BA/Components/Media/BaPlatformMediaPreview.swift` | 第一版已作为 Quick Look 不可用时的本地图片 fallback |
 | INTEROP-003 | 影画鉴赏 CollectionView 试点 | 已完成 | `Features/BA/Students/BaStudentGalleryCards.swift` | iPadOS 第一版已接入非滚动 UICollectionView，cell 继续承载现有 SwiftUI 卡片；完整测试通过 |
-| INTEROP-004 | 活动/卡池 iPad 宽屏 CollectionView 评估 | 待办 | `Features/BA/Timeline/` | 数据模型复用现有 snapshot |
+| INTEROP-004 | 活动/卡池 iPad 宽屏 CollectionView 评估 | 已完成 | `Features/BA/Timeline/` | 第一版接入共享非滚动 UICollectionView 容器，数据模型复用现有 snapshot；完整测试通过 |
 | INTEROP-005 | 技能富文本 read-only bridge | 待办 | `Features/BA/Students/` | 优先术语 icon baseline |
 | INTEROP-006 | 档案长文本选择/复制 bridge | 待办 | `Features/BA/Students/` | 与技能富文本共用基础组件 |
 | INTEROP-007 | macOS Quick Look / 保存面板优化 | 待办 | `Features/BA/Components/Media/` | AppKit responder/window 边界 |

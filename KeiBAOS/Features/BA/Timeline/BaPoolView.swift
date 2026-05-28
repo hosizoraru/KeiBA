@@ -12,6 +12,7 @@ struct BaPoolView: View {
 
     @Binding private var statusFilter: BaTimelineStatus?
     @State private var selectedPool: BaPoolEntry?
+    @State private var collectionHeight: CGFloat = 1
 
     init(
         statusFilter: Binding<BaTimelineStatus?> = .constant(nil)
@@ -96,19 +97,37 @@ struct BaPoolView: View {
         }
     }
 
+    @ViewBuilder
     private func poolRows(_ rows: [BaPoolRowDisplayModel], metrics: BaAdaptiveMetrics) -> some View {
+        #if os(iOS)
+            if metrics.usesTimelineCollectionLayout {
+                BaTimelineCollectionContainer(
+                    items: rows,
+                    columnCount: metrics.timelineCollectionColumnCount,
+                    spacing: metrics.cardSpacing,
+                    height: $collectionHeight
+                ) { row in
+                    poolButton(row: row)
+                        .frame(maxWidth: .infinity, alignment: .top)
+                }
+                .frame(height: max(collectionHeight, 1))
+                .baAdaptiveListCardRow(top: 7, bottom: 7)
+            } else {
+                poolListRows(rows, metrics: metrics)
+            }
+        #else
+            poolListRows(rows, metrics: metrics)
+        #endif
+    }
+
+    @ViewBuilder
+    private func poolListRows(_ rows: [BaPoolRowDisplayModel], metrics: BaAdaptiveMetrics) -> some View {
         ForEach(rows.baChunked(into: metrics.timelineColumnCount), id: \.baPoolChunkID) { chunk in
             HStack(alignment: .top, spacing: metrics.cardSpacing) {
                 ForEach(chunk) { row in
-                    Button {
-                        selectedPool = row.pool
-                    } label: {
-                        BaPoolNavigationCard(row: row)
-                            .equatable()
-                    }
-                    .buttonStyle(BaPressButtonStyle(scale: 0.985))
-                    .frame(maxWidth: .infinity, alignment: .top)
-                    .transition(BaMotion.subtleTransition)
+                    poolButton(row: row)
+                        .frame(maxWidth: .infinity, alignment: .top)
+                        .transition(BaMotion.subtleTransition)
                 }
                 ForEach(0 ..< max(metrics.timelineColumnCount - chunk.count, 0), id: \.self) { _ in
                     Color.clear
@@ -117,6 +136,16 @@ struct BaPoolView: View {
             }
             .baAdaptiveListCardRow(top: 7, bottom: 7)
         }
+    }
+
+    private func poolButton(row: BaPoolRowDisplayModel) -> some View {
+        Button {
+            selectedPool = row.pool
+        } label: {
+            BaPoolNavigationCard(row: row)
+                .equatable()
+        }
+        .buttonStyle(BaPressButtonStyle(scale: 0.985))
     }
 
     @ViewBuilder
@@ -202,7 +231,7 @@ private struct BaPoolListSnapshot {
     }
 }
 
-private struct BaPoolRowDisplayModel: Identifiable, Equatable {
+private struct BaPoolRowDisplayModel: Identifiable, Equatable, Hashable {
     let pool: BaPoolEntry
     let status: BaTimelineStatus
     let tagTitle: String

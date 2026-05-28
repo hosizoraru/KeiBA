@@ -101,6 +101,18 @@ struct BaAdaptiveMetrics: Equatable {
         widthClass == .compact ? 1 : 2
     }
 
+    var timelineCollectionColumnCount: Int {
+        timelineColumnCount
+    }
+
+    var usesTimelineCollectionLayout: Bool {
+        #if os(iOS)
+            timelineColumnCount > 1
+        #else
+            false
+        #endif
+    }
+
     var overviewDashboardRefreshInterval: TimeInterval {
         60
     }

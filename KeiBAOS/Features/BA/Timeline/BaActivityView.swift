@@ -11,6 +11,7 @@ struct BaActivityView: View {
     @Environment(BaAppModel.self) private var model
 
     @Binding private var statusFilter: BaTimelineStatus?
+    @State private var collectionHeight: CGFloat = 1
 
     init(
         statusFilter: Binding<BaTimelineStatus?> = .constant(nil)
@@ -90,7 +91,32 @@ struct BaActivityView: View {
         }
     }
 
+    @ViewBuilder
     private func activityRows(_ rows: [BaActivityRowDisplayModel], metrics: BaAdaptiveMetrics) -> some View {
+        #if os(iOS)
+            if metrics.usesTimelineCollectionLayout {
+                BaTimelineCollectionContainer(
+                    items: rows,
+                    columnCount: metrics.timelineCollectionColumnCount,
+                    spacing: metrics.cardSpacing,
+                    height: $collectionHeight
+                ) { row in
+                    BaActivityCard(row: row)
+                        .equatable()
+                        .frame(maxWidth: .infinity, alignment: .top)
+                }
+                .frame(height: max(collectionHeight, 1))
+                .baAdaptiveListCardRow(top: 7, bottom: 7)
+            } else {
+                activityListRows(rows, metrics: metrics)
+            }
+        #else
+            activityListRows(rows, metrics: metrics)
+        #endif
+    }
+
+    @ViewBuilder
+    private func activityListRows(_ rows: [BaActivityRowDisplayModel], metrics: BaAdaptiveMetrics) -> some View {
         ForEach(rows.baChunked(into: metrics.timelineColumnCount), id: \.baActivityChunkID) { chunk in
             HStack(alignment: .top, spacing: metrics.cardSpacing) {
                 ForEach(chunk) { row in
@@ -182,7 +208,7 @@ private struct BaActivityListSnapshot {
     }
 }
 
-private struct BaActivityRowDisplayModel: Identifiable, Equatable {
+private struct BaActivityRowDisplayModel: Identifiable, Equatable, Hashable {
     let entry: BaActivityEntry
     let status: BaTimelineStatus
     let kindTitle: String
