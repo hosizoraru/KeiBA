@@ -25,6 +25,39 @@ final class BaStudentDetailGalleryTests: XCTestCase {
         XCTAssertEqual(BaGuideMediaExportBuilder.metadata(for: audioURL, title: "BGM").contentType.preferredFilenameExtension, "ogg")
     }
 
+    func testPlatformMediaPreviewPolicyPrefersQuickLookWhenAvailable() throws {
+        let gifURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina/furniture.gif?token=1"))
+        let audioURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina/bgm.ogg"))
+
+        XCTAssertEqual(
+            BaPlatformMediaPreviewPolicy.renderer(for: .image, fileURL: gifURL, isQuickLookAvailable: true),
+            .quickLook
+        )
+        XCTAssertEqual(
+            BaPlatformMediaPreviewPolicy.renderer(for: .audio, fileURL: audioURL, isQuickLookAvailable: true),
+            .quickLook
+        )
+    }
+
+    func testPlatformMediaPreviewPolicyFallsBackToZoomOnlyForImageMedia() throws {
+        let imageURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina/portrait.webp"))
+        let videoURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina/memory.mp4"))
+        let audioURL = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina/bgm.ogg"))
+
+        XCTAssertEqual(
+            BaPlatformMediaPreviewPolicy.renderer(for: .image, fileURL: imageURL, isQuickLookAvailable: false),
+            .zoomableImage
+        )
+        XCTAssertEqual(
+            BaPlatformMediaPreviewPolicy.renderer(for: .video, fileURL: videoURL, isQuickLookAvailable: false),
+            .iconFallback
+        )
+        XCTAssertEqual(
+            BaPlatformMediaPreviewPolicy.renderer(for: .audio, fileURL: audioURL, isQuickLookAvailable: false),
+            .iconFallback
+        )
+    }
+
     func testGalleryDisplayStateGroupsExpressionsAndFiltersProfileOnlyMedia() throws {
         let standing = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina/standing.png"))
         let memory = try XCTUnwrap(URL(string: "https://cdnimg.gamekee.com/hina/memory.png"))

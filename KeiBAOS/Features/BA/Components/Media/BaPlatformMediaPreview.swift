@@ -43,6 +43,30 @@ struct BaPlatformMediaPreviewRequest: Identifiable, Hashable {
     }
 }
 
+enum BaPlatformMediaPreviewRenderer: Hashable {
+    case quickLook
+    case zoomableImage
+    case iconFallback
+}
+
+enum BaPlatformMediaPreviewPolicy {
+    nonisolated static func renderer(
+        for kind: BaGuideMediaKind,
+        fileURL: URL,
+        isQuickLookAvailable: Bool
+    ) -> BaPlatformMediaPreviewRenderer {
+        if isQuickLookAvailable {
+            return .quickLook
+        }
+
+        if kind == .image || fileURL.baPlatformPreviewIsImageLike {
+            return .zoomableImage
+        }
+
+        return .iconFallback
+    }
+}
+
 struct BaPlatformMediaPreviewSheet: View {
     @Environment(\.dismiss) private var dismiss
 
@@ -150,11 +174,33 @@ private struct BaPlatformMediaPreviewContent: View {
     let kind: BaGuideMediaKind
 
     var body: some View {
-        #if canImport(UIKit) || canImport(QuickLookUI)
-            BaPlatformQuickLookPreview(fileURL: fileURL, title: title)
-                .ignoresSafeArea(edges: .bottom)
-        #else
+        switch BaPlatformMediaPreviewPolicy.renderer(
+            for: kind,
+            fileURL: fileURL,
+            isQuickLookAvailable: Self.isQuickLookAvailable
+        ) {
+        case .quickLook:
+            #if canImport(UIKit) || canImport(QuickLookUI)
+                BaPlatformQuickLookPreview(fileURL: fileURL, title: title)
+                    .ignoresSafeArea(edges: .bottom)
+            #else
+                BaZoomableLocalMediaView(fileURL: fileURL, kind: kind)
+            #endif
+        case .zoomableImage:
             BaZoomableLocalMediaView(fileURL: fileURL, kind: kind)
+        case .iconFallback:
+            Image(systemName: kind.systemImage)
+                .font(.largeTitle.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    private static var isQuickLookAvailable: Bool {
+        #if canImport(UIKit) || canImport(QuickLookUI)
+            true
+        #else
+            false
         #endif
     }
 }
@@ -365,19 +411,49 @@ private struct BaZoomableLocalMediaView: View {
                 imageView.heightAnchor.constraint(equalTo: scrollView.frameLayoutGuide.heightAnchor),
             ])
 
+            let doubleTap = UITapGestureRecognizer(
+                target: context.coordinator,
+                action: #selector(Coordinator.handleDoubleTap(_:))
+            )
+            doubleTap.numberOfTapsRequired = 2
+            scrollView.addGestureRecognizer(doubleTap)
+            context.coordinator.scrollView = scrollView
+
             return scrollView
         }
 
         func updateUIView(_ scrollView: UIScrollView, context: Context) {
             context.coordinator.imageView?.image = image
+            context.coordinator.scrollView = scrollView
             scrollView.zoomScale = max(scrollView.minimumZoomScale, min(scrollView.zoomScale, scrollView.maximumZoomScale))
         }
 
         final class Coordinator: NSObject, UIScrollViewDelegate {
             weak var imageView: UIImageView?
+            weak var scrollView: UIScrollView?
 
             func viewForZooming(in _: UIScrollView) -> UIView? {
                 imageView
+            }
+
+            @objc func handleDoubleTap(_ recognizer: UITapGestureRecognizer) {
+                guard let scrollView else { return }
+                if scrollView.zoomScale > scrollView.minimumZoomScale {
+                    scrollView.setZoomScale(scrollView.minimumZoomScale, animated: true)
+                    return
+                }
+
+                let point = recognizer.location(in: imageView)
+                let targetScale = min(scrollView.maximumZoomScale, max(2.5, scrollView.minimumZoomScale * 2.5))
+                let width = scrollView.bounds.width / targetScale
+                let height = scrollView.bounds.height / targetScale
+                let rect = CGRect(
+                    x: point.x - width / 2,
+                    y: point.y - height / 2,
+                    width: width,
+                    height: height
+                )
+                scrollView.zoom(to: rect, animated: true)
             }
         }
     }
@@ -387,7 +463,11 @@ private struct BaZoomableLocalMediaView: View {
     private struct BaPlatformZoomableImageView: NSViewRepresentable {
         let image: NSImage
 
-        func makeNSView(context _: Context) -> NSScrollView {
+        func makeCoordinator() -> Coordinator {
+            Coordinator()
+        }
+
+        func makeNSView(context: Context) -> NSScrollView {
             let scrollView = NSScrollView()
             scrollView.allowsMagnification = true
             scrollView.minMagnification = 1
@@ -399,11 +479,32 @@ private struct BaZoomableLocalMediaView: View {
             imageView.imageScaling = .scaleProportionallyUpOrDown
             imageView.image = image
             scrollView.documentView = imageView
+            context.coordinator.scrollView = scrollView
+
+            let doubleClick = NSClickGestureRecognizer(
+                target: context.coordinator,
+                action: #selector(Coordinator.handleDoubleClick(_:))
+            )
+            doubleClick.numberOfClicksRequired = 2
+            imageView.addGestureRecognizer(doubleClick)
             return scrollView
         }
 
-        func updateNSView(_ nsView: NSScrollView, context _: Context) {
+        func updateNSView(_ nsView: NSScrollView, context: Context) {
+            context.coordinator.scrollView = nsView
             (nsView.documentView as? NSImageView)?.image = image
+        }
+
+        final class Coordinator: NSObject {
+            weak var scrollView: NSScrollView?
+
+            @objc func handleDoubleClick(_: NSClickGestureRecognizer) {
+                guard let scrollView else { return }
+                let target = scrollView.magnification > scrollView.minMagnification
+                    ? scrollView.minMagnification
+                    : min(scrollView.maxMagnification, max(2.5, scrollView.minMagnification * 2.5))
+                scrollView.animator().setMagnification(target, centeredAt: scrollView.contentView.bounds.center)
+            }
         }
     }
 #endif
@@ -421,3 +522,18 @@ private enum BaPlatformPreviewImageLoader {
         }.value
     }
 }
+
+private extension URL {
+    var baPlatformPreviewIsImageLike: Bool {
+        let value = pathExtension.lowercased()
+        return ["apng", "gif", "heic", "heif", "jpeg", "jpg", "png", "tiff", "webp"].contains(value)
+    }
+}
+
+#if canImport(AppKit)
+    private extension CGRect {
+        var center: CGPoint {
+            CGPoint(x: midX, y: midY)
+        }
+    }
+#endif
