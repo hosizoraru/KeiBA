@@ -261,6 +261,10 @@ private struct BaPlatformMediaSaveButton: View {
             controller.reloadData()
         }
 
+        static func dismantleUIViewController(_ controller: QLPreviewController, coordinator: Coordinator) {
+            controller.dataSource = nil
+        }
+
         final class Coordinator: NSObject, QLPreviewControllerDataSource {
             private var item: BaQuickLookPreviewItem
 
@@ -297,6 +301,10 @@ private struct BaPlatformMediaSaveButton: View {
         func updateNSView(_ nsView: QLPreviewView, context _: Context) {
             nsView.previewItem = BaQuickLookPreviewItem(fileURL: fileURL, title: title)
             nsView.refreshPreviewItem()
+        }
+
+        static func dismantleNSView(_ nsView: QLPreviewView, coordinator: Coordinator) {
+            nsView.previewItem = nil
         }
     }
 #endif
@@ -375,6 +383,11 @@ private struct BaZoomableLocalMediaView: View {
             scrollView.zoomScale = max(scrollView.minimumZoomScale, min(scrollView.zoomScale, scrollView.maximumZoomScale))
         }
 
+        static func dismantleUIView(_ scrollView: UIScrollView, coordinator: Coordinator) {
+            scrollView.delegate = nil
+            coordinator.imageView?.image = nil
+        }
+
         final class Coordinator: NSObject, UIScrollViewDelegate {
             weak var imageView: UIImageView?
             weak var scrollView: UIScrollView?
@@ -440,6 +453,10 @@ private struct BaZoomableLocalMediaView: View {
         func updateNSView(_ nsView: NSScrollView, context: Context) {
             context.coordinator.scrollView = nsView
             (nsView.documentView as? NSImageView)?.image = image
+        }
+
+        static func dismantleNSView(_ nsView: NSScrollView, coordinator: Coordinator) {
+            (nsView.documentView as? NSImageView)?.image = nil
         }
 
         final class Coordinator: NSObject {

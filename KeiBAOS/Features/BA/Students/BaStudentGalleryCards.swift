@@ -535,6 +535,7 @@ private struct BaStudentGalleryRelatedLinksCard: View {
 
         static func dismantleUIView(_ uiView: UICollectionView, coordinator: Coordinator) {
             coordinator.dataSource = nil
+            coordinator.onPreview = { _ in }
             uiView.delegate = nil
         }
 

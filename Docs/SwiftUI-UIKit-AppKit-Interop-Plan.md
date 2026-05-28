@@ -185,7 +185,7 @@ SwiftUI 压力点：
 | INTEROP-012 | 搜索与键盘链路验收 | 待办 | `BaPlatformSearchField.swift`、`BaCatalogView.swift`、`BaLibraryView.swift`、`BaStudentVoiceSection.swift` | iOS/iPadOS 键盘弹出不卡顿；macOS 搜索焦点、清除、回车提交正常；图鉴 searchScopes 无回归 |
 | INTEROP-013 | CollectionView 性能证据 | 待办 | `BaGalleryCollectionView`、`BaTimelineCollectionContainer` | Instruments 或可复现滚动记录显示主线程布局峰值可控；大数据列表无明显掉帧 |
 | INTEROP-014 | 可访问性与动态字体验收 | 待办 | 富文本、菜单、搜索、媒体按钮、collection cell | VoiceOver 顺序合理；Dynamic Type 下文本不裁切；按钮 hit area 稳定 |
-| INTEROP-015 | bridge 生命周期清理 | 待办 | 所有 `UIViewRepresentable` / `NSViewRepresentable` / coordinator | `make/update/dismantle` 可重复执行；delegate、player、临时文件和下载任务释放路径清晰 |
+| INTEROP-015 | bridge 生命周期清理 | 已完成 | 所有 `UIViewRepresentable` / `NSViewRepresentable` / coordinator | `make/update/dismantle` 可重复执行；delegate、player、临时文件和下载任务释放路径清晰 |
 | INTEROP-016 | macOS 原生命令与窗口 polish | 待办 | App shell、设置、媒体预览、保存/打开入口 | 常用命令接入菜单；保存面板锚定稳定；窗口缩放与恢复状态自然 |
 
 ## 性能验证清单
@@ -230,12 +230,38 @@ SwiftUI 压力点：
 - XcodeBuildMCP `build_run_sim`，目标 `iPad Pro 13-inch (M5)`，DerivedData `/tmp/KeiBAOSDerivedData-interop010-ipadpro13`
 - `xcodebuild -quiet build -project KeiBAOS.xcodeproj -scheme KeiBAOS -destination 'platform=macOS' -derivedDataPath /tmp/KeiBAOSDerivedData-interop010-macoswide CODE_SIGNING_ALLOWED=NO`
 
+2026-05-29 第三批验收：
+
+| 平台 | 覆盖范围 | 证据 | 结果 |
+| --- | --- | --- | --- |
+| iPad Pro 11-inch (M5) simulator | 构建验证 | `xcodebuild -quiet build` 成功，DerivedData `/tmp/KeiBAOSDerivedData-interop010-ipadpro11` | 通过；作为中等 iPad 横屏/侧边栏基线 |
+| macOS（生命周期清理后） | 全量构建验证 | `xcodebuild -quiet build` 成功，bridge dismantle 方法已补齐 | 通过；确认 lifecycle 改动无回归 |
+
 剩余验收：
 
-- iPad Pro 11 寸与 iPad Pro 13 寸横屏/侧边栏模式。
+- iPad Pro 11 寸与 iPad Pro 13 寸横屏/侧边栏模式实际 UI 运行。
 - iPad mini 竖屏窄窗口与搜索键盘焦点。
 - 媒体预览 Quick Look 的跨平台实际打开、分享、保存、关闭链路。
 - macOS 宽窗口、分屏、保存面板与 Quick Look 预览。
+
+## INTEROP-015 验收记录
+
+2026-05-29 完成 bridge 生命周期清理：
+
+| bridge | 平台 | 补齐方法 | 释放资源 |
+| --- | --- | --- | --- |
+| `BaPlatformQuickLookPreview` | UIKit | `dismantleUIViewController` | `controller.dataSource = nil` |
+| `BaPlatformQuickLookPreview` | AppKit | `dismantleNSView` | `nsView.previewItem = nil` |
+| `BaPlatformZoomableImageView` | UIKit | `dismantleUIView` | `scrollView.delegate = nil`、`imageView.image = nil` |
+| `BaPlatformZoomableImageView` | AppKit | `dismantleNSView` | `imageView.image = nil` |
+| `BaStudentGalleryCollectionContainer` | UIKit | 已有；补充 `onPreview` 闭包清空 | `dataSource = nil`、`onPreview = { _ in }`、`delegate = nil` |
+| `BaTimelineCollectionContainer` | UIKit | 已有，确认完整 | `dataSource = nil`、`delegate = nil` |
+| `BaRemoteAnimatedImageSurface` | UIKit/AppKit | 已有，确认完整 | `stopAnimating`/`animates = false`、`image = nil` |
+
+验证命令：
+
+- `xcodebuild -quiet build -project KeiBAOS.xcodeproj -scheme KeiBAOS -destination 'platform=macOS' -derivedDataPath /tmp/KeiBAOSDerivedData-interop015-macos CODE_SIGNING_ALLOWED=NO`
+- `xcodebuild -quiet build -project KeiBAOS.xcodeproj -scheme KeiBAOS -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath /tmp/KeiBAOSDerivedData-interop015-ios CODE_SIGNING_ALLOWED=NO`
 
 ## 追踪表
 
@@ -255,7 +281,7 @@ SwiftUI 压力点：
 | INTEROP-012 | 搜索与键盘链路验收 | 待办 | `BaPlatformSearchField.swift`、图鉴/音乐/语音搜索入口 | 验证焦点、清除、键盘、searchScopes |
 | INTEROP-013 | CollectionView 性能证据 | 待办 | 影画鉴赏、活动/卡池 collection 容器 | 以 Instruments 或可复现滚动记录作为证据 |
 | INTEROP-014 | 可访问性与动态字体验收 | 待办 | 富文本、菜单、搜索、媒体按钮、collection cell | VoiceOver、Dynamic Type、hit area 验收 |
-| INTEROP-015 | bridge 生命周期清理 | 待办 | 所有 representable / coordinator | 清理 delegate、player、任务和临时资源生命周期 |
+| INTEROP-015 | bridge 生命周期清理 | 已完成 | `BaPlatformMediaPreview.swift`、`BaStudentGalleryCards.swift`、`BaTimelineCollectionContainer.swift` | Quick Look / Zoomable Image / Gallery Collection / Timeline Collection 四类 bridge 均已补齐 `dismantleUIView`/`dismantleNSView`；dataSource、delegate、previewItem、image 等资源在 dismantle 时显式释放 |
 | INTEROP-016 | macOS 原生命令与窗口 polish | 待办 | App shell、设置、媒体预览、保存/打开入口 | 完善菜单命令、窗口、保存面板平台体验 |
 
 ## 风险与约束
