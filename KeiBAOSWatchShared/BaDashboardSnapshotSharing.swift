@@ -24,8 +24,7 @@ nonisolated enum BaDashboardSnapshotSharing {
     // write. The first write seeds it; subsequent identical pushes short-
     // circuit before any disk I/O. Synchronized via NSLock so it stays
     // safe across the host app and extensions that share this enum.
-    private static let lastWrittenLock = NSLock()
-    nonisolated(unsafe) private static var lastWrittenSharedSnapshotData: Data?
+    private nonisolated static let lastWrittenSharedSnapshotData = BaLockedSnapshotData()
 
     static func loadSnapshot() -> BaWatchDashboardSnapshot? {
         if let snapshot = loadSnapshotFromSharedFile() {
@@ -55,9 +54,7 @@ nonisolated enum BaDashboardSnapshotSharing {
         if let sharedSnapshotFileURL {
             try? FileManager.default.removeItem(at: sharedSnapshotFileURL)
         }
-        lastWrittenLock.lock()
-        lastWrittenSharedSnapshotData = nil
-        lastWrittenLock.unlock()
+        lastWrittenSharedSnapshotData.clear()
     }
 
     private static var sharedSnapshotFileURL: URL? {
@@ -98,21 +95,16 @@ nonisolated enum BaDashboardSnapshotSharing {
         // payloads. The previous Data(contentsOf:) ran on every snapshot
         // sync (which fires on every settings/timeline change), turning a
         // no-op push into a full file read.
-        lastWrittenLock.lock()
-        if lastWrittenSharedSnapshotData == data {
-            lastWrittenLock.unlock()
+        if lastWrittenSharedSnapshotData.matches(data) {
             return
         }
-        lastWrittenLock.unlock()
         do {
             try FileManager.default.createDirectory(
                 at: sharedSnapshotFileURL.deletingLastPathComponent(),
                 withIntermediateDirectories: true
             )
             try data.write(to: sharedSnapshotFileURL, options: [.atomic])
-            lastWrittenLock.lock()
-            lastWrittenSharedSnapshotData = data
-            lastWrittenLock.unlock()
+            lastWrittenSharedSnapshotData.store(data)
         } catch {
             return
         }
@@ -121,5 +113,28 @@ nonisolated enum BaDashboardSnapshotSharing {
     private static func save(_ data: Data, to defaults: UserDefaults?, key: String) {
         guard let defaults, defaults.data(forKey: key) != data else { return }
         defaults.set(data, forKey: key)
+    }
+}
+
+private nonisolated final class BaLockedSnapshotData: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value: Data?
+
+    func matches(_ data: Data) -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return value == data
+    }
+
+    func store(_ data: Data) {
+        lock.lock()
+        value = data
+        lock.unlock()
+    }
+
+    func clear() {
+        lock.lock()
+        value = nil
+        lock.unlock()
     }
 }

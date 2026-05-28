@@ -86,8 +86,7 @@ nonisolated enum BaAppAppearance: String, CaseIterable, Codable, Identifiable, H
 }
 
 nonisolated enum BaL10n {
-    private static let appLanguageLock = NSLock()
-    nonisolated(unsafe) private static var cachedAppLanguage: BaAppLanguage?
+    private nonisolated static let appLanguageCache = BaLockedAppLanguageCache()
     private static let appBundle = Bundle(for: BaLocalizationBundleToken.self)
 
     static func configure(appLanguage: BaAppLanguage) {
@@ -125,15 +124,28 @@ nonisolated enum BaL10n {
     }
 
     private static func cachedAppLanguageValue() -> BaAppLanguage? {
-        appLanguageLock.lock()
-        defer { appLanguageLock.unlock() }
-        return cachedAppLanguage
+        appLanguageCache.value
     }
 
     private static func setCachedAppLanguage(_ language: BaAppLanguage) {
-        appLanguageLock.lock()
-        cachedAppLanguage = language
-        appLanguageLock.unlock()
+        appLanguageCache.store(language)
+    }
+}
+
+private nonisolated final class BaLockedAppLanguageCache: @unchecked Sendable {
+    private let lock = NSLock()
+    private var cachedLanguage: BaAppLanguage?
+
+    var value: BaAppLanguage? {
+        lock.lock()
+        defer { lock.unlock() }
+        return cachedLanguage
+    }
+
+    func store(_ language: BaAppLanguage) {
+        lock.lock()
+        cachedLanguage = language
+        lock.unlock()
     }
 }
 
