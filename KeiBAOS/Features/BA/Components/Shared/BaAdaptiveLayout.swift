@@ -316,6 +316,32 @@ struct BaAdaptiveMetrics: Equatable {
         containerWidth >= 760
     }
 
+    var galleryCollectionColumnCount: Int {
+        #if os(macOS)
+            if containerWidth >= 1180 {
+                return 3
+            }
+            return containerWidth >= 720 ? 2 : 1
+        #else
+            switch widthClass {
+            case .compact:
+                return 1
+            case .regular:
+                return 2
+            case .expanded:
+                return containerWidth >= 1160 ? 3 : 2
+            }
+        #endif
+    }
+
+    var usesGalleryCollectionLayout: Bool {
+        #if os(iOS)
+            widthClass != .compact
+        #else
+            false
+        #endif
+    }
+
     private static func widthClass(for width: CGFloat) -> BaAdaptiveWidthClass {
         if width >= 980 {
             return .expanded

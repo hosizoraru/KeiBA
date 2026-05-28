@@ -63,6 +63,24 @@ final class BaAdaptiveLayoutTests: XCTestCase {
         XCTAssertEqual(landscapeIPadWindow.timelineCardImageHeight, 270)
     }
 
+    func testGalleryCollectionColumnsFollowAvailableWidth() {
+        let phoneWidth = BaAdaptiveMetrics(containerWidth: 430)
+        XCTAssertEqual(phoneWidth.galleryCollectionColumnCount, 1)
+        XCTAssertFalse(phoneWidth.usesGalleryCollectionLayout)
+
+        let stageManagerWidth = BaAdaptiveMetrics(containerWidth: 760)
+        XCTAssertEqual(stageManagerWidth.galleryCollectionColumnCount, 2)
+        XCTAssertTrue(stageManagerWidth.usesGalleryCollectionLayout)
+
+        let fullWidthIPad = BaAdaptiveMetrics(containerWidth: 1_024)
+        XCTAssertEqual(fullWidthIPad.galleryCollectionColumnCount, 2)
+        XCTAssertTrue(fullWidthIPad.usesGalleryCollectionLayout)
+
+        let expandedWindow = BaAdaptiveMetrics(containerWidth: 1_180)
+        XCTAssertEqual(expandedWindow.galleryCollectionColumnCount, 3)
+        XCTAssertTrue(expandedWindow.usesGalleryCollectionLayout)
+    }
+
     func testOverviewIdentityLayoutKeepsFriendCodeReadableOnNarrowCards() {
         let iPhone15Pro = BaAdaptiveMetrics(containerWidth: 393)
         XCTAssertTrue(iPhone15Pro.usesCompactOverviewIdentityLayout)

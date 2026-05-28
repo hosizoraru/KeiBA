@@ -7,9 +7,17 @@
 
 import SwiftUI
 
+#if canImport(UIKit)
+    import UIKit
+#endif
+
 struct BaStudentGalleryCardsSection: View {
+    @Environment(\.baAdaptiveMetrics) private var metrics
+
     let info: BaStudentGuideInfo?
     var onPreview: (BaStudentGalleryPreviewItem) -> Void = { _ in }
+
+    @State private var collectionHeight: CGFloat = 1
 
     var body: some View {
         // BaStudentGalleryDisplayState scans the entire info to compute rows,
@@ -30,25 +38,50 @@ struct BaStudentGalleryCardsSection: View {
 
     @ViewBuilder
     private func galleryRows(state: BaStudentGalleryDisplayState) -> some View {
-        ForEach(state.rows) { row in
-            switch row {
-            case let .item(item):
-                BaStudentGalleryItemCard(item: item, onPreview: onPreview)
-                    .equatable()
-                    .baGalleryListCardRow()
-            case let .expression(items):
-                BaStudentGalleryExpressionCard(items: items, onPreview: onPreview)
-                    .baGalleryListCardRow()
-            case let .videoGroup(group):
-                BaStudentGalleryVideoGroupCard(group: group, onPreview: onPreview)
-                    .baGalleryListCardRow()
-            case let .memoryUnlock(level):
-                BaStudentGalleryMemoryUnlockCard(level: level)
-                    .baGalleryListCardRow()
-            case let .relatedLinks(rows):
-                BaStudentGalleryRelatedLinksCard(rows: rows)
-                    .baGalleryListCardRow()
+        #if os(iOS)
+            if metrics.usesGalleryCollectionLayout {
+                BaStudentGalleryCollectionContainer(
+                    rows: state.rows,
+                    columnCount: metrics.galleryCollectionColumnCount,
+                    height: $collectionHeight,
+                    onPreview: onPreview
+                )
+                .frame(height: max(collectionHeight, 1))
+                .baGalleryListCardRow()
+            } else {
+                galleryListRows(rows: state.rows)
             }
+        #else
+            galleryListRows(rows: state.rows)
+        #endif
+    }
+
+    @ViewBuilder
+    private func galleryListRows(rows: [BaStudentGalleryDisplayRow]) -> some View {
+        ForEach(rows) { row in
+            BaStudentGalleryRowCard(row: row, onPreview: onPreview)
+                .baGalleryListCardRow()
+        }
+    }
+}
+
+private struct BaStudentGalleryRowCard: View {
+    let row: BaStudentGalleryDisplayRow
+    let onPreview: (BaStudentGalleryPreviewItem) -> Void
+
+    var body: some View {
+        switch row {
+        case let .item(item):
+            BaStudentGalleryItemCard(item: item, onPreview: onPreview)
+                .equatable()
+        case let .expression(items):
+            BaStudentGalleryExpressionCard(items: items, onPreview: onPreview)
+        case let .videoGroup(group):
+            BaStudentGalleryVideoGroupCard(group: group, onPreview: onPreview)
+        case let .memoryUnlock(level):
+            BaStudentGalleryMemoryUnlockCard(level: level)
+        case let .relatedLinks(rows):
+            BaStudentGalleryRelatedLinksCard(rows: rows)
         }
     }
 }
@@ -457,3 +490,167 @@ private struct BaStudentGalleryRelatedLinksCard: View {
         }
     }
 }
+
+#if canImport(UIKit)
+    nonisolated private enum BaStudentGalleryCollectionSection: Hashable {
+        case main
+    }
+
+    private struct BaStudentGalleryCollectionContainer: UIViewRepresentable {
+        let rows: [BaStudentGalleryDisplayRow]
+        let columnCount: Int
+        @Binding var height: CGFloat
+        let onPreview: (BaStudentGalleryPreviewItem) -> Void
+
+        func makeCoordinator() -> Coordinator {
+            Coordinator(height: $height, onPreview: onPreview)
+        }
+
+        func makeUIView(context: Context) -> UICollectionView {
+            let collectionView = UICollectionView(
+                frame: .zero,
+                collectionViewLayout: Self.makeLayout(columnCount: columnCount)
+            )
+            collectionView.backgroundColor = .clear
+            collectionView.isScrollEnabled = false
+            collectionView.alwaysBounceVertical = false
+            collectionView.contentInsetAdjustmentBehavior = .never
+            collectionView.showsVerticalScrollIndicator = false
+            collectionView.showsHorizontalScrollIndicator = false
+            collectionView.setContentHuggingPriority(.required, for: .vertical)
+            collectionView.setContentCompressionResistancePriority(.required, for: .vertical)
+            context.coordinator.configureDataSource(collectionView: collectionView)
+            return collectionView
+        }
+
+        func updateUIView(_ collectionView: UICollectionView, context: Context) {
+            context.coordinator.height = $height
+            context.coordinator.onPreview = onPreview
+            context.coordinator.apply(
+                rows: rows,
+                columnCount: columnCount,
+                to: collectionView
+            )
+        }
+
+        static func dismantleUIView(_ uiView: UICollectionView, coordinator: Coordinator) {
+            coordinator.dataSource = nil
+            uiView.delegate = nil
+        }
+
+        private static func makeLayout(columnCount: Int) -> UICollectionViewCompositionalLayout {
+            UICollectionViewCompositionalLayout { _, environment in
+                let columns = max(columnCount, 1)
+                let width = environment.container.effectiveContentSize.width
+                let spacing = Self.spacing(for: width)
+
+                let itemSize = NSCollectionLayoutSize(
+                    widthDimension: .fractionalWidth(1),
+                    heightDimension: .estimated(380)
+                )
+                let item = NSCollectionLayoutItem(layoutSize: itemSize)
+
+                let groupSize = NSCollectionLayoutSize(
+                    widthDimension: .fractionalWidth(1),
+                    heightDimension: .estimated(380)
+                )
+                let group = NSCollectionLayoutGroup.horizontal(
+                    layoutSize: groupSize,
+                    subitems: Array(repeating: item, count: columns)
+                )
+                group.interItemSpacing = .fixed(spacing)
+
+                let section = NSCollectionLayoutSection(group: group)
+                section.interGroupSpacing = spacing
+                return section
+            }
+        }
+
+        private static func spacing(for width: CGFloat) -> CGFloat {
+            width >= 900 ? 16 : 14
+        }
+
+        final class Coordinator: NSObject {
+            var height: Binding<CGFloat>
+            var onPreview: (BaStudentGalleryPreviewItem) -> Void
+            var dataSource: UICollectionViewDiffableDataSource<BaStudentGalleryCollectionSection, BaStudentGalleryDisplayRow>?
+
+            private var appliedRows: [BaStudentGalleryDisplayRow] = []
+            private var appliedColumnCount = 0
+
+            init(
+                height: Binding<CGFloat>,
+                onPreview: @escaping (BaStudentGalleryPreviewItem) -> Void
+            ) {
+                self.height = height
+                self.onPreview = onPreview
+            }
+
+            func configureDataSource(collectionView: UICollectionView) {
+                let registration = UICollectionView.CellRegistration<UICollectionViewCell, BaStudentGalleryDisplayRow> { [weak self] cell, _, row in
+                    guard let self else { return }
+                    cell.backgroundConfiguration = .clear()
+                    cell.contentConfiguration = UIHostingConfiguration {
+                        BaStudentGalleryRowCard(row: row, onPreview: self.onPreview)
+                    }
+                    .margins(.all, 0)
+                    .background {
+                        Color.clear
+                    }
+                }
+
+                dataSource = UICollectionViewDiffableDataSource<BaStudentGalleryCollectionSection, BaStudentGalleryDisplayRow>(
+                    collectionView: collectionView
+                ) { collectionView, indexPath, row in
+                    collectionView.dequeueConfiguredReusableCell(
+                        using: registration,
+                        for: indexPath,
+                        item: row
+                    )
+                }
+            }
+
+            func apply(
+                rows: [BaStudentGalleryDisplayRow],
+                columnCount: Int,
+                to collectionView: UICollectionView
+            ) {
+                if appliedColumnCount != columnCount {
+                    collectionView.setCollectionViewLayout(
+                        BaStudentGalleryCollectionContainer.makeLayout(columnCount: columnCount),
+                        animated: false
+                    )
+                    appliedColumnCount = columnCount
+                }
+
+                guard let dataSource else { return }
+                if appliedRows == rows {
+                    updateHeight(for: collectionView)
+                    return
+                }
+
+                appliedRows = rows
+                var snapshot = NSDiffableDataSourceSnapshot<BaStudentGalleryCollectionSection, BaStudentGalleryDisplayRow>()
+                snapshot.appendSections([.main])
+                snapshot.appendItems(rows, toSection: .main)
+                dataSource.apply(snapshot, animatingDifferences: false) { [weak self, weak collectionView] in
+                    guard let self, let collectionView else { return }
+                    self.updateHeight(for: collectionView)
+                }
+            }
+
+            private func updateHeight(for collectionView: UICollectionView) {
+                collectionView.collectionViewLayout.invalidateLayout()
+                collectionView.layoutIfNeeded()
+                let contentHeight = collectionView.collectionViewLayout.collectionViewContentSize.height
+                guard contentHeight.isFinite, contentHeight > 0 else { return }
+                guard abs(height.wrappedValue - contentHeight) > 1 else { return }
+
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
+                    self.height.wrappedValue = contentHeight.rounded(.up)
+                }
+            }
+        }
+    }
+#endif
