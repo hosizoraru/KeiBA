@@ -11,16 +11,16 @@ nonisolated struct BaStudentWeaponDisplayModel: Identifiable, Hashable {
     // Cache once. The weapon-row parsing path is hit per-row whenever a
     // weapon panel rebuilds, so recompiling these literals adds up across
     // every visible weapon card.
-    fileprivate nonisolated(unsafe) static let extraStatKeyRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let extraStatKeyRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"^附加属性\d+$"#)
     }()
-    fileprivate nonisolated(unsafe) static let digitsRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let digitsRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"\d+"#)
     }()
-    fileprivate nonisolated(unsafe) static let starPrefixRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let starPrefixRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"^★\d+"#)
     }()
-    fileprivate nonisolated(unsafe) static let weaponLevelRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let weaponLevelRegex: NSRegularExpression? = {
         try? NSRegularExpression(
             pattern: #"Lv\.?\s*\d{1,3}"#,
             options: [.caseInsensitive]

@@ -259,13 +259,13 @@ nonisolated enum BaWatchDashboardSnapshotCoding {
     // never mutate either after this setup. The previous code paid the
     // configuration cost on every Watch sync (which can fire on every
     // settings/timeline change) and on every widget timeline build.
-    nonisolated(unsafe) private static let sharedEncoder: JSONEncoder = {
+    private nonisolated static let sharedEncoder: JSONEncoder = {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         return encoder
     }()
 
-    nonisolated(unsafe) private static let sharedDecoder: JSONDecoder = {
+    private nonisolated static let sharedDecoder: JSONDecoder = {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         return decoder

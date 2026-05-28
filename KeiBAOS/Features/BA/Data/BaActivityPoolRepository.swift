@@ -192,7 +192,7 @@ struct BaActivityPoolRepository {
         return .ended
     }
 
-    private nonisolated(unsafe) static let poolTagDigitRegex: NSRegularExpression? = {
+    private nonisolated static let poolTagDigitRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"\d+"#)
     }()
 

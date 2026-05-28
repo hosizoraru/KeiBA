@@ -54,7 +54,6 @@ struct BaLibraryView: View {
                 .baMotion(BaMotion.standard, value: playbackSession.selectedTrack?.id)
                 .baMotion(BaMotion.standard, value: snapshot.queueSignature)
         }
-        .searchable(text: $searchText, prompt: Text(BaL10n.string("ba.music.search.prompt")))
         .navigationDestination(item: $selectedDetailEntry) { entry in
             BaStudentDetailView(entry: entry)
         }
@@ -69,6 +68,13 @@ struct BaLibraryView: View {
         }
     }
 
+    private var musicSearchField: some View {
+        BaPlatformSearchField(
+            text: $searchText,
+            prompt: BaL10n.string("ba.music.search.prompt")
+        )
+    }
+
     @ViewBuilder
     private func musicPage(snapshot: BaMusicLibrarySnapshot, metrics: BaAdaptiveMetrics) -> some View {
         if usesSplitPage(snapshot: snapshot, metrics: metrics) {
@@ -81,6 +87,8 @@ struct BaLibraryView: View {
     private func stackedMusicPage(snapshot: BaMusicLibrarySnapshot, metrics: BaAdaptiveMetrics) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: metrics.cardSpacing) {
+                musicSearchField
+
                 if let status = libraryStatusText(snapshot: snapshot) {
                     musicStatus(status)
                 }
@@ -119,6 +127,8 @@ struct BaLibraryView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: metrics.cardSpacing) {
+                    musicSearchField
+
                     if let status = libraryStatusText(snapshot: snapshot) {
                         musicStatus(status)
                     }

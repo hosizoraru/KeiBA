@@ -12,40 +12,40 @@ enum BaGuideTextNormalizer {
     // clean()/cleanDisplayText()/normalizeMediaURL(), so recompiling these
     // patterns from string literals on each call shows up as a meaningful
     // allocation hotspot during initial guide loads and search updates.
-    fileprivate nonisolated(unsafe) static let stripHTMLRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let stripHTMLRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"<[^>]+>"#)
     }()
-    fileprivate nonisolated(unsafe) static let displayMediaRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let displayMediaRegex: NSRegularExpression? = {
         try? NSRegularExpression(
             pattern: #"((?:https?:)?//[^\s"'<>\\]+|/[A-Za-z0-9_\-./%]+\.(?:png|jpe?g|webp|gif|mp3|m4a|wav|aac|ogg|oga|opus|flac|mp4|mov|m3u8)(?:\?[^\s"'<>\\]+)?)"#,
             options: [.caseInsensitive]
         )
     }()
-    fileprivate nonisolated(unsafe) static let trailingSlashRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let trailingSlashRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"\s*/\s*$"#)
     }()
-    fileprivate nonisolated(unsafe) static let collapsedSpaceRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let collapsedSpaceRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"\s{2,}"#)
     }()
-    fileprivate nonisolated(unsafe) static let digitOnlyRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let digitOnlyRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"^\d+$"#)
     }()
-    fileprivate nonisolated(unsafe) static let dateRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let dateRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"\d{4}[-/.]\d{1,2}[-/.]\d{1,2}"#)
     }()
-    fileprivate nonisolated(unsafe) static let extractURLsRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let extractURLsRegex: NSRegularExpression? = {
         try? NSRegularExpression(
             pattern: #"((?:https?:)?//[^\s"'<>\\]+|/[A-Za-z0-9_\-./%]+(?:\?[^\s"'<>\\]+)?|[A-Za-z0-9_\-./%]+\.(?:png|jpe?g|webp|gif|mp3|m4a|wav|aac|ogg|oga|opus|flac|mp4|mov|m3u8)(?:\?[^\s"'<>\\]+)?)"#,
             options: [.caseInsensitive]
         )
     }()
-    fileprivate nonisolated(unsafe) static let imgTagRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let imgTagRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"<img\b[^>]*>"#, options: [.caseInsensitive, .dotMatchesLineSeparators])
     }()
-    fileprivate nonisolated(unsafe) static let imgClassRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let imgClassRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"\bclass\s*=\s*["']([^"']+)["']"#, options: [.caseInsensitive])
     }()
-    fileprivate nonisolated(unsafe) static let imgSrcRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let imgSrcRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"\bsrc\s*=\s*["']([^"']+)["']"#, options: [.caseInsensitive])
     }()
 

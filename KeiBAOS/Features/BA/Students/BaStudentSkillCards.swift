@@ -229,164 +229,29 @@ struct BaStudentSkillDescriptionView: View {
     }
 
     var body: some View {
-        BaStudentSkillInlineTextFlow(segments: segments, tint: tint)
+        BaSelectableRichTextView(
+            segments: segments.map(\.baRichTextSegment),
+            plainText: description,
+            tint: tint,
+            lineSpacing: 5
+        )
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text(description))
     }
 }
 
-private struct BaStudentSkillInlineTextFlow: View {
-    let segments: [BaStudentSkillDescriptionSegment]
-    let tint: Color
-
-    private var renderItems: [BaStudentSkillInlineTextItem] {
-        Self.renderItems(from: segments)
-    }
-
-    var body: some View {
-        FlowLayout(spacing: 0, lineSpacing: 5) {
-            ForEach(Array(renderItems.enumerated()), id: \.offset) { _, item in
-                switch item {
-                case let .icon(url):
-                    BaRemoteIconSurface(
-                        url: url,
-                        fallbackSystemImage: "seal",
-                        tint: tint,
-                        size: 16,
-                        fallbackFont: .caption2.weight(.semibold)
-                    )
-                    .padding(.horizontal, 1.5)
-                case let .text(value, highlighted):
-                    Text(value)
-                        .font(.body)
-                        .fontWeight(highlighted ? .semibold : .regular)
-                        .foregroundStyle(highlighted ? tint : Color.primary)
-                        .lineLimit(1)
-                }
-            }
+private extension BaStudentSkillDescriptionSegment {
+    var baRichTextSegment: BaRichTextSegment {
+        switch self {
+        case let .text(value):
+            return .text(value)
+        case let .highlightedText(value):
+            return .tinted(value)
+        case let .term(value):
+            return .emphasized(value)
+        case let .icon(url):
+            return .icon(url)
         }
-        .fixedSize(horizontal: false, vertical: true)
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private static func renderItems(from segments: [BaStudentSkillDescriptionSegment]) -> [BaStudentSkillInlineTextItem] {
-        segments.flatMap { segment in
-            switch segment {
-            case let .icon(url):
-                return [BaStudentSkillInlineTextItem.icon(url)]
-            case let .term(value):
-                return [BaStudentSkillInlineTextItem.text(value, highlighted: false)]
-            case let .highlightedText(value):
-                return [BaStudentSkillInlineTextItem.text(value, highlighted: true)]
-            case let .text(value):
-                return textFragments(value).map { BaStudentSkillInlineTextItem.text($0, highlighted: false) }
-            }
-        }
-    }
-
-    private static func textFragments(_ value: String) -> [String] {
-        var fragments: [String] = []
-        var latinBuffer = ""
-
-        func flushLatinBuffer() {
-            if latinBuffer.isEmpty == false {
-                fragments.append(latinBuffer)
-                latinBuffer = ""
-            }
-        }
-
-        for scalar in value.unicodeScalars {
-            let character = String(scalar)
-            if scalar.isASCIILetterOrDigit || scalar.value == 95 {
-                latinBuffer.append(character)
-            } else {
-                flushLatinBuffer()
-                fragments.append(character)
-            }
-        }
-        flushLatinBuffer()
-        return fragments.filter { $0.isEmpty == false }
-    }
-}
-
-private enum BaStudentSkillInlineTextItem: Hashable {
-    case text(String, highlighted: Bool)
-    case icon(URL)
-}
-
-private extension Unicode.Scalar {
-    var isASCIILetterOrDigit: Bool {
-        (65 ... 90).contains(value) ||
-            (97 ... 122).contains(value) ||
-            (48 ... 57).contains(value)
-    }
-}
-
-private struct FlowLayout: Layout {
-    var spacing: CGFloat
-    var lineSpacing: CGFloat
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        layout(in: proposal.width ?? 0, subviews: subviews).size
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let rows = layout(in: bounds.width, subviews: subviews).rows
-        var y = bounds.minY
-        for row in rows {
-            var x = bounds.minX
-            for item in row.items {
-                item.subview.place(
-                    at: CGPoint(x: x, y: y + (row.height - item.size.height) / 2),
-                    proposal: ProposedViewSize(item.size)
-                )
-                x += item.size.width + spacing
-            }
-            y += row.height + lineSpacing
-        }
-    }
-
-    private func layout(in width: CGFloat, subviews: Subviews) -> (size: CGSize, rows: [Row]) {
-        var rows: [Row] = []
-        var current = Row()
-        let maxWidth = width > 0 ? width : .greatestFiniteMagnitude
-
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            let itemWidth = min(size.width, maxWidth)
-            let item = Item(subview: subview, size: CGSize(width: itemWidth, height: size.height))
-            let nextWidth = current.items.isEmpty ? itemWidth : current.width + spacing + itemWidth
-            if nextWidth > maxWidth, current.items.isEmpty == false {
-                rows.append(current)
-                current = Row()
-            }
-            current.add(item, spacing: spacing)
-        }
-        if current.items.isEmpty == false {
-            rows.append(current)
-        }
-        let height = rows.reduce(CGFloat.zero) { partial, row in
-            partial + row.height
-        } + CGFloat(max(rows.count - 1, 0)) * lineSpacing
-        let resolvedWidth = width > 0 ? width : rows.map(\.width).max() ?? 0
-        return (CGSize(width: resolvedWidth, height: height), rows)
-    }
-
-    private struct Row {
-        var items: [Item] = []
-        var width: CGFloat = 0
-        var height: CGFloat = 0
-
-        mutating func add(_ item: Item, spacing: CGFloat) {
-            width += items.isEmpty ? item.size.width : spacing + item.size.width
-            height = max(height, item.size.height)
-            items.append(item)
-        }
-    }
-
-    private struct Item {
-        let subview: LayoutSubview
-        let size: CGSize
     }
 }
 

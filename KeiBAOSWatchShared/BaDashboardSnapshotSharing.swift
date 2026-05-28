@@ -68,7 +68,7 @@ nonisolated enum BaDashboardSnapshotSharing {
     // property re-asked FileManager on every save and every widget timeline
     // build; the result is fixed for the process lifetime, so caching it
     // turns each subsequent access into a single load.
-    nonisolated(unsafe) private static let sharedSnapshotFileURLCache: URL? = {
+    private nonisolated static let sharedSnapshotFileURLCache: URL? = {
         #if os(iOS) || os(watchOS)
         FileManager.default
             .containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier)?

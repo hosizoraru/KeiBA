@@ -116,7 +116,7 @@ private enum BaStudentDetailContentFormatter {
 
     // Highlighted attributed strings render in every skill/profile row body
     // recompose. Compile this regex once instead of building it per call.
-    private nonisolated(unsafe) static let highlightRegex: NSRegularExpression? = {
+    private nonisolated static let highlightRegex: NSRegularExpression? = {
         try? NSRegularExpression(
             pattern: #"\d+(?:\.\d+)?\s*(?:%|％|秒|s|S|倍)|COST[:：]?\s*\d+|Lv\.?\s*\d+"#,
             options: []
@@ -146,7 +146,7 @@ private enum BaStudentDetailContentFormatter {
 
     // Cached so the per-row stat parser doesn't recompile its regex literal
     // on every body recompose of the stat panel.
-    private nonisolated(unsafe) static let bonusValueRegex: NSRegularExpression? = {
+    private nonisolated static let bonusValueRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"\(\+\s*[^)]+\)"#)
     }()
 

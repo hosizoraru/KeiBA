@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import UniformTypeIdentifiers
 
 struct BaStudentProfileCardsSection: View {
     let tint: Color
@@ -184,6 +183,14 @@ private struct BaStudentProfileFieldRowView: View {
             }
         } else if row.prefersCapsule {
             BaStudentProfileValueChip(title: displayValue, tint: tint)
+        } else if usesParagraphLayout {
+            BaSelectableRichTextView(
+                text: displayValue,
+                tint: tint,
+                baseWeight: .semibold,
+                alignment: .leading,
+                lineSpacing: 3
+            )
         } else {
             Text(displayValue)
                 .font(.body.weight(.semibold))
@@ -628,17 +635,14 @@ private struct BaGuideMediaSaveButton: View {
     let url: URL?
     let title: String
 
-    @State private var exportDocument = BaGuideMediaExportDocument()
-    @State private var exportType: UTType = .data
-    @State private var exportFilename = "BA_media.bin"
-    @State private var isExporterPresented = false
-    @State private var isLoading = false
-    @State private var errorMessage: String?
-
     var body: some View {
-        Button {
-            Task { await prepareExport() }
-        } label: {
+        BaGuideMediaSaveAction(
+            url: url,
+            title: title,
+            dataLoader: { url in
+                try await model.imageData(for: url)
+            }
+        ) { isLoading, _ in
             if isLoading {
                 ProgressView()
                     .controlSize(.small)
@@ -646,49 +650,6 @@ private struct BaGuideMediaSaveButton: View {
                 Label(BaL10n.string("ba.action.save"), systemImage: "square.and.arrow.down")
                     .labelStyle(.iconOnly)
             }
-        }
-        .disabled(url == nil || isLoading)
-        .accessibilityLabel(BaL10n.string("ba.action.save"))
-        .fileExporter(
-            isPresented: $isExporterPresented,
-            document: exportDocument,
-            contentType: exportType,
-            defaultFilename: exportFilename
-        ) { result in
-            if case let .failure(error) = result {
-                errorMessage = error.localizedDescription
-            }
-        }
-        .alert(
-            BaL10n.string("ba.student.detail.media.saveFailed"),
-            isPresented: Binding(
-                get: { errorMessage != nil },
-                set: { if $0 == false { errorMessage = nil } }
-            )
-        ) {
-            Button(BaL10n.string("ba.common.done")) {
-                errorMessage = nil
-            }
-        } message: {
-            Text(errorMessage ?? "")
-        }
-    }
-
-    @MainActor
-    private func prepareExport() async {
-        guard let url else { return }
-        isLoading = true
-        defer { isLoading = false }
-
-        do {
-            let data = try await model.imageData(for: url)
-            let metadata = BaGuideMediaExportBuilder.metadata(for: url, title: title)
-            exportDocument = BaGuideMediaExportDocument(data: data)
-            exportType = metadata.contentType
-            exportFilename = metadata.fileName
-            isExporterPresented = true
-        } catch {
-            errorMessage = error.localizedDescription
         }
     }
 }
@@ -861,22 +822,22 @@ private extension BaGuideGalleryItem {
 private enum BaProfileURLPatterns {
     // Hit on every body recompose for profile rows that probe whether an
     // image URL is animated. Compile once.
-    nonisolated(unsafe) static let gifSuffixRegex: NSRegularExpression? = {
+    nonisolated static let gifSuffixRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"\.gif(?:[?#].*)?$"#)
     }()
 
     // String.regexNumberTokens is hit per profile string during card
     // rendering — caching avoids recompiling \d+ on every recompose.
-    nonisolated(unsafe) static let digitsRegex: NSRegularExpression? = {
+    nonisolated static let digitsRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"\d+"#)
     }()
 
     // Furniture display titles parse the trailing digits of a 互动家具
     // label per row. Both patterns compile once and reuse.
-    nonisolated(unsafe) static let furniturePairRegex: NSRegularExpression? = {
+    nonisolated static let furniturePairRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"^互动家具\s*(\d)(\d)$"#)
     }()
-    nonisolated(unsafe) static let furnitureNumberRegex: NSRegularExpression? = {
+    nonisolated static let furnitureNumberRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"^互动家具\s*(\d+)$"#)
     }()
 }

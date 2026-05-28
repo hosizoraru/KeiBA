@@ -23,10 +23,10 @@ enum BaStudentGuideMeta {
     // The meta-extraction path runs whenever the profile/skill summary
     // sections refresh. These two patterns are tested per row, so cache them
     // once instead of recompiling per call.
-    private nonisolated(unsafe) static let mediaFilenameSuffixRegex: NSRegularExpression? = {
+    private nonisolated static let mediaFilenameSuffixRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"\.(png|jpe?g|webp|gif|svg)$"#)
     }()
-    private nonisolated(unsafe) static let terrainGradeRegex: NSRegularExpression? = {
+    private nonisolated static let terrainGradeRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"^[SABCDE][+-]?$"#)
     }()
 

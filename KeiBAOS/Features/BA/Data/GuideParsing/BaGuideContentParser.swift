@@ -77,11 +77,9 @@ struct BaGuideContentParser {
         firstHTMLMetaContent(html, names: ["og:image", "twitter:image"]).flatMap(GameKeeJSON.normalizeImageURL)
     }
 
-    // NSRegularExpression is thread-safe once created; reuse the compiled
-    // pattern instead of recompiling per call. The struct is not actor-isolated,
-    // so use nonisolated(unsafe) for the shared static (NSRegularExpression is
-    // not Sendable).
-    private nonisolated(unsafe) static let metaContentRegexCache: [String: NSRegularExpression] = {
+    // NSRegularExpression is thread-safe once created; reuse compiled patterns
+    // instead of recompiling per call.
+    private nonisolated static let metaContentRegexCache: [String: NSRegularExpression] = {
         let names = ["description", "og:description", "og:image", "twitter:image"]
         var cache: [String: NSRegularExpression] = [:]
         for name in names {

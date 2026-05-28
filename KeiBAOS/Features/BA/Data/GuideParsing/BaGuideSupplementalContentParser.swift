@@ -348,7 +348,7 @@ struct BaGuideSupplementalContentParser {
 
     // Compiled once. Hit per text node during supplemental content walks
     // for every student detail body recompose.
-    private nonisolated(unsafe) static let webURLRegex: NSRegularExpression? = {
+    private nonisolated static let webURLRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"((?:https?:)?//[^\s"'<>\\]+|/[A-Za-z0-9_\-./%]+(?:\?[^\s"'<>\\]+)?)"#, options: [.caseInsensitive])
     }()
 

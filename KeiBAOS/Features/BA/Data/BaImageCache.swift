@@ -18,10 +18,9 @@ actor BaImageCache {
     private let fileManager: FileManager
     private let client: GameKeeClient
     private let rootDirectory: URL
-    // NSCache is thread-safe so it lives outside actor isolation. The fast path
-    // can serve hits without bouncing through the actor, which matters when
-    // SwiftUI grids re-issue the same URL during scroll/recompose.
-    private nonisolated let memoryCache: NSCache<NSURL, NSData> = {
+    // NSCache handles memory pressure and eviction; the actor keeps request
+    // coalescing, failure backoff, and metrics serialized.
+    private let memoryCache: NSCache<NSURL, NSData> = {
         let cache = NSCache<NSURL, NSData>()
         cache.name = "os.kei.KeiBAOS.BaImageCache"
         cache.countLimit = BaPlatformPerformanceProfile.imageMemoryCacheCountLimit
@@ -50,9 +49,8 @@ actor BaImageCache {
     }
 
     func data(for url: URL, refererPath: String = "/ba") async throws -> Data {
-        // Fast path: in-memory hit. NSCache is thread-safe, so this resolves
-        // without any actor hop and avoids both the disk read and the
-        // signature scan that disk hits perform.
+        // Fast path: in-memory hit avoids both the disk read and the signature
+        // scan that disk hits perform.
         if let cached = memoryCache.object(forKey: url as NSURL) {
             memoryHitCount += 1
             return Data(referencing: cached)

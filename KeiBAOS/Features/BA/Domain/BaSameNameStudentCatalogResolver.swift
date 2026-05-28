@@ -93,7 +93,7 @@ nonisolated enum BaSameNameStudentCatalogResolver {
 
     // Compiled once. Hit per same-name role row during student detail recompose;
     // an inline regex compile per call dominated when the body re-evaluated.
-    private nonisolated(unsafe) static let displayPrefixRegex: NSRegularExpression? = {
+    private nonisolated static let displayPrefixRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"^(?:★+\s*\d*|\d+\s*星|NPC|npc)\s*"#)
     }()
 

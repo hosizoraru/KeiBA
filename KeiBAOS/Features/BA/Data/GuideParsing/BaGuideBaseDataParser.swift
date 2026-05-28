@@ -271,7 +271,7 @@ struct BaGuideBaseDataParser {
     // Compiled once. Hit per row during base-data ingestion — every
     // detail body recompose iterates many rows, and each one was paying
     // a fresh regex compile.
-    private nonisolated(unsafe) static let skillKeyLevelRegex: NSRegularExpression? = {
+    private nonisolated static let skillKeyLevelRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"^LV\.?\d{1,2}\b"#, options: [.caseInsensitive])
     }()
 

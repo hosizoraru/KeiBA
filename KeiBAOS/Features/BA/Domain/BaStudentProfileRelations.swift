@@ -11,21 +11,21 @@ import Foundation
 // sameNameRoleNameCandidate run once per relation row during student
 // detail parsing; the originals compiled the same patterns from string
 // literals on every call.
-private nonisolated(unsafe) let roleRowLinkRegex: NSRegularExpression? =
+private nonisolated let roleRowLinkRegex: NSRegularExpression? =
     try? NSRegularExpression(
         pattern: #"https?://[^\s|｜]+|/(?:ba/tj/\d+(?:\.html)?|ba/\d+(?:\.html)?|v1/content/detail/\d+)|(?<![A-Za-z0-9])\d{4,}(?![A-Za-z0-9])"#,
         options: [.caseInsensitive]
     )
-private nonisolated(unsafe) let bareDomainURLRegex: NSRegularExpression? =
+private nonisolated let bareDomainURLRegex: NSRegularExpression? =
     try? NSRegularExpression(pattern: #"https?://[^\s/／|｜]+"#, options: [.caseInsensitive])
-private nonisolated(unsafe) let plainURLRegex: NSRegularExpression? =
+private nonisolated let plainURLRegex: NSRegularExpression? =
     try? NSRegularExpression(pattern: #"https?://[^\s]+"#, options: [.caseInsensitive])
-private nonisolated(unsafe) let detailPathRegex: NSRegularExpression? =
+private nonisolated let detailPathRegex: NSRegularExpression? =
     try? NSRegularExpression(
         pattern: #"/(?:ba/tj/\d+(?:\.html)?|ba/\d+(?:\.html)?|v1/content/detail/\d+)"#,
         options: [.caseInsensitive]
     )
-private nonisolated(unsafe) let standaloneIDRegex: NSRegularExpression? =
+private nonisolated let standaloneIDRegex: NSRegularExpression? =
     try? NSRegularExpression(pattern: #"(?<![A-Za-z0-9])\d{4,}(?![A-Za-z0-9])"#)
 
 private nonisolated func stripWithCachedRegex(

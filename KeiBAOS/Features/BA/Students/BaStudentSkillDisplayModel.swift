@@ -11,39 +11,39 @@ nonisolated struct BaStudentSkillDisplayModel: Identifiable, Hashable {
     // Compiled-once regex cache. parseLevelNumber alone is called from
     // levelOptions/defaultLevel computed properties — those run on every body
     // recompose for every visible skill card.
-    fileprivate nonisolated(unsafe) static let levelDigitRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let levelDigitRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"\d{1,2}"#)
     }()
-    fileprivate nonisolated(unsafe) static let glossaryNameRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let glossaryNameRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"名词\d+"#)
     }()
-    fileprivate nonisolated(unsafe) static let dimensionRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let dimensionRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"/w_(\d{1,4})/h_(\d{1,4})/"#)
     }()
-    fileprivate nonisolated(unsafe) static let levelKeyRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let levelKeyRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"(?i)^LV\.?\d{1,2}$"#)
     }()
-    fileprivate nonisolated(unsafe) static let costPrefixRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let costPrefixRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"(?i)^COST:\s*"#)
     }()
-    fileprivate nonisolated(unsafe) static let collapsedSpaceRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let collapsedSpaceRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"\s{2,}"#)
     }()
-    fileprivate nonisolated(unsafe) static let multiSpaceRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let multiSpaceRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"\s+"#)
     }()
-    fileprivate nonisolated(unsafe) static let ownedSkillRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let ownedSkillRegex: NSRegularExpression? = {
         try? NSRegularExpression(
             pattern: #"^(「[^」]{1,40}」|『[^』]{1,40}』|【[^】]{1,40}】|[A-Za-z0-9\u{4E00}-\u{9FFF}·・\-\s]{1,40})\s*的\s*(.+)$"#
         )
     }()
-    fileprivate nonisolated(unsafe) static let trailingNumberRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let trailingNumberRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"^(.*?)[\s\-_]*(\d{1,2})$"#)
     }()
-    fileprivate nonisolated(unsafe) static let trailingDigitsRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let trailingDigitsRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"\d{1,2}$"#)
     }()
-    fileprivate nonisolated(unsafe) static let bracketCaptureRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let bracketCaptureRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"[（(【\[]([^()（）【】\[\]]+)[)）】\]]"#)
     }()
 
@@ -703,20 +703,20 @@ enum BaStudentSkillTextNormalizer {
     // description segment list, which happens on every body recompose for
     // expanded skill cards. Compiling these regexes from a literal pattern
     // each invocation showed up as a notable allocation hotspot.
-    private nonisolated(unsafe) static let descriptionNumberRegex: NSRegularExpression? = {
+    private nonisolated static let descriptionNumberRegex: NSRegularExpression? = {
         try? NSRegularExpression(
             pattern: #"(?<![A-Za-z])[-+]?\d+(?:\.\d+)?\s*(?:%|％|秒|s|S|倍)?"#
         )
     }()
-    private nonisolated(unsafe) static let highlightedAttributedRegex: NSRegularExpression? = {
+    private nonisolated static let highlightedAttributedRegex: NSRegularExpression? = {
         try? NSRegularExpression(
             pattern: #"(?<![A-Za-z])[-+]?\d+(?:\.\d+)?\s*(?:%|％|秒|s|S|倍)?|COST[:：]?\s*\d+|Lv\.?\s*\d+"#
         )
     }()
-    private nonisolated(unsafe) static let glossaryWhitespaceRegex: NSRegularExpression? = {
+    private nonisolated static let glossaryWhitespaceRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"[\s\u{3000}]"#)
     }()
-    private nonisolated(unsafe) static let glossaryPunctuationRegex: NSRegularExpression? = {
+    private nonisolated static let glossaryPunctuationRegex: NSRegularExpression? = {
         try? NSRegularExpression(
             pattern: #"[，。、“”‘’：:；;（）()【】\[\]《》<>·•\-—_+*/\\|!?！？]"#
         )

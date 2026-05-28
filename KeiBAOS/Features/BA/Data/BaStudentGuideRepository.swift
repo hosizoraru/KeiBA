@@ -326,10 +326,9 @@ struct BaStudentGuideRepository: Sendable {
         return title != value
     }
 
-    // Compiled once and reused. NSRegularExpression is documented as thread-safe
-    // after creation, but it isn't Sendable, so use nonisolated(unsafe) for the
-    // shared static.
-    private nonisolated(unsafe) static let placeholderPunctuationRegex: NSRegularExpression? = {
+    // Compiled once and reused. NSRegularExpression is thread-safe after
+    // creation, so the parser can share this pattern across calls.
+    private nonisolated static let placeholderPunctuationRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"^[\\/|｜／,，;；:：._\-—~·*]+$"#)
     }()
 
@@ -417,7 +416,7 @@ struct BaStudentGuideRepository: Sendable {
         )
     }
 
-    private nonisolated(unsafe) static let metaContentRegexCache: [String: NSRegularExpression] = {
+    private nonisolated static let metaContentRegexCache: [String: NSRegularExpression] = {
         let names = ["description", "og:description", "og:image", "twitter:image"]
         var cache: [String: NSRegularExpression] = [:]
         for name in names {

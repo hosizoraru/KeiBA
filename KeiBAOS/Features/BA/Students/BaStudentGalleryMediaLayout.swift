@@ -194,7 +194,7 @@ private extension BaStudentGalleryLayoutContext {
 
 private enum BaGalleryURLPatterns {
     // Hit on every body recompose for visible gallery cells; cache once.
-    nonisolated(unsafe) static let dimensionsRegex: NSRegularExpression? = {
+    nonisolated static let dimensionsRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"/w_(\d+)/h_(\d+)/"#)
     }()
 }

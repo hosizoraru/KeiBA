@@ -170,14 +170,14 @@ enum GameKeeJSON {
     // NSRegularExpression is documented as thread-safe once created; reuse the
     // compiled pattern across calls so URL extraction does not pay the
     // compilation cost per invocation.
-    private nonisolated(unsafe) static let extractURLsRegex: NSRegularExpression? = {
+    private nonisolated static let extractURLsRegex: NSRegularExpression? = {
         let pattern = #"((?:https?:)?//[^\s"'<>\\]+|/[A-Za-z0-9_\-./%]+(?:\?[^\s"'<>\\]+)?)"#
         return try? NSRegularExpression(pattern: pattern)
     }()
 
     // Cached for extractPlainText, which fans out from preferredText on
     // every JSON row during list ingestion (announcements, news, gallery).
-    fileprivate nonisolated(unsafe) static let stripHTMLRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let stripHTMLRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"<[^>]+>"#)
     }()
 

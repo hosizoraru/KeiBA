@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import UniformTypeIdentifiers
 
 enum BaStudentGalleryMetrics {
     static let cardSpacing: CGFloat = 12
@@ -411,66 +410,15 @@ struct BaGalleryMediaSaveButton: View {
     let title: String
     var tint: Color = BaDesign.blue
 
-    @State private var exportDocument = BaGuideMediaExportDocument()
-    @State private var exportType: UTType = .data
-    @State private var exportFilename = "BA_media.bin"
-    @State private var isExporterPresented = false
-    @State private var isLoading = false
-    @State private var errorMessage: String?
-
     var body: some View {
-        Button {
-            Task { await prepareExport() }
-        } label: {
+        BaGuideMediaSaveAction(url: url, title: title) { isLoading, isEnabled in
             if isLoading {
                 BaGalleryIconActionSurface(systemImage: "square.and.arrow.down", tint: tint, isLoading: true, isEnabled: false)
             } else {
-                BaGalleryIconActionSurface(systemImage: "square.and.arrow.down", tint: tint, isEnabled: url != nil)
+                BaGalleryIconActionSurface(systemImage: "square.and.arrow.down", tint: tint, isEnabled: isEnabled)
             }
         }
         .buttonStyle(.plain)
-        .disabled(url == nil || isLoading)
-        .accessibilityLabel(BaL10n.string("ba.action.save"))
-        .fileExporter(
-            isPresented: $isExporterPresented,
-            document: exportDocument,
-            contentType: exportType,
-            defaultFilename: exportFilename
-        ) { result in
-            if case let .failure(error) = result {
-                errorMessage = error.localizedDescription
-            }
-        }
-        .alert(
-            BaL10n.string("ba.student.detail.media.saveFailed"),
-            isPresented: Binding(
-                get: { errorMessage != nil },
-                set: { if $0 == false { errorMessage = nil } }
-            )
-        ) {
-            Button(BaL10n.string("ba.common.done")) {
-                errorMessage = nil
-            }
-        } message: {
-            Text(errorMessage ?? "")
-        }
-    }
-
-    @MainActor
-    private func prepareExport() async {
-        guard let url else { return }
-        isLoading = true
-        defer { isLoading = false }
-        do {
-            let data = try await BaGuideMediaCache.shared.data(for: url)
-            let metadata = BaGuideMediaExportBuilder.metadata(for: url, title: title)
-            exportDocument = BaGuideMediaExportDocument(data: data)
-            exportType = metadata.contentType
-            exportFilename = metadata.fileName
-            isExporterPresented = true
-        } catch {
-            errorMessage = error.localizedDescription
-        }
     }
 }
 

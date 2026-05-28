@@ -193,10 +193,10 @@ SwiftUI 压力点：
 | INTEROP-002 | 建立 Zoomable 图片/GIF bridge | 已完成 | `Features/BA/Components/Media/BaPlatformMediaPreview.swift` | 已作为 Quick Look 不可用时的本地图片 fallback；UIKit/AppKit 均支持双击缩放与恢复 |
 | INTEROP-003 | 影画鉴赏 CollectionView 试点 | 已完成 | `Features/BA/Students/BaStudentGalleryCards.swift` | iPadOS 第一版已接入非滚动 UICollectionView，cell 继续承载现有 SwiftUI 卡片；完整测试通过 |
 | INTEROP-004 | 活动/卡池 iPad 宽屏 CollectionView 评估 | 已完成 | `Features/BA/Timeline/` | 第一版接入共享非滚动 UICollectionView 容器，数据模型复用现有 snapshot；完整测试通过 |
-| INTEROP-005 | 技能富文本 read-only bridge | 待办 | `Features/BA/Students/` | 优先术语 icon baseline |
-| INTEROP-006 | 档案长文本选择/复制 bridge | 待办 | `Features/BA/Students/` | 与技能富文本共用基础组件 |
-| INTEROP-007 | macOS Quick Look / 保存面板优化 | 待办 | `Features/BA/Components/Media/` | AppKit responder/window 边界 |
-| INTEROP-008 | SwiftUIIntrospect 小范围评估 | 待办 | 待定 | 只用于搜索、List、ScrollView 微调 |
+| INTEROP-005 | 技能富文本 read-only bridge | 已完成 | `Features/BA/Components/Shared/BaSelectableRichTextView.swift`、`Features/BA/Students/BaStudentSkillCards.swift` | iOS/iPadOS 使用 `UITextView`，macOS 使用 `NSTextView`；技能描述支持选择/复制、动态字体、术语 icon attachment 与数值高亮 |
+| INTEROP-006 | 档案长文本选择/复制 bridge | 已完成 | `Features/BA/Components/Shared/BaSelectableRichTextView.swift`、`Features/BA/Students/BaStudentProfileCards.swift` | 档案长文本复用同一 read-only bridge；短值、胶囊、外链保持 SwiftUI 原交互 |
+| INTEROP-007 | macOS Quick Look / 保存面板优化 | 已完成 | `Features/BA/Components/Media/BaGuideMediaExport.swift`、`Features/BA/Components/Media/BaPlatformMediaPreview.swift`、`Features/BA/Students/BaStudentGalleryCardComponents.swift`、`Features/BA/Students/BaStudentProfileCards.swift` | 导出按钮已收敛到 `BaGuideMediaSaveAction`；macOS 使用当前窗口锚定 `NSSavePanel`，iOS/iPadOS 保持 `fileExporter`，Quick Look 预览继续保留平台桥接 |
+| INTEROP-008 | 搜索输入平台桥接试点 | 已完成 | `Features/BA/Components/Shared/BaPlatformSearchField.swift`、`Features/BA/Catalog/BaLibraryView.swift`、`Features/BA/Students/BaStudentVoiceSection.swift` | 音乐与语音搜索已改为小型 `UISearchTextField` / `NSSearchField` bridge；SwiftUI 继续拥有搜索文本状态，图鉴主搜索保留 `.searchable + searchScopes` 的系统链路 |
 | INTEROP-009 | SDWebImageSwiftUI 依赖评估 | 待办 | Package / project settings | 当前 GIF bridge 数据不足时启用 |
 
 ## 风险与约束
@@ -209,7 +209,7 @@ SwiftUI 压力点：
 
 ## 推荐路线
 
-先落 `INTEROP-001` 和 `INTEROP-002`，因为它们直接覆盖影画鉴赏、互动家具、学生档案、媒体预览多个痛点，收益最大且边界清晰。随后用影画鉴赏作为 `UICollectionViewCompositionalLayout` 试点，再决定活动/卡池是否迁移到同一容器。
+当前 `INTEROP-001` 到 `INTEROP-008` 已落地。下一步按实际问题评估 `INTEROP-009` 图片依赖兜底；图鉴搜索在保留 `searchScopes` 的前提下继续观察系统行为。
 
 ## 参考链接
 

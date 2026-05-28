@@ -12,13 +12,13 @@ struct BaGuideSimulateParser {
     // detail loads, and patchSupplementIcons() invokes these patterns once
     // per row in the simulate block. Caching avoids repeated
     // NSRegularExpression compilations during initial student loads.
-    fileprivate nonisolated(unsafe) static let equipmentSlotRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let equipmentSlotRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"^([123])号装备$"#)
     }()
-    fileprivate nonisolated(unsafe) static let equipmentTitleRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let equipmentTitleRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"^装备([123])$"#)
     }()
-    fileprivate nonisolated(unsafe) static let unlockLevelRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let unlockLevelRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"^\d+级$"#)
     }()
 

@@ -13,16 +13,16 @@ nonisolated enum BaGuideGallerySupport {
     // itemIndex, isExpression, isMemoryHall, etc.), and those are called
     // once per gallery item per body recompose. Caching avoids a new
     // NSRegularExpression compile on every helper call.
-    fileprivate nonisolated(unsafe) static let whitespaceRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let whitespaceRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"\s+"#)
     }()
-    fileprivate nonisolated(unsafe) static let trailingDigitsRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let trailingDigitsRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"\d+$"#)
     }()
-    fileprivate nonisolated(unsafe) static let lastDigitsRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let lastDigitsRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"(\d+)(?!.*\d)"#)
     }()
-    fileprivate nonisolated(unsafe) static let gifSuffixRegex: NSRegularExpression? = {
+    fileprivate nonisolated static let gifSuffixRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"\.gif(\?.*)?(#.*)?$"#)
     }()
 

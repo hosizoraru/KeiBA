@@ -126,16 +126,16 @@ nonisolated enum BaSameNameStudentGuideLinkResolver {
     // Compiled once. Hit per resolution attempt (often per same-name role row in
     // a student detail body). Fallback to per-call compile only if the static
     // initializer threw.
-    private nonisolated(unsafe) static let contentIDRegexes: [NSRegularExpression?] = contentIDPathPatterns.map {
+    private nonisolated static let contentIDRegexes: [NSRegularExpression?] = contentIDPathPatterns.map {
         try? NSRegularExpression(pattern: $0, options: [.caseInsensitive])
     }
 
     private static let embeddedLinkPattern = #"https?://[^\s]+|/(?:ba/tj/\d+(?:\.html)?|ba/\d+(?:\.html)?|v1/content/detail/\d+)"#
-    private nonisolated(unsafe) static let embeddedLinkRegex: NSRegularExpression? = {
+    private nonisolated static let embeddedLinkRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: embeddedLinkPattern, options: [.caseInsensitive])
     }()
 
-    private nonisolated(unsafe) static let numericIDRegex: NSRegularExpression? = {
+    private nonisolated static let numericIDRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"^\d{4,}$"#)
     }()
 }

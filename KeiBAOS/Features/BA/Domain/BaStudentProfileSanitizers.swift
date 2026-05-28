@@ -14,29 +14,29 @@ import Foundation
 // stripProfileInstructionNotes / stripProfileCopyHint. Allocating a
 // fresh NSRegularExpression on every check showed up during initial
 // detail loads.
-private nonisolated(unsafe) let additionalAttributeRegex: NSRegularExpression? =
+private nonisolated let additionalAttributeRegex: NSRegularExpression? =
     try? NSRegularExpression(pattern: #"^附加属性\d+$"#)
-private nonisolated(unsafe) let tLevelRegex: NSRegularExpression? =
+private nonisolated let tLevelRegex: NSRegularExpression? =
     try? NSRegularExpression(pattern: #"^t\d+$"#, options: [.caseInsensitive])
-private nonisolated(unsafe) let tLevelEffectRegex: NSRegularExpression? =
+private nonisolated let tLevelEffectRegex: NSRegularExpression? =
     try? NSRegularExpression(pattern: #"^t\d+(效果|所需升级材料|技能图标)$"#, options: [.caseInsensitive])
-private nonisolated(unsafe) let containsDigitRegex: NSRegularExpression? =
+private nonisolated let containsDigitRegex: NSRegularExpression? =
     try? NSRegularExpression(pattern: #"\d"#)
-private nonisolated(unsafe) let placeholderPunctuationRegex: NSRegularExpression? =
+private nonisolated let placeholderPunctuationRegex: NSRegularExpression? =
     try? NSRegularExpression(pattern: #"^[\\/|｜／,，;；:：._\-—~·*]+$"#)
-private nonisolated(unsafe) let instructionNoteRegex: NSRegularExpression? =
+private nonisolated let instructionNoteRegex: NSRegularExpression? =
     try? NSRegularExpression(pattern: #"(?:<-|←)?\s*(?:这个|这里|此处|这条)?\s*不用写"#)
-private nonisolated(unsafe) let copyHintRegex: NSRegularExpression? =
+private nonisolated let copyHintRegex: NSRegularExpression? =
     try? NSRegularExpression(pattern: #"(?:<-|←)?\s*大部分时候可以去别的图鉴复制"#)
-private nonisolated(unsafe) let voicePlaceholderRegex: NSRegularExpression? =
+private nonisolated let voicePlaceholderRegex: NSRegularExpression? =
     try? NSRegularExpression(pattern: #"被CC\d+"#)
-private nonisolated(unsafe) let simulateStatLabelRegex: NSRegularExpression? =
+private nonisolated let simulateStatLabelRegex: NSRegularExpression? =
     try? NSRegularExpression(pattern: #"^(初始|顶级|最大|基础)?(攻击力|防御力|生命值|治愈力|命中值|闪避值|暴击值|暴击伤害|稳定值|射程)"#)
-private nonisolated(unsafe) let httpURLRegex: NSRegularExpression? =
+private nonisolated let httpURLRegex: NSRegularExpression? =
     try? NSRegularExpression(pattern: #"https?://[^\s]+"#, options: [.caseInsensitive])
-private nonisolated(unsafe) let wwwURLRegex: NSRegularExpression? =
+private nonisolated let wwwURLRegex: NSRegularExpression? =
     try? NSRegularExpression(pattern: #"www\.[^\s]+"#, options: [.caseInsensitive])
-private nonisolated(unsafe) let digitsRegex: NSRegularExpression? =
+private nonisolated let digitsRegex: NSRegularExpression? =
     try? NSRegularExpression(pattern: #"\d+"#)
 
 nonisolated let profileInlineNoteStripFieldKeys = Set([

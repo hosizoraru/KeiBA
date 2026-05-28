@@ -84,7 +84,7 @@ extension JSONEncoder {
     // Pretty printing roughly doubles the on-disk size and the encode CPU cost,
     // which matters for the catalog snapshot (hundreds of KB) and the per-student
     // detail caches written on every refresh.
-    nonisolated(unsafe) static let ba: JSONEncoder = {
+    nonisolated static let ba: JSONEncoder = {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         return encoder
@@ -93,7 +93,7 @@ extension JSONEncoder {
 
 extension JSONDecoder {
     // Shared decoder reused across cache reads. See note on JSONEncoder.ba.
-    nonisolated(unsafe) static let ba: JSONDecoder = {
+    nonisolated static let ba: JSONDecoder = {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         return decoder

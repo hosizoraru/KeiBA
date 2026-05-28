@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import UniformTypeIdentifiers
 
 #if canImport(QuickLook)
     import QuickLook
@@ -209,66 +208,14 @@ private struct BaPlatformMediaSaveButton: View {
     let url: URL?
     let title: String
 
-    @State private var exportDocument = BaGuideMediaExportDocument()
-    @State private var exportType = UTType.data
-    @State private var exportFilename = "BA_media.bin"
-    @State private var isExporterPresented = false
-    @State private var isLoading = false
-    @State private var errorMessage: String?
-
     var body: some View {
-        Button {
-            Task { await prepareExport() }
-        } label: {
+        BaGuideMediaSaveAction(url: url, title: title) { isLoading, _ in
             if isLoading {
                 ProgressView()
                     .controlSize(.small)
             } else {
                 Image(systemName: "square.and.arrow.down")
             }
-        }
-        .disabled(url == nil || isLoading)
-        .accessibilityLabel(BaL10n.string("ba.action.save"))
-        .fileExporter(
-            isPresented: $isExporterPresented,
-            document: exportDocument,
-            contentType: exportType,
-            defaultFilename: exportFilename
-        ) { result in
-            if case let .failure(error) = result {
-                errorMessage = error.localizedDescription
-            }
-        }
-        .alert(
-            BaL10n.string("ba.student.detail.media.saveFailed"),
-            isPresented: Binding(
-                get: { errorMessage != nil },
-                set: { if $0 == false { errorMessage = nil } }
-            )
-        ) {
-            Button(BaL10n.string("ba.common.done")) {
-                errorMessage = nil
-            }
-        } message: {
-            Text(errorMessage ?? "")
-        }
-    }
-
-    @MainActor
-    private func prepareExport() async {
-        guard let url else { return }
-        isLoading = true
-        defer { isLoading = false }
-
-        do {
-            let data = try await BaGuideMediaCache.shared.data(for: url)
-            let metadata = BaGuideMediaExportBuilder.metadata(for: url, title: title)
-            exportDocument = BaGuideMediaExportDocument(data: data)
-            exportType = metadata.contentType
-            exportFilename = metadata.fileName
-            isExporterPresented = true
-        } catch {
-            errorMessage = error.localizedDescription
         }
     }
 }
@@ -524,7 +471,7 @@ private enum BaPlatformPreviewImageLoader {
 }
 
 private extension URL {
-    var baPlatformPreviewIsImageLike: Bool {
+    nonisolated var baPlatformPreviewIsImageLike: Bool {
         let value = pathExtension.lowercased()
         return ["apng", "gif", "heic", "heif", "jpeg", "jpg", "png", "tiff", "webp"].contains(value)
     }

@@ -227,7 +227,7 @@ struct BaGuideMediaParser {
     // Compiled once. Hit per memory-hall lookup during student detail
     // ingestion — running a regex compile per call dominated when many
     // students were preloaded.
-    private nonisolated(unsafe) static let digitsRegex: NSRegularExpression? = {
+    private nonisolated static let digitsRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"\d+"#)
     }()
 

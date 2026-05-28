@@ -308,7 +308,7 @@ private struct BaStudentWeaponStarEffectCard: View {
 private struct BaWeaponStarBadgeRow: View {
     // The star count parser is hit on every body recompose for visible weapon
     // cards. Cache the compiled pattern instead of recompiling per call.
-    private nonisolated(unsafe) static let starCountRegex: NSRegularExpression? = {
+    private nonisolated static let starCountRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"\d{1,2}"#)
     }()
 

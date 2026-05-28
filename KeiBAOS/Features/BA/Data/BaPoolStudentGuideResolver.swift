@@ -115,11 +115,11 @@ nonisolated struct BaPoolStudentGuideResolver {
 
     // Compiled once. Hit per pool entry resolution; without caching every
     // resolve() walked the pattern list and recompiled each pattern.
-    private nonisolated(unsafe) static let explicitGuidePathRegexes: [NSRegularExpression?] = explicitGuidePathPatterns.map {
+    private nonisolated static let explicitGuidePathRegexes: [NSRegularExpression?] = explicitGuidePathPatterns.map {
         try? NSRegularExpression(pattern: $0, options: [.caseInsensitive])
     }
 
-    private nonisolated(unsafe) static let canonicalContentIDRegex: NSRegularExpression? = {
+    private nonisolated static let canonicalContentIDRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"/ba/tj/(\d+)(?:\.html)?$"#)
     }()
 

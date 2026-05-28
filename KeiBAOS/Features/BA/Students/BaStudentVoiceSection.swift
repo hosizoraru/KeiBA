@@ -31,6 +31,7 @@ struct BaStudentVoiceSection: View {
                 BaStudentDetailEmptyRow(section: .voice)
             } else {
                 BaVoiceControlPanel(
+                    searchText: $searchText,
                     selectedLanguage: $selectedLanguage,
                     sectionFilter: $sectionFilter,
                     languages: snapshot.languagePickerHeaders,
@@ -146,6 +147,7 @@ private struct BaVoiceSectionSnapshot {
 }
 
 private struct BaVoiceControlPanel: View {
+    @Binding var searchText: String
     @Binding var selectedLanguage: String
     @Binding var sectionFilter: BaVoiceSectionFilter
 
@@ -156,6 +158,11 @@ private struct BaVoiceControlPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
+            BaPlatformSearchField(
+                text: $searchText,
+                prompt: BaL10n.string("ba.student.detail.voice.search.placeholder")
+            )
+
             if languages.count > 1 {
                 if languages.count <= 3 {
                     Picker(BaL10n.string("ba.student.detail.voice.language.picker"), selection: $selectedLanguage) {

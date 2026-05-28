@@ -129,7 +129,7 @@ struct BaGuideGiftParser {
 
     // Cached once. Hit per gift preference cell during student detail
     // ingestion — every detail load fans out to multiple gift rows.
-    private nonisolated(unsafe) static let dimensionsRegex: NSRegularExpression? = {
+    private nonisolated static let dimensionsRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"/w_(\d{1,4})/h_(\d{1,4})/"#)
     }()
 

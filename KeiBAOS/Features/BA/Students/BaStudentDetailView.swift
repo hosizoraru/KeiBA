@@ -125,7 +125,6 @@ struct BaStudentDetailView: View {
                 .menuOrder(.fixed)
             }
         }
-        .modifier(BaStudentVoiceSearchModifier(isActive: resolvedActivePage == .voice, text: $voiceSearchText))
         .task(id: entry.contentId) {
             await model.loadStudentDetail(entry: entry)
         }
@@ -379,22 +378,6 @@ private struct BaStudentDetailPageRailItem: View {
             }
             .baMotion(BaMotion.quick, value: isSelected)
             .accessibilityAddTraits(isSelected ? .isSelected : [])
-    }
-}
-
-private struct BaStudentVoiceSearchModifier: ViewModifier {
-    let isActive: Bool
-    @Binding var text: String
-
-    func body(content: Content) -> some View {
-        if isActive {
-            content.searchable(
-                text: $text,
-                prompt: Text(BaL10n.string("ba.student.detail.voice.search.placeholder"))
-            )
-        } else {
-            content
-        }
     }
 }
 

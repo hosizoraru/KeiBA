@@ -510,10 +510,10 @@ private struct BaStudentSimulationCapsule: View {
 private struct BaStudentSimulationRowItem: View {
     // Cached on the type so each body recompose of every visible simulation
     // row reuses the same compiled regex instead of re-parsing the literal.
-    private nonisolated(unsafe) static let tierPrefixRegex: NSRegularExpression? = {
+    private nonisolated static let tierPrefixRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"(?i)^T\d+"#)
     }()
-    private nonisolated(unsafe) static let levelPrefixRegex: NSRegularExpression? = {
+    private nonisolated static let levelPrefixRegex: NSRegularExpression? = {
         try? NSRegularExpression(pattern: #"(?i)^Lv\d+"#)
     }()
 
