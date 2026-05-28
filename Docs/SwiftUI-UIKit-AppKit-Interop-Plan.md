@@ -197,7 +197,7 @@ SwiftUI 压力点：
 | INTEROP-006 | 档案长文本选择/复制 bridge | 已完成 | `Features/BA/Components/Shared/BaSelectableRichTextView.swift`、`Features/BA/Students/BaStudentProfileCards.swift` | 档案长文本复用同一 read-only bridge；短值、胶囊、外链保持 SwiftUI 原交互 |
 | INTEROP-007 | macOS Quick Look / 保存面板优化 | 已完成 | `Features/BA/Components/Media/BaGuideMediaExport.swift`、`Features/BA/Components/Media/BaPlatformMediaPreview.swift`、`Features/BA/Students/BaStudentGalleryCardComponents.swift`、`Features/BA/Students/BaStudentProfileCards.swift` | 导出按钮已收敛到 `BaGuideMediaSaveAction`；macOS 使用当前窗口锚定 `NSSavePanel`，iOS/iPadOS 保持 `fileExporter`，Quick Look 预览继续保留平台桥接 |
 | INTEROP-008 | 搜索输入平台桥接试点 | 已完成 | `Features/BA/Components/Shared/BaPlatformSearchField.swift`、`Features/BA/Catalog/BaLibraryView.swift`、`Features/BA/Students/BaStudentVoiceSection.swift` | 音乐与语音搜索已改为小型 `UISearchTextField` / `NSSearchField` bridge；SwiftUI 继续拥有搜索文本状态，图鉴主搜索保留 `.searchable + searchScopes` 的系统链路 |
-| INTEROP-009 | SDWebImageSwiftUI 依赖评估 | 待办 | Package / project settings | 当前 GIF bridge 数据不足时启用 |
+| INTEROP-009 | SDWebImageSwiftUI 依赖评估 | 已完成 | `Docs/SwiftUI-UIKit-AppKit-Interop-Plan.md` | 暂不接入依赖；当前 ImageIO + Quick Look 链路覆盖 GIF、静图、预览与缩放，第三方图片栈仅在 WebP/AVIF/SVG、GIF 内存或解码性能出现明确证据时启用 |
 
 ## 风险与约束
 
@@ -207,9 +207,23 @@ SwiftUI 压力点：
 - SwiftUIIntrospect 需要显式覆盖平台版本，升级 iOS/iPadOS/macOS 大版本时要更新版本声明。
 - 第三方依赖需要锁定最新稳定版，并记录替代方案和回滚路径。
 
+## 第三方图片依赖评估
+
+当前结论：
+
+- 继续保留 Apple 原生链路：`ImageIO` 负责 GIF/缩略图解码，Quick Look 负责系统预览，`BaImageCache` 负责磁盘和内存缓存。
+- 暂不接入 SDWebImageSwiftUI。项目当前没有稳定复现的 WebP/AVIF/SVG 展示缺口，也没有 GIF 解码内存峰值证据足以抵消新依赖的维护成本。
+- 依赖接入触发条件：GameKee 媒体开始高频返回 ImageIO 覆盖不足的格式；或 Instruments 显示 `BaRemoteAnimatedImageSurface` 解码/内存峰值成为滚动和预览的主要瓶颈。
+- 触发后接入路线：使用最新稳定版 SDWebImageSwiftUI，并优先只替换 `BaRemoteAnimatedImageSurface` 与远程静图解码表面，保留 `BaImageCache`、Quick Look 和系统保存/分享链路。
+
+版本基线：
+
+- 2026-05-29 检查 SDWebImageSwiftUI GitHub Releases，当前最新稳定版本为 `3.1.4`。
+- SDWebImageSwiftUI 官方说明提到仓库正在进入维护/迁移阶段，未来 SwiftUI 支持会并入 SDWebImage 主仓库；正式接入前需要复查官方 README 与 release notes。
+
 ## 推荐路线
 
-当前 `INTEROP-001` 到 `INTEROP-008` 已落地。下一步按实际问题评估 `INTEROP-009` 图片依赖兜底；图鉴搜索在保留 `searchScopes` 的前提下继续观察系统行为。
+当前 `INTEROP-001` 到 `INTEROP-009` 已落地。下一步进入实测验收和回归清理：优先检查 iPadOS/macOS 大屏、媒体预览、搜索输入、watch/widget 同步链路的运行表现。
 
 ## 参考链接
 
