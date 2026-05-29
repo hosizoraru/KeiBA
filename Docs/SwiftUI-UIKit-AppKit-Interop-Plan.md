@@ -400,3 +400,35 @@ SwiftUI 压力点：
 - SwiftUIIntrospect: https://github.com/siteline/swiftui-introspect
 - SDWebImageSwiftUI: https://github.com/SDWebImage/SDWebImageSwiftUI
 - RichTextKit: https://github.com/danielsaidi/RichTextKit
+
+## 计划完成声明
+
+`SwiftUI-UIKit-AppKit-Interop-Plan` 已于 2026-05-29 完成。
+
+### 完成摘要
+
+| 指标 | 数值 |
+| --- | --- |
+| Phase 完成 | 8/8 |
+| INTEROP 任务完成 | 16/16 |
+| Bridge 文件 | 9 个 |
+| 单元测试 | 189 个（全部通过） |
+| 平台覆盖 | iOS / iPadOS / macOS |
+| 文档 | 3 份（计划 + Bridge Guide + Performance Baselines） |
+
+### 已完成的全部 Phase
+
+1. 统一系统媒体预览（Quick Look bridge）
+2. Zoomable 媒体表面（UIScrollView / NSScrollView）
+3. 影画鉴赏 CollectionView 试点
+4. 活动/卡池大屏容器评估
+5. 技能/档案富文本桥接
+6. Bridge 增强与平台适配（VideoPlayer 统一、macOS 菜单）
+7. 缓存与内存管理（磁盘清理、NSCache）
+8. 质量保障与平台 polish（Snapshot 测试、拖放、Toolbar、性能基线）
+
+### 后续方向
+
+本计划覆盖的 interop 工作已全部完成。后续新功能（WidgetKit、Shortcuts、SharePlay 等）请参考独立的平台功能路线图。
+
+需要真机验证的项目（Instruments profiling、VoiceOver 操作、Quick Look 实际链路）留待物理设备可用时补充。
