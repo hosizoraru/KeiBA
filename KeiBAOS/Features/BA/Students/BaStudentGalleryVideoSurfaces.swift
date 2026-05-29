@@ -62,7 +62,7 @@ struct BaStudentGalleryVideoPlayerScreen: View {
 
                 ZStack {
                     if let player {
-                        BaGallerySystemVideoPlayer(player: player)
+                        BaPlatformVideoPlayer(player: player)
                     } else {
                         poster
                             .padding(20)
@@ -242,48 +242,3 @@ private struct BaGalleryVideoControlSurface: View {
     }
 }
 
-#if canImport(UIKit)
-    private struct BaGallerySystemVideoPlayer: UIViewControllerRepresentable {
-        let player: AVPlayer
-
-        func makeUIViewController(context _: Context) -> AVPlayerViewController {
-            let controller = AVPlayerViewController()
-            player.isMuted = false
-            player.volume = 1
-            controller.player = player
-            controller.showsPlaybackControls = true
-            controller.allowsPictureInPicturePlayback = true
-            controller.canStartPictureInPictureAutomaticallyFromInline = true
-            controller.entersFullScreenWhenPlaybackBegins = false
-            controller.exitsFullScreenWhenPlaybackEnds = false
-            controller.videoGravity = .resizeAspect
-            return controller
-        }
-
-        func updateUIViewController(_ controller: AVPlayerViewController, context _: Context) {
-            player.isMuted = false
-            player.volume = 1
-            controller.player = player
-        }
-    }
-#elseif canImport(AppKit)
-    private struct BaGallerySystemVideoPlayer: NSViewRepresentable {
-        let player: AVPlayer
-
-        func makeNSView(context _: Context) -> AVPlayerView {
-            let view = AVPlayerView()
-            view.controlsStyle = .floating
-            view.videoGravity = .resizeAspect
-            player.isMuted = false
-            player.volume = 1
-            view.player = player
-            return view
-        }
-
-        func updateNSView(_ nsView: AVPlayerView, context _: Context) {
-            player.isMuted = false
-            player.volume = 1
-            nsView.player = player
-        }
-    }
-#endif

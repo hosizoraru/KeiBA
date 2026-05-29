@@ -30,6 +30,7 @@ struct KeiBAOSApp: App {
             .defaultSize(width: 1_120, height: 760)
             .commands {
                 BaGoCommands()
+                BaViewCommands()
             }
 
         Settings {
@@ -78,6 +79,20 @@ private struct BaGoCommands: Commands {
                 .keyboardShortcut(tab.goKeyboardShortcut, modifiers: .command)
                 .disabled(focusedTab == tab)
             }
+        }
+    }
+}
+
+private struct BaViewCommands: Commands {
+    var body: some Commands {
+        CommandGroup(after: .toolbar) {
+            Button("Toggle Sidebar") {
+                NSApp.keyWindow?.contentViewController?.tryToPerform(
+                    #selector(NSSplitViewController.toggleSidebar(_:)),
+                    with: nil
+                )
+            }
+            .keyboardShortcut("s", modifiers: [.control, .command])
         }
     }
 }

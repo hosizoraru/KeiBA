@@ -32,9 +32,10 @@ KeiBAOS 继续以 SwiftUI 承担应用结构、导航、状态流、Liquid Glass
   - UIKit：`UIViewRepresentable` 包装 `UIImageView` 播放 GIF。
   - AppKit：`NSViewRepresentable` 包装 `NSImageView`。
   - ImageIO 解码放到 detached worker，方向正确。
-- `KeiBAOS/Features/BA/Students/BaStudentGalleryVideoSurfaces.swift`
-  - UIKit：`UIViewControllerRepresentable` 包装 `AVPlayerViewController`。
-  - AppKit：`NSViewRepresentable` 包装 `AVPlayerView`。
+- `KeiBAOS/Features/BA/Components/Media/BaPlatformVideoPlayer.swift`
+  - UIKit：`UIViewControllerRepresentable` 包装 `AVPlayerViewController`，支持 PiP、全屏。
+  - AppKit：`NSViewRepresentable` 包装 `AVPlayerView`，floating controls。
+  - dismantle 时自动暂停并释放 player。
 
 SwiftUI 压力点：
 
@@ -189,6 +190,26 @@ SwiftUI 压力点：
 | INTEROP-014 | 可访问性与动态字体验收 | 已完成 | 富文本、菜单、搜索、媒体按钮、collection cell | 修复：图片表面 `accessibilityHidden`、预览按钮 `accessibilityHint`、音频 Slider `accessibilityLabel`、装饰图标 `accessibilityHidden`、loading 状态 label；全平台 183 测试通过 |
 | INTEROP-015 | bridge 生命周期清理 | 已完成 | 所有 `UIViewRepresentable` / `NSViewRepresentable` / coordinator | `make/update/dismantle` 可重复执行；delegate、player、临时文件和下载任务释放路径清晰 |
 | INTEROP-016 | macOS 原生命令与窗口 polish | 已完成 | `KeiBAOSApp.swift`、`AppShell.swift` | Go 菜单已接入 Cmd+1~5 快捷键切换侧边栏标签；`FocusedValueKey` 驱动命令与侧边栏状态同步 |
+
+### Phase 6：Bridge 增强与平台深度适配（已完成）
+
+新增：
+
+- `BaPlatformVideoPlayer.swift`：统一视频播放 bridge，UIKit 使用 `AVPlayerViewController`，AppKit 使用 `AVPlayerView`；支持 PiP、全屏、dismantle 清理。
+- macOS 菜单扩展：Go 菜单 Cmd+1~5 切换侧边栏标签；View 菜单 Cmd+Ctrl+S 切换侧边栏。
+
+策略：
+
+- 从 `BaStudentGalleryVideoSurfaces.swift` 提取 `BaGallerySystemVideoPlayer` 为统一 `BaPlatformVideoPlayer`。
+- 使用 `#selector` 避免 Selector 字符串构造警告。
+- iPad Stage Manager 由 `WindowGroup` + `BaAdaptiveMetrics` 自然支持。
+
+验收：
+
+- 视频播放、PiP、全屏行为跨平台一致。
+- macOS Go/View 菜单可用。
+- iPad Stage Manager 窗口缩放正常。
+- 全平台 183 测试通过。
 
 ## 性能验证清单
 
