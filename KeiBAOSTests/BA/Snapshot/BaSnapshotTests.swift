@@ -10,13 +10,8 @@ import XCTest
 import SwiftUI
 
 final class BaSnapshotTests: XCTestCase {
-    private var isCI: Bool {
-        ProcessInfo.processInfo.environment["CI"] != nil ||
-            ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] != nil
-    }
-
     func testOverviewCardsLayout() throws {
-        try XCTSkipIf(isCI, "Snapshot tests skipped on CI due to rendering differences")
+        try XCTSkipIf(!baselineExists("overview-cards-layout"), "Baseline not yet generated")
         let cards = VStack(spacing: 12) {
             BaGlassCard(tint: BaDesign.green) {
                 HStack {
@@ -48,7 +43,7 @@ final class BaSnapshotTests: XCTestCase {
     }
 
     func testGalleryCardLayout() throws {
-        try XCTSkipIf(isCI, "Snapshot tests skipped on CI due to rendering differences")
+        try XCTSkipIf(!baselineExists("gallery-card-layout"), "Baseline not yet generated")
         let card = BaGlassCard(tint: BaDesign.pink) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
@@ -72,7 +67,7 @@ final class BaSnapshotTests: XCTestCase {
     }
 
     func testRichTextViewLayout() throws {
-        try XCTSkipIf(isCI, "Snapshot tests skipped on CI due to rendering differences")
+        try XCTSkipIf(!baselineExists("rich-text-view-layout"), "Baseline not yet generated")
         let text = BaSelectableRichTextView(
             segments: [
                 .text("普通文本 "),
@@ -87,5 +82,10 @@ final class BaSnapshotTests: XCTestCase {
         .padding()
 
         BaSnapshotTesting.assertSnapshot(of: text, named: "rich-text-view-layout")
+    }
+
+    private func baselineExists(_ name: String) -> Bool {
+        let baselineURL = BaSnapshotTesting.baselineDirectory.appendingPathComponent("\(name).png")
+        return FileManager.default.fileExists(atPath: baselineURL.path)
     }
 }
