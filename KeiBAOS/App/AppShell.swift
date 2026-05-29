@@ -7,6 +7,10 @@
 
 import SwiftUI
 
+extension Notification.Name {
+    static let baRefreshRequested = Notification.Name("BaRefreshRequested")
+}
+
 #if os(macOS)
     private struct BaFocusedTabKey: FocusedValueKey {
         typealias Value = AppTab
@@ -106,6 +110,22 @@ struct AppShell: View {
                 ) { selectedTab = $0 }
                 .accessibilityIdentifier(selectedTab.accessibilityIdentifier)
                 .baMusicMiniPlayerAccessory(session: musicPlaybackSession, selectedTab: selectedTab)
+                .toolbar {
+                    ToolbarItemGroup(placement: .automatic) {
+                        Button {
+                            NotificationCenter.default.post(name: .baRefreshRequested, object: nil)
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
+                        }
+                        .accessibilityLabel(BaL10n.string("ba.action.refresh"))
+                        .keyboardShortcut("r", modifiers: .command)
+
+                        SettingsLink {
+                            Image(systemName: "gearshape")
+                        }
+                        .accessibilityLabel(BaL10n.string("ba.settings.title"))
+                    }
+                }
             }
             .navigationSplitViewStyle(.balanced)
             .focusedSceneValue(\.baFocusedTab, selectedTab)
