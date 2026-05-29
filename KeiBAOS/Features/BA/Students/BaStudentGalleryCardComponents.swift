@@ -340,6 +340,9 @@ struct BaStudentGalleryAdaptiveMediaSurface: View {
             maxPixelDimension: resolvedLayout.maxPixelDimension,
             contentPadding: resolvedLayout.contentPadding
         )
+        #if os(macOS)
+            .modifier(BaDraggableMediaModifier(url: presentation.previewURL, label: presentation.title))
+        #endif
         .frame(maxWidth: resolvedLayout.maxContentWidth)
         .frame(maxWidth: .infinity, alignment: .center)
     }
@@ -582,3 +585,21 @@ extension String {
         baGalleryIsBlank ? fallback : self
     }
 }
+
+#if os(macOS)
+    struct BaDraggableMediaModifier: ViewModifier {
+        let url: URL?
+        let label: String
+
+        func body(content: Content) -> some View {
+            if let url {
+                content.draggable(url) {
+                    Text(label)
+                        .padding(8)
+                }
+            } else {
+                content
+            }
+        }
+    }
+#endif

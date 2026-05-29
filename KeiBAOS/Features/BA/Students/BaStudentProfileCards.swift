@@ -599,6 +599,9 @@ private struct BaStudentProfileFurnitureMediaSurface: View {
             }
         }
         .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        #if os(macOS)
+            .modifier(BaDraggableMediaModifier(url: url, label: kind.title))
+        #endif
     }
 }
 

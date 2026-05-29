@@ -229,7 +229,30 @@ SwiftUI 压力点：
 验收：
 
 - 长时间运行后磁盘缓存不会无限增长。
-- 全平台 186 测试通过（含 3 个新增缓存清理测试）。
+- 全平台 189 测试通过（含缓存清理 + snapshot 测试）。
+
+### Phase 8：质量保障与平台 polish（已完成）
+
+新增：
+
+- macOS Toolbar：刷新 (Cmd+R) + 设置按钮。
+- macOS 拖放：影画卡片和家具图片支持拖出到 Finder/其他 app。
+- UI Snapshot 测试框架：`BaSnapshotTesting` 工具 + 3 个基线测试。
+- 性能基线文档：`Performance-Baselines.md`。
+- Bridge 编写指南：`Bridge-Authoring-Guide.md`。
+
+策略：
+
+- 使用 `NSItemProvider` + SwiftUI `.draggable` 实现 macOS 拖放。
+- `BaDraggableMediaModifier` 处理 optional URL 解包。
+- Snapshot 测试首次运行创建基线，后续运行比对差异。
+- 性能基线覆盖启动、内存、帧率、缓存命中、布局耗时。
+
+验收：
+
+- macOS 影画/家具图片可拖出。
+- Snapshot 框架可检测视觉回归。
+- 全平台 189 测试通过。
 
 ## 性能验证清单
 
