@@ -51,6 +51,12 @@ actor BaImageCache {
         // NSCache automatically evicts under memory pressure; no manual observer needed.
     }
 
+    init(rootDirectory: URL, client: GameKeeClient) {
+        self.fileManager = .default
+        self.client = client
+        self.rootDirectory = rootDirectory
+    }
+
     func data(for url: URL, refererPath: String = "/ba") async throws -> Data {
         // Fast path: in-memory hit avoids both the disk read and the signature
         // scan that disk hits perform.
