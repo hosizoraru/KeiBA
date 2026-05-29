@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		986D4A042FC93FC7008EFF9E /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 986D4A032FC93FC7008EFF9E /* WidgetKit.framework */; };
+		986D4A062FC93FC7008EFF9E /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 986D4A052FC93FC7008EFF9E /* SwiftUI.framework */; };
+		986D4A152FC93FC9008EFF9E /* KeiBAOSiOSWidgetsExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 986D4A012FC93FC7008EFF9E /* KeiBAOSiOSWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		98BA01032FB7000000000103 /* AudioStreaming in Frameworks */ = {isa = PBXBuildFile; productRef = 98BA01022FB7000000000102 /* AudioStreaming */; };
 		98BA03012FBA000000000301 /* KeiBAOSLiveActivities.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 98BA03032FBA000000000303 /* KeiBAOSLiveActivities.appex */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		98BA04012FBB000000000401 /* KeiBAOSWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 98BA04032FBB000000000403 /* KeiBAOSWatch.app */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -14,6 +17,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		986D4A132FC93FC9008EFF9E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9893E46B2FB52F57001F2D43 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 986D4A002FC93FC7008EFF9E;
+			remoteInfo = KeiBAOSiOSWidgetsExtension;
+		};
 		98BA00072FB6000000000007 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9893E46B2FB52F57001F2D43 /* Project object */;
@@ -43,6 +53,7 @@
 			dstPath = "";
 			dstSubfolder = PlugIns;
 			files = (
+				986D4A152FC93FC9008EFF9E /* KeiBAOSiOSWidgetsExtension.appex in Embed App Extensions */,
 				98BA03012FBA000000000301 /* KeiBAOSLiveActivities.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
@@ -68,6 +79,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		986D4A012FC93FC7008EFF9E /* KeiBAOSiOSWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = KeiBAOSiOSWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		986D4A032FC93FC7008EFF9E /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		986D4A052FC93FC7008EFF9E /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		986D4A222FC941F3008EFF9E /* KeiBAOSiOSWidgetsExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = KeiBAOSiOSWidgetsExtension.entitlements; sourceTree = "<group>"; };
 		9893E4732FB52F57001F2D43 /* KeiBAOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KeiBAOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		98BA00012FB6000000000001 /* KeiBAOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KeiBAOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		98BA03032FBA000000000303 /* KeiBAOSLiveActivities.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = KeiBAOSLiveActivities.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -76,6 +91,45 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		986D4A192FC93FC9008EFF9E /* Exceptions for "KeiBAOSiOSWidgets" folder in "KeiBAOSiOSWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 986D4A002FC93FC7008EFF9E /* KeiBAOSiOSWidgetsExtension */;
+		};
+		986D4A202FC940F2008EFF9E /* Exceptions for "KeiBAOSiOSWidgets" folder in "KeiBAOSLiveActivities" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				BaDashboardResourceWidgets.swift,
+				BaDashboardTimelineWidgets.swift,
+				BaDashboardWidgetComponents.swift,
+				BaDashboardWidgetProvider.swift,
+				BaDashboardWidgets.swift,
+			);
+			target = 98BA03092FBA000000000309 /* KeiBAOSLiveActivities */;
+		};
+		986D4A212FC940F2008EFF9E /* Exceptions for "KeiBAOSiOSWidgets" folder in "KeiBAOSWatchWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				BaDashboardResourceWidgets.swift,
+				BaDashboardTimelineWidgets.swift,
+				BaDashboardWidgetComponents.swift,
+				BaDashboardWidgetProvider.swift,
+				BaDashboardWidgets.swift,
+			);
+			target = 98BA05092FBC000000000509 /* KeiBAOSWatchWidgets */;
+		};
+		986D4A2C2FC9436A008EFF9E /* Exceptions for "KeiBAOSWatchShared" folder in "KeiBAOSiOSWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				BaDashboardSnapshotSharing.swift,
+				BaMotion.swift,
+				BaTimelineGlanceSnapshot.swift,
+				BaWatchDashboardSnapshot.swift,
+			);
+			target = 986D4A002FC93FC7008EFF9E /* KeiBAOSiOSWidgetsExtension */;
+		};
 		98BA02012FB9000000000201 /* Exceptions for "KeiBAOS" folder in "KeiBAOS" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -100,6 +154,16 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		986D4A072FC93FC7008EFF9E /* KeiBAOSiOSWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				986D4A202FC940F2008EFF9E /* Exceptions for "KeiBAOSiOSWidgets" folder in "KeiBAOSLiveActivities" target */,
+				986D4A212FC940F2008EFF9E /* Exceptions for "KeiBAOSiOSWidgets" folder in "KeiBAOSWatchWidgets" target */,
+				986D4A192FC93FC9008EFF9E /* Exceptions for "KeiBAOSiOSWidgets" folder in "KeiBAOSiOSWidgetsExtension" target */,
+			);
+			path = KeiBAOSiOSWidgets;
+			sourceTree = "<group>";
+		};
 		9893E4752FB52F57001F2D43 /* KeiBAOS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -133,6 +197,9 @@
 		};
 		98BA04052FBB000000000405 /* KeiBAOSWatchShared */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				986D4A2C2FC9436A008EFF9E /* Exceptions for "KeiBAOSWatchShared" folder in "KeiBAOSiOSWidgetsExtension" target */,
+			);
 			path = KeiBAOSWatchShared;
 			sourceTree = "<group>";
 		};
@@ -152,6 +219,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		986D49FE2FC93FC7008EFF9E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				986D4A062FC93FC7008EFF9E /* SwiftUI.framework in Frameworks */,
+				986D4A042FC93FC7008EFF9E /* WidgetKit.framework in Frameworks */,
+			);
+		};
 		9893E4702FB52F57001F2D43 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
@@ -181,9 +255,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		986D4A022FC93FC7008EFF9E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				986D4A032FC93FC7008EFF9E /* WidgetKit.framework */,
+				986D4A052FC93FC7008EFF9E /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		9893E46A2FB52F57001F2D43 = {
 			isa = PBXGroup;
 			children = (
+				986D4A222FC941F3008EFF9E /* KeiBAOSiOSWidgetsExtension.entitlements */,
 				9893E4752FB52F57001F2D43 /* KeiBAOS */,
 				98BA03052FBA000000000305 /* KeiBAOSShared */,
 				98BA04052FBB000000000405 /* KeiBAOSWatchShared */,
@@ -192,6 +276,8 @@
 				98BA04042FBB000000000404 /* KeiBAOSWatch */,
 				98BA05042FBC000000000504 /* KeiBAOSWatchWidgets */,
 				98BA00022FB6000000000002 /* KeiBAOSTests */,
+				986D4A072FC93FC7008EFF9E /* KeiBAOSiOSWidgets */,
+				986D4A022FC93FC7008EFF9E /* Frameworks */,
 				9893E4742FB52F57001F2D43 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -204,6 +290,7 @@
 				98BA04032FBB000000000403 /* KeiBAOSWatch.app */,
 				98BA05032FBC000000000503 /* KeiBAOSWatchWidgets.appex */,
 				98BA00012FB6000000000001 /* KeiBAOSTests.xctest */,
+				986D4A012FC93FC7008EFF9E /* KeiBAOSiOSWidgetsExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -211,6 +298,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		986D4A002FC93FC7008EFF9E /* KeiBAOSiOSWidgetsExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 986D4A162FC93FC9008EFF9E /* Build configuration list for PBXNativeTarget "KeiBAOSiOSWidgetsExtension" */;
+			buildPhases = (
+				986D49FD2FC93FC7008EFF9E /* Sources */,
+				986D49FE2FC93FC7008EFF9E /* Frameworks */,
+				986D49FF2FC93FC7008EFF9E /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				986D4A072FC93FC7008EFF9E /* KeiBAOSiOSWidgets */,
+			);
+			name = KeiBAOSiOSWidgetsExtension;
+			productName = KeiBAOSiOSWidgetsExtension;
+			productReference = 986D4A012FC93FC7008EFF9E /* KeiBAOSiOSWidgetsExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		9893E4722FB52F57001F2D43 /* KeiBAOS */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 9893E4802FB52F59001F2D43 /* Build configuration list for PBXNativeTarget "KeiBAOS" */;
@@ -225,6 +330,7 @@
 			);
 			dependencies = (
 				98BA04112FBB000000000411 /* PBXTargetDependency */,
+				986D4A142FC93FC9008EFF9E /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				9893E4752FB52F57001F2D43 /* KeiBAOS */,
@@ -334,6 +440,9 @@
 				LastSwiftUpdateCheck = 2650;
 				LastUpgradeCheck = 2650;
 				TargetAttributes = {
+					986D4A002FC93FC7008EFF9E = {
+						CreatedOnToolsVersion = 26.5;
+					};
 					9893E4722FB52F57001F2D43 = {
 						CreatedOnToolsVersion = 26.5;
 						SystemCapabilities = {
@@ -381,11 +490,17 @@
 				98BA04092FBB000000000409 /* KeiBAOSWatch */,
 				98BA05092FBC000000000509 /* KeiBAOSWatchWidgets */,
 				98BA00062FB6000000000006 /* KeiBAOSTests */,
+				986D4A002FC93FC7008EFF9E /* KeiBAOSiOSWidgetsExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		986D49FF2FC93FC7008EFF9E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
 		9893E4712FB52F57001F2D43 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
@@ -414,6 +529,11 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		986D49FD2FC93FC7008EFF9E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 		9893E46F2FB52F57001F2D43 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
@@ -442,6 +562,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		986D4A142FC93FC9008EFF9E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 986D4A002FC93FC7008EFF9E /* KeiBAOSiOSWidgetsExtension */;
+			targetProxy = 986D4A132FC93FC9008EFF9E /* PBXContainerItemProxy */;
+		};
 		98BA00082FB6000000000008 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 9893E4722FB52F57001F2D43 /* KeiBAOS */;
@@ -461,6 +586,73 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		986D4A172FC93FC9008EFF9E /* Debug configuration for PBXNativeTarget "KeiBAOSiOSWidgetsExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = KeiBAOSiOSWidgetsExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3CKCL389SP;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = KeiBAOSiOSWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = KeiBAOSiOSWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = os.kei.KeiBAOS.KeiBAOSiOSWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		986D4A182FC93FC9008EFF9E /* Release configuration for PBXNativeTarget "KeiBAOSiOSWidgetsExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = KeiBAOSiOSWidgetsExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3CKCL389SP;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = KeiBAOSiOSWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = KeiBAOSiOSWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = os.kei.KeiBAOS.KeiBAOSiOSWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		9893E47E2FB52F59001F2D43 /* Debug configuration for PBXProject "KeiBAOS" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1042,6 +1234,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		986D4A162FC93FC9008EFF9E /* Build configuration list for PBXNativeTarget "KeiBAOSiOSWidgetsExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				986D4A172FC93FC9008EFF9E /* Debug configuration for PBXNativeTarget "KeiBAOSiOSWidgetsExtension" */,
+				986D4A182FC93FC9008EFF9E /* Release configuration for PBXNativeTarget "KeiBAOSiOSWidgetsExtension" */,
+			);
+			defaultConfigurationName = Release;
+		};
 		9893E46E2FB52F57001F2D43 /* Build configuration list for PBXProject "KeiBAOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
