@@ -146,6 +146,19 @@ private struct BaStudentGalleryItemCard: View, Equatable {
                     BaStudentGalleryPillRow(item: item)
                 }
             }
+            .contextMenu {
+                Button {
+                    onPreview(BaStudentGalleryPreviewItem(item: item))
+                } label: {
+                    Label(BaL10n.string("ba.student.detail.media.preview"), systemImage: "arrow.up.left.and.arrow.down.right")
+                }
+
+                if let saveURL = presentation.saveURL {
+                    ShareLink(item: saveURL) {
+                        Label(BaL10n.string("ba.action.share"), systemImage: "square.and.arrow.up")
+                    }
+                }
+            }
         }
     }
 }
@@ -206,6 +219,22 @@ private struct BaStudentGalleryExpressionCard: View {
                     .contentShape(RoundedRectangle(cornerRadius: selectedPresentation.layout.cornerRadius, style: .continuous))
                     .accessibilityLabel(BaL10n.string("ba.student.detail.media.preview"))
                     .accessibilityHint(BaL10n.string("ba.student.detail.media.preview.hint"))
+                }
+            }
+            .contextMenu {
+                if let selectedItem {
+                    let selectedPresentation = BaStudentGalleryCardPresentation(item: selectedItem)
+                    Button {
+                        onPreview(BaStudentGalleryPreviewItem(item: selectedItem))
+                    } label: {
+                        Label(BaL10n.string("ba.student.detail.media.preview"), systemImage: "arrow.up.left.and.arrow.down.right")
+                    }
+
+                    if let saveURL = selectedPresentation.saveURL {
+                        ShareLink(item: saveURL) {
+                            Label(BaL10n.string("ba.action.share"), systemImage: "square.and.arrow.up")
+                        }
+                    }
                 }
             }
         }
@@ -286,6 +315,22 @@ private struct BaStudentGalleryVideoGroupCard: View {
                     .contentShape(RoundedRectangle(cornerRadius: selectedPresentation.layout.cornerRadius, style: .continuous))
                     .accessibilityLabel(BaL10n.string("ba.student.detail.media.preview"))
                     .accessibilityHint(BaL10n.string("ba.student.detail.media.preview.hint"))
+                }
+            }
+            .contextMenu {
+                if let selectedItem {
+                    let selectedPresentation = BaStudentGalleryCardPresentation(item: selectedItem)
+                    Button {
+                        onPreview(BaStudentGalleryPreviewItem(item: selectedItem))
+                    } label: {
+                        Label(BaL10n.string("ba.student.detail.media.preview"), systemImage: "arrow.up.left.and.arrow.down.right")
+                    }
+
+                    if let saveURL = selectedPresentation.saveURL {
+                        ShareLink(item: saveURL) {
+                            Label(BaL10n.string("ba.action.share"), systemImage: "square.and.arrow.up")
+                        }
+                    }
                 }
             }
         }

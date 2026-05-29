@@ -294,6 +294,24 @@ private struct BaActivityCard: View, Equatable {
         .padding(.vertical, metrics.timelineCardVerticalPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .baTimelineScrollCardSurface(tint: row.status.tint)
+        .contextMenu {
+            Button {
+                #if canImport(UIKit)
+                    UIPasteboard.general.string = row.entry.title
+                #elseif canImport(AppKit)
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(row.entry.title, forType: .string)
+                #endif
+            } label: {
+                Label(BaL10n.string("ba.action.copy"), systemImage: "doc.on.doc")
+            }
+
+            if let url = row.entry.linkURL {
+                ShareLink(item: url) {
+                    Label(BaL10n.string("ba.action.share"), systemImage: "square.and.arrow.up")
+                }
+            }
+        }
     }
 }
 

@@ -341,6 +341,18 @@ private struct BaPoolNavigationCard: View, Equatable {
                 .padding(.vertical, 18)
         }
         .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .contextMenu {
+            Button {
+                #if canImport(UIKit)
+                    UIPasteboard.general.string = row.pool.name
+                #elseif canImport(AppKit)
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(row.pool.name, forType: .string)
+                #endif
+            } label: {
+                Label(BaL10n.string("ba.action.copy"), systemImage: "doc.on.doc")
+            }
+        }
     }
 }
 
