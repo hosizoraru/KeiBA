@@ -5,16 +5,57 @@ Build/
 xcuserdata/
 *.xcscmblueprint
 *.xcresult
+*.playground/playground.xcworkspace
+*.xctoolchain/
 
 # Swift Package Manager
 .build/
 .swiftpm/
+Packages/
+Package.resolved
 
 # macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
 
 # App artifacts
 *.ipa
-*.dSYM
+*.dSYM/
 *.dSYM.zip
 *.xcarchive
+
+# CocoaPods (if used)
+Pods/
+Podfile.lock
+*.xcworkspace
+
+# Carthage (if used)
+Carthage/Build/
+Carthage/Checkouts/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Secrets / local config
+*.env
+*.p12
+*.mobileprovision
+*.cer
+
+# Generated baselines (review and commit manually)
+KeiBAOSTests/BA/Snapshot/Baselines/*-actual.png
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~
