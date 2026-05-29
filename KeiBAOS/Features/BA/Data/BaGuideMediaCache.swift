@@ -18,6 +18,8 @@ actor BaGuideMediaCache {
     private var deferredFailures: [URL: Date] = [:]
     private let failureTTL: TimeInterval = 45
     private let deferredFailureCap = 128
+    private var lastPruneDate: Date = .distantPast
+    private let pruneInterval: TimeInterval = 600
     private let logger = Logger(subsystem: "os.kei.KeiBAOS", category: "BaGuideMediaCache")
 
     init(fileManager: FileManager = .default, client: GameKeeClient) {
@@ -38,6 +40,7 @@ actor BaGuideMediaCache {
         switch validation {
         case .valid:
             logger.debug("guide media cache hit \(url.host ?? "unknown", privacy: .public)")
+            pruneStaleDiskCache()
             return fileURL
         case .invalid:
             try? fileManager.removeItem(at: fileURL)
@@ -141,5 +144,24 @@ actor BaGuideMediaCache {
             }
             return looksLikeRenderableMediaData(data) ? .valid : .invalid
         }.value
+    }
+
+    func pruneStaleDiskCache(maxAge: TimeInterval = 14 * 24 * 3600) {
+        let now = Date()
+        guard now.timeIntervalSince(lastPruneDate) > pruneInterval else { return }
+        lastPruneDate = now
+        guard let files = try? fileManager.contentsOfDirectory(
+            at: rootDirectory,
+            includingPropertiesForKeys: [.contentModificationDateKey],
+            options: .skipsHiddenFiles
+        ) else { return }
+        let cutoff = now.addingTimeInterval(-maxAge)
+        for file in files {
+            guard let attrs = try? file.resourceValues(forKeys: [.contentModificationDateKey]),
+                  let modDate = attrs.contentModificationDate,
+                  modDate < cutoff
+            else { continue }
+            try? fileManager.removeItem(at: file)
+        }
     }
 }

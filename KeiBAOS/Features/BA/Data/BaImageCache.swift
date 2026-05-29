@@ -27,6 +27,8 @@ actor BaImageCache {
         cache.totalCostLimit = BaPlatformPerformanceProfile.imageMemoryCacheCostLimit
         return cache
     }()
+    private var lastDiskPruneDate: Date = .distantPast
+    private let diskPruneInterval: TimeInterval = 300
     private var inFlightRequests: [RequestKey: Task<Data, Error>] = [:]
     private var deferredFailures: [URL: Date] = [:]
     private var hitCount = 0
@@ -46,6 +48,7 @@ actor BaImageCache {
         let base = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first
             ?? fileManager.temporaryDirectory
         rootDirectory = base.appendingPathComponent("BAImages", isDirectory: true)
+        // NSCache automatically evicts under memory pressure; no manual observer needed.
     }
 
     func data(for url: URL, refererPath: String = "/ba") async throws -> Data {
@@ -97,6 +100,7 @@ actor BaImageCache {
             throw error
         }
         memoryCache.setObject(data as NSData, forKey: url as NSURL, cost: data.count)
+        pruneStaleDiskCache()
         do {
             try? fileManager.createDirectory(at: rootDirectory, withIntermediateDirectories: true)
             try data.write(to: fileURL, options: [.atomic])
@@ -125,6 +129,25 @@ actor BaImageCache {
     private func pruneExpiredFailures() {
         let now = Date()
         deferredFailures = deferredFailures.filter { $0.value > now }
+    }
+
+    func pruneStaleDiskCache(maxAge: TimeInterval = 7 * 24 * 3600) {
+        let now = Date()
+        guard now.timeIntervalSince(lastDiskPruneDate) > diskPruneInterval else { return }
+        lastDiskPruneDate = now
+        guard let files = try? fileManager.contentsOfDirectory(
+            at: rootDirectory,
+            includingPropertiesForKeys: [.contentModificationDateKey],
+            options: .skipsHiddenFiles
+        ) else { return }
+        let cutoff = now.addingTimeInterval(-maxAge)
+        for file in files {
+            guard let attrs = try? file.resourceValues(forKeys: [.contentModificationDateKey]),
+                  let modDate = attrs.contentModificationDate,
+                  modDate < cutoff
+            else { continue }
+            try? fileManager.removeItem(at: file)
+        }
     }
 
     func clear() {

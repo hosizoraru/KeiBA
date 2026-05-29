@@ -211,6 +211,26 @@ SwiftUI 压力点：
 - iPad Stage Manager 窗口缩放正常。
 - 全平台 183 测试通过。
 
+### Phase 7：缓存与内存管理（已完成）
+
+新增：
+
+- `BaImageCache.pruneStaleDiskCache(maxAge:)`：定期清理超过 7 天的磁盘缓存文件。
+- `BaGuideMediaCache.pruneStaleDiskCache(maxAge:)`：定期清理超过 14 天的媒体缓存文件。
+- 两个缓存均以 300~600 秒间隔触发清理，避免高频文件系统操作。
+
+策略：
+
+- 使用 `URLResourceKey.contentModificationDateKey` 读取文件修改日期。
+- 按时间阈值删除过期文件，防止磁盘缓存无限增长。
+- `NSCache` 自动处理内存压力，无需手动 observer。
+- 缓存命中时触发清理，利用已有 I/O 路径分摊开销。
+
+验收：
+
+- 长时间运行后磁盘缓存不会无限增长。
+- 全平台 183 测试通过。
+
 ## 性能验证清单
 
 - `git diff --check`
