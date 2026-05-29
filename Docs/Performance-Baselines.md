@@ -92,7 +92,7 @@
 
 ## 测试方法
 
-1. **构建验证**：`xcodebuild test` 全平台 186 测试通过
+1. **构建验证**：`xcodebuild test` 全平台 189 测试通过
 2. **UI 截图**：iPad Pro 11" 总览页截图验证渲染正确
 3. **Instruments**：需要真机或模拟器 GUI 操作
    - 打开 Instruments → Time Profiler

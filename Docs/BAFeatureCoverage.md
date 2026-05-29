@@ -1,5 +1,7 @@
 # BA Feature Coverage
 
+更新日期：2026-05-29
+
 This document tracks the BA-only migration from the KeiOS Android BA module into the native SwiftUI app. It keeps the current iOS surface honest before the iPadOS and macOS layout pass.
 
 ## References
@@ -27,7 +29,7 @@ This document tracks the BA-only migration from the KeiOS Android BA module into
 | Catalog | `BaGuideCatalogRepository`, trees by pid | `BaGuideCatalogRepository`, `BaGuideCatalogBundle` | Catalog tab | Codable cache, favorites set | catalog parser tests | Migrated shell/data |
 | Student detail | `BaStudentGuideRepository`, `GuideFetchContentParser` | `BaStudentGuideRepository`, guide parsers | Student detail route | Codable detail cache | parser tests | Migrated shell/data |
 | Voice | `GuideSectionVoice`, voice playback state | `BaGuideVoiceEntry`, `BaVoicePlaybackController` | Student detail Voice section | Audio cache | voice parser/playback tests | Migrated playback path |
-| Media/gallery | `GuideFetchGallery`, gallery renderers, media save settings | `BaGuideGalleryItem`, media parsers | Student detail Gallery section | Detail/image/audio cache; media prefs | gallery parser tests | Partial, playback/export later |
+| Media/gallery | `GuideFetchGallery`, gallery renderers, media save settings | `BaGuideGalleryItem`, media parsers | Student detail Gallery section | Detail/image/audio cache; media prefs | gallery parser tests | Migrated (preview, player, export complete) |
 | Favorites | `BaGuideFavoriteBgm*`, catalog favorites | `BaGlobalSettings.favoriteContentIDs` | Catalog favorites category | Global settings | cache/settings tests through Codable | Partial, import/export later |
 | Notification settings | BA notification dispatchers and settings sheet | `BaGlobalSettings`, `BaServerProfile` flags | Settings notification section | Envelope global/profile fields | settings round trip | Preference migrated; system scheduling later |
 

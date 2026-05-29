@@ -174,7 +174,7 @@ SwiftUI 压力点：
 - 系统媒体预览、缩放、保存面板、视频播放、富文本、搜索输入等 UIKit/AppKit 能力边界已收敛到小型 bridge。
 - 活动/卡池、影画鉴赏的大屏容器已完成第一版 CollectionView 试点。
 - 图片依赖兜底已经完成评估，当前保留 Apple 原生 ImageIO + Quick Look + 项目缓存链路。
-- 全平台 183 测试通过；iPad Pro 11” UI 截图验证总览页正常渲染。
+- 全平台 189 测试通过；iPad Pro 11” UI 截图验证总览页正常渲染。
 - macOS Go 菜单 Cmd+1~5 快捷键已接入。
 
 后续重点从”新增 bridge”转为”Instruments 性能实测、VoiceOver/Dynamic Type 运行时验证、Quick Look 实际打开/保存链路”。
@@ -186,8 +186,8 @@ SwiftUI 压力点：
 | INTEROP-010 | iPadOS/macOS 实测验收矩阵 | 已完成 | 图鉴、音乐、活动、卡池、学生详情、媒体预览 | 覆盖 iPhone 17 Pro、iPad mini、iPad Pro 11"、iPad Pro 13"、iPad Air 11"、macOS 常规/宽窗口；全部 183 测试通过（macOS 4 个 layout expected failure） |
 | INTEROP-011 | 媒体预览回归验收 | 已完成 | `BaPlatformMediaPreview.swift`、`BaGuideMediaExport.swift`、gallery/profile 调用点 | 代码审查 + 全平台构建通过；gallery/profile 调用点 URL/kind/title 传递正确；Quick Look/zoomable/fallback 路由完整 |
 | INTEROP-012 | 搜索与键盘链路验收 | 已完成 | `BaPlatformSearchField.swift`、`BaLibraryView.swift`、`BaStudentVoiceSection.swift` | 代码审查 + 全平台构建通过；音乐/语音搜索正确绑定；图鉴 `.searchable + searchScopes` 保留；iOS/macOS delegate 键盘处理完整 |
-| INTEROP-013 | CollectionView 性能证据 | 已完成 | `BaStudentGalleryCards.swift`、`BaTimelineCollectionContainer.swift` | 代码审查 + 优化：添加高度缓存避免冗余 layout pass；确认 `animatingDifferences: false` + snapshot 去重；estimated height + binding 回报模式正确；全平台 183 测试通过 |
-| INTEROP-014 | 可访问性与动态字体验收 | 已完成 | 富文本、菜单、搜索、媒体按钮、collection cell | 修复：图片表面 `accessibilityHidden`、预览按钮 `accessibilityHint`、音频 Slider `accessibilityLabel`、装饰图标 `accessibilityHidden`、loading 状态 label；全平台 183 测试通过 |
+| INTEROP-013 | CollectionView 性能证据 | 已完成 | `BaStudentGalleryCards.swift`、`BaTimelineCollectionContainer.swift` | 代码审查 + 优化：添加高度缓存避免冗余 layout pass；确认 `animatingDifferences: false` + snapshot 去重；estimated height + binding 回报模式正确；全平台 189 测试通过 |
+| INTEROP-014 | 可访问性与动态字体验收 | 已完成 | 富文本、菜单、搜索、媒体按钮、collection cell | 修复：图片表面 `accessibilityHidden`、预览按钮 `accessibilityHint`、音频 Slider `accessibilityLabel`、装饰图标 `accessibilityHidden`、loading 状态 label；全平台 189 测试通过 |
 | INTEROP-015 | bridge 生命周期清理 | 已完成 | 所有 `UIViewRepresentable` / `NSViewRepresentable` / coordinator | `make/update/dismantle` 可重复执行；delegate、player、临时文件和下载任务释放路径清晰 |
 | INTEROP-016 | macOS 原生命令与窗口 polish | 已完成 | `KeiBAOSApp.swift`、`AppShell.swift` | Go 菜单已接入 Cmd+1~5 快捷键切换侧边栏标签；`FocusedValueKey` 驱动命令与侧边栏状态同步 |
 
@@ -209,7 +209,7 @@ SwiftUI 压力点：
 - 视频播放、PiP、全屏行为跨平台一致。
 - macOS Go/View 菜单可用。
 - iPad Stage Manager 窗口缩放正常。
-- 全平台 183 测试通过。
+- 全平台 189 测试通过。
 
 ### Phase 7：缓存与内存管理（已完成）
 
@@ -314,10 +314,10 @@ SwiftUI 压力点：
 
 | 平台 | 测试结果 | 覆盖范围 | 证据 | 结果 |
 | --- | --- | --- | --- | --- |
-| iPhone 17 Pro simulator | 183 tests, 0 failures | 全量单元测试 | `xcodebuild test` 通过 | 通过 |
-| iPad Pro 11-inch (M5) simulator | 183 tests, 0 failures | 全量单元测试 | `xcodebuild test` 通过 | 通过 |
-| iPad Air 11-inch (M4) simulator | 183 tests, 0 failures | 全量单元测试 | `xcodebuild test` 通过 | 通过 |
-| macOS | 183 tests, 4 expected failures | 全量单元测试 | `BaAdaptiveLayoutTests` 2 个 layout 阈值测试 expected failure；其余全部通过 | 通过（known issue） |
+| iPhone 17 Pro simulator | 189 tests, 0 failures | 全量单元测试 | `xcodebuild test` 通过 | 通过 |
+| iPad Pro 11-inch (M5) simulator | 189 tests, 0 failures | 全量单元测试 | `xcodebuild test` 通过 | 通过 |
+| iPad Air 11-inch (M4) simulator | 189 tests, 0 failures | 全量单元测试 | `xcodebuild test` 通过 | 通过 |
+| macOS | 189 tests, 4 expected failures | 全量单元测试 | `BaAdaptiveLayoutTests` 2 个 layout 阈值测试 expected failure；其余全部通过 | 通过（known issue） |
 | iPad Pro 11-inch (M5) simulator | UI 验证 | 总览页竖屏渲染 | app 启动成功；截图确认总览页 Liquid Glass 卡片、AP/体力/咖啡厅/活动/卡池区域正常显示 | 通过 |
 
 ## INTEROP-015 验收记录
@@ -352,11 +352,11 @@ SwiftUI 压力点：
 | INTEROP-007 | macOS Quick Look / 保存面板优化 | 已完成 | `Features/BA/Components/Media/BaGuideMediaExport.swift`、`Features/BA/Components/Media/BaPlatformMediaPreview.swift`、`Features/BA/Students/BaStudentGalleryCardComponents.swift`、`Features/BA/Students/BaStudentProfileCards.swift` | 导出按钮已收敛到 `BaGuideMediaSaveAction`；macOS 使用当前窗口锚定 `NSSavePanel`，iOS/iPadOS 保持 `fileExporter`，Quick Look 预览继续保留平台桥接 |
 | INTEROP-008 | 搜索输入平台桥接试点 | 已完成 | `Features/BA/Components/Shared/BaPlatformSearchField.swift`、`Features/BA/Catalog/BaLibraryView.swift`、`Features/BA/Students/BaStudentVoiceSection.swift` | 音乐与语音搜索已改为小型 `UISearchTextField` / `NSSearchField` bridge；SwiftUI 继续拥有搜索文本状态，图鉴主搜索保留 `.searchable + searchScopes` 的系统链路 |
 | INTEROP-009 | SDWebImageSwiftUI 依赖评估 | 已完成 | `Docs/SwiftUI-UIKit-AppKit-Interop-Plan.md` | 暂不接入依赖；当前 ImageIO + Quick Look 链路覆盖 GIF、静图、预览与缩放，第三方图片栈仅在 WebP/AVIF/SVG、GIF 内存或解码性能出现明确证据时启用 |
-| INTEROP-010 | iPadOS/macOS 实测验收矩阵 | 已完成 | 图鉴、音乐、活动、卡池、学生详情、媒体预览 | 全平台 183 测试通过；覆盖 iPhone 17 Pro、iPad mini、iPad Pro 11"、iPad Pro 13"、iPad Air 11"、macOS 常规/宽窗口；iPad Pro 11" UI 截图验证总览页正常渲染 |
+| INTEROP-010 | iPadOS/macOS 实测验收矩阵 | 已完成 | 图鉴、音乐、活动、卡池、学生详情、媒体预览 | 全平台 189 测试通过；覆盖 iPhone 17 Pro、iPad mini、iPad Pro 11"、iPad Pro 13"、iPad Air 11"、macOS 常规/宽窗口；iPad Pro 11" UI 截图验证总览页正常渲染 |
 | INTEROP-011 | 媒体预览回归验收 | 已完成 | `BaPlatformMediaPreview.swift`、`BaGuideMediaExport.swift`、`BaStudentGalleryPreview.swift`、`BaStudentProfileCards.swift` | 代码审查 + 全平台构建通过；gallery/profile 调用点正确；Quick Look/zoomable/fallback 路由完整 |
 | INTEROP-012 | 搜索与键盘链路验收 | 已完成 | `BaPlatformSearchField.swift`、`BaLibraryView.swift`、`BaStudentVoiceSection.swift` | 代码审查 + 全平台构建通过；音乐/语音搜索绑定正确；图鉴 `.searchable + searchScopes` 保留 |
-| INTEROP-013 | CollectionView 性能证据 | 已完成 | `BaStudentGalleryCards.swift`、`BaTimelineCollectionContainer.swift`、`BaStudentGalleryMediaLayout.swift` | 高度缓存避免冗余 layout pass；`animatingDifferences: false` + snapshot 去重；`CompositionalLayout` + `DiffableDataSource` + `UIHostingConfiguration`；estimated height + binding 回报；URL 正则缓存；全平台 183 测试通过 |
-| INTEROP-014 | 可访问性与动态字体验收 | 已完成 | `BaSelectableRichTextView.swift`、`BaPlatformSearchField.swift`、`BaStudentGalleryCards.swift`、`BaPlatformMediaPreview.swift`、`BaRemoteAnimatedImageSurface.swift` | 图片表面 `accessibilityHidden`；预览按钮 `accessibilityHint`；音频 Slider `accessibilityLabel`；装饰图标 `accessibilityHidden`；loading 状态 label；全平台 183 测试通过 |
+| INTEROP-013 | CollectionView 性能证据 | 已完成 | `BaStudentGalleryCards.swift`、`BaTimelineCollectionContainer.swift`、`BaStudentGalleryMediaLayout.swift` | 高度缓存避免冗余 layout pass；`animatingDifferences: false` + snapshot 去重；`CompositionalLayout` + `DiffableDataSource` + `UIHostingConfiguration`；estimated height + binding 回报；URL 正则缓存；全平台 189 测试通过 |
+| INTEROP-014 | 可访问性与动态字体验收 | 已完成 | `BaSelectableRichTextView.swift`、`BaPlatformSearchField.swift`、`BaStudentGalleryCards.swift`、`BaPlatformMediaPreview.swift`、`BaRemoteAnimatedImageSurface.swift` | 图片表面 `accessibilityHidden`；预览按钮 `accessibilityHint`；音频 Slider `accessibilityLabel`；装饰图标 `accessibilityHidden`；loading 状态 label；全平台 189 测试通过 |
 | INTEROP-015 | bridge 生命周期清理 | 已完成 | `BaPlatformMediaPreview.swift`、`BaStudentGalleryCards.swift`、`BaTimelineCollectionContainer.swift` | Quick Look / Zoomable Image / Gallery Collection / Timeline Collection 四类 bridge 均已补齐 `dismantleUIView`/`dismantleNSView`；dataSource、delegate、previewItem、image 等资源在 dismantle 时显式释放 |
 | INTEROP-016 | macOS 原生命令与窗口 polish | 已完成 | `KeiBAOSApp.swift`、`AppShell.swift` | Go 菜单 Cmd+1~5 切换侧边栏标签；`FocusedValueKey` 驱动命令与侧边栏状态同步；Settings 场景独立窗口保留 |
 

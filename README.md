@@ -61,7 +61,7 @@ KeiBAOSShared/          Types shared by the app and extension
 KeiBAOSWatch/           watchOS companion app source and watch assets
 KeiBAOSWatchShared/     Codable snapshot models shared by iPhone and Watch
 KeiBAOSWatchWidgets/    watchOS WidgetKit extension for Smart Stack surfaces
-KeiBAOSWidgetsShared/   Shared WidgetKit widget views and timeline providers
+KeiBAOSiOSWidgets/      iOS WidgetKit extension for Dashboard widgets
 KeiBAOSTests/           Unit tests for parsing, settings, notifications,
                         media, and layout
 Docs/                   Project notes and feature coverage
