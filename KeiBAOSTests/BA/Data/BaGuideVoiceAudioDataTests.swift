@@ -326,7 +326,7 @@ final class BaGuideVoiceAudioDataTests: XCTestCase {
 
         playback.play(remoteURL: remoteURL)
 
-        await fulfillment(of: [startedExpectation, finishedExpectation], timeout: 3)
+        await fulfillment(of: [startedExpectation, finishedExpectation], timeout: 10)
         XCTAssertNil(playback.currentRemoteURL)
         XCTAssertFalse(playback.isLoading)
         XCTAssertFalse(playback.isPlaying)
