@@ -1,6 +1,7 @@
 # Xcode
 DerivedData/
 Build/
+build/
 *.xcuserstate
 xcuserdata/
 *.xcscmblueprint
