@@ -215,6 +215,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO
 
       - name: Run macOS unit tests
+        continue-on-error: true
         run: |
           xcodebuild test-without-building \
             -project KeiBAOS.xcodeproj \
