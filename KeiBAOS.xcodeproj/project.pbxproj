@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		986D4A042FC93FC7008EFF9E /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 986D4A032FC93FC7008EFF9E /* WidgetKit.framework */; };
 		986D4A062FC93FC7008EFF9E /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 986D4A052FC93FC7008EFF9E /* SwiftUI.framework */; };
-		986D4A152FC93FC9008EFF9E /* KeiBAOSiOSWidgetsExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 986D4A012FC93FC7008EFF9E /* KeiBAOSiOSWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		986D4A152FC93FC9008EFF9E /* KeiBAOSiOSWidgetsExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 986D4A012FC93FC7008EFF9E /* KeiBAOSiOSWidgetsExtension.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		98BA01032FB7000000000103 /* AudioStreaming in Frameworks */ = {isa = PBXBuildFile; productRef = 98BA01022FB7000000000102 /* AudioStreaming */; };
 		98BA03012FBA000000000301 /* KeiBAOSLiveActivities.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 98BA03032FBA000000000303 /* KeiBAOSLiveActivities.appex */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		98BA04012FBB000000000401 /* KeiBAOSWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 98BA04032FBB000000000403 /* KeiBAOSWatch.app */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
