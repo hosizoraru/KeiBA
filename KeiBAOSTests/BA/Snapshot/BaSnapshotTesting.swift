@@ -107,11 +107,9 @@ enum BaSnapshotTesting {
 
             let image = NSImage(size: size)
             image.addRepresentation(bitmap)
-            guard let context = NSGraphicsContext(bitmapImageRep: bitmap) else { return image }
-            NSGraphicsContext.saveGraphicsState()
-            NSGraphicsContext.current = context
-            hosting.view.drawHierarchy(in: CGRect(origin: .zero, size: size), afterScreenUpdates: true)
-            NSGraphicsContext.restoreGraphicsState()
+            hosting.view.lockFocus()
+            hosting.view.draw(in: CGRect(origin: .zero, size: size))
+            hosting.view.unlockFocus()
             return image
         }
 
