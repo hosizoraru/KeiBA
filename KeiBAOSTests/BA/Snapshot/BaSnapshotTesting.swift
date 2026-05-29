@@ -108,7 +108,7 @@ enum BaSnapshotTesting {
             let image = NSImage(size: size)
             image.addRepresentation(bitmap)
             hosting.view.lockFocus()
-            hosting.view.draw(in: CGRect(origin: .zero, size: size))
+            hosting.view.draw(CGRect(origin: .zero, size: size))
             hosting.view.unlockFocus()
             return image
         }
