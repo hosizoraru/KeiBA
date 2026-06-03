@@ -52,12 +52,15 @@ nonisolated struct BaNotificationPreferenceSnapshot: Equatable, Sendable {
     var timelineChange: Bool
 
     init(envelope: BaSettingsEnvelope) {
-        let profile = envelope.profile(for: envelope.selectedServer)
-        let global = envelope.globalSettings
-        ap = profile.apNotificationsEnabled
-        cafeAP = profile.cafeApNotificationsEnabled
-        cafeVisit = profile.visitNotificationsEnabled
-        arenaRefresh = profile.arenaRefreshNotificationsEnabled
+        let normalized = envelope.normalized()
+        let profiles = normalized.accounts.filter(\.isEnabled).map(\.profile)
+        let activeProfile = normalized.selectedAccount.profile
+        let scopedProfiles = profiles.isEmpty ? [activeProfile] : profiles
+        let global = normalized.globalSettings
+        ap = scopedProfiles.contains { $0.apNotificationsEnabled }
+        cafeAP = scopedProfiles.contains { $0.cafeApNotificationsEnabled }
+        cafeVisit = scopedProfiles.contains { $0.visitNotificationsEnabled }
+        arenaRefresh = scopedProfiles.contains { $0.arenaRefreshNotificationsEnabled }
         activityStart = global.calendarUpcomingNotificationsEnabled
         activityEnd = global.calendarEndingNotificationsEnabled
         poolStart = global.poolUpcomingNotificationsEnabled
@@ -106,6 +109,7 @@ nonisolated struct BaNotificationScheduleSnapshot: Equatable, Sendable {
     var lastHeadpatAt: Date?
     var lastInviteTicket1At: Date?
     var lastInviteTicket2At: Date?
+    var accounts: [BaAccountNotificationScheduleSnapshot]
 
     init(envelope: BaSettingsEnvelope) {
         let normalized = envelope.normalized()
@@ -125,6 +129,52 @@ nonisolated struct BaNotificationScheduleSnapshot: Equatable, Sendable {
         lastHeadpatAt = settings.lastHeadpatAt
         lastInviteTicket1At = settings.lastInviteTicket1At
         lastInviteTicket2At = settings.lastInviteTicket2At
+        accounts = normalized.accounts
+            .filter(\.isEnabled)
+            .map { account in
+                BaAccountNotificationScheduleSnapshot(account: account)
+            }
+    }
+}
+
+nonisolated struct BaAccountNotificationScheduleSnapshot: Equatable, Sendable {
+    var id: BaAccountID
+    var server: BaServer
+    var apCurrent: Double
+    var apLimit: Int
+    var apRegenBaseAt: Date
+    var apNotificationsEnabled: Bool
+    var apNotifyThreshold: Int
+    var cafeLevel: Int
+    var cafeApCurrent: Double
+    var cafeStorageBaseAt: Date
+    var cafeApNotificationsEnabled: Bool
+    var cafeApNotifyThreshold: Int
+    var visitNotificationsEnabled: Bool
+    var arenaRefreshNotificationsEnabled: Bool
+    var lastHeadpatAt: Date?
+    var lastInviteTicket1At: Date?
+    var lastInviteTicket2At: Date?
+
+    init(account: BaAccountProfile) {
+        let normalized = account.profile.normalized()
+        id = account.id
+        server = account.server
+        apCurrent = normalized.apCurrent
+        apLimit = normalized.apLimit
+        apRegenBaseAt = normalized.apRegenBaseAt
+        apNotificationsEnabled = normalized.apNotificationsEnabled
+        apNotifyThreshold = normalized.apNotifyThreshold
+        cafeLevel = normalized.cafeLevel
+        cafeApCurrent = normalized.cafeApCurrent
+        cafeStorageBaseAt = normalized.cafeStorageBaseAt
+        cafeApNotificationsEnabled = normalized.cafeApNotificationsEnabled
+        cafeApNotifyThreshold = normalized.cafeApNotifyThreshold
+        visitNotificationsEnabled = normalized.visitNotificationsEnabled
+        arenaRefreshNotificationsEnabled = normalized.arenaRefreshNotificationsEnabled
+        lastHeadpatAt = normalized.lastHeadpatAt
+        lastInviteTicket1At = normalized.lastInviteTicket1At
+        lastInviteTicket2At = normalized.lastInviteTicket2At
     }
 }
 

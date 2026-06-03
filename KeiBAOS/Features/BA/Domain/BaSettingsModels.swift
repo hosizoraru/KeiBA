@@ -676,7 +676,10 @@ nonisolated struct BaSettingsEnvelope: Codable, Equatable, Sendable {
     }
 
     func flattenedSettings() -> BaAppSettings {
-        let account = selectedAccount
+        flattenedSettings(for: selectedAccount)
+    }
+
+    func flattenedSettings(for account: BaAccountProfile) -> BaAppSettings {
         let profile = account.profile
         return BaAppSettings(
             server: account.server,

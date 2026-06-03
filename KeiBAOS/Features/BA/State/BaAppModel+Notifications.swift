@@ -13,6 +13,7 @@ extension BaAppModel {
         now: Date = Date(),
         delay: Duration? = nil
     ) {
+        let envelope = envelope
         let settings = settings
         let activities = activityState.value ?? []
         let pools = poolState.value ?? []
@@ -23,6 +24,7 @@ extension BaAppModel {
             }
             guard Task.isCancelled == false else { return }
             await notificationCoordinator.synchronize(
+                envelope: envelope,
                 settings: settings,
                 activities: activities,
                 pools: pools,
@@ -37,11 +39,13 @@ extension BaAppModel {
         now: Date = Date()
     ) async {
         let hasEnabledReminder = BaNotificationPreferenceSnapshot(envelope: envelope).hasEnabledReminder
+        let envelope = envelope
         let settings = settings
         let activities = activityState.value ?? []
         let pools = poolState.value ?? []
         notificationSyncTask?.cancel()
         await notificationCoordinator.synchronize(
+            envelope: envelope,
             settings: settings,
             activities: activities,
             pools: pools,

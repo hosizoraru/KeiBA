@@ -20,28 +20,105 @@ nonisolated enum BaNotificationPlanner {
         now: Date = Date(),
         maximumReminderCount: Int = defaultMaximumReminderCount
     ) -> BaNotificationPlan {
+        filteredPlan(
+            reminders: reminders(
+                settings: settings,
+                activities: activities,
+                pools: pools,
+                now: now,
+                account: nil
+            ),
+            now: now,
+            maximumReminderCount: maximumReminderCount
+        )
+    }
+
+    static func makePlan(
+        envelope: BaSettingsEnvelope,
+        activities: [BaActivityEntry],
+        pools: [BaPoolEntry],
+        now: Date = Date(),
+        maximumReminderCount: Int = defaultMaximumReminderCount
+    ) -> BaNotificationPlan {
+        let normalized = envelope.normalized()
+        let enabledAccounts = normalized.accounts.filter(\.isEnabled)
+        let accountReminders = enabledAccounts.flatMap { account in
+            personalReminders(
+                settings: normalized.flattenedSettings(for: account),
+                now: now,
+                account: account
+            )
+        }
+        let timelineReminders = timelineReminders(
+            settings: normalized.flattenedSettings(),
+            activities: activities,
+            pools: pools,
+            now: now
+        )
+
+        return filteredPlan(
+            reminders: accountReminders + timelineReminders,
+            now: now,
+            maximumReminderCount: maximumReminderCount
+        )
+    }
+
+    private static func reminders(
+        settings: BaAppSettings,
+        activities: [BaActivityEntry],
+        pools: [BaPoolEntry],
+        now: Date,
+        account: BaAccountProfile?
+    ) -> [BaNotificationReminder] {
+        personalReminders(
+            settings: settings,
+            now: now,
+            account: account
+        ) + timelineReminders(
+            settings: settings,
+            activities: activities,
+            pools: pools,
+            now: now
+        )
+    }
+
+    private static func personalReminders(
+        settings: BaAppSettings,
+        now: Date,
+        account: BaAccountProfile?
+    ) -> [BaNotificationReminder] {
         var reminders: [BaNotificationReminder] = []
 
         if settings.apNotificationsEnabled,
-           let reminder = apReminder(settings: settings, now: now)
+           let reminder = apReminder(settings: settings, now: now, account: account)
         {
             reminders.append(reminder)
         }
 
         if settings.cafeApNotificationsEnabled,
-           let reminder = cafeAPReminder(settings: settings, now: now)
+           let reminder = cafeAPReminder(settings: settings, now: now, account: account)
         {
             reminders.append(reminder)
         }
 
         if settings.visitNotificationsEnabled {
-            reminders.append(contentsOf: cafeVisitReminders(settings: settings, now: now))
+            reminders.append(contentsOf: cafeVisitReminders(settings: settings, now: now, account: account))
         }
 
         if settings.arenaRefreshNotificationsEnabled {
-            reminders.append(contentsOf: arenaRefreshReminders(settings: settings, now: now))
+            reminders.append(contentsOf: arenaRefreshReminders(settings: settings, now: now, account: account))
         }
 
+        return reminders
+    }
+
+    private static func timelineReminders(
+        settings: BaAppSettings,
+        activities: [BaActivityEntry],
+        pools: [BaPoolEntry],
+        now: Date
+    ) -> [BaNotificationReminder] {
+        var reminders: [BaNotificationReminder] = []
         reminders.append(
             contentsOf: activityReminders(
                 settings: settings,
@@ -57,6 +134,14 @@ nonisolated enum BaNotificationPlanner {
             )
         )
 
+        return reminders
+    }
+
+    private static func filteredPlan(
+        reminders: [BaNotificationReminder],
+        now: Date,
+        maximumReminderCount: Int
+    ) -> BaNotificationPlan {
         let horizon = now.addingTimeInterval(timelineLookahead)
         let filtered = reminders
             .filter { $0.fireDate.timeIntervalSince(now) >= minimumFutureOffset }
@@ -163,7 +248,11 @@ nonisolated enum BaNotificationPlanner {
         )
     }
 
-    private static func apReminder(settings: BaAppSettings, now: Date) -> BaNotificationReminder? {
+    private static func apReminder(
+        settings: BaAppSettings,
+        now: Date,
+        account: BaAccountProfile?
+    ) -> BaNotificationReminder? {
         let current = BaTimeMath.currentAP(settings: settings, now: now)
         guard current < Double(settings.apLimit) else { return nil }
 
@@ -178,20 +267,25 @@ nonisolated enum BaNotificationPlanner {
         ) else { return nil }
 
         return BaNotificationReminder(
-            id: identifier(settings.server, BaNotificationReminder.Kind.ap.rawValue, "threshold"),
+            id: identifier(settings.server, BaNotificationReminder.Kind.ap.rawValue, "threshold", accountID: account?.id),
             kind: .ap,
             fireDate: fireDate,
             titleKey: "ba.notification.ap.title",
-            bodyKey: "ba.notification.ap.body",
-            bodyArguments: [
-                "\(target)",
-                BaDisplayFormatters.clockTime(fireDate),
-            ],
-            threadIdentifier: threadIdentifier(settings.server, "resource")
+            bodyKey: account == nil ? "ba.notification.ap.body" : "ba.notification.account.ap.body",
+            bodyArguments: accountArguments(
+                account,
+                values: "\(target)",
+                BaDisplayFormatters.clockTime(fireDate)
+            ),
+            threadIdentifier: threadIdentifier(settings.server, "resource", accountID: account?.id)
         )
     }
 
-    private static func cafeAPReminder(settings: BaAppSettings, now: Date) -> BaNotificationReminder? {
+    private static func cafeAPReminder(
+        settings: BaAppSettings,
+        now: Date,
+        account: BaAccountProfile?
+    ) -> BaNotificationReminder? {
         let capacity = BaTimeMath.cafeDailyCapacity(level: settings.cafeLevel)
         let current = BaTimeMath.currentCafeAP(settings: settings, now: now)
         guard current < Double(capacity) else { return nil }
@@ -201,20 +295,25 @@ nonisolated enum BaNotificationPlanner {
         guard let fireDate = cafeAPTargetDate(settings: settings, target: target, now: now) else { return nil }
 
         return BaNotificationReminder(
-            id: identifier(settings.server, BaNotificationReminder.Kind.cafeAP.rawValue, "threshold"),
+            id: identifier(settings.server, BaNotificationReminder.Kind.cafeAP.rawValue, "threshold", accountID: account?.id),
             kind: .cafeAP,
             fireDate: fireDate,
             titleKey: "ba.notification.cafeAp.title",
-            bodyKey: "ba.notification.cafeAp.body",
-            bodyArguments: [
-                "\(target)",
-                BaDisplayFormatters.clockTime(fireDate),
-            ],
-            threadIdentifier: threadIdentifier(settings.server, "resource")
+            bodyKey: account == nil ? "ba.notification.cafeAp.body" : "ba.notification.account.cafeAp.body",
+            bodyArguments: accountArguments(
+                account,
+                values: "\(target)",
+                BaDisplayFormatters.clockTime(fireDate)
+            ),
+            threadIdentifier: threadIdentifier(settings.server, "resource", accountID: account?.id)
         )
     }
 
-    private static func cafeVisitReminders(settings: BaAppSettings, now: Date) -> [BaNotificationReminder] {
+    private static func cafeVisitReminders(
+        settings: BaAppSettings,
+        now: Date,
+        account: BaAccountProfile?
+    ) -> [BaNotificationReminder] {
         nextServerRefreshes(
             count: 4,
             server: settings.server,
@@ -222,18 +321,27 @@ nonisolated enum BaNotificationPlanner {
             next: BaTimeMath.nextCafeStudentRefresh(from:server:)
         ).enumerated().map { offset, fireDate in
             BaNotificationReminder(
-                id: identifier(settings.server, BaNotificationReminder.Kind.cafeVisit.rawValue, "\(offset)-\(Int(fireDate.timeIntervalSince1970))"),
+                id: identifier(
+                    settings.server,
+                    BaNotificationReminder.Kind.cafeVisit.rawValue,
+                    "\(offset)-\(Int(fireDate.timeIntervalSince1970))",
+                    accountID: account?.id
+                ),
                 kind: .cafeVisit,
                 fireDate: fireDate,
                 titleKey: "ba.notification.visit.title",
-                bodyKey: "ba.notification.visit.body",
-                bodyArguments: [BaDisplayFormatters.clockTime(fireDate)],
-                threadIdentifier: threadIdentifier(settings.server, "cafe")
+                bodyKey: account == nil ? "ba.notification.visit.body" : "ba.notification.account.visit.body",
+                bodyArguments: accountArguments(account, values: BaDisplayFormatters.clockTime(fireDate)),
+                threadIdentifier: threadIdentifier(settings.server, "cafe", accountID: account?.id)
             )
         }
     }
 
-    private static func arenaRefreshReminders(settings: BaAppSettings, now: Date) -> [BaNotificationReminder] {
+    private static func arenaRefreshReminders(
+        settings: BaAppSettings,
+        now: Date,
+        account: BaAccountProfile?
+    ) -> [BaNotificationReminder] {
         nextServerRefreshes(
             count: 3,
             server: settings.server,
@@ -241,13 +349,18 @@ nonisolated enum BaNotificationPlanner {
             next: BaTimeMath.nextArenaRefresh(from:server:)
         ).enumerated().map { offset, fireDate in
             BaNotificationReminder(
-                id: identifier(settings.server, BaNotificationReminder.Kind.arenaRefresh.rawValue, "\(offset)-\(Int(fireDate.timeIntervalSince1970))"),
+                id: identifier(
+                    settings.server,
+                    BaNotificationReminder.Kind.arenaRefresh.rawValue,
+                    "\(offset)-\(Int(fireDate.timeIntervalSince1970))",
+                    accountID: account?.id
+                ),
                 kind: .arenaRefresh,
                 fireDate: fireDate,
                 titleKey: "ba.notification.arena.title",
-                bodyKey: "ba.notification.arena.body",
-                bodyArguments: [BaDisplayFormatters.clockTime(fireDate)],
-                threadIdentifier: threadIdentifier(settings.server, "arena")
+                bodyKey: account == nil ? "ba.notification.arena.body" : "ba.notification.account.arena.body",
+                bodyArguments: accountArguments(account, values: BaDisplayFormatters.clockTime(fireDate)),
+                threadIdentifier: threadIdentifier(settings.server, "arena", accountID: account?.id)
             )
         }
     }
@@ -539,12 +652,43 @@ nonisolated enum BaNotificationPlanner {
         return remaining >= minimumFutureOffset && remaining <= liveActivityMaximumDuration
     }
 
-    private static func identifier(_ server: BaServer, _ kind: String, _ key: String) -> String {
-        "\(BaNotificationPlan.managedIdentifierPrefix)\(server.rawValue).\(kind).\(key)"
+    private static func identifier(
+        _ server: BaServer,
+        _ kind: String,
+        _ key: String,
+        accountID: BaAccountID? = nil
+    ) -> String {
+        if let accountID {
+            return "\(BaNotificationPlan.managedIdentifierPrefix)account.\(safeIdentifierPart(accountID)).\(server.rawValue).\(kind).\(key)"
+        }
+        return "\(BaNotificationPlan.managedIdentifierPrefix)\(server.rawValue).\(kind).\(key)"
     }
 
-    private static func threadIdentifier(_ server: BaServer, _ topic: String) -> String {
-        "os.kei.KeiBAOS.ba.\(server.rawValue).\(topic)"
+    private static func threadIdentifier(
+        _ server: BaServer,
+        _ topic: String,
+        accountID: BaAccountID? = nil
+    ) -> String {
+        if let accountID {
+            return "os.kei.KeiBAOS.ba.account.\(safeIdentifierPart(accountID)).\(server.rawValue).\(topic)"
+        }
+        return "os.kei.KeiBAOS.ba.\(server.rawValue).\(topic)"
+    }
+
+    private static func accountArguments(
+        _ account: BaAccountProfile?,
+        values: String...
+    ) -> [String] {
+        guard let account else { return values }
+        return [account.title] + values
+    }
+
+    private static func safeIdentifierPart(_ value: String) -> String {
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_"))
+        return value.unicodeScalars.map { scalar in
+            allowed.contains(scalar) ? String(scalar) : "_"
+        }
+        .joined()
     }
 
     private static func localized(_ key: String) -> String {

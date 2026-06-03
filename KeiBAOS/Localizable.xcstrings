@@ -5415,6 +5415,94 @@
         }
       }
     },
+    "ba.notification.account.ap.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: AP will reach %2$@ at %3$@."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@：APは%2$@に到達します。予定時刻：%3$@。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@：AP 将达到 %2$@，预计时间 %3$@。"
+          }
+        }
+      }
+    },
+    "ba.notification.account.arena.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: Tactical Challenge refreshes at %2$@."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@：戦術対抗戦は%2$@に更新されます。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@：战术对抗将在 %2$@ 刷新。"
+          }
+        }
+      }
+    },
+    "ba.notification.account.cafeAp.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: Cafe AP will reach %2$@ at %3$@."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@：カフェAPは%2$@に到達します。予定時刻：%3$@。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@：咖啡厅 AP 将达到 %2$@，预计时间 %3$@。"
+          }
+        }
+      }
+    },
+    "ba.notification.account.visit.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: Cafe students refresh at %2$@."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@：カフェの生徒は%2$@に更新されます。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@：咖啡厅学生将在 %2$@ 刷新。"
+          }
+        }
+      }
+    },
     "ba.notification.ap.title" : {
       "localizations" : {
         "en" : {

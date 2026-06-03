@@ -20,6 +20,15 @@ protocol BaNotificationCoordinating: AnyObject {
         now: Date
     ) async
 
+    func synchronize(
+        envelope: BaSettingsEnvelope,
+        settings: BaAppSettings,
+        activities: [BaActivityEntry],
+        pools: [BaPoolEntry],
+        requestAuthorizationIfNeeded: Bool,
+        now: Date
+    ) async
+
     func sendTestNotification(now: Date) async
     func startTestLiveActivity(kind: BaDebugLiveActivityKind, now: Date) async -> Bool
     func endTestLiveActivities() async
@@ -28,6 +37,15 @@ protocol BaNotificationCoordinating: AnyObject {
 @MainActor
 final class BaNoopNotificationCoordinator: BaNotificationCoordinating {
     func synchronize(
+        settings: BaAppSettings,
+        activities: [BaActivityEntry],
+        pools: [BaPoolEntry],
+        requestAuthorizationIfNeeded: Bool,
+        now: Date
+    ) async {}
+
+    func synchronize(
+        envelope: BaSettingsEnvelope,
         settings: BaAppSettings,
         activities: [BaActivityEntry],
         pools: [BaPoolEntry],
@@ -59,6 +77,24 @@ final class BaNotificationCoordinator: BaNotificationCoordinating {
         requestAuthorizationIfNeeded: Bool,
         now: Date = Date()
     ) async {
+        await synchronize(
+            envelope: BaSettingsEnvelope.migrated(from: settings),
+            settings: settings,
+            activities: activities,
+            pools: pools,
+            requestAuthorizationIfNeeded: requestAuthorizationIfNeeded,
+            now: now
+        )
+    }
+
+    func synchronize(
+        envelope: BaSettingsEnvelope,
+        settings: BaAppSettings,
+        activities: [BaActivityEntry],
+        pools: [BaPoolEntry],
+        requestAuthorizationIfNeeded: Bool,
+        now: Date = Date()
+    ) async {
         let planning = await Task.detached(priority: .utility) {
             #if os(iOS) && canImport(ActivityKit)
             let liveActivityCandidates = BaNotificationPlanner.liveActivityCandidates(
@@ -73,7 +109,7 @@ final class BaNotificationCoordinator: BaNotificationCoordinating {
 
             return BaNotificationPlanningResult(
                 plan: BaNotificationPlanner.makePlan(
-                    settings: settings,
+                    envelope: envelope,
                     activities: activities,
                     pools: pools,
                     now: now
