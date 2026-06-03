@@ -77,6 +77,103 @@ final class BaNotificationAppModelTests: XCTestCase {
         XCTAssertTrue(envelope.accounts.first { $0.id == "inactive" }?.profile.apNotificationsEnabled ?? false)
     }
 
+    func testAccountReminderUpdatePersistsOnlyTargetAccountAndRefreshesSchedule() async throws {
+        let defaults = try makeIsolatedDefaults()
+        let coordinator = RecordingNotificationCoordinator()
+        let model = makeAppModel(defaults: defaults, coordinator: coordinator) { envelope in
+            let base = Date(timeIntervalSince1970: 1_800_000_000)
+            var activeProfile = BaServerProfile.defaults(now: base)
+            activeProfile.nickname = "CN Sensei"
+            activeProfile.friendCode = "cn000001"
+            activeProfile.apNotificationsEnabled = false
+            activeProfile.cafeApNotificationsEnabled = false
+            activeProfile.visitNotificationsEnabled = false
+            activeProfile.arenaRefreshNotificationsEnabled = false
+            activeProfile.apNotifyThreshold = 90
+            activeProfile.cafeApNotifyThreshold = 100
+            var inactiveProfile = BaServerProfile.defaults(now: base)
+            inactiveProfile.nickname = "JP Sensei"
+            inactiveProfile.friendCode = "jp000001"
+            inactiveProfile.apNotificationsEnabled = false
+            inactiveProfile.cafeApNotificationsEnabled = false
+            inactiveProfile.visitNotificationsEnabled = false
+            inactiveProfile.arenaRefreshNotificationsEnabled = false
+            inactiveProfile.apNotifyThreshold = 110
+            inactiveProfile.cafeApNotifyThreshold = 120
+            envelope.accounts = [
+                BaAccountProfile(id: "active", server: .cn, displayName: "Active", profile: activeProfile, sortOrder: 0),
+                BaAccountProfile(id: "inactive", server: .jp, displayName: "Inactive", profile: inactiveProfile, sortOrder: 1),
+            ]
+            envelope.selectedAccountID = "active"
+            envelope.selectedServer = .cn
+        }
+
+        model.updateAccount(
+            id: "inactive",
+            displayName: "JP Alt",
+            server: .jp,
+            nickname: "JP Alt Sensei",
+            friendCode: "JP000002",
+            isEnabled: true,
+            apNotificationsEnabled: true,
+            cafeApNotificationsEnabled: true,
+            visitNotificationsEnabled: true,
+            arenaRefreshNotificationsEnabled: true,
+            apNotifyThreshold: BaTimeMath.apMax + 50,
+            cafeApNotifyThreshold: -10
+        )
+
+        await assertCoordinatorCallCount(1, coordinator: coordinator)
+        let active = try XCTUnwrap(model.envelope.accounts.first { $0.id == "active" })
+        let inactive = try XCTUnwrap(model.envelope.accounts.first { $0.id == "inactive" })
+        XCTAssertEqual(active.profile.nickname, "CN Sensei")
+        XCTAssertFalse(active.profile.apNotificationsEnabled)
+        XCTAssertFalse(active.profile.cafeApNotificationsEnabled)
+        XCTAssertFalse(active.profile.visitNotificationsEnabled)
+        XCTAssertFalse(active.profile.arenaRefreshNotificationsEnabled)
+        XCTAssertEqual(active.profile.apNotifyThreshold, 90)
+        XCTAssertEqual(active.profile.cafeApNotifyThreshold, 100)
+        XCTAssertEqual(inactive.displayName, "JP Alt")
+        XCTAssertEqual(inactive.profile.nickname, "JP Alt Sensei")
+        XCTAssertTrue(inactive.profile.apNotificationsEnabled)
+        XCTAssertTrue(inactive.profile.cafeApNotificationsEnabled)
+        XCTAssertTrue(inactive.profile.visitNotificationsEnabled)
+        XCTAssertTrue(inactive.profile.arenaRefreshNotificationsEnabled)
+        XCTAssertEqual(inactive.profile.apNotifyThreshold, BaTimeMath.apMax)
+        XCTAssertEqual(inactive.profile.cafeApNotifyThreshold, 0)
+        XCTAssertTrue(coordinator.calls[0].requestAuthorizationIfNeeded)
+        let synchronizedEnvelope = try XCTUnwrap(coordinator.calls[0].envelope)
+        XCTAssertEqual(synchronizedEnvelope.accounts.first { $0.id == "inactive" }?.profile.apNotifyThreshold, BaTimeMath.apMax)
+    }
+
+    func testAddedAccountStoresInitialReminderPreferences() async throws {
+        let defaults = try makeIsolatedDefaults()
+        let coordinator = RecordingNotificationCoordinator()
+        let model = makeAppModel(defaults: defaults, coordinator: coordinator) { _ in }
+
+        model.addAccount(
+            displayName: "CN Alt",
+            server: .cn,
+            nickname: "Alt Sensei",
+            friendCode: "ALT00001",
+            apNotificationsEnabled: false,
+            cafeApNotificationsEnabled: true,
+            visitNotificationsEnabled: true,
+            arenaRefreshNotificationsEnabled: false,
+            apNotifyThreshold: BaTimeMath.apMax + 1,
+            cafeApNotifyThreshold: -1
+        )
+
+        let account = try XCTUnwrap(model.envelope.accounts.first { $0.displayName == "CN Alt" })
+        XCTAssertEqual(model.currentAccount.id, account.id)
+        XCTAssertFalse(account.profile.apNotificationsEnabled)
+        XCTAssertTrue(account.profile.cafeApNotificationsEnabled)
+        XCTAssertTrue(account.profile.visitNotificationsEnabled)
+        XCTAssertFalse(account.profile.arenaRefreshNotificationsEnabled)
+        XCTAssertEqual(account.profile.apNotifyThreshold, BaTimeMath.apMax)
+        XCTAssertEqual(account.profile.cafeApNotifyThreshold, 0)
+    }
+
     func testIdentityTextUpdateSkipsNotificationRefresh() async throws {
         let defaults = try makeIsolatedDefaults()
         let coordinator = RecordingNotificationCoordinator()
