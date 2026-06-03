@@ -200,6 +200,61 @@ final class BaOverviewSettingsTests: XCTestCase {
         XCTAssertEqual(normalized.flattenedSettings().nickname, "JP Main")
     }
 
+    func testDisablingSelectedAccountFallsBackToNextEnabledAccount() {
+        let base = Date(timeIntervalSince1970: 1_700_000_000)
+        var firstProfile = BaServerProfile.defaults(now: base)
+        firstProfile.nickname = "First"
+        var secondProfile = BaServerProfile.defaults(now: base)
+        secondProfile.nickname = "Second"
+        var thirdProfile = BaServerProfile.defaults(now: base)
+        thirdProfile.nickname = "Third"
+
+        var envelope = BaSettingsEnvelope.defaults(now: base)
+        envelope.accounts = [
+            BaAccountProfile(id: "first", server: .cn, displayName: "First", profile: firstProfile, sortOrder: 0),
+            BaAccountProfile(id: "second", server: .cn, displayName: "Second", profile: secondProfile, sortOrder: 1),
+            BaAccountProfile(id: "third", server: .jp, displayName: "Third", profile: thirdProfile, sortOrder: 2),
+        ]
+        envelope.selectedAccountID = "second"
+        envelope.selectedServer = .cn
+
+        envelope.updateAccount(id: "second") { account in
+            account.isEnabled = false
+        }
+        let normalized = envelope.normalized()
+
+        XCTAssertEqual(normalized.accounts.first { $0.id == "second" }?.isEnabled, false)
+        XCTAssertEqual(normalized.selectedAccountID, "first")
+        XCTAssertEqual(normalized.selectedServer, .cn)
+        XCTAssertEqual(normalized.flattenedSettings().nickname, "First")
+    }
+
+    func testDisablingOnlyEnabledAccountKeepsSelectionAvailableForEditing() {
+        let base = Date(timeIntervalSince1970: 1_700_000_000)
+        var firstProfile = BaServerProfile.defaults(now: base)
+        firstProfile.nickname = "First"
+        var secondProfile = BaServerProfile.defaults(now: base)
+        secondProfile.nickname = "Second"
+
+        var envelope = BaSettingsEnvelope.defaults(now: base)
+        envelope.accounts = [
+            BaAccountProfile(id: "first", server: .cn, displayName: "First", profile: firstProfile, isEnabled: false, sortOrder: 0),
+            BaAccountProfile(id: "second", server: .jp, displayName: "Second", profile: secondProfile, sortOrder: 1),
+        ]
+        envelope.selectedAccountID = "second"
+        envelope.selectedServer = .jp
+
+        envelope.updateAccount(id: "second") { account in
+            account.isEnabled = false
+        }
+        let normalized = envelope.normalized()
+
+        XCTAssertEqual(normalized.accounts.filter(\.isEnabled).count, 0)
+        XCTAssertEqual(normalized.selectedAccountID, "second")
+        XCTAssertEqual(normalized.selectedServer, .jp)
+        XCTAssertEqual(normalized.flattenedSettings().nickname, "Second")
+    }
+
     func testFriendCodeKeepsEightUppercaseLettersOrDigits() {
         XCTAssertEqual(BaFriendCodeFormat.sanitizedDraft("ab-12 cd34xyz"), "AB12CD34")
         XCTAssertEqual(BaFriendCodeFormat.normalized("ke1os26x"), "KE1OS26X")

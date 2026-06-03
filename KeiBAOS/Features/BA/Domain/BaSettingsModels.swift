@@ -642,18 +642,14 @@ nonisolated struct BaSettingsEnvelope: Codable, Equatable, Sendable {
         transform(&account)
         guard let normalized = account.normalized(defaultSortOrder: index) else { return }
         accounts[index] = normalized
-        if selectedAccountID == id {
-            selectedServer = normalized.server
-        }
+        repairSelectedAccountAfterAvailabilityChange(updatedAccountID: id)
         serverProfiles[normalized.server] = normalized.profile
     }
 
     mutating func deleteAccount(id: BaAccountID) {
         guard accounts.count > 1 else { return }
         accounts.removeAll { $0.id == id }
-        if selectedAccountID == id || accounts.contains(where: { $0.id == selectedAccountID }) == false {
-            selectedAccountID = accounts.first(where: \.isEnabled)?.id ?? accounts.first?.id
-        }
+        repairSelectedAccountAfterAvailabilityChange(updatedAccountID: id)
         selectedServer = selectedAccount.server
     }
 
@@ -673,6 +669,16 @@ nonisolated struct BaSettingsEnvelope: Codable, Equatable, Sendable {
             copy.sortOrder = index
             return copy
         }
+    }
+
+    private mutating func repairSelectedAccountAfterAvailabilityChange(updatedAccountID: BaAccountID) {
+        let selectedAccount = accounts.first { $0.id == selectedAccountID }
+        if selectedAccount == nil ||
+            (selectedAccount?.id == updatedAccountID && selectedAccount?.isEnabled == false)
+        {
+            selectedAccountID = accounts.first(where: \.isEnabled)?.id ?? selectedAccount?.id ?? accounts.first?.id
+        }
+        selectedServer = self.selectedAccount.server
     }
 
     func flattenedSettings() -> BaAppSettings {
