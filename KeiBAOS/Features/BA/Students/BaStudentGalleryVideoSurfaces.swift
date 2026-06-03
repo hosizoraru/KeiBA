@@ -126,10 +126,13 @@ struct BaStudentGalleryVideoPlayerScreen: View {
 
     private var toolbar: some View {
         HStack(spacing: 12) {
-            Button(BaL10n.string("ba.common.done")) {
+            Button {
                 dismiss()
+            } label: {
+                BaGalleryVideoToolbarIconSurface(systemImage: "xmark")
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.plain)
+            .accessibilityLabel(BaL10n.string("ba.common.done"))
 
             Spacer(minLength: 12)
 
@@ -143,19 +146,24 @@ struct BaStudentGalleryVideoPlayerScreen: View {
 
             if let shareURL = item.mediaURL ?? item.previewURL {
                 ShareLink(item: shareURL) {
-                    Image(systemName: "square.and.arrow.up")
-                        .frame(width: 22, height: 22)
+                    BaGalleryVideoToolbarIconSurface(systemImage: "square.and.arrow.up")
                 }
-                .buttonStyle(.bordered)
-                .tint(.white)
+                .buttonStyle(.plain)
                 .accessibilityLabel(BaL10n.string("ba.action.share"))
             }
 
-            BaGalleryMediaSaveButton(url: item.mediaURL ?? item.previewURL, title: item.title)
+            BaGalleryMediaSaveButton(url: item.mediaURL ?? item.previewURL, title: item.title, tint: .white)
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 10)
-        .background(.black.opacity(0.68))
+        .background {
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    Rectangle()
+                        .fill(.black.opacity(0.26))
+                }
+        }
     }
 
     @MainActor
@@ -219,12 +227,7 @@ private struct BaGalleryVideoControlSurface: View {
 
     var body: some View {
         ZStack {
-            Circle()
-                .fill(.black.opacity(0.72))
-                .overlay {
-                    Circle()
-                        .strokeBorder(.white.opacity(0.26), lineWidth: 1)
-                }
+            controlBackground
                 .shadow(color: .black.opacity(0.22), radius: 14, y: 6)
 
             if isLoading {
@@ -240,5 +243,48 @@ private struct BaGalleryVideoControlSurface: View {
         }
         .frame(width: 58, height: 58)
     }
+
+    @ViewBuilder
+    private var controlBackground: some View {
+        if #available(iOS 26.0, macOS 26.0, visionOS 26.0, *) {
+            Circle()
+                .fill(.clear)
+                .glassEffect(.regular.tint(.white.opacity(0.12)).interactive(), in: Circle())
+        } else {
+            Circle()
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    Circle()
+                        .fill(.black.opacity(0.18))
+                }
+                .overlay {
+                    Circle()
+                        .strokeBorder(.white.opacity(0.24), lineWidth: 1)
+                }
+        }
+    }
 }
 
+private struct BaGalleryVideoToolbarIconSurface: View {
+    let systemImage: String
+
+    var body: some View {
+        Image(systemName: systemImage)
+            .font(.headline.weight(.semibold))
+            .foregroundStyle(.white)
+            .frame(width: 36, height: 36)
+            .contentShape(Circle())
+            .background {
+                Circle()
+                    .fill(.ultraThinMaterial)
+                    .overlay {
+                        Circle()
+                            .fill(.black.opacity(0.18))
+                    }
+            }
+            .overlay {
+                Circle()
+                    .strokeBorder(.white.opacity(0.18), lineWidth: 1)
+            }
+    }
+}
