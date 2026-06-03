@@ -160,7 +160,7 @@ struct BaOverviewIdentityCard: View {
                     onAccountSelected(account.id)
                 } label: {
                     Label {
-                        Text(accountSwitchTitle(for: account))
+                        Text(BaAccountDisplayText.switchTitle(for: account))
                     } icon: {
                         Image(systemName: accountSwitchSystemImage(for: account))
                     }
@@ -184,25 +184,6 @@ struct BaOverviewIdentityCard: View {
         .fixedSize(horizontal: true, vertical: false)
         .help(Text(BaL10n.string("ba.account.switch.title")))
         .accessibilityLabel(Text(BaL10n.string("ba.account.switch.title")))
-    }
-
-    private func accountSwitchTitle(for account: BaAccountProfile) -> String {
-        let title = account.title.trimmingCharacters(in: .whitespacesAndNewlines)
-        let nickname = account.profile.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
-        let friendCode = account.profile.friendCode.trimmingCharacters(in: .whitespacesAndNewlines)
-        var parts = [
-            title.isEmpty ? BaL10n.string("ba.account.new.defaultName") : title,
-            account.server.title,
-        ]
-
-        if nickname.isEmpty == false {
-            parts.append(nickname)
-        }
-        if friendCode.isEmpty == false {
-            parts.append("# \(friendCode)")
-        }
-
-        return parts.joined(separator: " · ")
     }
 
     private func accountSwitchSystemImage(for account: BaAccountProfile) -> String {

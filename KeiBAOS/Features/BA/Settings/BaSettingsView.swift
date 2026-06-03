@@ -75,7 +75,7 @@ struct BaSettingsView: View {
                     macSettingsRow(BaL10n.string("ba.account.switch.title")) {
                         Picker(BaL10n.string("ba.account.switch.title"), selection: accountBinding) {
                             ForEach(model.switchableAccounts) { account in
-                                Text(account.title)
+                                Text(BaAccountDisplayText.switchTitle(for: account))
                                     .tag(account.id)
                             }
                         }
@@ -338,7 +338,7 @@ struct BaSettingsView: View {
         Section {
             Picker(BaL10n.string("ba.account.switch.title"), selection: accountBinding) {
                 ForEach(model.switchableAccounts) { account in
-                    Text(account.title)
+                    Text(BaAccountDisplayText.switchTitle(for: account))
                         .tag(account.id)
                 }
             }

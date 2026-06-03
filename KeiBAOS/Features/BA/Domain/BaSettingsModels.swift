@@ -359,16 +359,11 @@ nonisolated struct BaAccountProfile: Identifiable, Codable, Equatable, Sendable 
     }
 
     var title: String {
-        displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? profile.nickname : displayName
+        BaAccountDisplayText.title(for: self)
     }
 
     var detail: String {
-        String(
-            format: BaL10n.string("ba.account.summary.format"),
-            server.title,
-            profile.nickname,
-            profile.friendCode
-        )
+        BaAccountDisplayText.detail(for: self)
     }
 
     static func legacyID(for server: BaServer) -> BaAccountID {
@@ -392,6 +387,70 @@ nonisolated struct BaAccountProfile: Identifiable, Codable, Equatable, Sendable 
             isEnabled: isEnabled,
             sortOrder: sortOrder >= 0 ? sortOrder : defaultSortOrder
         )
+    }
+}
+
+nonisolated enum BaAccountDisplayText {
+    static func title(for account: BaAccountProfile) -> String {
+        title(displayName: account.displayName, nickname: account.profile.nickname)
+    }
+
+    static func detail(for account: BaAccountProfile) -> String {
+        String(
+            format: BaL10n.string("ba.account.summary.format"),
+            account.server.title,
+            fallbackField(account.profile.nickname),
+            fallbackField(account.profile.friendCode)
+        )
+    }
+
+    static func compactDetail(for account: BaAccountProfile) -> String {
+        joined(secondaryParts(for: account, primaryTitle: title(for: account)))
+    }
+
+    static func switchTitle(for account: BaAccountProfile) -> String {
+        let primaryTitle = title(for: account)
+        return joined([primaryTitle] + secondaryParts(for: account, primaryTitle: primaryTitle))
+    }
+
+    private static func title(displayName: String, nickname: String) -> String {
+        let normalizedDisplayName = trimmed(displayName)
+        if normalizedDisplayName.isEmpty == false {
+            return normalizedDisplayName
+        }
+
+        let normalizedNickname = trimmed(nickname)
+        return normalizedNickname.isEmpty ? BaL10n.string("ba.account.new.defaultName") : normalizedNickname
+    }
+
+    private static func secondaryParts(for account: BaAccountProfile, primaryTitle: String) -> [String] {
+        var parts = [account.server.title]
+        let nickname = trimmed(account.profile.nickname)
+        if nickname.isEmpty == false && nickname != primaryTitle {
+            parts.append(nickname)
+        }
+
+        let friendCode = trimmed(account.profile.friendCode)
+        if friendCode.isEmpty == false {
+            parts.append("# \(friendCode)")
+        }
+        return parts
+    }
+
+    private static func fallbackField(_ value: String) -> String {
+        let normalized = trimmed(value)
+        return normalized.isEmpty ? BaL10n.string("ba.common.none") : normalized
+    }
+
+    private static func joined(_ parts: [String]) -> String {
+        parts
+            .map(trimmed)
+            .filter { $0.isEmpty == false }
+            .joined(separator: " · ")
+    }
+
+    private static func trimmed(_ value: String) -> String {
+        value.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 

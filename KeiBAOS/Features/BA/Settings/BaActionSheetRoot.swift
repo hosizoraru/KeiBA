@@ -1249,11 +1249,7 @@ private struct BaAccountManagementRow: View {
     }
 
     private var compactDetail: String {
-        [
-            account.server.title,
-            account.profile.nickname,
-            "# \(account.profile.friendCode)",
-        ].joined(separator: " · ")
+        BaAccountDisplayText.compactDetail(for: account)
     }
 
     private var actionsMenu: some View {
