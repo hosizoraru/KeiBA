@@ -66,8 +66,20 @@ struct BaOverviewIdentityCard: View {
         }
     }
 
-    private var displayName: String {
+    private var primaryTitle: String {
+        account.title == settings.nickname ? teacherDisplayName : account.title
+    }
+
+    private var teacherDisplayName: String {
         "\(settings.nickname) \(BaL10n.string("ba.office.nickname.suffix"))"
+    }
+
+    private var identitySubtitle: String {
+        var parts = [account.server.title]
+        if primaryTitle != teacherDisplayName {
+            parts.append(teacherDisplayName)
+        }
+        return parts.joined(separator: " · ")
     }
 
     private var identityHeader: some View {
@@ -126,7 +138,7 @@ struct BaOverviewIdentityCard: View {
     }
 
     private var identityName: some View {
-        Text(displayName)
+        Text(primaryTitle)
             .font(.title3.weight(.semibold))
             .foregroundStyle(.primary)
             .lineLimit(1)
@@ -134,7 +146,7 @@ struct BaOverviewIdentityCard: View {
     }
 
     private var accountSummary: some View {
-        Text(account.detail)
+        Text(identitySubtitle)
             .font(.caption)
             .foregroundStyle(.secondary)
             .lineLimit(2)
@@ -158,16 +170,15 @@ struct BaOverviewIdentityCard: View {
                 Label(BaL10n.string("ba.account.manage.title"), systemImage: "person.crop.circle.badge.plus")
             }
         } label: {
-            Label {
-                Text(account.title)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.78)
-            } icon: {
-                Image(systemName: "person.crop.circle")
-            }
+            Label(BaL10n.string("ba.account.switch.title"), systemImage: "person.crop.circle")
+                .labelStyle(.iconOnly)
+                .font(.body.weight(.semibold))
+                .frame(width: 34, height: 30)
+                .contentShape(Circle())
         }
         .buttonStyle(.glass)
         .fixedSize(horizontal: true, vertical: false)
+        .help(Text(BaL10n.string("ba.account.switch.title")))
         .accessibilityLabel(Text(BaL10n.string("ba.account.switch.title")))
     }
 
@@ -296,8 +307,10 @@ private struct BaFriendCodeInlineText: View {
 
     var body: some View {
         HStack(spacing: 5) {
-            Text(prefix)
-                .layoutPriority(0)
+            Image(systemName: "number")
+                .font(.caption.weight(.semibold))
+                .symbolRenderingMode(.hierarchical)
+                .accessibilityHidden(true)
 
             Text(friendCode)
                 .font(BaOverviewTextToken.number)
@@ -308,11 +321,9 @@ private struct BaFriendCodeInlineText: View {
         .foregroundStyle(.secondary)
         .lineLimit(1)
         .minimumScaleFactor(0.82)
-    }
-
-    private var prefix: String {
-        String(format: BaL10n.string("ba.office.friendCode.display.format"), "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        .accessibilityLabel(
+            Text(String(format: BaL10n.string("ba.office.friendCode.display.format"), friendCode))
+        )
     }
 }
 
