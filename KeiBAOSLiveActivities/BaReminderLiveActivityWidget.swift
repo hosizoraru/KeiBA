@@ -208,10 +208,14 @@ private struct BaReminderSmallLiveActivityView: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 7)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-        .background(
+        .background {
             ContainerRelativeShape()
-                .fill(Color.black.opacity(0.82))
-        )
+                .fill(.thinMaterial)
+                .overlay {
+                    ContainerRelativeShape()
+                        .fill(context.attributes.kind.tint.opacity(0.10))
+                }
+        }
     }
 
     private var fallbackBody: some View {
@@ -282,8 +286,8 @@ private struct BaReminderSmallAcknowledgeButton: View {
             .contentShape(.rect)
         }
         .font(.caption2.weight(.semibold))
-        .foregroundStyle(.white)
-        .background(.white.opacity(0.16), in: Capsule())
+        .foregroundStyle(.primary)
+        .background(.primary.opacity(0.10), in: Capsule())
         .buttonStyle(.plain)
         .accessibilityLabel(title)
     }
