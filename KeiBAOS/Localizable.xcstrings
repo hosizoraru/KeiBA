@@ -3935,6 +3935,9 @@
         }
       }
     },
+    "ba.media.zoomable.hint" : {
+
+    },
     "ba.music.action.cache" : {
       "localizations" : {
         "en" : {
@@ -6169,95 +6172,6 @@
         }
       }
     },
-    "ba.office.nickname.label" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nickname"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ニックネーム"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "昵称"
-          }
-        }
-      }
-    },
-    "ba.office.nickname.prompt" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Teacher name shown on the ID card"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "IDカードに表示する先生名"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "显示在 ID 卡上的老师名称"
-          }
-        }
-      }
-    },
-    "ba.office.nickname.suffix" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sensei"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "先生"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "老师"
-          }
-        }
-      }
-    },
-    "ba.office.nickname.value" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kei"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kei"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kei"
-          }
-        }
-      }
-    },
     "ba.office.name.cn" : {
       "localizations" : {
         "en" : {
@@ -6430,6 +6344,95 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "夏莱"
+          }
+        }
+      }
+    },
+    "ba.office.nickname.label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nickname"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ニックネーム"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "昵称"
+          }
+        }
+      }
+    },
+    "ba.office.nickname.prompt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teacher name shown on the ID card"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IDカードに表示する先生名"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示在 ID 卡上的老师名称"
+          }
+        }
+      }
+    },
+    "ba.office.nickname.suffix" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensei"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "先生"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "老师"
+          }
+        }
+      }
+    },
+    "ba.office.nickname.value" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kei"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kei"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kei"
           }
         }
       }
@@ -15112,6 +15115,9 @@
         }
       }
     },
+    "Check AP Status" : {
+
+    },
     "KeiBAOS" : {
 
     },
@@ -15136,6 +15142,27 @@
           }
         }
       }
+    },
+    "Open KeiBAOS to check your AP status and café status." : {
+
+    },
+    "Open KeiBAOS to search for %@." : {
+
+    },
+    "Opens KeiBAOS to search for a student." : {
+
+    },
+    "Please say a student name to search." : {
+
+    },
+    "Search Student" : {
+
+    },
+    "Shows a reminder to check your AP status in KeiBAOS." : {
+
+    },
+    "Student Name" : {
+
     }
   },
   "version" : "1.0"
