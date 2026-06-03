@@ -81,16 +81,10 @@ struct BaPlatformMediaPreviewSheet: View {
                 previewContent
 
                 if request.detail.baGalleryIsBlank == false {
-                    Text(request.detail)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 18)
-                        .padding(.vertical, 12)
-                        .background(.regularMaterial)
+                    mediaDetailBar
                 }
             }
+            .background(AppBackground())
             .navigationTitle(request.title)
             .platformInlineNavigationTitle()
             .toolbar {
@@ -115,10 +109,24 @@ struct BaPlatformMediaPreviewSheet: View {
         #if os(iOS)
             .presentationDetents([.large])
             .presentationDragIndicator(.visible)
+            .presentationContentInteraction(.scrolls)
         #endif
         .task(id: request.id) {
             await loadPreviewFile()
         }
+    }
+
+    private var mediaDetailBar: some View {
+        Text(request.detail)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .liquidGlassSurface(cornerRadius: 18, tint: .white.opacity(0.055), isInteractive: false)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
     }
 
     @ViewBuilder
