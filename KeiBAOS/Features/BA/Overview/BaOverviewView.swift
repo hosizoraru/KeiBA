@@ -27,8 +27,11 @@ struct BaOverviewView: View {
                 BaOverviewAdaptiveCards {
                     BaOverviewIdentityCard(
                         settings: model.settings,
+                        account: model.currentAccount,
+                        accounts: model.accounts,
                         watchSyncState: model.watchSyncState,
-                        onServerSelected: selectServer,
+                        onAccountSelected: selectAccount,
+                        onManageAccounts: { onOpenSheet(.editOffice) },
                         onOpenWatchSettings: { onOpenSheet(.watch) }
                     )
                 } ap: {
@@ -71,8 +74,8 @@ struct BaOverviewView: View {
         }
     }
 
-    private func selectServer(_ server: BaServer) {
-        model.selectServer(server)
+    private func selectAccount(_ accountID: BaAccountID) {
+        model.selectAccount(accountID)
         Task {
             async let activities: Void = model.loadActivitiesIfNeeded()
             async let pools: Void = model.loadPoolsIfNeeded()

@@ -9,6 +9,19 @@ import SwiftUI
 
 extension View {
     @ViewBuilder
+    func baAccountDisplayNameTextInput() -> some View {
+        #if os(iOS)
+            self
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.words)
+                .submitLabel(.done)
+        #else
+            self
+                .autocorrectionDisabled()
+        #endif
+    }
+
+    @ViewBuilder
     func baNicknameTextInput() -> some View {
         #if os(iOS)
             self

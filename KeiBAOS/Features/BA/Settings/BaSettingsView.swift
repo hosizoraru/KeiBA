@@ -72,23 +72,16 @@ struct BaSettingsView: View {
                     title: BaL10n.string("ba.settings.identity.section"),
                     footer: BaL10n.string("ba.settings.identity.footer")
                 ) {
-                    macSettingsRow(BaL10n.string("ba.settings.server.title")) {
-                        Picker(BaL10n.string("ba.settings.server.title"), selection: serverBinding) {
-                            ForEach(BaServer.allCases) { server in
-                                Text(server.title)
-                                    .tag(server)
+                    macSettingsRow(BaL10n.string("ba.account.switch.title")) {
+                        Picker(BaL10n.string("ba.account.switch.title"), selection: accountBinding) {
+                            ForEach(model.accounts) { account in
+                                Text(account.title)
+                                    .tag(account.id)
                             }
                         }
                         .labelsHidden()
                         .pickerStyle(.menu)
-                        .frame(width: 150, alignment: .leading)
-                    }
-
-                    macToggleRow {
-                        Toggle(
-                            BaL10n.string("ba.settings.identity.independent.title"),
-                            isOn: globalBoolBinding(\.identityIndependentByServer)
-                        )
+                        .frame(width: 220, alignment: .leading)
                     }
 
                     macSettingsRow(BaL10n.string("ba.office.nickname.label")) {
@@ -343,17 +336,12 @@ struct BaSettingsView: View {
 
     private var serverIdentitySection: some View {
         Section {
-            Picker(BaL10n.string("ba.settings.server.title"), selection: serverBinding) {
-                ForEach(BaServer.allCases) { server in
-                    Text(server.title)
-                        .tag(server)
+            Picker(BaL10n.string("ba.account.switch.title"), selection: accountBinding) {
+                ForEach(model.accounts) { account in
+                    Text(account.title)
+                        .tag(account.id)
                 }
             }
-
-            Toggle(
-                BaL10n.string("ba.settings.identity.independent.title"),
-                isOn: globalBoolBinding(\.identityIndependentByServer)
-            )
 
             BaDeferredTextField(
                 title: BaL10n.string("ba.office.nickname.label"),
@@ -567,11 +555,11 @@ struct BaSettingsView: View {
         }
     }
 
-    private var serverBinding: Binding<BaServer> {
+    private var accountBinding: Binding<BaAccountID> {
         Binding(
-            get: { model.settings.server },
-            set: { server in
-                model.selectServer(server)
+            get: { model.currentAccount.id },
+            set: { accountID in
+                model.selectAccount(accountID)
                 Task {
                     await model.loadActivitiesIfNeeded()
                     await model.loadPoolsIfNeeded()

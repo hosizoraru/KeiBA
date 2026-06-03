@@ -608,17 +608,33 @@ private enum BaNotificationAuthorizationStatus: Equatable {
 private struct BaEditOfficeSheet: View {
     @Environment(BaAppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
-    @State private var draft = BaAppSettings.defaults()
+    @State private var editorDraft: BaAccountEditorDraft?
+    @State private var pendingDeleteAccountID: BaAccountID?
 
     var body: some View {
         content
-            .onAppear {
-                draft = model.settings
+            .sheet(item: $editorDraft) { draft in
+                BaAccountEditorSheet(initialDraft: draft) { savedDraft in
+                    save(savedDraft)
+                }
             }
-            .onChange(of: draft.friendCode) { _, value in
-                let sanitized = BaFriendCodeFormat.sanitizedDraft(value)
-                if sanitized != value {
-                    draft.friendCode = sanitized
+            .confirmationDialog(
+                BaL10n.string("ba.account.delete.title"),
+                isPresented: deleteConfirmationBinding,
+                titleVisibility: .visible
+            ) {
+                Button(BaL10n.string("ba.account.delete.confirm"), role: .destructive) {
+                    if let pendingDeleteAccountID {
+                        model.deleteAccount(id: pendingDeleteAccountID)
+                    }
+                    pendingDeleteAccountID = nil
+                }
+                Button(BaL10n.string("ba.common.cancel"), role: .cancel) {
+                    pendingDeleteAccountID = nil
+                }
+            } message: {
+                if let pendingDeleteAccount {
+                    Text(String(format: BaL10n.string("ba.account.delete.message.format"), pendingDeleteAccount.title))
                 }
             }
     }
@@ -649,71 +665,18 @@ private struct BaEditOfficeSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     macEditGroup(
-                        title: BaL10n.string("ba.sheet.edit.identity.title"),
-                        footer: BaL10n.string("ba.sheet.edit.identity.footer")
+                        title: BaL10n.string("ba.account.management.section"),
+                        footer: BaL10n.string("ba.account.management.footer")
                     ) {
-                        macToggleRow {
-                            Toggle(
-                                BaL10n.string("ba.settings.identity.independent.title"),
-                                isOn: $draft.identityIndependentByServer
-                            )
-                        }
-
-                        macEditRow(BaL10n.string("ba.office.nickname.label")) {
-                            TextField(
-                                BaL10n.string("ba.office.nickname.label"),
-                                text: $draft.nickname,
-                                prompt: Text(BaL10n.string("ba.office.nickname.prompt"))
-                            )
-                            .baNicknameTextInput()
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 280)
-                        }
-
-                        macEditRow(BaL10n.string("ba.office.friendCode.label")) {
-                            TextField(
-                                BaL10n.string("ba.office.friendCode.label"),
-                                text: $draft.friendCode,
-                                prompt: Text(BaL10n.string("ba.office.friendCode.prompt"))
-                            )
-                            .textFieldStyle(.roundedBorder)
-                            .baFriendCodeTextInput()
-                            .frame(width: 180)
-                        }
-
-                        macEditRow(BaL10n.string("ba.office.server.label")) {
-                            Picker(BaL10n.string("ba.office.server.label"), selection: $draft.server) {
-                                ForEach(BaServer.allCases) { server in
-                                    Text(server.title)
-                                        .tag(server)
-                                }
-                            }
-                            .labelsHidden()
-                            .pickerStyle(.menu)
-                            .frame(width: 140, alignment: .leading)
+                        Button {
+                            startAddAccount()
+                        } label: {
+                            Label(BaL10n.string("ba.account.add.title"), systemImage: "person.crop.circle.badge.plus")
                         }
                     }
 
-                    macEditGroup(
-                        title: BaL10n.string("ba.sheet.edit.resources.title"),
-                        footer: BaL10n.string("ba.sheet.edit.resources.footer")
-                    ) {
-                        macEditRow(BaL10n.string("ba.office.ap.limit.title")) {
-                            TextField("240", value: $draft.apLimit, format: .number)
-                                .textFieldStyle(.roundedBorder)
-                                .multilineTextAlignment(.trailing)
-                                .baNumberTextInput()
-                                .frame(width: 96)
-                        }
-
-                        macEditRow(BaL10n.string("ba.cafe.level.title")) {
-                            Stepper(value: $draft.cafeLevel, in: 1 ... 10) {
-                                Text("Lv\(draft.cafeLevel)")
-                                    .monospacedDigit()
-                                    .frame(width: 48, alignment: .leading)
-                            }
-                            .frame(width: 150, alignment: .leading)
-                        }
+                    ForEach(accountListItems) { item in
+                        accountManagementRow(item)
                     }
                 }
                 .padding(24)
@@ -729,14 +692,14 @@ private struct BaEditOfficeSheet: View {
                 .keyboardShortcut(.cancelAction)
 
                 Button(BaL10n.string("ba.common.done")) {
-                    saveAndDismiss()
+                    dismiss()
                 }
                 .keyboardShortcut(.defaultAction)
             }
             .padding(.horizontal, 24)
             .padding(.vertical, 16)
         }
-        .frame(width: 640, height: 520)
+        .frame(width: 680, height: 640)
     }
 
     private func macEditGroup<Content: View>(
@@ -761,79 +724,29 @@ private struct BaEditOfficeSheet: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
-
-    private func macEditRow<Content: View>(
-        _ title: String,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 16) {
-            Text(title)
-                .foregroundStyle(.secondary)
-                .frame(width: 96, alignment: .trailing)
-
-            content()
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-
-    private func macToggleRow<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 16) {
-            Spacer()
-                .frame(width: 96)
-            content()
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
     #endif
 
     private var touchContent: some View {
         NavigationStack {
             Form {
                 Section {
-                    Toggle(
-                        BaL10n.string("ba.settings.identity.independent.title"),
-                        isOn: $draft.identityIndependentByServer
-                    )
-                    TextField(
-                        BaL10n.string("ba.office.nickname.label"),
-                        text: $draft.nickname,
-                        prompt: Text(BaL10n.string("ba.office.nickname.prompt"))
-                    )
-                    .baNicknameTextInput()
-                    TextField(
-                        BaL10n.string("ba.office.friendCode.label"),
-                        text: $draft.friendCode,
-                        prompt: Text(BaL10n.string("ba.office.friendCode.prompt"))
-                    )
-                    .baFriendCodeTextInput()
-                    Picker(BaL10n.string("ba.office.server.label"), selection: $draft.server) {
-                        ForEach(BaServer.allCases) { server in
-                            Text(server.title)
-                                .tag(server)
-                        }
+                    Button {
+                        startAddAccount()
+                    } label: {
+                        Label(BaL10n.string("ba.account.add.title"), systemImage: "person.crop.circle.badge.plus")
                     }
                 } header: {
-                    Text(BaL10n.string("ba.sheet.edit.identity.title"))
+                    Text(BaL10n.string("ba.account.management.section"))
                 } footer: {
-                    Text(BaL10n.string("ba.sheet.edit.identity.footer"))
+                    Text(BaL10n.string("ba.account.management.footer"))
                 }
 
                 Section {
-                    LabeledContent(BaL10n.string("ba.office.ap.limit.title")) {
-                        TextField("240", value: $draft.apLimit, format: .number)
-                            .multilineTextAlignment(.trailing)
-                            .baNumberTextInput()
-                    }
-                    Stepper(value: $draft.cafeLevel, in: 1 ... 10) {
-                        LabeledContent(BaL10n.string("ba.cafe.level.title")) {
-                            Text("Lv\(draft.cafeLevel)")
-                                .monospacedDigit()
-                        }
+                    ForEach(accountListItems) { item in
+                        accountManagementRow(item)
                     }
                 } header: {
-                    Text(BaL10n.string("ba.sheet.edit.resources.title"))
-                } footer: {
-                    Text(BaL10n.string("ba.sheet.edit.resources.footer"))
+                    Text(BaL10n.string("ba.account.list.title"))
                 }
             }
             .navigationTitle(BaPresentedSheet.editOffice.title)
@@ -847,21 +760,310 @@ private struct BaEditOfficeSheet: View {
 
                 ToolbarItem(placement: .confirmationAction) {
                     Button(BaL10n.string("ba.common.done")) {
-                        saveAndDismiss()
+                        dismiss()
                     }
                 }
             }
         }
     }
 
-    private func saveAndDismiss() {
-        model.updateSettings { settings in
-            settings = draft
-            settings.friendCode = BaFriendCodeFormat.normalized(settings.friendCode)
-            settings.apLimit = min(max(settings.apLimit, 0), BaTimeMath.apLimitMax)
-            settings.cafeLevel = min(max(settings.cafeLevel, 1), 10)
+    private var accountListItems: [BaAccountListItem] {
+        let accounts = model.accounts
+        return accounts.enumerated().map { index, account in
+            BaAccountListItem(
+                index: index,
+                account: account,
+                totalCount: accounts.count
+            )
         }
-        dismiss()
+    }
+
+    private func accountManagementRow(_ item: BaAccountListItem) -> some View {
+        BaAccountManagementRow(
+            account: item.account,
+            isActive: item.account.id == model.currentAccount.id,
+            canDelete: item.totalCount > 1,
+            canMoveUp: item.index > 0,
+            canMoveDown: item.index < item.totalCount - 1,
+            onSelect: { model.selectAccount(item.account.id) },
+            onEdit: { editorDraft = BaAccountEditorDraft(account: item.account) },
+            onEnabledChange: { model.setAccountEnabled(id: item.account.id, isEnabled: $0) },
+            onMove: { model.moveAccount(id: item.account.id, offset: $0) },
+            onDelete: { pendingDeleteAccountID = item.account.id }
+        )
+    }
+
+    private var deleteConfirmationBinding: Binding<Bool> {
+        Binding(
+            get: { pendingDeleteAccountID != nil },
+            set: { isPresented in
+                if isPresented == false {
+                    pendingDeleteAccountID = nil
+                }
+            }
+        )
+    }
+
+    private var pendingDeleteAccount: BaAccountProfile? {
+        guard let pendingDeleteAccountID else { return nil }
+        return model.accounts.first { $0.id == pendingDeleteAccountID }
+    }
+
+    private func startAddAccount() {
+        editorDraft = BaAccountEditorDraft.new(defaultServer: model.currentAccount.server)
+    }
+
+    private func save(_ draft: BaAccountEditorDraft) {
+        if let editingAccountID = draft.editingAccountID {
+            model.updateAccount(
+                id: editingAccountID,
+                displayName: draft.displayName,
+                server: draft.server,
+                nickname: draft.nickname,
+                friendCode: draft.friendCode,
+                isEnabled: draft.isEnabled
+            )
+        } else {
+            model.addAccount(
+                displayName: draft.displayName,
+                server: draft.server,
+                nickname: draft.nickname,
+                friendCode: draft.friendCode
+            )
+        }
+    }
+}
+
+private struct BaAccountListItem: Identifiable {
+    let index: Int
+    let account: BaAccountProfile
+    let totalCount: Int
+
+    var id: BaAccountID {
+        account.id
+    }
+}
+
+private struct BaAccountEditorDraft: Identifiable {
+    var editingAccountID: BaAccountID?
+    var displayName: String
+    var server: BaServer
+    var nickname: String
+    var friendCode: String
+    var isEnabled: Bool
+
+    var id: String {
+        editingAccountID ?? "new-\(server.rawValue)"
+    }
+
+    static func new(defaultServer: BaServer) -> BaAccountEditorDraft {
+        let defaults = BaServerProfile.defaults()
+        return BaAccountEditorDraft(
+            editingAccountID: nil,
+            displayName: BaL10n.string("ba.account.new.defaultName"),
+            server: defaultServer,
+            nickname: defaults.nickname,
+            friendCode: defaults.friendCode,
+            isEnabled: true
+        )
+    }
+
+    init(account: BaAccountProfile) {
+        editingAccountID = account.id
+        displayName = account.displayName
+        server = account.server
+        nickname = account.profile.nickname
+        friendCode = account.profile.friendCode
+        isEnabled = account.isEnabled
+    }
+
+    private init(
+        editingAccountID: BaAccountID?,
+        displayName: String,
+        server: BaServer,
+        nickname: String,
+        friendCode: String,
+        isEnabled: Bool
+    ) {
+        self.editingAccountID = editingAccountID
+        self.displayName = displayName
+        self.server = server
+        self.nickname = nickname
+        self.friendCode = friendCode
+        self.isEnabled = isEnabled
+    }
+}
+
+private struct BaAccountEditorSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var draft: BaAccountEditorDraft
+
+    let onSave: (BaAccountEditorDraft) -> Void
+
+    init(initialDraft: BaAccountEditorDraft, onSave: @escaping (BaAccountEditorDraft) -> Void) {
+        _draft = State(initialValue: initialDraft)
+        self.onSave = onSave
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TextField(
+                        BaL10n.string("ba.account.displayName.title"),
+                        text: $draft.displayName,
+                        prompt: Text(BaL10n.string("ba.account.displayName.prompt"))
+                    )
+                    .baAccountDisplayNameTextInput()
+
+                    TextField(
+                        BaL10n.string("ba.office.nickname.label"),
+                        text: $draft.nickname,
+                        prompt: Text(BaL10n.string("ba.office.nickname.prompt"))
+                    )
+                    .baNicknameTextInput()
+
+                    TextField(
+                        BaL10n.string("ba.office.friendCode.label"),
+                        text: $draft.friendCode,
+                        prompt: Text(BaL10n.string("ba.office.friendCode.prompt"))
+                    )
+                    .baFriendCodeTextInput()
+                    .onChange(of: draft.friendCode) { _, value in
+                        let sanitized = BaFriendCodeFormat.sanitizedDraft(value)
+                        if sanitized != value {
+                            draft.friendCode = sanitized
+                        }
+                    }
+
+                    Picker(BaL10n.string("ba.office.server.label"), selection: $draft.server) {
+                        ForEach(BaServer.allCases) { server in
+                            Text(server.title)
+                                .tag(server)
+                        }
+                    }
+
+                    Toggle(BaL10n.string("ba.account.enabled.title"), isOn: $draft.isEnabled)
+                } footer: {
+                    Text(BaL10n.string("ba.account.editor.footer"))
+                }
+            }
+            .navigationTitle(draft.editingAccountID == nil ? BaL10n.string("ba.account.add.title") : BaL10n.string("ba.account.edit.title"))
+            .scrollDismissesKeyboard(.interactively)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(BaL10n.string("ba.common.cancel")) {
+                        dismiss()
+                    }
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(BaL10n.string("ba.common.done")) {
+                        var saved = draft
+                        saved.friendCode = BaFriendCodeFormat.normalized(saved.friendCode)
+                        onSave(saved)
+                        dismiss()
+                    }
+                    .disabled(draft.displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+                        draft.nickname.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+    }
+}
+
+private struct BaAccountManagementRow: View {
+    let account: BaAccountProfile
+    let isActive: Bool
+    let canDelete: Bool
+    let canMoveUp: Bool
+    let canMoveDown: Bool
+    let onSelect: () -> Void
+    let onEdit: () -> Void
+    let onEnabledChange: (Bool) -> Void
+    let onMove: (Int) -> Void
+    let onDelete: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: account.isEnabled ? "person.crop.circle" : "person.crop.circle.badge.xmark")
+                    .font(.title2)
+                    .foregroundStyle(isActive ? BaDesign.blue : .secondary)
+                    .frame(width: 30)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
+                        Text(account.title)
+                            .font(.headline)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.82)
+
+                        if isActive {
+                            Text(BaL10n.string("ba.account.active.badge"))
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(BaDesign.blue)
+                        }
+                    }
+
+                    Text(account.detail)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+
+                Spacer(minLength: 8)
+
+                Toggle(BaL10n.string("ba.account.enabled.title"), isOn: enabledBinding)
+                    .labelsHidden()
+            }
+
+            HStack(spacing: 8) {
+                Button(isActive ? BaL10n.string("ba.account.active.action") : BaL10n.string("ba.account.use.action")) {
+                    onSelect()
+                }
+                .disabled(isActive)
+
+                Button(BaL10n.string("ba.account.edit.title")) {
+                    onEdit()
+                }
+
+                Spacer(minLength: 0)
+
+                Button {
+                    onMove(-1)
+                } label: {
+                    Image(systemName: "arrow.up")
+                }
+                .disabled(canMoveUp == false)
+                .accessibilityLabel(Text(BaL10n.string("ba.account.moveUp.title")))
+
+                Button {
+                    onMove(1)
+                } label: {
+                    Image(systemName: "arrow.down")
+                }
+                .disabled(canMoveDown == false)
+                .accessibilityLabel(Text(BaL10n.string("ba.account.moveDown.title")))
+
+                Button(role: .destructive) {
+                    onDelete()
+                } label: {
+                    Image(systemName: "trash")
+                }
+                .disabled(canDelete == false)
+                .accessibilityLabel(Text(BaL10n.string("ba.account.delete.title")))
+            }
+            .buttonStyle(.borderless)
+        }
+        .padding(.vertical, 4)
+    }
+
+    private var enabledBinding: Binding<Bool> {
+        Binding(
+            get: { account.isEnabled },
+            set: onEnabledChange
+        )
     }
 }
 

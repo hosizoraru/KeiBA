@@ -43,8 +43,11 @@ struct BaOverviewIdentityCard: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     let settings: BaAppSettings
+    let account: BaAccountProfile
+    let accounts: [BaAccountProfile]
     let watchSyncState: BaWatchSyncState
-    let onServerSelected: (BaServer) -> Void
+    let onAccountSelected: (BaAccountID) -> Void
+    let onManageAccounts: () -> Void
     let onOpenWatchSettings: () -> Void
 
     @State private var copiedFriendCode = false
@@ -84,6 +87,7 @@ struct BaOverviewIdentityCard: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 identityName
+                accountSummary
 
                 BaFriendCodeCopyLine(
                     friendCode: settings.friendCode,
@@ -95,7 +99,7 @@ struct BaOverviewIdentityCard: View {
 
             Spacer(minLength: 8)
 
-            serverPicker
+            accountMenu
         }
     }
 
@@ -109,9 +113,10 @@ struct BaOverviewIdentityCard: View {
 
                 Spacer(minLength: 6)
 
-                serverPicker
+                accountMenu
             }
 
+            accountSummary
             BaFriendCodeCopyPill(
                 friendCode: settings.friendCode,
                 isCopied: copiedFriendCode,
@@ -128,16 +133,42 @@ struct BaOverviewIdentityCard: View {
             .minimumScaleFactor(0.78)
     }
 
-    private var serverPicker: some View {
-        Picker(BaL10n.string("ba.settings.server.title"), selection: serverBinding) {
-            ForEach(BaServer.allCases) { server in
-                Text(server.title)
-                    .tag(server)
+    private var accountSummary: some View {
+        Text(account.detail)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .lineLimit(2)
+            .minimumScaleFactor(0.82)
+    }
+
+    private var accountMenu: some View {
+        Menu {
+            Picker(BaL10n.string("ba.account.switch.title"), selection: accountBinding) {
+                ForEach(accounts) { account in
+                    Label {
+                        Text(account.title)
+                    } icon: {
+                        Image(systemName: account.isEnabled ? "person.crop.circle" : "person.crop.circle.badge.xmark")
+                    }
+                    .tag(account.id)
+                }
+            }
+            Divider()
+            Button(action: onManageAccounts) {
+                Label(BaL10n.string("ba.account.manage.title"), systemImage: "person.crop.circle.badge.plus")
+            }
+        } label: {
+            Label {
+                Text(account.title)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.78)
+            } icon: {
+                Image(systemName: "person.crop.circle")
             }
         }
-        .labelsHidden()
-        .pickerStyle(.menu)
+        .buttonStyle(.glass)
         .fixedSize(horizontal: true, vertical: false)
+        .accessibilityLabel(Text(BaL10n.string("ba.account.switch.title")))
     }
 
     @ViewBuilder
@@ -178,10 +209,10 @@ struct BaOverviewIdentityCard: View {
         #endif
     }
 
-    private var serverBinding: Binding<BaServer> {
+    private var accountBinding: Binding<BaAccountID> {
         Binding(
-            get: { settings.server },
-            set: onServerSelected
+            get: { account.id },
+            set: onAccountSelected
         )
     }
 
