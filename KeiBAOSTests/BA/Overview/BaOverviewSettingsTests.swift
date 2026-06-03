@@ -88,6 +88,116 @@ final class BaOverviewSettingsTests: XCTestCase {
         XCTAssertEqual(loaded.profile(for: .cn).apCurrent, 90)
         XCTAssertEqual(loaded.profile(for: .global).apCurrent, 120)
         XCTAssertEqual(loaded.profile(for: .jp).apCurrent, 150)
+        XCTAssertEqual(loaded.accounts.map(\.server), [.cn, .global, .jp])
+        XCTAssertEqual(loaded.selectedAccount.server, .jp)
+    }
+
+    func testMultipleAccountsOnSameServerSwitchOfficeProfile() {
+        let base = Date(timeIntervalSince1970: 1_700_000_000)
+        var primaryProfile = BaServerProfile.defaults(now: base)
+        primaryProfile.nickname = "CN Main"
+        primaryProfile.friendCode = "main0001"
+        primaryProfile.apCurrent = 42
+        primaryProfile.cafeApCurrent = 120
+
+        var secondaryProfile = BaServerProfile.defaults(now: base.addingTimeInterval(60))
+        secondaryProfile.nickname = "CN Alt"
+        secondaryProfile.friendCode = "alt00002"
+        secondaryProfile.apCurrent = 88
+        secondaryProfile.cafeApCurrent = 240
+
+        var envelope = BaSettingsEnvelope.defaults(now: base)
+        envelope.accounts = [
+            BaAccountProfile(
+                id: "cn-main",
+                server: .cn,
+                displayName: "国服主号",
+                profile: primaryProfile,
+                sortOrder: 0
+            ),
+            BaAccountProfile(
+                id: "cn-alt",
+                server: .cn,
+                displayName: "国服小号",
+                profile: secondaryProfile,
+                sortOrder: 1
+            ),
+        ]
+        envelope.selectedAccountID = "cn-main"
+        envelope.selectedServer = .cn
+
+        let primarySettings = envelope.normalized().flattenedSettings()
+        XCTAssertEqual(primarySettings.server, .cn)
+        XCTAssertEqual(primarySettings.nickname, "CN Main")
+        XCTAssertEqual(primarySettings.friendCode, "MAIN0001")
+        XCTAssertEqual(primarySettings.apCurrent, 42)
+        XCTAssertEqual(primarySettings.cafeApCurrent, 120)
+
+        envelope.setSelectedAccountID("cn-alt")
+        let secondarySettings = envelope.normalized().flattenedSettings()
+        XCTAssertEqual(secondarySettings.server, .cn)
+        XCTAssertEqual(secondarySettings.nickname, "CN Alt")
+        XCTAssertEqual(secondarySettings.friendCode, "ALT00002")
+        XCTAssertEqual(secondarySettings.apCurrent, 88)
+        XCTAssertEqual(secondarySettings.cafeApCurrent, 240)
+    }
+
+    func testCurrentProfileWritesOnlySelectedAccount() {
+        let base = Date(timeIntervalSince1970: 1_700_000_000)
+        var first = BaServerProfile.defaults(now: base)
+        first.nickname = "First"
+        first.friendCode = "first001"
+        first.apCurrent = 12
+        var second = BaServerProfile.defaults(now: base)
+        second.nickname = "Second"
+        second.friendCode = "second02"
+        second.apCurrent = 34
+
+        var envelope = BaSettingsEnvelope.defaults(now: base)
+        envelope.accounts = [
+            BaAccountProfile(id: "cn-first", server: .cn, displayName: "First", profile: first, sortOrder: 0),
+            BaAccountProfile(id: "cn-second", server: .cn, displayName: "Second", profile: second, sortOrder: 1),
+        ]
+        envelope.selectedAccountID = "cn-second"
+        envelope.selectedServer = .cn
+
+        var updated = envelope.selectedAccount.profile
+        updated.nickname = "Second Updated"
+        updated.friendCode = "upd00002"
+        updated.apCurrent = 99
+        envelope.setProfile(updated, for: .cn)
+        let normalized = envelope.normalized()
+
+        XCTAssertEqual(normalized.accounts.first { $0.id == "cn-first" }?.profile.nickname, "First")
+        XCTAssertEqual(normalized.accounts.first { $0.id == "cn-first" }?.profile.apCurrent, 12)
+        XCTAssertEqual(normalized.accounts.first { $0.id == "cn-second" }?.profile.nickname, "Second Updated")
+        XCTAssertEqual(normalized.accounts.first { $0.id == "cn-second" }?.profile.friendCode, "UPD00002")
+        XCTAssertEqual(normalized.accounts.first { $0.id == "cn-second" }?.profile.apCurrent, 99)
+        XCTAssertEqual(normalized.flattenedSettings().nickname, "Second Updated")
+    }
+
+    func testDeletingSelectedAccountFallsBackToNextEnabledAccount() {
+        let base = Date(timeIntervalSince1970: 1_700_000_000)
+        var cnProfile = BaServerProfile.defaults(now: base)
+        cnProfile.nickname = "CN Main"
+        var jpProfile = BaServerProfile.defaults(now: base)
+        jpProfile.nickname = "JP Main"
+
+        var envelope = BaSettingsEnvelope.defaults(now: base)
+        envelope.accounts = [
+            BaAccountProfile(id: "cn-main", server: .cn, displayName: "CN", profile: cnProfile, isEnabled: false, sortOrder: 0),
+            BaAccountProfile(id: "jp-main", server: .jp, displayName: "JP", profile: jpProfile, sortOrder: 1),
+        ]
+        envelope.selectedAccountID = "cn-main"
+        envelope.selectedServer = .cn
+
+        envelope.deleteAccount(id: "cn-main")
+        let normalized = envelope.normalized()
+
+        XCTAssertEqual(normalized.accounts.map(\.id), ["jp-main"])
+        XCTAssertEqual(normalized.selectedAccountID, "jp-main")
+        XCTAssertEqual(normalized.selectedServer, .jp)
+        XCTAssertEqual(normalized.flattenedSettings().nickname, "JP Main")
     }
 
     func testFriendCodeKeepsEightUppercaseLettersOrDigits() {

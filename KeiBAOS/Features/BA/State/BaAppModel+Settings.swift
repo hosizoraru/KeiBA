@@ -8,8 +8,16 @@
 import Foundation
 
 extension BaAppModel {
+    var currentAccount: BaAccountProfile {
+        envelope.selectedAccount
+    }
+
+    var accounts: [BaAccountProfile] {
+        envelope.accounts
+    }
+
     var currentProfile: BaServerProfile {
-        envelope.profile(for: envelope.selectedServer)
+        envelope.selectedAccount.profile
     }
 
     var userData: BaUserDataEnvelope {
@@ -28,10 +36,25 @@ extension BaAppModel {
     }
 
     func selectServer(_ server: BaServer) {
-        guard envelope.selectedServer != server else { return }
+        guard let account = envelope.accounts.first(where: { $0.server == server && $0.isEnabled }) ??
+            envelope.accounts.first(where: { $0.server == server })
+        else {
+            addAccount(
+                displayName: server.title,
+                server: server,
+                nickname: BaServerProfile.defaults().nickname,
+                friendCode: BaServerProfile.defaults().friendCode
+            )
+            return
+        }
+        selectAccount(account.id)
+    }
+
+    func selectAccount(_ accountID: BaAccountID) {
+        guard envelope.selectedAccountID != accountID else { return }
         let previousServer = settings.server
         let previousEnvelope = envelope
-        envelope.selectedServer = server
+        envelope.setSelectedAccountID(accountID)
         persistEnvelope(previousServer: previousServer, previousEnvelope: previousEnvelope)
     }
 
@@ -53,7 +76,6 @@ extension BaAppModel {
         transform(&profile)
         guard profile != currentProfile else { return }
         envelope.setProfile(profile, for: envelope.selectedServer)
-        synchronizeSharedIdentityIfNeeded(from: envelope.selectedServer)
         persistEnvelope(previousServer: previousServer, previousEnvelope: previousEnvelope)
     }
 
@@ -63,7 +85,70 @@ extension BaAppModel {
         let previousGlobalSettings = envelope.globalSettings
         transform(&envelope.globalSettings)
         guard envelope.globalSettings != previousGlobalSettings else { return }
-        synchronizeSharedIdentityIfNeeded(from: envelope.selectedServer)
+        persistEnvelope(previousServer: previousServer, previousEnvelope: previousEnvelope)
+    }
+
+    func addAccount(
+        displayName: String,
+        server: BaServer,
+        nickname: String,
+        friendCode: String
+    ) {
+        let previousServer = settings.server
+        let previousEnvelope = envelope
+        var profile = BaServerProfile.defaults(now: Date())
+        profile.nickname = nickname
+        profile.friendCode = friendCode
+        let account = BaAccountProfile(
+            server: server,
+            displayName: displayName,
+            profile: profile,
+            sortOrder: envelope.accounts.count
+        )
+        envelope.addAccount(account, select: true)
+        persistEnvelope(previousServer: previousServer, previousEnvelope: previousEnvelope)
+    }
+
+    func updateAccount(
+        id accountID: BaAccountID,
+        displayName: String,
+        server: BaServer,
+        nickname: String,
+        friendCode: String,
+        isEnabled: Bool
+    ) {
+        let previousServer = settings.server
+        let previousEnvelope = envelope
+        envelope.updateAccount(id: accountID) { account in
+            account.displayName = displayName
+            account.server = server
+            account.isEnabled = isEnabled
+            account.profile.nickname = nickname
+            account.profile.friendCode = friendCode
+        }
+        persistEnvelope(previousServer: previousServer, previousEnvelope: previousEnvelope)
+    }
+
+    func deleteAccount(id accountID: BaAccountID) {
+        let previousServer = settings.server
+        let previousEnvelope = envelope
+        envelope.deleteAccount(id: accountID)
+        persistEnvelope(previousServer: previousServer, previousEnvelope: previousEnvelope)
+    }
+
+    func moveAccount(id accountID: BaAccountID, offset: Int) {
+        let previousServer = settings.server
+        let previousEnvelope = envelope
+        envelope.moveAccount(id: accountID, offset: offset)
+        persistEnvelope(previousServer: previousServer, previousEnvelope: previousEnvelope, refreshNotifications: false)
+    }
+
+    func setAccountEnabled(id accountID: BaAccountID, isEnabled: Bool) {
+        let previousServer = settings.server
+        let previousEnvelope = envelope
+        envelope.updateAccount(id: accountID) { account in
+            account.isEnabled = isEnabled
+        }
         persistEnvelope(previousServer: previousServer, previousEnvelope: previousEnvelope)
     }
 
@@ -239,6 +324,11 @@ extension BaAppModel {
         envelope.globalSettings.dutyStudent = next.dutyStudent
         if next.server != previous.server {
             envelope.selectedServer = next.server
+            if let account = envelope.accounts.first(where: { $0.server == next.server && $0.isEnabled }) ??
+                envelope.accounts.first(where: { $0.server == next.server })
+            {
+                envelope.selectedAccountID = account.id
+            }
             return
         }
         var profile = currentProfile
@@ -269,15 +359,5 @@ extension BaAppModel {
         profile.cafeVisitLastNotifiedAt = next.cafeVisitLastNotifiedAt
         profile.arenaRefreshLastNotifiedAt = next.arenaRefreshLastNotifiedAt
         envelope.setProfile(profile, for: envelope.selectedServer)
-        synchronizeSharedIdentityIfNeeded(from: envelope.selectedServer)
-    }
-
-    private func synchronizeSharedIdentityIfNeeded(from server: BaServer) {
-        guard envelope.globalSettings.identityIndependentByServer == false else { return }
-        let source = envelope.profile(for: server)
-        for target in BaServer.allCases {
-            envelope.serverProfiles[target]?.nickname = source.nickname
-            envelope.serverProfiles[target]?.friendCode = source.friendCode
-        }
     }
 }

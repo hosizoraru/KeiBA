@@ -67,6 +67,58 @@ final class BaUserDataSyncTests: XCTestCase {
         XCTAssertEqual(loaded.profile(for: .global).apNotifyThreshold, 200)
     }
 
+    func testUserDataRoundTripPreservesMultipleAccountsAndActiveSelection() throws {
+        let sourceDefaults = try makeIsolatedDefaults()
+        let destinationDefaults = try makeIsolatedDefaults()
+        let base = Date(timeIntervalSince1970: 1_800_000_000)
+        var primaryProfile = BaServerProfile.defaults(now: base)
+        primaryProfile.nickname = "CN Main"
+        primaryProfile.friendCode = "main0001"
+        primaryProfile.apCurrent = 20
+        var secondaryProfile = BaServerProfile.defaults(now: base)
+        secondaryProfile.nickname = "CN Alt"
+        secondaryProfile.friendCode = "alt00002"
+        secondaryProfile.apCurrent = 180
+        secondaryProfile.cafeApCurrent = 360
+
+        var envelope = BaSettingsEnvelope.defaults(now: base)
+        envelope.accounts = [
+            BaAccountProfile(
+                id: "cn-main",
+                server: .cn,
+                displayName: "国服主号",
+                profile: primaryProfile,
+                sortOrder: 0
+            ),
+            BaAccountProfile(
+                id: "cn-alt",
+                server: .cn,
+                displayName: "国服小号",
+                profile: secondaryProfile,
+                sortOrder: 1
+            ),
+        ]
+        envelope.selectedAccountID = "cn-alt"
+        envelope.selectedServer = .cn
+
+        let sourceStore = BaSettingsStore(defaults: sourceDefaults)
+        sourceStore.saveEnvelope(envelope)
+        let data = try sourceStore.exportUserData(updatedAt: base.addingTimeInterval(60))
+        let imported = try BaSettingsStore(defaults: destinationDefaults).importUserData(from: data)
+        let loaded = BaSettingsStore(defaults: destinationDefaults).loadEnvelope()
+        let settings = loaded.flattenedSettings()
+
+        XCTAssertEqual(imported.accounts.map(\.id), ["cn-main", "cn-alt"])
+        XCTAssertEqual(loaded.accounts.map(\.id), ["cn-main", "cn-alt"])
+        XCTAssertEqual(loaded.selectedAccountID, "cn-alt")
+        XCTAssertEqual(loaded.selectedServer, .cn)
+        XCTAssertEqual(settings.nickname, "CN Alt")
+        XCTAssertEqual(settings.friendCode, "ALT00002")
+        XCTAssertEqual(settings.apCurrent, 180)
+        XCTAssertEqual(settings.cafeApCurrent, 360)
+        XCTAssertEqual(loaded.accounts.first { $0.id == "cn-main" }?.profile.apCurrent, 20)
+    }
+
     func testWatchSnapshotKeepsCompactCurrentServerPayload() throws {
         let base = Date(timeIntervalSince1970: 1_800_000_000)
         var envelope = BaSettingsEnvelope.defaults(now: base)
@@ -102,6 +154,35 @@ final class BaUserDataSyncTests: XCTestCase {
         XCTAssertEqual(snapshot.preferences.favoriteCount, 2)
         XCTAssertEqual(snapshot.dutyStudent?.contentId, 702_789)
         XCTAssertFalse(json.contains("favoriteCatalogEntries"))
+    }
+
+    func testWatchSnapshotUsesSelectedAccountWhenServerHasMultipleAccounts() throws {
+        let base = Date(timeIntervalSince1970: 1_800_000_000)
+        var primaryProfile = BaServerProfile.defaults(now: base)
+        primaryProfile.nickname = "CN Main"
+        primaryProfile.friendCode = "main0001"
+        primaryProfile.apCurrent = 10
+        var secondaryProfile = BaServerProfile.defaults(now: base)
+        secondaryProfile.nickname = "CN Alt"
+        secondaryProfile.friendCode = "alt00002"
+        secondaryProfile.apCurrent = 77
+        secondaryProfile.cafeLevel = 8
+
+        var envelope = BaSettingsEnvelope.defaults(now: base)
+        envelope.accounts = [
+            BaAccountProfile(id: "cn-main", server: .cn, displayName: "国服主号", profile: primaryProfile, sortOrder: 0),
+            BaAccountProfile(id: "cn-alt", server: .cn, displayName: "国服小号", profile: secondaryProfile, sortOrder: 1),
+        ]
+        envelope.selectedAccountID = "cn-alt"
+        envelope.selectedServer = .cn
+
+        let snapshot = envelope.userData(updatedAt: base).watchSnapshot(generatedAt: base.addingTimeInterval(30))
+
+        XCTAssertEqual(snapshot.selectedServer, .cn)
+        XCTAssertEqual(snapshot.nickname, "CN Alt")
+        XCTAssertEqual(snapshot.friendCode, "ALT00002")
+        XCTAssertEqual(snapshot.profile.apCurrent, 77)
+        XCTAssertEqual(snapshot.profile.cafeLevel, 8)
     }
 
     func testSettingsPersistenceTransitionResetsServerScopedTimelineState() throws {

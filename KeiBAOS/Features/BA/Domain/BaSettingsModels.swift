@@ -332,21 +332,141 @@ nonisolated struct BaServerProfile: Codable, Equatable, Sendable {
     }
 }
 
+typealias BaAccountID = String
+
+nonisolated struct BaAccountProfile: Identifiable, Codable, Equatable, Sendable {
+    var id: BaAccountID
+    var server: BaServer
+    var displayName: String
+    var profile: BaServerProfile
+    var isEnabled: Bool
+    var sortOrder: Int
+
+    init(
+        id: BaAccountID = UUID().uuidString,
+        server: BaServer,
+        displayName: String? = nil,
+        profile: BaServerProfile = .defaults(),
+        isEnabled: Bool = true,
+        sortOrder: Int = 0
+    ) {
+        self.id = id
+        self.server = server
+        self.displayName = displayName ?? profile.nickname
+        self.profile = profile
+        self.isEnabled = isEnabled
+        self.sortOrder = sortOrder
+    }
+
+    var title: String {
+        displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? profile.nickname : displayName
+    }
+
+    var detail: String {
+        String(
+            format: BaL10n.string("ba.account.summary.format"),
+            server.title,
+            profile.nickname,
+            profile.friendCode
+        )
+    }
+
+    static func legacyID(for server: BaServer) -> BaAccountID {
+        "legacy-\(server.rawValue)"
+    }
+
+    static func defaultID(for server: BaServer) -> BaAccountID {
+        "default-\(server.rawValue)"
+    }
+
+    func normalized(defaultSortOrder: Int) -> BaAccountProfile? {
+        let normalizedID = id.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard normalizedID.isEmpty == false else { return nil }
+        let normalizedProfile = profile.normalized()
+        let normalizedDisplayName = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return BaAccountProfile(
+            id: normalizedID,
+            server: server,
+            displayName: normalizedDisplayName.isEmpty ? normalizedProfile.nickname : String(normalizedDisplayName.prefix(32)),
+            profile: normalizedProfile,
+            isEnabled: isEnabled,
+            sortOrder: sortOrder >= 0 ? sortOrder : defaultSortOrder
+        )
+    }
+}
+
 nonisolated struct BaSettingsEnvelope: Codable, Equatable, Sendable {
     var schemaVersion: Int
     var selectedServer: BaServer
     var globalSettings: BaGlobalSettings
     var serverProfiles: [BaServer: BaServerProfile]
+    var selectedAccountID: BaAccountID?
+    var accounts: [BaAccountProfile]
 
-    static let currentSchemaVersion = 6
+    static let currentSchemaVersion = 7
+
+    enum CodingKeys: String, CodingKey {
+        case schemaVersion
+        case selectedServer
+        case globalSettings
+        case serverProfiles
+        case selectedAccountID
+        case accounts
+    }
+
+    init(
+        schemaVersion: Int,
+        selectedServer: BaServer,
+        globalSettings: BaGlobalSettings,
+        serverProfiles: [BaServer: BaServerProfile],
+        selectedAccountID: BaAccountID? = nil,
+        accounts: [BaAccountProfile] = []
+    ) {
+        self.schemaVersion = schemaVersion
+        self.selectedServer = selectedServer
+        self.globalSettings = globalSettings
+        self.serverProfiles = serverProfiles
+        self.selectedAccountID = selectedAccountID
+        self.accounts = accounts
+    }
+
+    init(from decoder: Decoder) throws {
+        let defaults = BaSettingsEnvelope.defaults()
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        schemaVersion = try container.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? defaults.schemaVersion
+        selectedServer = try container.decodeIfPresent(BaServer.self, forKey: .selectedServer) ?? defaults.selectedServer
+        globalSettings = try container.decodeIfPresent(BaGlobalSettings.self, forKey: .globalSettings) ?? defaults.globalSettings
+        serverProfiles = try container.decodeIfPresent([BaServer: BaServerProfile].self, forKey: .serverProfiles) ?? defaults.serverProfiles
+        selectedAccountID = try container.decodeIfPresent(BaAccountID.self, forKey: .selectedAccountID)
+        accounts = try container.decodeIfPresent([BaAccountProfile].self, forKey: .accounts) ?? []
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(schemaVersion, forKey: .schemaVersion)
+        try container.encode(selectedServer, forKey: .selectedServer)
+        try container.encode(globalSettings, forKey: .globalSettings)
+        try container.encode(serverProfiles, forKey: .serverProfiles)
+        try container.encodeIfPresent(selectedAccountID, forKey: .selectedAccountID)
+        try container.encode(accounts, forKey: .accounts)
+    }
 
     static func defaults(now: Date = Date()) -> BaSettingsEnvelope {
         let profile = BaServerProfile.defaults(now: now)
+        let account = BaAccountProfile(
+            id: BaAccountProfile.defaultID(for: .cn),
+            server: .cn,
+            displayName: profile.nickname,
+            profile: profile,
+            sortOrder: 0
+        )
         return BaSettingsEnvelope(
             schemaVersion: currentSchemaVersion,
             selectedServer: .cn,
             globalSettings: .defaults(),
-            serverProfiles: Dictionary(uniqueKeysWithValues: BaServer.allCases.map { ($0, profile) })
+            serverProfiles: Dictionary(uniqueKeysWithValues: BaServer.allCases.map { ($0, profile) }),
+            selectedAccountID: account.id,
+            accounts: [account]
         )
     }
 
@@ -399,27 +519,167 @@ nonisolated struct BaSettingsEnvelope: Codable, Equatable, Sendable {
             arenaRefreshLastNotifiedAt: settings.arenaRefreshLastNotifiedAt
         )
         envelope.serverProfiles[settings.server] = profile
-        if envelope.globalSettings.identityIndependentByServer == false {
-            for server in BaServer.allCases {
-                envelope.serverProfiles[server]?.nickname = settings.nickname
-                envelope.serverProfiles[server]?.friendCode = settings.friendCode
+        if settings.identityIndependentByServer {
+            envelope.accounts = BaServer.allCases.enumerated().map { index, server in
+                var serverProfile = envelope.serverProfiles[server] ?? .defaults(now: settings.apRegenBaseAt)
+                if server == settings.server {
+                    serverProfile = profile
+                }
+                return BaAccountProfile(
+                    id: BaAccountProfile.legacyID(for: server),
+                    server: server,
+                    displayName: serverProfile.nickname,
+                    profile: serverProfile,
+                    sortOrder: index
+                )
             }
+            envelope.selectedAccountID = BaAccountProfile.legacyID(for: settings.server)
+        } else {
+            let account = BaAccountProfile(
+                id: BaAccountProfile.defaultID(for: settings.server),
+                server: settings.server,
+                displayName: profile.nickname,
+                profile: profile,
+                sortOrder: 0
+            )
+            envelope.accounts = [account]
+            envelope.selectedAccountID = account.id
         }
         return envelope
     }
 
+    var selectedAccount: BaAccountProfile {
+        if let selectedAccountID,
+           let account = accounts.first(where: { $0.id == selectedAccountID })
+        {
+            return account
+        }
+        if let account = accounts.first(where: { $0.isEnabled && $0.server == selectedServer }) ??
+            accounts.first(where: { $0.server == selectedServer }) ??
+            accounts.first(where: \.isEnabled) ??
+            accounts.first
+        {
+            return account
+        }
+        let fallbackProfile = serverProfiles[selectedServer] ?? .defaults()
+        return BaAccountProfile(
+            id: BaAccountProfile.defaultID(for: selectedServer),
+            server: selectedServer,
+            displayName: fallbackProfile.nickname,
+            profile: fallbackProfile,
+            sortOrder: 0
+        )
+    }
+
+    var enabledAccounts: [BaAccountProfile] {
+        accounts.filter(\.isEnabled)
+    }
+
     func profile(for server: BaServer) -> BaServerProfile {
-        serverProfiles[server] ?? .defaults()
+        let selected = selectedAccount
+        if selected.server == server {
+            return selected.profile
+        }
+        return accounts.first(where: { $0.server == server && $0.isEnabled })?.profile ??
+            accounts.first(where: { $0.server == server })?.profile ??
+            serverProfiles[server] ??
+            .defaults()
     }
 
     mutating func setProfile(_ profile: BaServerProfile, for server: BaServer) {
-        serverProfiles[server] = profile.normalized()
+        let normalizedProfile = profile.normalized()
+        if let selectedAccountID,
+           let selectedIndex = accounts.firstIndex(where: { $0.id == selectedAccountID && $0.server == server })
+        {
+            accounts[selectedIndex].profile = normalizedProfile
+            accounts[selectedIndex].displayName = normalizedAccountDisplayName(
+                currentDisplayName: accounts[selectedIndex].displayName,
+                profile: normalizedProfile
+            )
+        } else if let index = accounts.firstIndex(where: { $0.server == server }) {
+            accounts[index].profile = normalizedProfile
+            accounts[index].displayName = normalizedAccountDisplayName(
+                currentDisplayName: accounts[index].displayName,
+                profile: normalizedProfile
+            )
+        } else {
+            let account = BaAccountProfile(
+                id: BaAccountProfile.defaultID(for: server),
+                server: server,
+                displayName: normalizedProfile.nickname,
+                profile: normalizedProfile,
+                sortOrder: accounts.count
+            )
+            accounts.append(account)
+            if server == selectedServer {
+                selectedAccountID = account.id
+            }
+        }
+        serverProfiles[server] = normalizedProfile
+    }
+
+    mutating func setSelectedAccountID(_ accountID: BaAccountID) {
+        guard let account = accounts.first(where: { $0.id == accountID }) else { return }
+        selectedAccountID = account.id
+        selectedServer = account.server
+        serverProfiles[account.server] = account.profile
+    }
+
+    mutating func addAccount(_ account: BaAccountProfile, select: Bool = true) {
+        let normalized = account.normalized(defaultSortOrder: accounts.count) ?? account
+        accounts.removeAll { $0.id == normalized.id }
+        accounts.append(normalized)
+        if select {
+            selectedAccountID = normalized.id
+            selectedServer = normalized.server
+        }
+        serverProfiles[normalized.server] = normalized.profile
+    }
+
+    mutating func updateAccount(id: BaAccountID, transform: (inout BaAccountProfile) -> Void) {
+        guard let index = accounts.firstIndex(where: { $0.id == id }) else { return }
+        var account = accounts[index]
+        transform(&account)
+        guard let normalized = account.normalized(defaultSortOrder: index) else { return }
+        accounts[index] = normalized
+        if selectedAccountID == id {
+            selectedServer = normalized.server
+        }
+        serverProfiles[normalized.server] = normalized.profile
+    }
+
+    mutating func deleteAccount(id: BaAccountID) {
+        guard accounts.count > 1 else { return }
+        accounts.removeAll { $0.id == id }
+        if selectedAccountID == id || accounts.contains(where: { $0.id == selectedAccountID }) == false {
+            selectedAccountID = accounts.first(where: \.isEnabled)?.id ?? accounts.first?.id
+        }
+        selectedServer = selectedAccount.server
+    }
+
+    mutating func moveAccount(id: BaAccountID, offset: Int) {
+        guard offset != 0,
+              let fromIndex = accounts.firstIndex(where: { $0.id == id })
+        else {
+            return
+        }
+        let toIndex = min(max(fromIndex + offset, 0), accounts.count - 1)
+        guard fromIndex != toIndex else { return }
+        var mutable = accounts
+        let account = mutable.remove(at: fromIndex)
+        mutable.insert(account, at: toIndex)
+        accounts = mutable.enumerated().map { index, account in
+            var copy = account
+            copy.sortOrder = index
+            return copy
+        }
     }
 
     func flattenedSettings() -> BaAppSettings {
-        let profile = profile(for: selectedServer)
+        let account = selectedAccount
+        let profile = account.profile
         return BaAppSettings(
-            server: selectedServer,
+            server: account.server,
             nickname: profile.nickname,
             friendCode: profile.friendCode,
             apCurrent: profile.apCurrent,
@@ -462,6 +722,10 @@ nonisolated struct BaSettingsEnvelope: Codable, Equatable, Sendable {
             cafeVisitLastNotifiedAt: profile.cafeVisitLastNotifiedAt,
             arenaRefreshLastNotifiedAt: profile.arenaRefreshLastNotifiedAt
         )
+    }
+
+    private func normalizedAccountDisplayName(currentDisplayName: String, profile: BaServerProfile) -> String {
+        currentDisplayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? profile.nickname : currentDisplayName
     }
 }
 

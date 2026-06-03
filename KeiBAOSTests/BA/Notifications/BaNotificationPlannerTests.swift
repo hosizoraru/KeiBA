@@ -97,9 +97,13 @@ final class BaNotificationPlannerTests: XCTestCase {
 
     func testPreferenceSnapshotDetectsNewlyEnabledReminder() {
         var previous = BaSettingsEnvelope.defaults()
-        previous.serverProfiles[.cn]?.apNotificationsEnabled = false
+        var previousProfile = previous.profile(for: .cn)
+        previousProfile.apNotificationsEnabled = false
+        previous.setProfile(previousProfile, for: .cn)
         var next = previous
-        next.serverProfiles[.cn]?.apNotificationsEnabled = true
+        var nextProfile = next.profile(for: .cn)
+        nextProfile.apNotificationsEnabled = true
+        next.setProfile(nextProfile, for: .cn)
 
         XCTAssertTrue(
             BaNotificationPreferenceSnapshot(envelope: next)
