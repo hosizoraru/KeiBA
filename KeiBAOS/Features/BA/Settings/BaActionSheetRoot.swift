@@ -821,14 +821,26 @@ private struct BaEditOfficeSheet: View {
                 server: draft.server,
                 nickname: draft.nickname,
                 friendCode: draft.friendCode,
-                isEnabled: draft.isEnabled
+                isEnabled: draft.isEnabled,
+                apNotificationsEnabled: draft.apNotificationsEnabled,
+                cafeApNotificationsEnabled: draft.cafeApNotificationsEnabled,
+                visitNotificationsEnabled: draft.visitNotificationsEnabled,
+                arenaRefreshNotificationsEnabled: draft.arenaRefreshNotificationsEnabled,
+                apNotifyThreshold: draft.apNotifyThreshold,
+                cafeApNotifyThreshold: draft.cafeApNotifyThreshold
             )
         } else {
             model.addAccount(
                 displayName: draft.displayName,
                 server: draft.server,
                 nickname: draft.nickname,
-                friendCode: draft.friendCode
+                friendCode: draft.friendCode,
+                apNotificationsEnabled: draft.apNotificationsEnabled,
+                cafeApNotificationsEnabled: draft.cafeApNotificationsEnabled,
+                visitNotificationsEnabled: draft.visitNotificationsEnabled,
+                arenaRefreshNotificationsEnabled: draft.arenaRefreshNotificationsEnabled,
+                apNotifyThreshold: draft.apNotifyThreshold,
+                cafeApNotifyThreshold: draft.cafeApNotifyThreshold
             )
         }
     }
@@ -851,6 +863,12 @@ private struct BaAccountEditorDraft: Identifiable {
     var nickname: String
     var friendCode: String
     var isEnabled: Bool
+    var apNotificationsEnabled: Bool
+    var cafeApNotificationsEnabled: Bool
+    var visitNotificationsEnabled: Bool
+    var arenaRefreshNotificationsEnabled: Bool
+    var apNotifyThreshold: Int
+    var cafeApNotifyThreshold: Int
 
     var id: String {
         editingAccountID ?? "new-\(server.rawValue)"
@@ -864,7 +882,13 @@ private struct BaAccountEditorDraft: Identifiable {
             server: defaultServer,
             nickname: defaults.nickname,
             friendCode: defaults.friendCode,
-            isEnabled: true
+            isEnabled: true,
+            apNotificationsEnabled: defaults.apNotificationsEnabled,
+            cafeApNotificationsEnabled: defaults.cafeApNotificationsEnabled,
+            visitNotificationsEnabled: defaults.visitNotificationsEnabled,
+            arenaRefreshNotificationsEnabled: defaults.arenaRefreshNotificationsEnabled,
+            apNotifyThreshold: defaults.apNotifyThreshold,
+            cafeApNotifyThreshold: defaults.cafeApNotifyThreshold
         )
     }
 
@@ -875,6 +899,12 @@ private struct BaAccountEditorDraft: Identifiable {
         nickname = account.profile.nickname
         friendCode = account.profile.friendCode
         isEnabled = account.isEnabled
+        apNotificationsEnabled = account.profile.apNotificationsEnabled
+        cafeApNotificationsEnabled = account.profile.cafeApNotificationsEnabled
+        visitNotificationsEnabled = account.profile.visitNotificationsEnabled
+        arenaRefreshNotificationsEnabled = account.profile.arenaRefreshNotificationsEnabled
+        apNotifyThreshold = account.profile.apNotifyThreshold
+        cafeApNotifyThreshold = account.profile.cafeApNotifyThreshold
     }
 
     private init(
@@ -883,7 +913,13 @@ private struct BaAccountEditorDraft: Identifiable {
         server: BaServer,
         nickname: String,
         friendCode: String,
-        isEnabled: Bool
+        isEnabled: Bool,
+        apNotificationsEnabled: Bool,
+        cafeApNotificationsEnabled: Bool,
+        visitNotificationsEnabled: Bool,
+        arenaRefreshNotificationsEnabled: Bool,
+        apNotifyThreshold: Int,
+        cafeApNotifyThreshold: Int
     ) {
         self.editingAccountID = editingAccountID
         self.displayName = displayName
@@ -891,6 +927,18 @@ private struct BaAccountEditorDraft: Identifiable {
         self.nickname = nickname
         self.friendCode = friendCode
         self.isEnabled = isEnabled
+        self.apNotificationsEnabled = apNotificationsEnabled
+        self.cafeApNotificationsEnabled = cafeApNotificationsEnabled
+        self.visitNotificationsEnabled = visitNotificationsEnabled
+        self.arenaRefreshNotificationsEnabled = arenaRefreshNotificationsEnabled
+        self.apNotifyThreshold = apNotifyThreshold
+        self.cafeApNotifyThreshold = cafeApNotifyThreshold
+    }
+
+    mutating func normalizeForSave() {
+        friendCode = BaFriendCodeFormat.normalized(friendCode)
+        apNotifyThreshold = min(max(apNotifyThreshold, 0), BaTimeMath.apMax)
+        cafeApNotifyThreshold = min(max(cafeApNotifyThreshold, 0), BaTimeMath.apMax)
     }
 }
 
@@ -947,6 +995,44 @@ private struct BaAccountEditorSheet: View {
                 } footer: {
                     Text(BaL10n.string("ba.account.editor.footer"))
                 }
+
+                Section {
+                    Toggle(BaL10n.string("ba.sheet.notifications.ap.title"), isOn: $draft.apNotificationsEnabled)
+
+                    Stepper(
+                        value: intBinding(\.apNotifyThreshold, range: 0 ... BaTimeMath.apMax),
+                        in: 0 ... BaTimeMath.apMax
+                    ) {
+                        LabeledContent(BaL10n.string("ba.settings.ap.threshold.title")) {
+                            Text("\(draft.apNotifyThreshold)")
+                                .monospacedDigit()
+                        }
+                    }
+                    .disabled(draft.apNotificationsEnabled == false)
+
+                    Toggle(BaL10n.string("ba.sheet.notifications.cafeAp.title"), isOn: $draft.cafeApNotificationsEnabled)
+
+                    Stepper(
+                        value: intBinding(\.cafeApNotifyThreshold, range: 0 ... BaTimeMath.apMax),
+                        in: 0 ... BaTimeMath.apMax
+                    ) {
+                        LabeledContent(BaL10n.string("ba.settings.cafe.threshold.title")) {
+                            Text("\(draft.cafeApNotifyThreshold)")
+                                .monospacedDigit()
+                        }
+                    }
+                    .disabled(draft.cafeApNotificationsEnabled == false)
+
+                    Toggle(BaL10n.string("ba.sheet.notifications.visit.title"), isOn: $draft.visitNotificationsEnabled)
+                    Toggle(
+                        BaL10n.string("ba.settings.arena.notifications.title"),
+                        isOn: $draft.arenaRefreshNotificationsEnabled
+                    )
+                } header: {
+                    Text(BaL10n.string("ba.settings.resources.section"))
+                } footer: {
+                    Text(BaL10n.string("ba.sheet.notifications.resources.footer"))
+                }
             }
             .navigationTitle(draft.editingAccountID == nil ? BaL10n.string("ba.account.add.title") : BaL10n.string("ba.account.edit.title"))
             .scrollDismissesKeyboard(.interactively)
@@ -960,7 +1046,7 @@ private struct BaAccountEditorSheet: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button(BaL10n.string("ba.common.done")) {
                         var saved = draft
-                        saved.friendCode = BaFriendCodeFormat.normalized(saved.friendCode)
+                        saved.normalizeForSave()
                         onSave(saved)
                         dismiss()
                     }
@@ -969,6 +1055,18 @@ private struct BaAccountEditorSheet: View {
                 }
             }
         }
+    }
+
+    private func intBinding(
+        _ keyPath: WritableKeyPath<BaAccountEditorDraft, Int>,
+        range: ClosedRange<Int>
+    ) -> Binding<Int> {
+        Binding(
+            get: { draft[keyPath: keyPath] },
+            set: { value in
+                draft[keyPath: keyPath] = min(max(value, range.lowerBound), range.upperBound)
+            }
+        )
     }
 }
 

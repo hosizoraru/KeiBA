@@ -92,13 +92,25 @@ extension BaAppModel {
         displayName: String,
         server: BaServer,
         nickname: String,
-        friendCode: String
+        friendCode: String,
+        apNotificationsEnabled: Bool? = nil,
+        cafeApNotificationsEnabled: Bool? = nil,
+        visitNotificationsEnabled: Bool? = nil,
+        arenaRefreshNotificationsEnabled: Bool? = nil,
+        apNotifyThreshold: Int? = nil,
+        cafeApNotifyThreshold: Int? = nil
     ) {
         let previousServer = settings.server
         let previousEnvelope = envelope
         var profile = BaServerProfile.defaults(now: Date())
         profile.nickname = nickname
         profile.friendCode = friendCode
+        profile.apNotificationsEnabled = apNotificationsEnabled ?? profile.apNotificationsEnabled
+        profile.cafeApNotificationsEnabled = cafeApNotificationsEnabled ?? profile.cafeApNotificationsEnabled
+        profile.visitNotificationsEnabled = visitNotificationsEnabled ?? profile.visitNotificationsEnabled
+        profile.arenaRefreshNotificationsEnabled = arenaRefreshNotificationsEnabled ?? profile.arenaRefreshNotificationsEnabled
+        profile.apNotifyThreshold = min(max(apNotifyThreshold ?? profile.apNotifyThreshold, 0), BaTimeMath.apMax)
+        profile.cafeApNotifyThreshold = min(max(cafeApNotifyThreshold ?? profile.cafeApNotifyThreshold, 0), BaTimeMath.apMax)
         let account = BaAccountProfile(
             server: server,
             displayName: displayName,
@@ -115,7 +127,13 @@ extension BaAppModel {
         server: BaServer,
         nickname: String,
         friendCode: String,
-        isEnabled: Bool
+        isEnabled: Bool,
+        apNotificationsEnabled: Bool,
+        cafeApNotificationsEnabled: Bool,
+        visitNotificationsEnabled: Bool,
+        arenaRefreshNotificationsEnabled: Bool,
+        apNotifyThreshold: Int,
+        cafeApNotifyThreshold: Int
     ) {
         let previousServer = settings.server
         let previousEnvelope = envelope
@@ -125,6 +143,12 @@ extension BaAppModel {
             account.isEnabled = isEnabled
             account.profile.nickname = nickname
             account.profile.friendCode = friendCode
+            account.profile.apNotificationsEnabled = apNotificationsEnabled
+            account.profile.cafeApNotificationsEnabled = cafeApNotificationsEnabled
+            account.profile.visitNotificationsEnabled = visitNotificationsEnabled
+            account.profile.arenaRefreshNotificationsEnabled = arenaRefreshNotificationsEnabled
+            account.profile.apNotifyThreshold = min(max(apNotifyThreshold, 0), BaTimeMath.apMax)
+            account.profile.cafeApNotifyThreshold = min(max(cafeApNotifyThreshold, 0), BaTimeMath.apMax)
         }
         persistEnvelope(previousServer: previousServer, previousEnvelope: previousEnvelope)
     }
