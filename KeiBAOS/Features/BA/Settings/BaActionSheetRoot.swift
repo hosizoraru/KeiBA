@@ -750,6 +750,8 @@ private struct BaEditOfficeSheet: View {
                 }
             }
             .navigationTitle(BaPresentedSheet.editOffice.title)
+            .scrollContentBackground(.hidden)
+            .background(AppBackground())
             .scrollDismissesKeyboard(.interactively)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -957,30 +959,47 @@ private struct BaAccountEditorSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField(
-                        BaL10n.string("ba.account.displayName.title"),
-                        text: $draft.displayName,
-                        prompt: Text(BaL10n.string("ba.account.displayName.prompt"))
+                    BaAccountEditorSummaryRow(
+                        title: previewTitle,
+                        detail: previewDetail,
+                        isEnabled: draft.isEnabled
                     )
-                    .baAccountDisplayNameTextInput()
+                }
 
-                    TextField(
-                        BaL10n.string("ba.office.nickname.label"),
-                        text: $draft.nickname,
-                        prompt: Text(BaL10n.string("ba.office.nickname.prompt"))
-                    )
-                    .baNicknameTextInput()
+                Section {
+                    LabeledContent(BaL10n.string("ba.account.displayName.title")) {
+                        TextField(
+                            BaL10n.string("ba.account.displayName.title"),
+                            text: $draft.displayName,
+                            prompt: Text(BaL10n.string("ba.account.displayName.prompt"))
+                        )
+                        .multilineTextAlignment(.trailing)
+                        .baAccountDisplayNameTextInput()
+                    }
 
-                    TextField(
-                        BaL10n.string("ba.office.friendCode.label"),
-                        text: $draft.friendCode,
-                        prompt: Text(BaL10n.string("ba.office.friendCode.prompt"))
-                    )
-                    .baFriendCodeTextInput()
-                    .onChange(of: draft.friendCode) { _, value in
-                        let sanitized = BaFriendCodeFormat.sanitizedDraft(value)
-                        if sanitized != value {
-                            draft.friendCode = sanitized
+                    LabeledContent(BaL10n.string("ba.office.nickname.label")) {
+                        TextField(
+                            BaL10n.string("ba.office.nickname.label"),
+                            text: $draft.nickname,
+                            prompt: Text(BaL10n.string("ba.office.nickname.prompt"))
+                        )
+                        .multilineTextAlignment(.trailing)
+                        .baNicknameTextInput()
+                    }
+
+                    LabeledContent(BaL10n.string("ba.office.friendCode.label")) {
+                        TextField(
+                            BaL10n.string("ba.office.friendCode.label"),
+                            text: $draft.friendCode,
+                            prompt: Text(BaL10n.string("ba.office.friendCode.prompt"))
+                        )
+                        .multilineTextAlignment(.trailing)
+                        .baFriendCodeTextInput()
+                        .onChange(of: draft.friendCode) { _, value in
+                            let sanitized = BaFriendCodeFormat.sanitizedDraft(value)
+                            if sanitized != value {
+                                draft.friendCode = sanitized
+                            }
                         }
                     }
 
@@ -1034,7 +1053,9 @@ private struct BaAccountEditorSheet: View {
                     Text(BaL10n.string("ba.sheet.notifications.resources.footer"))
                 }
             }
-            .navigationTitle(draft.editingAccountID == nil ? BaL10n.string("ba.account.add.title") : BaL10n.string("ba.account.edit.title"))
+            .navigationTitle(editorTitle)
+            .scrollContentBackground(.hidden)
+            .background(AppBackground())
             .scrollDismissesKeyboard(.interactively)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -1050,11 +1071,58 @@ private struct BaAccountEditorSheet: View {
                         onSave(saved)
                         dismiss()
                     }
-                    .disabled(draft.displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-                        draft.nickname.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .disabled(canSave == false)
                 }
             }
         }
+        #if os(iOS)
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+            .presentationContentInteraction(.scrolls)
+        #else
+            .frame(minWidth: 520, minHeight: 560)
+        #endif
+    }
+
+    private var editorTitle: String {
+        draft.editingAccountID == nil
+            ? BaL10n.string("ba.account.add.title")
+            : BaL10n.string("ba.account.edit.title")
+    }
+
+    private var previewTitle: String {
+        let displayName = draft.displayName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if displayName.isEmpty == false {
+            return displayName
+        }
+
+        let nickname = draft.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+        return nickname.isEmpty ? BaL10n.string("ba.account.new.defaultName") : nickname
+    }
+
+    private var previewDetail: String {
+        String(
+            format: BaL10n.string("ba.account.summary.format"),
+            draft.server.title,
+            previewNickname,
+            previewFriendCode
+        )
+    }
+
+    private var previewNickname: String {
+        let nickname = draft.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+        return nickname.isEmpty ? BaL10n.string("ba.common.none") : nickname
+    }
+
+    private var previewFriendCode: String {
+        let friendCode = BaFriendCodeFormat.sanitizedDraft(draft.friendCode)
+        return friendCode.isEmpty ? BaL10n.string("ba.common.none") : "# \(friendCode)"
+    }
+
+    private var canSave: Bool {
+        let displayName = draft.displayName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let nickname = draft.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+        return displayName.isEmpty == false || nickname.isEmpty == false
     }
 
     private func intBinding(
@@ -1067,6 +1135,39 @@ private struct BaAccountEditorSheet: View {
                 draft[keyPath: keyPath] = min(max(value, range.lowerBound), range.upperBound)
             }
         )
+    }
+}
+
+private struct BaAccountEditorSummaryRow: View {
+    let title: String
+    let detail: String
+    let isEnabled: Bool
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            Image(systemName: isEnabled ? "person.crop.circle.fill" : "person.crop.circle.badge.xmark")
+                .font(.title2.weight(.semibold))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(isEnabled ? BaDesign.blue : .secondary)
+                .frame(width: 34, height: 34)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
     }
 }
 
