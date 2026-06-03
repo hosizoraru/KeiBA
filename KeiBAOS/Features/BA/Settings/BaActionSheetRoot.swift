@@ -206,6 +206,8 @@ private struct BaNotificationSettingsSheet: View {
                 testActionsSection
             }
             .navigationTitle(BaPresentedSheet.notifications.title)
+            .scrollContentBackground(.hidden)
+            .background(AppBackground())
             .task {
                 await prepareNotificationSettings()
             }
@@ -1352,6 +1354,8 @@ private struct BaDebugToolsSheet: View {
                 }
             }
             .navigationTitle(BaPresentedSheet.debugTools.title)
+            .scrollContentBackground(.hidden)
+            .background(AppBackground())
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button(BaL10n.string("ba.common.done")) {
@@ -1381,6 +1385,7 @@ extension View {
         #if os(iOS)
             presentationDetents(sheet.presentationDetents)
                 .presentationDragIndicator(.visible)
+                .presentationContentInteraction(.scrolls)
         #else
             frame(
                 minWidth: sheet.macMinimumSheetWidth,
