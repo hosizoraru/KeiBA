@@ -74,7 +74,7 @@ struct BaSettingsView: View {
                 ) {
                     macSettingsRow(BaL10n.string("ba.account.switch.title")) {
                         Picker(BaL10n.string("ba.account.switch.title"), selection: accountBinding) {
-                            ForEach(model.accounts) { account in
+                            ForEach(model.switchableAccounts) { account in
                                 Text(account.title)
                                     .tag(account.id)
                             }
@@ -337,7 +337,7 @@ struct BaSettingsView: View {
     private var serverIdentitySection: some View {
         Section {
             Picker(BaL10n.string("ba.account.switch.title"), selection: accountBinding) {
-                ForEach(model.accounts) { account in
+                ForEach(model.switchableAccounts) { account in
                     Text(account.title)
                         .tag(account.id)
                 }

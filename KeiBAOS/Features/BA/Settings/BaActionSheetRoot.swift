@@ -1120,7 +1120,7 @@ private struct BaAccountManagementRow: View {
                 Button(isActive ? BaL10n.string("ba.account.active.action") : BaL10n.string("ba.account.use.action")) {
                     onSelect()
                 }
-                .disabled(isActive)
+                .disabled(isActive || account.isEnabled == false)
 
                 Button(BaL10n.string("ba.account.edit.title")) {
                     onEdit()

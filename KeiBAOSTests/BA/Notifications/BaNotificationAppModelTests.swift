@@ -174,6 +174,32 @@ final class BaNotificationAppModelTests: XCTestCase {
         XCTAssertEqual(account.profile.cafeApNotifyThreshold, 0)
     }
 
+    func testDisabledAccountCannotBeSelectedWhenEnabledAccountsExist() async throws {
+        let defaults = try makeIsolatedDefaults()
+        let coordinator = RecordingNotificationCoordinator()
+        let model = makeAppModel(defaults: defaults, coordinator: coordinator) { envelope in
+            let base = Date(timeIntervalSince1970: 1_800_000_000)
+            var activeProfile = BaServerProfile.defaults(now: base)
+            activeProfile.nickname = "Active"
+            var disabledProfile = BaServerProfile.defaults(now: base)
+            disabledProfile.nickname = "Disabled"
+            envelope.accounts = [
+                BaAccountProfile(id: "active", server: .cn, displayName: "Active", profile: activeProfile, sortOrder: 0),
+                BaAccountProfile(id: "disabled", server: .jp, displayName: "Disabled", profile: disabledProfile, isEnabled: false, sortOrder: 1),
+            ]
+            envelope.selectedAccountID = "active"
+            envelope.selectedServer = .cn
+        }
+
+        XCTAssertEqual(model.switchableAccounts.map(\.id), ["active"])
+
+        model.selectAccount("disabled")
+
+        XCTAssertEqual(model.currentAccount.id, "active")
+        XCTAssertEqual(model.settings.server, .cn)
+        await assertNoCoordinatorCalls(coordinator: coordinator)
+    }
+
     func testIdentityTextUpdateSkipsNotificationRefresh() async throws {
         let defaults = try makeIsolatedDefaults()
         let coordinator = RecordingNotificationCoordinator()

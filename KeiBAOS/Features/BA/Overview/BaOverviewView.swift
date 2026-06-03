@@ -28,7 +28,7 @@ struct BaOverviewView: View {
                     BaOverviewIdentityCard(
                         settings: model.settings,
                         account: model.currentAccount,
-                        accounts: model.accounts,
+                        accounts: model.switchableAccounts,
                         watchSyncState: model.watchSyncState,
                         onAccountSelected: selectAccount,
                         onManageAccounts: { onOpenSheet(.editOffice) },

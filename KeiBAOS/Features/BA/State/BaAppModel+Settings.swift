@@ -16,6 +16,11 @@ extension BaAppModel {
         envelope.accounts
     }
 
+    var switchableAccounts: [BaAccountProfile] {
+        let enabledAccounts = envelope.enabledAccounts
+        return enabledAccounts.isEmpty ? envelope.accounts : enabledAccounts
+    }
+
     var currentProfile: BaServerProfile {
         envelope.selectedAccount.profile
     }
@@ -51,6 +56,8 @@ extension BaAppModel {
     }
 
     func selectAccount(_ accountID: BaAccountID) {
+        guard let account = envelope.accounts.first(where: { $0.id == accountID }) else { return }
+        guard account.isEnabled || envelope.enabledAccounts.isEmpty else { return }
         guard envelope.selectedAccountID != accountID else { return }
         let previousServer = settings.server
         let previousEnvelope = envelope
