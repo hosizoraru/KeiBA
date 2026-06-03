@@ -111,6 +111,146 @@ final class BaNotificationPlannerTests: XCTestCase {
         )
     }
 
+    func testEnvelopePlanScopesResourceRemindersByAccount() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        var firstProfile = quietProfile(now: now)
+        firstProfile.nickname = "Main"
+        firstProfile.friendCode = "main0001"
+        firstProfile.apNotificationsEnabled = true
+        firstProfile.apCurrent = 100
+        firstProfile.apLimit = 240
+        firstProfile.apNotifyThreshold = 120
+        firstProfile.apRegenBaseAt = now
+        var secondProfile = quietProfile(now: now)
+        secondProfile.nickname = "Alt"
+        secondProfile.friendCode = "alt00002"
+        secondProfile.apNotificationsEnabled = true
+        secondProfile.apCurrent = 50
+        secondProfile.apLimit = 240
+        secondProfile.apNotifyThreshold = 120
+        secondProfile.apRegenBaseAt = now
+        var envelope = quietEnvelope(now: now)
+        envelope.accounts = [
+            BaAccountProfile(id: "cn-main", server: .cn, displayName: "国服主号", profile: firstProfile, sortOrder: 0),
+            BaAccountProfile(id: "cn-alt", server: .cn, displayName: "国服小号", profile: secondProfile, sortOrder: 1),
+        ]
+        envelope.selectedAccountID = "cn-main"
+        envelope.selectedServer = .cn
+
+        let plan = BaNotificationPlanner.makePlan(
+            envelope: envelope,
+            activities: [],
+            pools: [],
+            now: now
+        )
+
+        XCTAssertEqual(plan.reminders.map(\.kind), [.ap, .ap])
+        XCTAssertEqual(
+            plan.identifiers,
+            [
+                BaNotificationPlan.managedIdentifierPrefix + "account.cn-main.cn.ap.threshold",
+                BaNotificationPlan.managedIdentifierPrefix + "account.cn-alt.cn.ap.threshold",
+            ]
+        )
+        XCTAssertEqual(plan.reminders.map(\.bodyKey), [
+            "ba.notification.account.ap.body",
+            "ba.notification.account.ap.body",
+        ])
+        XCTAssertEqual(plan.reminders.map { $0.bodyArguments.first }, ["国服主号", "国服小号"])
+        XCTAssertEqual(plan.reminders.map(\.fireDate), [
+            now.addingTimeInterval(120 * 60),
+            now.addingTimeInterval(420 * 60),
+        ])
+    }
+
+    func testEnvelopePlanIgnoresDisabledAccounts() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        var enabledProfile = quietProfile(now: now)
+        enabledProfile.apNotificationsEnabled = true
+        enabledProfile.apCurrent = 100
+        enabledProfile.apNotifyThreshold = 120
+        enabledProfile.apRegenBaseAt = now
+        var disabledProfile = enabledProfile
+        disabledProfile.nickname = "Disabled"
+        disabledProfile.apCurrent = 10
+        var envelope = quietEnvelope(now: now)
+        envelope.accounts = [
+            BaAccountProfile(id: "enabled", server: .cn, displayName: "Enabled", profile: enabledProfile, sortOrder: 0),
+            BaAccountProfile(id: "disabled", server: .cn, displayName: "Disabled", profile: disabledProfile, isEnabled: false, sortOrder: 1),
+        ]
+        envelope.selectedAccountID = "enabled"
+        envelope.selectedServer = .cn
+
+        let plan = BaNotificationPlanner.makePlan(
+            envelope: envelope,
+            activities: [],
+            pools: [],
+            now: now
+        )
+
+        XCTAssertEqual(plan.reminders.map(\.bodyArguments.first), ["Enabled"])
+        XCTAssertTrue(plan.identifiers.allSatisfy { $0.contains("disabled") == false })
+    }
+
+    func testEnvelopePlanKeepsTimelineRemindersServerScoped() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        var profile = quietProfile(now: now)
+        profile.apNotificationsEnabled = false
+        var envelope = quietEnvelope(now: now)
+        envelope.globalSettings.calendarUpcomingNotificationsEnabled = true
+        envelope.globalSettings.calendarPoolNotifyLead = .twentyFourHours
+        envelope.accounts = [
+            BaAccountProfile(id: "cn-main", server: .cn, displayName: "国服主号", profile: profile, sortOrder: 0),
+            BaAccountProfile(id: "cn-alt", server: .cn, displayName: "国服小号", profile: profile, sortOrder: 1),
+        ]
+        envelope.selectedAccountID = "cn-main"
+        envelope.selectedServer = .cn
+        let activity = BaActivityEntry(
+            id: 10,
+            title: "夏日活动",
+            kindId: 1,
+            kindName: "活动",
+            beginAt: now.addingTimeInterval(2 * 24 * 60 * 60),
+            endAt: now.addingTimeInterval(3 * 24 * 60 * 60),
+            linkURL: nil,
+            imageURL: nil
+        )
+
+        let plan = BaNotificationPlanner.makePlan(
+            envelope: envelope,
+            activities: [activity],
+            pools: [],
+            now: now
+        )
+
+        XCTAssertEqual(plan.reminders.map(\.kind), [.activityStart])
+        XCTAssertEqual(plan.identifiers, [
+            BaNotificationPlan.managedIdentifierPrefix + "cn.activityStart.10",
+        ])
+    }
+
+    func testPreferenceSnapshotScansNonActiveEnabledAccounts() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        var inactiveProfile = quietProfile(now: now)
+        inactiveProfile.apNotificationsEnabled = false
+        var activeProfile = quietProfile(now: now)
+        activeProfile.apNotificationsEnabled = false
+        var previous = quietEnvelope(now: now)
+        previous.accounts = [
+            BaAccountProfile(id: "active", server: .cn, displayName: "Active", profile: activeProfile, sortOrder: 0),
+            BaAccountProfile(id: "inactive", server: .jp, displayName: "Inactive", profile: inactiveProfile, sortOrder: 1),
+        ]
+        previous.selectedAccountID = "active"
+        previous.selectedServer = .cn
+        var next = previous
+        next.accounts[1].profile.apNotificationsEnabled = true
+
+        XCTAssertTrue(
+            BaNotificationPreferenceSnapshot(envelope: next)
+                .becameEnabled(from: BaNotificationPreferenceSnapshot(envelope: previous))
+        )
+    }
+
     func testLiveActivityCandidatesPreferUrgentResourceAndRunningTimeline() {
         let now = Date(timeIntervalSince1970: 1_800_000_000)
         var settings = quietSettings(now: now)
@@ -303,5 +443,26 @@ final class BaNotificationPlannerTests: XCTestCase {
         settings.poolEndingNotificationsEnabled = false
         settings.calendarPoolChangeNotificationsEnabled = false
         return settings
+    }
+
+    private func quietEnvelope(now: Date) -> BaSettingsEnvelope {
+        var envelope = BaSettingsEnvelope.defaults(now: now)
+        envelope.globalSettings.activityNotificationsEnabled = false
+        envelope.globalSettings.poolNotificationsEnabled = false
+        envelope.globalSettings.calendarUpcomingNotificationsEnabled = false
+        envelope.globalSettings.calendarEndingNotificationsEnabled = false
+        envelope.globalSettings.poolUpcomingNotificationsEnabled = false
+        envelope.globalSettings.poolEndingNotificationsEnabled = false
+        envelope.globalSettings.calendarPoolChangeNotificationsEnabled = false
+        return envelope
+    }
+
+    private func quietProfile(now: Date) -> BaServerProfile {
+        var profile = BaServerProfile.defaults(now: now)
+        profile.apNotificationsEnabled = false
+        profile.cafeApNotificationsEnabled = false
+        profile.visitNotificationsEnabled = false
+        profile.arenaRefreshNotificationsEnabled = false
+        return profile
     }
 }

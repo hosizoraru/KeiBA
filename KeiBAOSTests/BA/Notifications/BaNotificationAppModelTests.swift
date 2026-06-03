@@ -45,6 +45,38 @@ final class BaNotificationAppModelTests: XCTestCase {
         XCTAssertTrue(coordinator.calls[0].settings.poolEndingNotificationsEnabled)
     }
 
+    func testNonActiveAccountNotificationToggleRefreshesScheduleWithFullEnvelope() async throws {
+        let defaults = try makeIsolatedDefaults()
+        let coordinator = RecordingNotificationCoordinator()
+        let model = makeAppModel(defaults: defaults, coordinator: coordinator) { envelope in
+            let base = Date(timeIntervalSince1970: 1_800_000_000)
+            var activeProfile = BaServerProfile.defaults(now: base)
+            activeProfile.apNotificationsEnabled = false
+            var inactiveProfile = BaServerProfile.defaults(now: base)
+            inactiveProfile.nickname = "JP Sensei"
+            inactiveProfile.friendCode = "jp000001"
+            inactiveProfile.apNotificationsEnabled = false
+            envelope.accounts = [
+                BaAccountProfile(id: "active", server: .cn, displayName: "Active", profile: activeProfile, sortOrder: 0),
+                BaAccountProfile(id: "inactive", server: .jp, displayName: "Inactive", profile: inactiveProfile, sortOrder: 1),
+            ]
+            envelope.selectedAccountID = "active"
+            envelope.selectedServer = .cn
+        }
+
+        let previousEnvelope = model.envelope
+        model.envelope.updateAccount(id: "inactive") { account in
+            account.profile.apNotificationsEnabled = true
+        }
+        model.persistEnvelope(previousServer: model.settings.server, previousEnvelope: previousEnvelope)
+
+        await assertCoordinatorCallCount(1, coordinator: coordinator)
+        let envelope = try XCTUnwrap(coordinator.calls[0].envelope)
+        XCTAssertTrue(coordinator.calls[0].requestAuthorizationIfNeeded)
+        XCTAssertEqual(envelope.accounts.map(\.id), ["active", "inactive"])
+        XCTAssertTrue(envelope.accounts.first { $0.id == "inactive" }?.profile.apNotificationsEnabled ?? false)
+    }
+
     func testIdentityTextUpdateSkipsNotificationRefresh() async throws {
         let defaults = try makeIsolatedDefaults()
         let coordinator = RecordingNotificationCoordinator()
@@ -209,6 +241,7 @@ final class BaNotificationAppModelTests: XCTestCase {
 @MainActor
 private final class RecordingNotificationCoordinator: BaNotificationCoordinating {
     struct Call {
+        var envelope: BaSettingsEnvelope?
         var settings: BaAppSettings
         var activities: [BaActivityEntry]
         var pools: [BaPoolEntry]
@@ -230,6 +263,27 @@ private final class RecordingNotificationCoordinator: BaNotificationCoordinating
     ) async {
         calls.append(
             Call(
+                envelope: nil,
+                settings: settings,
+                activities: activities,
+                pools: pools,
+                requestAuthorizationIfNeeded: requestAuthorizationIfNeeded,
+                now: now
+            )
+        )
+    }
+
+    func synchronize(
+        envelope: BaSettingsEnvelope,
+        settings: BaAppSettings,
+        activities: [BaActivityEntry],
+        pools: [BaPoolEntry],
+        requestAuthorizationIfNeeded: Bool,
+        now: Date
+    ) async {
+        calls.append(
+            Call(
+                envelope: envelope,
                 settings: settings,
                 activities: activities,
                 pools: pools,
