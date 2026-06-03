@@ -260,12 +260,18 @@ nonisolated extension BaSettingsEnvelope {
         let selectedByID = copy.selectedAccountID.flatMap { id in
             copy.accounts.first { $0.id == id }
         }
+        let selectedEnabledByID = selectedByID.flatMap { account in
+            account.isEnabled ? account : nil
+        }
+        let hasEnabledAccount = copy.accounts.contains(where: \.isEnabled)
         let resolvedAccount =
-            selectedByID.flatMap { $0.server == copy.selectedServer ? $0 : nil } ??
+            selectedEnabledByID.flatMap { $0.server == copy.selectedServer ? $0 : nil } ??
             copy.accounts.first { $0.server == copy.selectedServer && $0.isEnabled } ??
-            copy.accounts.first { $0.server == copy.selectedServer } ??
-            selectedByID ??
+            (hasEnabledAccount ? nil : selectedByID.flatMap { $0.server == copy.selectedServer ? $0 : nil }) ??
+            selectedEnabledByID ??
             copy.accounts.first(where: \.isEnabled) ??
+            selectedByID ??
+            copy.accounts.first { $0.server == copy.selectedServer } ??
             copy.accounts[0]
 
         copy.selectedAccountID = resolvedAccount.id

@@ -255,6 +255,31 @@ final class BaOverviewSettingsTests: XCTestCase {
         XCTAssertEqual(normalized.flattenedSettings().nickname, "Second")
     }
 
+    func testNormalizationRepairsDisabledSelectedAccountWhenEnabledFallbackExists() {
+        let base = Date(timeIntervalSince1970: 1_700_000_000)
+        var firstProfile = BaServerProfile.defaults(now: base)
+        firstProfile.nickname = "First"
+        var disabledProfile = BaServerProfile.defaults(now: base)
+        disabledProfile.nickname = "Disabled"
+        var thirdProfile = BaServerProfile.defaults(now: base)
+        thirdProfile.nickname = "Third"
+
+        var envelope = BaSettingsEnvelope.defaults(now: base)
+        envelope.accounts = [
+            BaAccountProfile(id: "first", server: .cn, displayName: "First", profile: firstProfile, sortOrder: 0),
+            BaAccountProfile(id: "disabled", server: .cn, displayName: "Disabled", profile: disabledProfile, isEnabled: false, sortOrder: 1),
+            BaAccountProfile(id: "third", server: .jp, displayName: "Third", profile: thirdProfile, sortOrder: 2),
+        ]
+        envelope.selectedAccountID = "disabled"
+        envelope.selectedServer = .cn
+
+        let normalized = envelope.normalized()
+
+        XCTAssertEqual(normalized.selectedAccountID, "first")
+        XCTAssertEqual(normalized.selectedServer, .cn)
+        XCTAssertEqual(normalized.flattenedSettings().nickname, "First")
+    }
+
     func testFriendCodeKeepsEightUppercaseLettersOrDigits() {
         XCTAssertEqual(BaFriendCodeFormat.sanitizedDraft("ab-12 cd34xyz"), "AB12CD34")
         XCTAssertEqual(BaFriendCodeFormat.normalized("ke1os26x"), "KE1OS26X")
