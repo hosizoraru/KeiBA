@@ -15,6 +15,8 @@ import SwiftUI
 #endif
 
 enum BaSnapshotTesting {
+    private static let defaultCanvasSize = CGSize(width: 393, height: 852)
+
     static var baselineDirectory: URL {
         let url = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -59,12 +61,14 @@ enum BaSnapshotTesting {
     #if canImport(UIKit)
         private static func render<V: View>(view: V) -> UIImage {
             let hosting = UIHostingController(rootView: view)
-            let size = UIScreen.main.bounds.size
+            let size = defaultCanvasSize
             hosting.view.frame = CGRect(origin: .zero, size: size)
             hosting.view.layoutIfNeeded()
 
-            let renderer = UIGraphicsImageRenderer(size: size)
-            return renderer.image { ctx in
+            let format = UIGraphicsImageRendererFormat()
+            format.scale = 2
+            let renderer = UIGraphicsImageRenderer(size: size, format: format)
+            return renderer.image { _ in
                 hosting.view.drawHierarchy(in: CGRect(origin: .zero, size: size), afterScreenUpdates: true)
             }
         }

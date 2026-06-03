@@ -286,6 +286,67 @@ final class BaOverviewSettingsTests: XCTestCase {
         XCTAssertEqual(BaFriendCodeFormat.normalized("short7"), BaFriendCodeFormat.fallback)
     }
 
+    func testAccountDisplayTextDisambiguatesCustomAccountNames() {
+        var profile = BaServerProfile.defaults()
+        profile.nickname = "JPSensei"
+        profile.friendCode = "JP000003"
+        let account = BaAccountProfile(
+            id: "jp-main",
+            server: .jp,
+            displayName: "JP Main",
+            profile: profile
+        )
+
+        XCTAssertEqual(account.title, "JP Main")
+        XCTAssertEqual(
+            BaAccountDisplayText.compactDetail(for: account),
+            [BaServer.jp.title, "JPSensei", "# JP000003"].joined(separator: " · ")
+        )
+        XCTAssertEqual(
+            BaAccountDisplayText.switchTitle(for: account),
+            ["JP Main", BaServer.jp.title, "JPSensei", "# JP000003"].joined(separator: " · ")
+        )
+    }
+
+    func testAccountDisplayTextAvoidsRepeatingNicknameTitle() {
+        var profile = BaServerProfile.defaults()
+        profile.nickname = "Kei"
+        profile.friendCode = "ARISUKEI"
+        let account = BaAccountProfile(server: .global, profile: profile)
+
+        XCTAssertEqual(account.title, "Kei")
+        XCTAssertEqual(
+            BaAccountDisplayText.compactDetail(for: account),
+            [BaServer.global.title, "# ARISUKEI"].joined(separator: " · ")
+        )
+        XCTAssertEqual(
+            BaAccountDisplayText.switchTitle(for: account),
+            ["Kei", BaServer.global.title, "# ARISUKEI"].joined(separator: " · ")
+        )
+    }
+
+    func testAccountDisplayTextFallsBackForBlankDraftValues() {
+        var profile = BaServerProfile.defaults()
+        profile.nickname = "  "
+        profile.friendCode = "  "
+        let account = BaAccountProfile(server: .cn, displayName: "  ", profile: profile)
+
+        XCTAssertEqual(account.title, BaL10n.string("ba.account.new.defaultName"))
+        XCTAssertEqual(
+            account.detail,
+            String(
+                format: BaL10n.string("ba.account.summary.format"),
+                BaServer.cn.title,
+                BaL10n.string("ba.common.none"),
+                BaL10n.string("ba.common.none")
+            )
+        )
+        XCTAssertEqual(
+            BaAccountDisplayText.switchTitle(for: account),
+            [BaL10n.string("ba.account.new.defaultName"), BaServer.cn.title].joined(separator: " · ")
+        )
+    }
+
     func testAppLanguageDefaultsPersistAndLookupLocalizedStrings() throws {
         let defaults = try makeIsolatedDefaults()
         var envelope = BaSettingsEnvelope.defaults(now: Date(timeIntervalSince1970: 1_700_000_000))
