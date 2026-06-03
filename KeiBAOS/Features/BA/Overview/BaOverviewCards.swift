@@ -155,17 +155,21 @@ struct BaOverviewIdentityCard: View {
 
     private var accountMenu: some View {
         Menu {
-            Picker(BaL10n.string("ba.account.switch.title"), selection: accountBinding) {
-                ForEach(accounts) { account in
+            ForEach(accounts) { account in
+                Button {
+                    onAccountSelected(account.id)
+                } label: {
                     Label {
-                        Text(account.title)
+                        Text(accountSwitchTitle(for: account))
                     } icon: {
-                        Image(systemName: account.isEnabled ? "person.crop.circle" : "person.crop.circle.badge.xmark")
+                        Image(systemName: accountSwitchSystemImage(for: account))
                     }
-                    .tag(account.id)
                 }
+                .disabled(account.id == self.account.id || account.isEnabled == false)
             }
+
             Divider()
+
             Button(action: onManageAccounts) {
                 Label(BaL10n.string("ba.account.manage.title"), systemImage: "person.crop.circle.badge.plus")
             }
@@ -180,6 +184,32 @@ struct BaOverviewIdentityCard: View {
         .fixedSize(horizontal: true, vertical: false)
         .help(Text(BaL10n.string("ba.account.switch.title")))
         .accessibilityLabel(Text(BaL10n.string("ba.account.switch.title")))
+    }
+
+    private func accountSwitchTitle(for account: BaAccountProfile) -> String {
+        let title = account.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let nickname = account.profile.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+        let friendCode = account.profile.friendCode.trimmingCharacters(in: .whitespacesAndNewlines)
+        var parts = [
+            title.isEmpty ? BaL10n.string("ba.account.new.defaultName") : title,
+            account.server.title,
+        ]
+
+        if nickname.isEmpty == false {
+            parts.append(nickname)
+        }
+        if friendCode.isEmpty == false {
+            parts.append("# \(friendCode)")
+        }
+
+        return parts.joined(separator: " · ")
+    }
+
+    private func accountSwitchSystemImage(for account: BaAccountProfile) -> String {
+        if account.isEnabled == false {
+            return "person.crop.circle.badge.xmark"
+        }
+        return account.id == self.account.id ? "checkmark.circle.fill" : "person.crop.circle"
     }
 
     @ViewBuilder
@@ -218,13 +248,6 @@ struct BaOverviewIdentityCard: View {
             )
         )
         #endif
-    }
-
-    private var accountBinding: Binding<BaAccountID> {
-        Binding(
-            get: { account.id },
-            set: onAccountSelected
-        )
     }
 
     private func copyFriendCode() {
