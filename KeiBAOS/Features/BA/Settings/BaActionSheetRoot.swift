@@ -1083,78 +1083,52 @@ private struct BaAccountManagementRow: View {
     let onDelete: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top, spacing: 12) {
-                Image(systemName: account.isEnabled ? "person.crop.circle" : "person.crop.circle.badge.xmark")
-                    .font(.title2)
-                    .foregroundStyle(isActive ? BaDesign.blue : .secondary)
-                    .frame(width: 30)
+        HStack(alignment: .center, spacing: 12) {
+            Button(action: onSelect) {
+                HStack(alignment: .top, spacing: 12) {
+                    Image(systemName: leadingSystemImage)
+                        .font(.title3.weight(.semibold))
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(isActive ? BaDesign.blue : .secondary)
+                        .frame(width: 28, height: 28)
 
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 8) {
-                        Text(account.title)
-                            .font(.headline)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.82)
+                    VStack(alignment: .leading, spacing: 5) {
+                        HStack(spacing: 7) {
+                            Text(account.title)
+                                .font(.headline)
+                                .foregroundStyle(.primary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.82)
 
-                        if isActive {
-                            Text(BaL10n.string("ba.account.active.badge"))
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(BaDesign.blue)
+                            if isActive {
+                                BaAccountStatusChip(
+                                    title: BaL10n.string("ba.account.active.badge"),
+                                    tint: BaDesign.blue
+                                )
+                            }
                         }
-                    }
 
-                    Text(account.detail)
+                        Text(compactDetail)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                        .lineLimit(2)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.78)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-
-                Spacer(minLength: 8)
-
-                Toggle(BaL10n.string("ba.account.enabled.title"), isOn: enabledBinding)
-                    .labelsHidden()
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .disabled(isActive || account.isEnabled == false)
+            .opacity(account.isEnabled ? 1 : 0.58)
+            .accessibilityLabel(Text(account.detail))
 
-            HStack(spacing: 8) {
-                Button(isActive ? BaL10n.string("ba.account.active.action") : BaL10n.string("ba.account.use.action")) {
-                    onSelect()
-                }
-                .disabled(isActive || account.isEnabled == false)
+            Toggle(BaL10n.string("ba.account.enabled.title"), isOn: enabledBinding)
+                .labelsHidden()
 
-                Button(BaL10n.string("ba.account.edit.title")) {
-                    onEdit()
-                }
-
-                Spacer(minLength: 0)
-
-                Button {
-                    onMove(-1)
-                } label: {
-                    Image(systemName: "arrow.up")
-                }
-                .disabled(canMoveUp == false)
-                .accessibilityLabel(Text(BaL10n.string("ba.account.moveUp.title")))
-
-                Button {
-                    onMove(1)
-                } label: {
-                    Image(systemName: "arrow.down")
-                }
-                .disabled(canMoveDown == false)
-                .accessibilityLabel(Text(BaL10n.string("ba.account.moveDown.title")))
-
-                Button(role: .destructive) {
-                    onDelete()
-                } label: {
-                    Image(systemName: "trash")
-                }
-                .disabled(canDelete == false)
-                .accessibilityLabel(Text(BaL10n.string("ba.account.delete.title")))
-            }
-            .buttonStyle(.borderless)
+            actionsMenu
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 8)
     }
 
     private var enabledBinding: Binding<Bool> {
@@ -1162,6 +1136,89 @@ private struct BaAccountManagementRow: View {
             get: { account.isEnabled },
             set: onEnabledChange
         )
+    }
+
+    private var leadingSystemImage: String {
+        if account.isEnabled == false {
+            return "person.crop.circle.badge.xmark"
+        }
+        return isActive ? "checkmark.circle.fill" : "person.crop.circle"
+    }
+
+    private var compactDetail: String {
+        [
+            account.server.title,
+            account.profile.nickname,
+            "# \(account.profile.friendCode)",
+        ].joined(separator: " · ")
+    }
+
+    private var actionsMenu: some View {
+        Menu {
+            Button {
+                onSelect()
+            } label: {
+                Label(
+                    isActive ? BaL10n.string("ba.account.active.action") : BaL10n.string("ba.account.use.action"),
+                    systemImage: isActive ? "checkmark.circle.fill" : "person.crop.circle.badge.checkmark"
+                )
+            }
+            .disabled(isActive || account.isEnabled == false)
+
+            Button {
+                onEdit()
+            } label: {
+                Label(BaL10n.string("ba.account.edit.title"), systemImage: "pencil")
+            }
+
+            Divider()
+
+            Button {
+                onMove(-1)
+            } label: {
+                Label(BaL10n.string("ba.account.moveUp.title"), systemImage: "arrow.up")
+            }
+            .disabled(canMoveUp == false)
+
+            Button {
+                onMove(1)
+            } label: {
+                Label(BaL10n.string("ba.account.moveDown.title"), systemImage: "arrow.down")
+            }
+            .disabled(canMoveDown == false)
+
+            Divider()
+
+            Button(role: .destructive) {
+                onDelete()
+            } label: {
+                Label(BaL10n.string("ba.account.delete.title"), systemImage: "trash")
+            }
+            .disabled(canDelete == false)
+        } label: {
+            Image(systemName: "ellipsis.circle")
+                .font(.title3.weight(.semibold))
+                .symbolRenderingMode(.hierarchical)
+                .frame(width: 32, height: 32)
+                .contentShape(Circle())
+        }
+        .menuOrder(.fixed)
+        .buttonStyle(.borderless)
+        .accessibilityLabel(Text(BaL10n.string("ba.action.more.title")))
+    }
+}
+
+private struct BaAccountStatusChip: View {
+    let title: String
+    let tint: Color
+
+    var body: some View {
+        Text(title)
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(tint)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background(tint.opacity(0.10), in: Capsule())
     }
 }
 
