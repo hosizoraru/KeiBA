@@ -160,19 +160,46 @@ private struct BaWatchTeacherHeader: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.78)
 
-                Text(snapshot.serverName)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                    Text(String(format: String(localized: "ba.watch.friendCode.format"), snapshot.friendCode))
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.75)
+                HStack(spacing: 5) {
+                    BaWatchHeaderChip(title: snapshot.serverName, systemImage: "globe.asia.australia.fill")
+                    BaWatchHeaderChip(
+                        title: "# \(snapshot.friendCode)",
+                        systemImage: "number"
+                    )
+                    .accessibilityLabel(
+                        Text(String(format: String(localized: "ba.watch.friendCode.format"), snapshot.friendCode))
+                    )
+                }
+                .font(.caption2.weight(.semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.vertical, 2)
         .baMotion(BaMotion.standard, value: snapshot.dutyStudentName)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct BaWatchHeaderChip: View {
+    let title: String
+    let systemImage: String
+
+    var body: some View {
+        Label {
+            Text(title)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+        } icon: {
+            Image(systemName: systemImage)
+                .font(.caption2.weight(.semibold))
+                .symbolRenderingMode(.hierarchical)
+        }
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 7)
+        .padding(.vertical, 4)
+        .background(.thinMaterial, in: Capsule())
     }
 }
 
