@@ -211,11 +211,6 @@
 			path = KeiBAOSWatchWidgets;
 			sourceTree = "<group>";
 		};
-		98BA05052FBC000000000505 /* KeiBAOSWidgetsShared */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = KeiBAOSWidgetsShared;
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -271,7 +266,6 @@
 				9893E4752FB52F57001F2D43 /* KeiBAOS */,
 				98BA03052FBA000000000305 /* KeiBAOSShared */,
 				98BA04052FBB000000000405 /* KeiBAOSWatchShared */,
-				98BA05052FBC000000000505 /* KeiBAOSWidgetsShared */,
 				98BA03042FBA000000000304 /* KeiBAOSLiveActivities */,
 				98BA04042FBB000000000404 /* KeiBAOSWatch */,
 				98BA05042FBC000000000504 /* KeiBAOSWatchWidgets */,
@@ -380,7 +374,6 @@
 				98BA03042FBA000000000304 /* KeiBAOSLiveActivities */,
 				98BA03052FBA000000000305 /* KeiBAOSShared */,
 				98BA04052FBB000000000405 /* KeiBAOSWatchShared */,
-				98BA05052FBC000000000505 /* KeiBAOSWidgetsShared */,
 			);
 			name = KeiBAOSLiveActivities;
 			productName = KeiBAOSLiveActivities;
@@ -423,7 +416,6 @@
 			fileSystemSynchronizedGroups = (
 				98BA04052FBB000000000405 /* KeiBAOSWatchShared */,
 				98BA05042FBC000000000504 /* KeiBAOSWatchWidgets */,
-				98BA05052FBC000000000505 /* KeiBAOSWidgetsShared */,
 			);
 			name = KeiBAOSWatchWidgets;
 			productName = KeiBAOSWatchWidgets;
