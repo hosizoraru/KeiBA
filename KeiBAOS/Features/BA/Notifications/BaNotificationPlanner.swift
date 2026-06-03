@@ -680,7 +680,7 @@ nonisolated enum BaNotificationPlanner {
         values: String...
     ) -> [String] {
         guard let account else { return values }
-        return [account.title] + values
+        return [BaAccountDisplayText.switchTitle(for: account)] + values
     }
 
     private static func safeIdentifierPart(_ value: String) -> String {

@@ -129,13 +129,15 @@ final class BaNotificationPlannerTests: XCTestCase {
         secondProfile.apLimit = 240
         secondProfile.apNotifyThreshold = 120
         secondProfile.apRegenBaseAt = now
-        var envelope = quietEnvelope(now: now)
-        envelope.accounts = [
+        let accounts = [
             BaAccountProfile(id: "cn-main", server: .cn, displayName: "国服主号", profile: firstProfile, sortOrder: 0),
             BaAccountProfile(id: "cn-alt", server: .cn, displayName: "国服小号", profile: secondProfile, sortOrder: 1),
         ]
+        var envelope = quietEnvelope(now: now)
+        envelope.accounts = accounts
         envelope.selectedAccountID = "cn-main"
         envelope.selectedServer = .cn
+        let normalizedAccounts = envelope.normalized().accounts
 
         let plan = BaNotificationPlanner.makePlan(
             envelope: envelope,
@@ -156,7 +158,10 @@ final class BaNotificationPlannerTests: XCTestCase {
             "ba.notification.account.ap.body",
             "ba.notification.account.ap.body",
         ])
-        XCTAssertEqual(plan.reminders.map { $0.bodyArguments.first }, ["国服主号", "国服小号"])
+        XCTAssertEqual(
+            plan.reminders.map { $0.bodyArguments.first },
+            normalizedAccounts.map { BaAccountDisplayText.switchTitle(for: $0) }
+        )
         XCTAssertEqual(plan.reminders.map(\.fireDate), [
             now.addingTimeInterval(120 * 60),
             now.addingTimeInterval(420 * 60),
@@ -173,9 +178,16 @@ final class BaNotificationPlannerTests: XCTestCase {
         var disabledProfile = enabledProfile
         disabledProfile.nickname = "Disabled"
         disabledProfile.apCurrent = 10
+        let enabledAccount = BaAccountProfile(
+            id: "enabled",
+            server: .cn,
+            displayName: "Enabled",
+            profile: enabledProfile,
+            sortOrder: 0
+        )
         var envelope = quietEnvelope(now: now)
         envelope.accounts = [
-            BaAccountProfile(id: "enabled", server: .cn, displayName: "Enabled", profile: enabledProfile, sortOrder: 0),
+            enabledAccount,
             BaAccountProfile(id: "disabled", server: .cn, displayName: "Disabled", profile: disabledProfile, isEnabled: false, sortOrder: 1),
         ]
         envelope.selectedAccountID = "enabled"
@@ -188,7 +200,7 @@ final class BaNotificationPlannerTests: XCTestCase {
             now: now
         )
 
-        XCTAssertEqual(plan.reminders.map(\.bodyArguments.first), ["Enabled"])
+        XCTAssertEqual(plan.reminders.map(\.bodyArguments.first), [BaAccountDisplayText.switchTitle(for: enabledAccount)])
         XCTAssertTrue(plan.identifiers.allSatisfy { $0.contains("disabled") == false })
     }
 
