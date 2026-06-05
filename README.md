@@ -2,10 +2,17 @@
 
 [![CI][ci-badge]][ci-workflow] ![Platforms][platforms-badge] ![Swift][swift-badge]
 
+[English](README.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md)
+
 KeiBA is a native Apple-platform companion app for Blue Archive players. It
 brings daily resource tracking, event timelines, student guide data, music,
 notifications, widgets, Live Activities, and Apple Watch glances into one
 Apple-native app for iPhone, iPad, Mac, and Apple Watch.
+
+Blue Archive is often shortened to BA in global community discussion, while
+Japanese players commonly say "Blue Archive" or "Buruaka" (`ブルアカ`). The
+localized READMEs keep those regional naming habits in mind instead of treating
+the project as a literal translation exercise.
 
 The project is in active development and is aimed at modern Apple operating
 systems. The main app targets iOS, iPadOS, and macOS 26. The watchOS companion,
