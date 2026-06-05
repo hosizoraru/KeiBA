@@ -3,7 +3,7 @@
 ## Project Identity
 
 - The app is named `KeiBA`.
-- Prefer user-visible product naming as `KeiBA`; do not reintroduce `KeiBAOS` or legacy bundle/app-group compatibility unless the user explicitly asks.
+- Prefer user-visible product naming as `KeiBA`; do not reintroduce old product names or legacy bundle/app-group compatibility unless the user explicitly asks.
 - This is an Apple-platform app. Prefer AppKit/UIKit-backed hot paths where they are already established or clearly beneficial, with SwiftUI used as support and composition glue.
 
 ## Simulator Review In Codex
