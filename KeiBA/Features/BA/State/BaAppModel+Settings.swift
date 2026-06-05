@@ -21,6 +21,14 @@ extension BaAppModel {
         return enabledAccounts.isEmpty ? envelope.accounts : enabledAccounts
     }
 
+    var watchDashboardAccount: BaAccountProfile {
+        envelope.watchDashboardAccount
+    }
+
+    var switchableWatchDashboardAccounts: [BaAccountProfile] {
+        switchableAccounts
+    }
+
     var currentProfile: BaServerProfile {
         envelope.selectedAccount.profile
     }
@@ -63,6 +71,16 @@ extension BaAppModel {
         let previousEnvelope = envelope
         envelope.setSelectedAccountID(accountID)
         persistEnvelope(previousServer: previousServer, previousEnvelope: previousEnvelope)
+    }
+
+    func setWatchDashboardAccount(_ accountID: BaAccountID) {
+        let switchableIDs = Set(switchableWatchDashboardAccounts.map(\.id))
+        guard switchableIDs.contains(accountID) else { return }
+        guard envelope.watchDashboardAccount.id != accountID else { return }
+        let previousServer = settings.server
+        let previousEnvelope = envelope
+        envelope.globalSettings.watchDashboardAccountID = accountID
+        persistEnvelope(previousServer: previousServer, previousEnvelope: previousEnvelope, refreshNotifications: false)
     }
 
     func updateSettings(_ transform: (inout BaAppSettings) -> Void) {

@@ -10040,6 +10040,94 @@
         }
       }
     },
+    "ba.settings.watch.account.current.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current on Watch"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch上のアカウント"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前同步"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.account.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dashboard, widgets, and complications stay on this account even when you switch accounts on iPhone."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhoneで別アカウントへ切り替えても、Watchのダッシュボード、ウィジェット、コンプリケーションはこのアカウントを使います。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "即使你在 iPhone 上临时切换账号，Watch 仪表盘、小组件和表盘复杂功能也会固定使用此账号。"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.account.picker.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync Account"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watchへ同期"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同步到 Watch"
+          }
+        }
+      }
+    },
+    "ba.settings.watch.account.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch Account"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watchアカウント"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch 主账号"
+          }
+        }
+      }
+    },
     "ba.settings.watch.actions.footer" : {
       "localizations" : {
         "en" : {

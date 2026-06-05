@@ -17,6 +17,7 @@ struct BaWatchSettingsView: View {
 
     var body: some View {
         Form {
+            accountSection
             connectionSection
             contentSection
             actionsSection
@@ -36,6 +37,48 @@ struct BaWatchSettingsView: View {
 
     private var snapshot: BaWatchDashboardSnapshot {
         model.currentWatchDashboardSnapshot
+    }
+
+    private var watchAccountSelection: Binding<BaAccountID> {
+        Binding {
+            model.watchDashboardAccount.id
+        } set: { accountID in
+            model.setWatchDashboardAccount(accountID)
+            refreshID = UUID()
+        }
+    }
+
+    @ViewBuilder
+    private var accountSection: some View {
+        let account = model.watchDashboardAccount
+        let accounts = model.switchableWatchDashboardAccounts
+        Section {
+            Picker(
+                BaL10n.string("ba.settings.watch.account.picker.title"),
+                selection: watchAccountSelection
+            ) {
+                ForEach(accounts) { account in
+                    Text(BaAccountDisplayText.switchTitle(for: account))
+                        .tag(account.id)
+                }
+            }
+            .disabled(accounts.count < 2)
+
+            LabeledContent(BaL10n.string("ba.settings.watch.account.current.title")) {
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(account.title)
+                        .foregroundStyle(.primary)
+                    Text(BaAccountDisplayText.compactDetail(for: account))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .multilineTextAlignment(.trailing)
+            }
+        } header: {
+            Text(BaL10n.string("ba.settings.watch.account.section"))
+        } footer: {
+            Text(BaL10n.string("ba.settings.watch.account.footer"))
+        }
     }
 
     private var connectionSection: some View {

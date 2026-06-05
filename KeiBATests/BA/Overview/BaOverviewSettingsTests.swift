@@ -301,6 +301,33 @@ final class BaOverviewSettingsTests: XCTestCase {
         XCTAssertEqual(normalized.watchDashboardAccount.id, "cn-main")
     }
 
+    @MainActor
+    func testSettingWatchDashboardAccountDoesNotChangeActiveAccount() throws {
+        let defaults = try makeIsolatedDefaults()
+        let base = Date(timeIntervalSince1970: 1_700_000_000)
+        var cnProfile = BaServerProfile.defaults(now: base)
+        cnProfile.nickname = "CN Main"
+        var jpProfile = BaServerProfile.defaults(now: base)
+        jpProfile.nickname = "JP Main"
+
+        var envelope = BaSettingsEnvelope.defaults(now: base)
+        envelope.accounts = [
+            BaAccountProfile(id: "cn-main", server: .cn, displayName: "CN", profile: cnProfile, sortOrder: 0),
+            BaAccountProfile(id: "jp-main", server: .jp, displayName: "JP", profile: jpProfile, sortOrder: 1),
+        ]
+        envelope.selectedAccountID = "cn-main"
+        envelope.selectedServer = .cn
+        BaSettingsStore(defaults: defaults).saveEnvelope(envelope, updatedAt: base)
+        let model = makeOverviewAppModel(defaults: defaults)
+
+        model.setWatchDashboardAccount("jp-main")
+
+        XCTAssertEqual(model.currentAccount.id, "cn-main")
+        XCTAssertEqual(model.watchDashboardAccount.id, "jp-main")
+        XCTAssertEqual(model.currentWatchDashboardSnapshot.accountID, "jp-main")
+        XCTAssertEqual(BaSettingsStore(defaults: defaults).loadEnvelope().globalSettings.watchDashboardAccountID, "jp-main")
+    }
+
     func testFriendCodeKeepsEightUppercaseLettersOrDigits() {
         XCTAssertEqual(BaFriendCodeFormat.sanitizedDraft("ab-12 cd34xyz"), "AB12CD34")
         XCTAssertEqual(BaFriendCodeFormat.normalized("ke1os26x"), "KE1OS26X")
