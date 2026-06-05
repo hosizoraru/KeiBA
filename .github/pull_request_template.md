@@ -10,7 +10,7 @@
 
 ## Verification
 
-- [ ] `jq empty KeiBAOS/Localizable.xcstrings`
+- [ ] `jq empty KeiBA/Localizable.xcstrings`
 - [ ] `git diff --check`
 - [ ] iOS simulator build
 - [ ] iOS simulator unit tests

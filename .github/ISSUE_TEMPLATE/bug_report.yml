@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a reproducible KeiBAOS problem.
+description: Report a reproducible KeiBA problem.
 title: "[Bug]: "
 labels:
   - bug

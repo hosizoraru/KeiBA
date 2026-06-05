@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping improve KeiBAOS. This project aims for a native
+Thanks for helping improve KeiBA. This project aims for a native
 Apple-platform experience for Blue Archive companion workflows.
 
 ## Development Principles
@@ -15,35 +15,35 @@ Apple-platform experience for Blue Archive companion workflows.
   context menus.
 - Keep changes scoped and easy to review. Split large UI or data changes into
   focused commits.
-- Put user-facing strings in `KeiBAOS/Localizable.xcstrings`.
+- Put user-facing strings in `KeiBA/Localizable.xcstrings`.
 - Keep Blue Archive terms consistent across Simplified Chinese, Japanese, and
   English where localized UI exists.
 
 ## Local Setup
 
 1. Install Xcode 26 or newer.
-2. Open `KeiBAOS.xcodeproj`.
-3. Select the `KeiBAOS` scheme.
+2. Open `KeiBA.xcodeproj`.
+3. Select the `KeiBA` scheme.
 4. Build for iOS Simulator, iPadOS Simulator, or macOS.
 
 Command-line checks:
 
 ```sh
-jq empty KeiBAOS/Localizable.xcstrings
+jq empty KeiBA/Localizable.xcstrings
 git diff --check
 xcodebuild build \
-  -project KeiBAOS.xcodeproj \
-  -scheme KeiBAOS \
+  -project KeiBA.xcodeproj \
+  -scheme KeiBA \
   -destination 'generic/platform=iOS Simulator'
 
 xcodebuild build \
-  -project KeiBAOS.xcodeproj \
-  -scheme KeiBAOS \
+  -project KeiBA.xcodeproj \
+  -scheme KeiBA \
   -destination 'generic/platform=macOS'
 
 xcodebuild test \
-  -project KeiBAOS.xcodeproj \
-  -scheme KeiBAOS \
+  -project KeiBA.xcodeproj \
+  -scheme KeiBA \
   -destination 'platform=macOS'
 ```
 

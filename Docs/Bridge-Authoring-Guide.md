@@ -1,4 +1,4 @@
-# KeiBAOS Bridge 编写指南
+# KeiBA Bridge 编写指南
 
 更新日期：2026-05-29
 

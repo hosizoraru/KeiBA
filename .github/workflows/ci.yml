@@ -70,22 +70,22 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ${{ env.SWIFTPM_CACHE_PATH }}
-          key: ${{ runner.os }}-xcode-26.4.1-spm-${{ hashFiles('KeiBAOS.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          key: ${{ runner.os }}-xcode-26.4.1-spm-${{ hashFiles('KeiBA.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: |
             ${{ runner.os }}-xcode-26.4.1-spm-
 
       - name: Validate localized strings
         run: |
-          jq empty KeiBAOS/Localizable.xcstrings
-          jq empty KeiBAOSLiveActivities/Localizable.xcstrings
-          jq empty KeiBAOSWatch/Localizable.xcstrings
-          jq empty KeiBAOSWatchWidgets/Localizable.xcstrings
+          jq empty KeiBA/Localizable.xcstrings
+          jq empty KeiBALiveActivities/Localizable.xcstrings
+          jq empty KeiBAWatch/Localizable.xcstrings
+          jq empty KeiBAWatchWidgets/Localizable.xcstrings
 
       - name: Resolve Swift packages
         run: |
           xcodebuild -resolvePackageDependencies \
-            -project KeiBAOS.xcodeproj \
-            -scheme KeiBAOS \
+            -project KeiBA.xcodeproj \
+            -scheme KeiBA \
             -clonedSourcePackagesDirPath "$SWIFTPM_CACHE_PATH"
 
       - name: Resolve iOS test simulator
@@ -127,10 +127,10 @@ jobs:
       - name: Build iOS simulator
         run: |
           xcodebuild build \
-            -project KeiBAOS.xcodeproj \
-            -scheme KeiBAOS \
+            -project KeiBA.xcodeproj \
+            -scheme KeiBA \
             -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath "$RUNNER_TEMP/KeiBAOS-iOS" \
+            -derivedDataPath "$RUNNER_TEMP/KeiBA-iOS" \
             -clonedSourcePackagesDirPath "$SWIFTPM_CACHE_PATH" \
             MARKETING_VERSION="$APP_MARKETING_VERSION" \
             CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
@@ -139,12 +139,12 @@ jobs:
       - name: Build iOS tests
         run: |
           xcodebuild build-for-testing \
-            -project KeiBAOS.xcodeproj \
-            -scheme KeiBAOS \
+            -project KeiBA.xcodeproj \
+            -scheme KeiBA \
             -destination '${{ steps.ios-simulator.outputs.destination }}' \
             -destination-timeout 60 \
             -parallel-testing-enabled NO \
-            -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests-iOS" \
+            -derivedDataPath "$RUNNER_TEMP/KeiBA-tests-iOS" \
             -clonedSourcePackagesDirPath "$SWIFTPM_CACHE_PATH" \
             MARKETING_VERSION="$APP_MARKETING_VERSION" \
             CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
@@ -153,15 +153,15 @@ jobs:
       - name: Run iOS unit tests
         run: |
           xcodebuild test-without-building \
-            -project KeiBAOS.xcodeproj \
-            -scheme KeiBAOS \
+            -project KeiBA.xcodeproj \
+            -scheme KeiBA \
             -destination '${{ steps.ios-simulator.outputs.destination }}' \
             -destination-timeout 60 \
             -parallel-testing-enabled NO \
             -testLanguage en \
             -testRegion US \
-            -resultBundlePath "$RUNNER_TEMP/KeiBAOS-iOS-unit.xcresult" \
-            -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests-iOS" \
+            -resultBundlePath "$RUNNER_TEMP/KeiBA-iOS-unit.xcresult" \
+            -derivedDataPath "$RUNNER_TEMP/KeiBA-tests-iOS" \
             MARKETING_VERSION="$APP_MARKETING_VERSION" \
             CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
             CODE_SIGNING_ALLOWED=NO
@@ -169,10 +169,10 @@ jobs:
       - name: Build iOS widgets and Live Activities extension
         run: |
           xcodebuild build \
-            -project KeiBAOS.xcodeproj \
-            -scheme KeiBAOSLiveActivities \
+            -project KeiBA.xcodeproj \
+            -scheme KeiBALiveActivities \
             -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath "$RUNNER_TEMP/KeiBAOS-live-activities" \
+            -derivedDataPath "$RUNNER_TEMP/KeiBA-live-activities" \
             -clonedSourcePackagesDirPath "$SWIFTPM_CACHE_PATH" \
             MARKETING_VERSION="$APP_MARKETING_VERSION" \
             CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
@@ -181,10 +181,10 @@ jobs:
       - name: Build watchOS simulator
         run: |
           xcodebuild build \
-            -project KeiBAOS.xcodeproj \
-            -scheme KeiBAOSWatch \
+            -project KeiBA.xcodeproj \
+            -scheme KeiBAWatch \
             -destination 'generic/platform=watchOS Simulator' \
-            -derivedDataPath "$RUNNER_TEMP/KeiBAOS-watchOS" \
+            -derivedDataPath "$RUNNER_TEMP/KeiBA-watchOS" \
             -clonedSourcePackagesDirPath "$SWIFTPM_CACHE_PATH" \
             MARKETING_VERSION="$APP_MARKETING_VERSION" \
             CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
@@ -193,10 +193,10 @@ jobs:
       - name: Build watchOS widgets extension
         run: |
           xcodebuild build \
-            -project KeiBAOS.xcodeproj \
-            -scheme KeiBAOSWatchWidgets \
+            -project KeiBA.xcodeproj \
+            -scheme KeiBAWatchWidgets \
             -destination 'generic/platform=watchOS Simulator' \
-            -derivedDataPath "$RUNNER_TEMP/KeiBAOS-watchOS-widgets" \
+            -derivedDataPath "$RUNNER_TEMP/KeiBA-watchOS-widgets" \
             -clonedSourcePackagesDirPath "$SWIFTPM_CACHE_PATH" \
             MARKETING_VERSION="$APP_MARKETING_VERSION" \
             CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
@@ -205,10 +205,10 @@ jobs:
       - name: Build macOS tests
         run: |
           xcodebuild build-for-testing \
-            -project KeiBAOS.xcodeproj \
-            -scheme KeiBAOS \
+            -project KeiBA.xcodeproj \
+            -scheme KeiBA \
             -destination 'platform=macOS' \
-            -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests-macOS" \
+            -derivedDataPath "$RUNNER_TEMP/KeiBA-tests-macOS" \
             -clonedSourcePackagesDirPath "$SWIFTPM_CACHE_PATH" \
             MARKETING_VERSION="$APP_MARKETING_VERSION" \
             CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
@@ -218,14 +218,14 @@ jobs:
         continue-on-error: true
         run: |
           xcodebuild test-without-building \
-            -project KeiBAOS.xcodeproj \
-            -scheme KeiBAOS \
+            -project KeiBA.xcodeproj \
+            -scheme KeiBA \
             -destination 'platform=macOS' \
             -parallel-testing-enabled NO \
             -testLanguage en \
             -testRegion US \
-            -resultBundlePath "$RUNNER_TEMP/KeiBAOS-macOS-unit.xcresult" \
-            -derivedDataPath "$RUNNER_TEMP/KeiBAOS-tests-macOS" \
+            -resultBundlePath "$RUNNER_TEMP/KeiBA-macOS-unit.xcresult" \
+            -derivedDataPath "$RUNNER_TEMP/KeiBA-tests-macOS" \
             MARKETING_VERSION="$APP_MARKETING_VERSION" \
             CURRENT_PROJECT_VERSION="$APP_BUILD_VERSION" \
             CODE_SIGNING_ALLOWED=NO
@@ -234,8 +234,8 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: KeiBAOS-Xcode-test-results
-          path: ${{ runner.temp }}/KeiBAOS-*.xcresult
+          name: KeiBA-Xcode-test-results
+          path: ${{ runner.temp }}/KeiBA-*.xcresult
           if-no-files-found: ignore
           retention-days: 7
 
@@ -276,22 +276,22 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ${{ env.SWIFTPM_CACHE_PATH }}
-          key: ${{ runner.os }}-xcode-26.4.1-spm-${{ hashFiles('KeiBAOS.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          key: ${{ runner.os }}-xcode-26.4.1-spm-${{ hashFiles('KeiBA.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: |
             ${{ runner.os }}-xcode-26.4.1-spm-
 
       - name: Build unsigned iOS IPA payload
         run: |
           set -euo pipefail
-          derived_data="$RUNNER_TEMP/KeiBAOS-iOS-Device"
-          artifacts="$RUNNER_TEMP/KeiBAOS-artifacts"
-          app_path="$derived_data/Build/Products/Release-iphoneos/KeiBAOS.app"
+          derived_data="$RUNNER_TEMP/KeiBA-iOS-Device"
+          artifacts="$RUNNER_TEMP/KeiBA-artifacts"
+          app_path="$derived_data/Build/Products/Release-iphoneos/KeiBA.app"
           payload_root="$artifacts/iphoneos"
           payload_dir="$payload_root/Payload"
 
           xcodebuild build \
-            -project KeiBAOS.xcodeproj \
-            -scheme KeiBAOS \
+            -project KeiBA.xcodeproj \
+            -scheme KeiBA \
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -derivedDataPath "$derived_data" \
@@ -303,8 +303,8 @@ jobs:
           test -d "$app_path"
           rm -rf "$payload_root"
           mkdir -p "$payload_dir" "$artifacts"
-          ipa_path="$artifacts/KeiBAOS-iOS-$ARTIFACT_SLUG-unsigned.ipa"
-          ditto "$app_path" "$payload_dir/KeiBAOS.app"
+          ipa_path="$artifacts/KeiBA-iOS-$ARTIFACT_SLUG-unsigned.ipa"
+          ditto "$app_path" "$payload_dir/KeiBA.app"
           (
             cd "$payload_root"
             COPYFILE_DISABLE=1 zip -qry "$ipa_path" Payload
@@ -314,8 +314,8 @@ jobs:
       - name: Upload unsigned iOS IPA
         uses: actions/upload-artifact@v7
         with:
-          name: KeiBAOS-iOS-${{ needs.version.outputs.artifact_slug }}-unsigned
-          path: ${{ runner.temp }}/KeiBAOS-artifacts/KeiBAOS-iOS-${{ needs.version.outputs.artifact_slug }}-unsigned.ipa
+          name: KeiBA-iOS-${{ needs.version.outputs.artifact_slug }}-unsigned
+          path: ${{ runner.temp }}/KeiBA-artifacts/KeiBA-iOS-${{ needs.version.outputs.artifact_slug }}-unsigned.ipa
           if-no-files-found: error
           retention-days: 14
 
@@ -356,22 +356,22 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ${{ env.SWIFTPM_CACHE_PATH }}
-          key: ${{ runner.os }}-xcode-26.4.1-spm-${{ hashFiles('KeiBAOS.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          key: ${{ runner.os }}-xcode-26.4.1-spm-${{ hashFiles('KeiBA.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: |
             ${{ runner.os }}-xcode-26.4.1-spm-
 
       - name: Build unsigned macOS DMG
         run: |
           set -euo pipefail
-          derived_data="$RUNNER_TEMP/KeiBAOS-macOS-Release"
-          artifacts="$RUNNER_TEMP/KeiBAOS-artifacts"
-          app_path="$derived_data/Build/Products/Release/KeiBAOS.app"
-          dmg_stage="$RUNNER_TEMP/KeiBAOS-dmg"
-          dmg_path="$artifacts/KeiBAOS-macOS-$ARTIFACT_SLUG-unsigned.dmg"
+          derived_data="$RUNNER_TEMP/KeiBA-macOS-Release"
+          artifacts="$RUNNER_TEMP/KeiBA-artifacts"
+          app_path="$derived_data/Build/Products/Release/KeiBA.app"
+          dmg_stage="$RUNNER_TEMP/KeiBA-dmg"
+          dmg_path="$artifacts/KeiBA-macOS-$ARTIFACT_SLUG-unsigned.dmg"
 
           xcodebuild build \
-            -project KeiBAOS.xcodeproj \
-            -scheme KeiBAOS \
+            -project KeiBA.xcodeproj \
+            -scheme KeiBA \
             -configuration Release \
             -destination 'generic/platform=macOS' \
             -derivedDataPath "$derived_data" \
@@ -383,10 +383,10 @@ jobs:
           test -d "$app_path"
           rm -rf "$dmg_stage"
           mkdir -p "$dmg_stage" "$artifacts"
-          ditto "$app_path" "$dmg_stage/KeiBAOS.app"
+          ditto "$app_path" "$dmg_stage/KeiBA.app"
           ln -s /Applications "$dmg_stage/Applications"
           hdiutil create \
-            -volname KeiBAOS \
+            -volname KeiBA \
             -srcfolder "$dmg_stage" \
             -ov \
             -format UDZO \
@@ -396,7 +396,7 @@ jobs:
       - name: Upload unsigned macOS DMG
         uses: actions/upload-artifact@v7
         with:
-          name: KeiBAOS-macOS-${{ needs.version.outputs.artifact_slug }}-unsigned
-          path: ${{ runner.temp }}/KeiBAOS-artifacts/KeiBAOS-macOS-${{ needs.version.outputs.artifact_slug }}-unsigned.dmg
+          name: KeiBA-macOS-${{ needs.version.outputs.artifact_slug }}-unsigned
+          path: ${{ runner.temp }}/KeiBA-artifacts/KeiBA-macOS-${{ needs.version.outputs.artifact_slug }}-unsigned.dmg
           if-no-files-found: error
           retention-days: 14

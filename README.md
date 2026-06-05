@@ -1,15 +1,15 @@
-# KeiBAOS
+# KeiBA
 
 [![CI][ci-badge]][ci-workflow]
 
-KeiBAOS is a native SwiftUI companion app for Blue Archive players on
+KeiBA is a native SwiftUI companion app for Blue Archive players on
 Apple platforms. It focuses on AP tracking, cafe AP, activity schedules,
 recruitment pools, student guide data, Live Activities, and memory-lobby
 music in an Apple-native interface.
 
 ## Status
 
-KeiBAOS is in active development. The current app target supports iOS,
+KeiBA is in active development. The current app target supports iOS,
 iPadOS, and macOS 26. A watchOS 26 companion app and WidgetKit glance
 surfaces are in development and are already part of the local build and CI
 verification path. The data model is being shaped with future iCloud sync and
@@ -54,15 +54,15 @@ Build baseline for the current project:
 ## Repository Layout
 
 ```text
-KeiBAOS/                App source, feature modules, localization, app assets
-KeiBAOSLiveActivities/  Widget extension for widgets, Live Activities,
+KeiBA/                App source, feature modules, localization, app assets
+KeiBALiveActivities/  Widget extension for widgets, Live Activities,
                         and Dynamic Island
-KeiBAOSShared/          Types shared by the app and extension
-KeiBAOSWatch/           watchOS companion app source and watch assets
-KeiBAOSWatchShared/     Codable snapshot models shared by iPhone and Watch
-KeiBAOSWatchWidgets/    watchOS WidgetKit extension for Smart Stack surfaces
-KeiBAOSiOSWidgets/      iOS WidgetKit extension for Dashboard widgets
-KeiBAOSTests/           Unit tests for parsing, settings, notifications,
+KeiBAShared/          Types shared by the app and extension
+KeiBAWatch/           watchOS companion app source and watch assets
+KeiBAWatchShared/     Codable snapshot models shared by iPhone and Watch
+KeiBAWatchWidgets/    watchOS WidgetKit extension for Smart Stack surfaces
+KeiBAiOSWidgets/      iOS WidgetKit extension for Dashboard widgets
+KeiBATests/           Unit tests for parsing, settings, notifications,
                         media, and layout
 Docs/                   Project notes and feature coverage
 scripts/                Local maintenance scripts
@@ -112,14 +112,14 @@ revisions.
 
 ## Build
 
-Open `KeiBAOS.xcodeproj` in Xcode 26.5 or newer, select the `KeiBAOS` scheme,
+Open `KeiBA.xcodeproj` in Xcode 26.5 or newer, select the `KeiBA` scheme,
 then build for an iOS 26 simulator, iPadOS 26 simulator, macOS 26, or an
-iOS 26 device. Select the `KeiBAOSWatch` scheme to build the watchOS companion
+iOS 26 device. Select the `KeiBAWatch` scheme to build the watchOS companion
 for a watchOS 26 simulator.
 
 Release install on a connected iPhone or iPad from Xcode:
 
-1. Select the `KeiBAOS` scheme and the physical device in the destination menu.
+1. Select the `KeiBA` scheme and the physical device in the destination menu.
 2. Open `Product > Scheme > Edit Scheme...`.
 3. Select `Run > Info`, set `Build Configuration` to `Release`, then close the sheet.
 4. Confirm `Signing & Capabilities` has the Apple team selected for the app,
@@ -136,18 +136,18 @@ Command-line build examples:
 
 ```sh
 xcodebuild build \
-  -project KeiBAOS.xcodeproj \
-  -scheme KeiBAOS \
+  -project KeiBA.xcodeproj \
+  -scheme KeiBA \
   -destination 'generic/platform=iOS Simulator'
 
 xcodebuild build \
-  -project KeiBAOS.xcodeproj \
-  -scheme KeiBAOS \
+  -project KeiBA.xcodeproj \
+  -scheme KeiBA \
   -destination 'generic/platform=macOS'
 
 xcodebuild build \
-  -project KeiBAOS.xcodeproj \
-  -scheme KeiBAOSWatch \
+  -project KeiBA.xcodeproj \
+  -scheme KeiBAWatch \
   -destination 'generic/platform=watchOS Simulator'
 ```
 
@@ -158,8 +158,8 @@ domain-logic pass:
 
 ```sh
 xcodebuild test \
-  -project KeiBAOS.xcodeproj \
-  -scheme KeiBAOS \
+  -project KeiBA.xcodeproj \
+  -scheme KeiBA \
   -destination 'platform=macOS'
 ```
 
@@ -167,10 +167,10 @@ Focused catalog-filter tests:
 
 ```sh
 xcodebuild test \
-  -project KeiBAOS.xcodeproj \
-  -scheme KeiBAOS \
+  -project KeiBA.xcodeproj \
+  -scheme KeiBA \
   -destination 'platform=macOS' \
-  -only-testing:KeiBAOSTests/BaCatalogFilterTests
+  -only-testing:KeiBATests/BaCatalogFilterTests
 ```
 
 ## CI
@@ -182,10 +182,10 @@ See [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 Pushes to `main` and manual workflow runs also upload side-load test artifacts:
 
-- `KeiBAOS-iOS-<version>-unsigned.ipa` is an unsigned iOS device payload with
+- `KeiBA-iOS-<version>-unsigned.ipa` is an unsigned iOS device payload with
   the embedded Watch app content. It needs re-signing with a valid Apple
   certificate and provisioning profile before installation on a physical device.
-- `KeiBAOS-macOS-<version>-unsigned.dmg` is an unsigned, unnotarized
+- `KeiBA-macOS-<version>-unsigned.dmg` is an unsigned, unnotarized
   macOS build for local smoke testing.
 
 The IPA and DMG are uploaded as separate workflow artifacts so testers can
@@ -193,7 +193,7 @@ download only the platform package they need.
 
 ## Versioning
 
-KeiBAOS keeps Apple bundle versions and CI artifact names separate:
+KeiBA keeps Apple bundle versions and CI artifact names separate:
 
 - `MARKETING_VERSION` / `CFBundleShortVersionString` uses a three-part release
   version such as `1.0.0`.
@@ -209,7 +209,7 @@ name.
 
 ## Data And Assets
 
-KeiBAOS fetches public Blue Archive guide data from GameKee pages and APIs.
+KeiBA fetches public Blue Archive guide data from GameKee pages and APIs.
 Blue Archive names, artwork, music, voice lines, and related game assets
 belong to their respective rights holders.
 
@@ -226,6 +226,6 @@ devices.
 License selection is pending. Until a license is added, all rights are
 reserved by the repository owner.
 
-[ci-badge]: https://github.com/hosizoraru/KeiBAOS/actions/workflows/ci.yml/badge.svg
-[ci-workflow]: https://github.com/hosizoraru/KeiBAOS/actions/workflows/ci.yml
+[ci-badge]: https://github.com/hosizoraru/KeiBA/actions/workflows/ci.yml/badge.svg
+[ci-workflow]: https://github.com/hosizoraru/KeiBA/actions/workflows/ci.yml
 [vorbis-binary-xcframework]: https://github.com/sbooth/vorbis-binary-xcframework

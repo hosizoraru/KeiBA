@@ -1,10 +1,10 @@
-# KeiBAOS SwiftUI + UIKit/AppKit 混合开发迁移计划
+# KeiBA SwiftUI + UIKit/AppKit 混合开发迁移计划
 
 更新日期：2026-05-29
 
 ## 目标
 
-KeiBAOS 继续以 SwiftUI 承担应用结构、导航、状态流、Liquid Glass 风格和简单信息卡片；在 SwiftUI 表达成本高、系统控件能力明显更完整、或者滚动/媒体/富文本需要更强生命周期控制的地方，引入小边界 UIKit/AppKit 桥接。
+KeiBA 继续以 SwiftUI 承担应用结构、导航、状态流、Liquid Glass 风格和简单信息卡片；在 SwiftUI 表达成本高、系统控件能力明显更完整、或者滚动/媒体/富文本需要更强生命周期控制的地方，引入小边界 UIKit/AppKit 桥接。
 
 这份计划用于持续追踪后续迁移，重点覆盖已经重写过的总览、活动、卡池、图鉴、学生详情、语音、影画、学生档案等链路。
 
@@ -28,11 +28,11 @@ KeiBAOS 继续以 SwiftUI 承担应用结构、导航、状态流、Liquid Glass
 
 已有平台桥接：
 
-- `KeiBAOS/Features/BA/Components/Media/BaRemoteAnimatedImageSurface.swift`
+- `KeiBA/Features/BA/Components/Media/BaRemoteAnimatedImageSurface.swift`
   - UIKit：`UIViewRepresentable` 包装 `UIImageView` 播放 GIF。
   - AppKit：`NSViewRepresentable` 包装 `NSImageView`。
   - ImageIO 解码放到 detached worker，方向正确。
-- `KeiBAOS/Features/BA/Components/Media/BaPlatformVideoPlayer.swift`
+- `KeiBA/Features/BA/Components/Media/BaPlatformVideoPlayer.swift`
   - UIKit：`UIViewControllerRepresentable` 包装 `AVPlayerViewController`，支持 PiP、全屏。
   - AppKit：`NSViewRepresentable` 包装 `AVPlayerView`，floating controls。
   - dismantle 时自动暂停并释放 player。
@@ -189,7 +189,7 @@ SwiftUI 压力点：
 | INTEROP-013 | CollectionView 性能证据 | 已完成 | `BaStudentGalleryCards.swift`、`BaTimelineCollectionContainer.swift` | 代码审查 + 优化：添加高度缓存避免冗余 layout pass；确认 `animatingDifferences: false` + snapshot 去重；estimated height + binding 回报模式正确；全平台 189 测试通过 |
 | INTEROP-014 | 可访问性与动态字体验收 | 已完成 | 富文本、菜单、搜索、媒体按钮、collection cell | 修复：图片表面 `accessibilityHidden`、预览按钮 `accessibilityHint`、音频 Slider `accessibilityLabel`、装饰图标 `accessibilityHidden`、loading 状态 label；全平台 189 测试通过 |
 | INTEROP-015 | bridge 生命周期清理 | 已完成 | 所有 `UIViewRepresentable` / `NSViewRepresentable` / coordinator | `make/update/dismantle` 可重复执行；delegate、player、临时文件和下载任务释放路径清晰 |
-| INTEROP-016 | macOS 原生命令与窗口 polish | 已完成 | `KeiBAOSApp.swift`、`AppShell.swift` | Go 菜单已接入 Cmd+1~5 快捷键切换侧边栏标签；`FocusedValueKey` 驱动命令与侧边栏状态同步 |
+| INTEROP-016 | macOS 原生命令与窗口 polish | 已完成 | `KeiBAApp.swift`、`AppShell.swift` | Go 菜单已接入 Cmd+1~5 快捷键切换侧边栏标签；`FocusedValueKey` 驱动命令与侧边栏状态同步 |
 
 ### Phase 6：Bridge 增强与平台深度适配（已完成）
 
@@ -257,7 +257,7 @@ SwiftUI 压力点：
 ## 性能验证清单
 
 - `git diff --check`
-- `xcodebuild test -project KeiBAOS.xcodeproj -scheme KeiBAOS -destination 'platform=iOS Simulator,name=iPhone 17 Pro'`
+- `xcodebuild test -project KeiBA.xcodeproj -scheme KeiBA -destination 'platform=iOS Simulator,name=iPhone 17 Pro'`
 - iPad 11 寸实体机：
   - 侧边栏
   - 顶栏
@@ -291,16 +291,16 @@ SwiftUI 压力点：
 
 本批验证命令：
 
-- `xcodebuild -quiet build -project KeiBAOS.xcodeproj -scheme KeiBAOS -destination 'platform=iOS Simulator,name=iPad mini (A17 Pro)' -derivedDataPath /tmp/KeiBAOSDerivedData-interop010-ipadmini CODE_SIGNING_ALLOWED=NO`
-- `xcodebuild -quiet build -project KeiBAOS.xcodeproj -scheme KeiBAOS -destination 'platform=macOS' -derivedDataPath /tmp/KeiBAOSDerivedData-interop010-macos CODE_SIGNING_ALLOWED=NO`
-- XcodeBuildMCP `build_run_sim`，目标 `iPad Pro 13-inch (M5)`，DerivedData `/tmp/KeiBAOSDerivedData-interop010-ipadpro13`
-- `xcodebuild -quiet build -project KeiBAOS.xcodeproj -scheme KeiBAOS -destination 'platform=macOS' -derivedDataPath /tmp/KeiBAOSDerivedData-interop010-macoswide CODE_SIGNING_ALLOWED=NO`
+- `xcodebuild -quiet build -project KeiBA.xcodeproj -scheme KeiBA -destination 'platform=iOS Simulator,name=iPad mini (A17 Pro)' -derivedDataPath /tmp/KeiBADerivedData-interop010-ipadmini CODE_SIGNING_ALLOWED=NO`
+- `xcodebuild -quiet build -project KeiBA.xcodeproj -scheme KeiBA -destination 'platform=macOS' -derivedDataPath /tmp/KeiBADerivedData-interop010-macos CODE_SIGNING_ALLOWED=NO`
+- XcodeBuildMCP `build_run_sim`，目标 `iPad Pro 13-inch (M5)`，DerivedData `/tmp/KeiBADerivedData-interop010-ipadpro13`
+- `xcodebuild -quiet build -project KeiBA.xcodeproj -scheme KeiBA -destination 'platform=macOS' -derivedDataPath /tmp/KeiBADerivedData-interop010-macoswide CODE_SIGNING_ALLOWED=NO`
 
 2026-05-29 第三批验收：
 
 | 平台 | 覆盖范围 | 证据 | 结果 |
 | --- | --- | --- | --- |
-| iPad Pro 11-inch (M5) simulator | 构建验证 | `xcodebuild -quiet build` 成功，DerivedData `/tmp/KeiBAOSDerivedData-interop010-ipadpro11` | 通过；作为中等 iPad 横屏/侧边栏基线 |
+| iPad Pro 11-inch (M5) simulator | 构建验证 | `xcodebuild -quiet build` 成功，DerivedData `/tmp/KeiBADerivedData-interop010-ipadpro11` | 通过；作为中等 iPad 横屏/侧边栏基线 |
 | macOS（生命周期清理后） | 全量构建验证 | `xcodebuild -quiet build` 成功，bridge dismantle 方法已补齐 | 通过；确认 lifecycle 改动无回归 |
 
 剩余验收：
@@ -336,8 +336,8 @@ SwiftUI 压力点：
 
 验证命令：
 
-- `xcodebuild -quiet build -project KeiBAOS.xcodeproj -scheme KeiBAOS -destination 'platform=macOS' -derivedDataPath /tmp/KeiBAOSDerivedData-interop015-macos CODE_SIGNING_ALLOWED=NO`
-- `xcodebuild -quiet build -project KeiBAOS.xcodeproj -scheme KeiBAOS -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath /tmp/KeiBAOSDerivedData-interop015-ios CODE_SIGNING_ALLOWED=NO`
+- `xcodebuild -quiet build -project KeiBA.xcodeproj -scheme KeiBA -destination 'platform=macOS' -derivedDataPath /tmp/KeiBADerivedData-interop015-macos CODE_SIGNING_ALLOWED=NO`
+- `xcodebuild -quiet build -project KeiBA.xcodeproj -scheme KeiBA -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath /tmp/KeiBADerivedData-interop015-ios CODE_SIGNING_ALLOWED=NO`
 
 ## 追踪表
 
@@ -358,7 +358,7 @@ SwiftUI 压力点：
 | INTEROP-013 | CollectionView 性能证据 | 已完成 | `BaStudentGalleryCards.swift`、`BaTimelineCollectionContainer.swift`、`BaStudentGalleryMediaLayout.swift` | 高度缓存避免冗余 layout pass；`animatingDifferences: false` + snapshot 去重；`CompositionalLayout` + `DiffableDataSource` + `UIHostingConfiguration`；estimated height + binding 回报；URL 正则缓存；全平台 189 测试通过 |
 | INTEROP-014 | 可访问性与动态字体验收 | 已完成 | `BaSelectableRichTextView.swift`、`BaPlatformSearchField.swift`、`BaStudentGalleryCards.swift`、`BaPlatformMediaPreview.swift`、`BaRemoteAnimatedImageSurface.swift` | 图片表面 `accessibilityHidden`；预览按钮 `accessibilityHint`；音频 Slider `accessibilityLabel`；装饰图标 `accessibilityHidden`；loading 状态 label；全平台 189 测试通过 |
 | INTEROP-015 | bridge 生命周期清理 | 已完成 | `BaPlatformMediaPreview.swift`、`BaStudentGalleryCards.swift`、`BaTimelineCollectionContainer.swift` | Quick Look / Zoomable Image / Gallery Collection / Timeline Collection 四类 bridge 均已补齐 `dismantleUIView`/`dismantleNSView`；dataSource、delegate、previewItem、image 等资源在 dismantle 时显式释放 |
-| INTEROP-016 | macOS 原生命令与窗口 polish | 已完成 | `KeiBAOSApp.swift`、`AppShell.swift` | Go 菜单 Cmd+1~5 切换侧边栏标签；`FocusedValueKey` 驱动命令与侧边栏状态同步；Settings 场景独立窗口保留 |
+| INTEROP-016 | macOS 原生命令与窗口 polish | 已完成 | `KeiBAApp.swift`、`AppShell.swift` | Go 菜单 Cmd+1~5 切换侧边栏标签；`FocusedValueKey` 驱动命令与侧边栏状态同步；Settings 场景独立窗口保留 |
 
 ## 风险与约束
 

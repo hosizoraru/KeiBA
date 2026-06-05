@@ -28,8 +28,8 @@ updates.
 
 ## User Data
 
-KeiBAOS stores local gameplay companion settings and cached public guide data.
+KeiBA stores local gameplay companion settings and cached public guide data.
 Future iCloud sync work should keep synced payloads narrow, documented, and
 compatible with user-initiated reset or export flows.
 
-[private-report]: https://github.com/hosizoraru/KeiBAOS/security/advisories/new
+[private-report]: https://github.com/hosizoraru/KeiBA/security/advisories/new

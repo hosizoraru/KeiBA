@@ -1,4 +1,4 @@
-# KeiBAOS 平台功能路线图
+# KeiBA 平台功能路线图
 
 更新日期：2026-05-29
 
@@ -122,7 +122,7 @@
 
 验收标准：
 
-- Shortcuts app 中可发现 KeiBAOS 意图
+- Shortcuts app 中可发现 KeiBA 意图
 - Siri 语音触发正常响应
 - 意图参数支持学生名称搜索
 

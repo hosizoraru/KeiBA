@@ -1,6 +1,6 @@
 # Code of Conduct
 
-KeiBAOS discussions should stay useful, respectful, and focused on improving
+KeiBA discussions should stay useful, respectful, and focused on improving
 the project.
 
 Expected behavior:
