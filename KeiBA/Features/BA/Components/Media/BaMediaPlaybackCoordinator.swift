@@ -1,0 +1,68 @@
+//
+//  BaMediaPlaybackCoordinator.swift
+//  KeiBA
+//
+//  Created by Codex on 2026/05/16.
+//
+
+import AVFoundation
+import Foundation
+import os
+
+enum BaMediaPlaybackCoordinator {
+    static let willStartPlaybackNotification = Notification.Name("BaMediaPlaybackCoordinatorWillStartPlayback")
+    private static let logger = Logger(subsystem: "os.kei.KeiBA", category: "BaMediaPlayback")
+    @MainActor private static var activePlaybackMode: PlaybackMode?
+
+    private enum PlaybackMode {
+        case audio
+        case video
+    }
+
+    @MainActor
+    static func notifyWillStartPlayback(sender: AnyObject) {
+        NotificationCenter.default.post(
+            name: willStartPlaybackNotification,
+            object: sender
+        )
+    }
+
+    @MainActor
+    static func configurePrimaryPlaybackSession() {
+        configureAudioPlaybackSession()
+    }
+
+    @MainActor
+    static func configureAudioPlaybackSession() {
+        configurePlaybackSession(mode: .audio)
+    }
+
+    @MainActor
+    static func configureVideoPlaybackSession() {
+        configurePlaybackSession(mode: .video)
+    }
+
+    @MainActor
+    private static func configurePlaybackSession(mode: PlaybackMode) {
+        #if os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
+            let session = AVAudioSession.sharedInstance()
+            let sessionMode: AVAudioSession.Mode = switch mode {
+            case .audio:
+                .default
+            case .video:
+                .moviePlayback
+            }
+            do {
+                if activePlaybackMode != mode {
+                    try session.setCategory(.playback, mode: sessionMode, options: [])
+                }
+                try session.setActive(true)
+                activePlaybackMode = mode
+            } catch {
+                logger.error("audio session activation failed: \(error.localizedDescription, privacy: .public)")
+            }
+        #else
+            activePlaybackMode = mode
+        #endif
+    }
+}

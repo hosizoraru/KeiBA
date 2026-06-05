@@ -1,0 +1,1307 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 100;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		986D4A042FC93FC7008EFF9E /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 986D4A032FC93FC7008EFF9E /* WidgetKit.framework */; };
+		986D4A062FC93FC7008EFF9E /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 986D4A052FC93FC7008EFF9E /* SwiftUI.framework */; };
+		986D4A152FC93FC9008EFF9E /* KeiBAiOSWidgetsExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 986D4A012FC93FC7008EFF9E /* KeiBAiOSWidgetsExtension.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		98BA01032FB7000000000103 /* AudioStreaming in Frameworks */ = {isa = PBXBuildFile; productRef = 98BA01022FB7000000000102 /* AudioStreaming */; };
+		98BA03012FBA000000000301 /* KeiBALiveActivities.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 98BA03032FBA000000000303 /* KeiBALiveActivities.appex */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		98BA04012FBB000000000401 /* KeiBAWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 98BA04032FBB000000000403 /* KeiBAWatch.app */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		98BA05012FBC000000000501 /* KeiBAWatchWidgets.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 98BA05032FBC000000000503 /* KeiBAWatchWidgets.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		986D4A132FC93FC9008EFF9E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9893E46B2FB52F57001F2D43 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 986D4A002FC93FC7008EFF9E;
+			remoteInfo = KeiBAiOSWidgetsExtension;
+		};
+		98BA00072FB6000000000007 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9893E46B2FB52F57001F2D43 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9893E4722FB52F57001F2D43;
+			remoteInfo = KeiBA;
+		};
+		98BA04102FBB000000000410 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9893E46B2FB52F57001F2D43 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 98BA04092FBB000000000409;
+			remoteInfo = KeiBAWatch;
+		};
+		98BA05102FBC000000000510 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9893E46B2FB52F57001F2D43 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 98BA05092FBC000000000509;
+			remoteInfo = KeiBAWatchWidgets;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		98BA030D2FBA00000000030D /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = PlugIns;
+			files = (
+				986D4A152FC93FC9008EFF9E /* KeiBAiOSWidgetsExtension.appex in Embed App Extensions */,
+				98BA03012FBA000000000301 /* KeiBALiveActivities.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+		};
+		98BA040D2FBB00000000040D /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolder = Product;
+			files = (
+				98BA04012FBB000000000401 /* KeiBAWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+		};
+		98BA050D2FBC00000000050D /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = PlugIns;
+			files = (
+				98BA05012FBC000000000501 /* KeiBAWatchWidgets.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		986D4A012FC93FC7008EFF9E /* KeiBAiOSWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = KeiBAiOSWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		986D4A032FC93FC7008EFF9E /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		986D4A052FC93FC7008EFF9E /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		986D4A222FC941F3008EFF9E /* KeiBAiOSWidgetsExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = KeiBAiOSWidgetsExtension.entitlements; sourceTree = "<group>"; };
+		9893E4732FB52F57001F2D43 /* KeiBA.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KeiBA.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		98BA00012FB6000000000001 /* KeiBATests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KeiBATests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		98BA03032FBA000000000303 /* KeiBALiveActivities.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = KeiBALiveActivities.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		98BA04032FBB000000000403 /* KeiBAWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KeiBAWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		98BA05032FBC000000000503 /* KeiBAWatchWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = KeiBAWatchWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		986D4A192FC93FC9008EFF9E /* Exceptions for "KeiBAiOSWidgets" folder in "KeiBAiOSWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 986D4A002FC93FC7008EFF9E /* KeiBAiOSWidgetsExtension */;
+		};
+		986D4A202FC940F2008EFF9E /* Exceptions for "KeiBAiOSWidgets" folder in "KeiBALiveActivities" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				BaDashboardResourceWidgets.swift,
+				BaDashboardTimelineWidgets.swift,
+				BaDashboardWidgetComponents.swift,
+				BaDashboardWidgetProvider.swift,
+				BaDashboardWidgets.swift,
+			);
+			target = 98BA03092FBA000000000309 /* KeiBALiveActivities */;
+		};
+		986D4A212FC940F2008EFF9E /* Exceptions for "KeiBAiOSWidgets" folder in "KeiBAWatchWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				BaDashboardResourceWidgets.swift,
+				BaDashboardTimelineWidgets.swift,
+				BaDashboardWidgetComponents.swift,
+				BaDashboardWidgetProvider.swift,
+				BaDashboardWidgets.swift,
+			);
+			target = 98BA05092FBC000000000509 /* KeiBAWatchWidgets */;
+		};
+		986D4A2C2FC9436A008EFF9E /* Exceptions for "KeiBAWatchShared" folder in "KeiBAiOSWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				BaDashboardSnapshotSharing.swift,
+				BaMotion.swift,
+				BaTimelineGlanceSnapshot.swift,
+				BaWatchDashboardSnapshot.swift,
+			);
+			target = 986D4A002FC93FC7008EFF9E /* KeiBAiOSWidgetsExtension */;
+		};
+		98BA02012FB9000000000201 /* Exceptions for "KeiBA" folder in "KeiBA" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Support/KeiBA-iOS-Info.plist",
+			);
+			target = 9893E4722FB52F57001F2D43 /* KeiBA */;
+		};
+		98BA03102FBA000000000310 /* Exceptions for "KeiBALiveActivities" folder in "KeiBALiveActivities" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 98BA03092FBA000000000309 /* KeiBALiveActivities */;
+		};
+		98BA05112FBC000000000511 /* Exceptions for "KeiBAWatchWidgets" folder in "KeiBAWatchWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 98BA05092FBC000000000509 /* KeiBAWatchWidgets */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		986D4A072FC93FC7008EFF9E /* KeiBAiOSWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				986D4A202FC940F2008EFF9E /* Exceptions for "KeiBAiOSWidgets" folder in "KeiBALiveActivities" target */,
+				986D4A212FC940F2008EFF9E /* Exceptions for "KeiBAiOSWidgets" folder in "KeiBAWatchWidgets" target */,
+				986D4A192FC93FC9008EFF9E /* Exceptions for "KeiBAiOSWidgets" folder in "KeiBAiOSWidgetsExtension" target */,
+			);
+			path = KeiBAiOSWidgets;
+			sourceTree = "<group>";
+		};
+		9893E4752FB52F57001F2D43 /* KeiBA */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				98BA02012FB9000000000201 /* Exceptions for "KeiBA" folder in "KeiBA" target */,
+			);
+			path = KeiBA;
+			sourceTree = "<group>";
+		};
+		98BA00022FB6000000000002 /* KeiBATests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = KeiBATests;
+			sourceTree = "<group>";
+		};
+		98BA03042FBA000000000304 /* KeiBALiveActivities */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				98BA03102FBA000000000310 /* Exceptions for "KeiBALiveActivities" folder in "KeiBALiveActivities" target */,
+			);
+			path = KeiBALiveActivities;
+			sourceTree = "<group>";
+		};
+		98BA03052FBA000000000305 /* KeiBAShared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = KeiBAShared;
+			sourceTree = "<group>";
+		};
+		98BA04042FBB000000000404 /* KeiBAWatch */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = KeiBAWatch;
+			sourceTree = "<group>";
+		};
+		98BA04052FBB000000000405 /* KeiBAWatchShared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				986D4A2C2FC9436A008EFF9E /* Exceptions for "KeiBAWatchShared" folder in "KeiBAiOSWidgetsExtension" target */,
+			);
+			path = KeiBAWatchShared;
+			sourceTree = "<group>";
+		};
+		98BA05042FBC000000000504 /* KeiBAWatchWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				98BA05112FBC000000000511 /* Exceptions for "KeiBAWatchWidgets" folder in "KeiBAWatchWidgets" target */,
+			);
+			path = KeiBAWatchWidgets;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		986D49FE2FC93FC7008EFF9E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				986D4A062FC93FC7008EFF9E /* SwiftUI.framework in Frameworks */,
+				986D4A042FC93FC7008EFF9E /* WidgetKit.framework in Frameworks */,
+			);
+		};
+		9893E4702FB52F57001F2D43 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				98BA01032FB7000000000103 /* AudioStreaming in Frameworks */,
+			);
+		};
+		98BA00042FB6000000000004 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		98BA03062FBA000000000306 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		98BA04062FBB000000000406 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		98BA05062FBC000000000506 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		986D4A022FC93FC7008EFF9E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				986D4A032FC93FC7008EFF9E /* WidgetKit.framework */,
+				986D4A052FC93FC7008EFF9E /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		9893E46A2FB52F57001F2D43 = {
+			isa = PBXGroup;
+			children = (
+				986D4A222FC941F3008EFF9E /* KeiBAiOSWidgetsExtension.entitlements */,
+				9893E4752FB52F57001F2D43 /* KeiBA */,
+				98BA03052FBA000000000305 /* KeiBAShared */,
+				98BA04052FBB000000000405 /* KeiBAWatchShared */,
+				98BA03042FBA000000000304 /* KeiBALiveActivities */,
+				98BA04042FBB000000000404 /* KeiBAWatch */,
+				98BA05042FBC000000000504 /* KeiBAWatchWidgets */,
+				98BA00022FB6000000000002 /* KeiBATests */,
+				986D4A072FC93FC7008EFF9E /* KeiBAiOSWidgets */,
+				986D4A022FC93FC7008EFF9E /* Frameworks */,
+				9893E4742FB52F57001F2D43 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		9893E4742FB52F57001F2D43 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				9893E4732FB52F57001F2D43 /* KeiBA.app */,
+				98BA03032FBA000000000303 /* KeiBALiveActivities.appex */,
+				98BA04032FBB000000000403 /* KeiBAWatch.app */,
+				98BA05032FBC000000000503 /* KeiBAWatchWidgets.appex */,
+				98BA00012FB6000000000001 /* KeiBATests.xctest */,
+				986D4A012FC93FC7008EFF9E /* KeiBAiOSWidgetsExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		986D4A002FC93FC7008EFF9E /* KeiBAiOSWidgetsExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 986D4A162FC93FC9008EFF9E /* Build configuration list for PBXNativeTarget "KeiBAiOSWidgetsExtension" */;
+			buildPhases = (
+				986D49FD2FC93FC7008EFF9E /* Sources */,
+				986D49FE2FC93FC7008EFF9E /* Frameworks */,
+				986D49FF2FC93FC7008EFF9E /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				986D4A072FC93FC7008EFF9E /* KeiBAiOSWidgets */,
+			);
+			name = KeiBAiOSWidgetsExtension;
+			productName = KeiBAiOSWidgetsExtension;
+			productReference = 986D4A012FC93FC7008EFF9E /* KeiBAiOSWidgetsExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		9893E4722FB52F57001F2D43 /* KeiBA */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9893E4802FB52F59001F2D43 /* Build configuration list for PBXNativeTarget "KeiBA" */;
+			buildPhases = (
+				9893E46F2FB52F57001F2D43 /* Sources */,
+				9893E4702FB52F57001F2D43 /* Frameworks */,
+				9893E4712FB52F57001F2D43 /* Resources */,
+				98BA030D2FBA00000000030D /* Embed App Extensions */,
+				98BA040D2FBB00000000040D /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				98BA04112FBB000000000411 /* PBXTargetDependency */,
+				986D4A142FC93FC9008EFF9E /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				9893E4752FB52F57001F2D43 /* KeiBA */,
+				98BA03052FBA000000000305 /* KeiBAShared */,
+				98BA04052FBB000000000405 /* KeiBAWatchShared */,
+			);
+			name = KeiBA;
+			packageProductDependencies = (
+				98BA01022FB7000000000102 /* AudioStreaming */,
+			);
+			productName = KeiBA;
+			productReference = 9893E4732FB52F57001F2D43 /* KeiBA.app */;
+			productType = "com.apple.product-type.application";
+		};
+		98BA00062FB6000000000006 /* KeiBATests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 98BA000B2FB60000000000B /* Build configuration list for PBXNativeTarget "KeiBATests" */;
+			buildPhases = (
+				98BA00032FB6000000000003 /* Sources */,
+				98BA00042FB6000000000004 /* Frameworks */,
+				98BA00052FB6000000000005 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				98BA00082FB6000000000008 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				98BA00022FB6000000000002 /* KeiBATests */,
+			);
+			name = KeiBATests;
+			productName = KeiBATests;
+			productReference = 98BA00012FB6000000000001 /* KeiBATests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		98BA03092FBA000000000309 /* KeiBALiveActivities */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 98BA030A2FBA00000000030A /* Build configuration list for PBXNativeTarget "KeiBALiveActivities" */;
+			buildPhases = (
+				98BA03082FBA000000000308 /* Sources */,
+				98BA03062FBA000000000306 /* Frameworks */,
+				98BA03072FBA000000000307 /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				98BA03042FBA000000000304 /* KeiBALiveActivities */,
+				98BA03052FBA000000000305 /* KeiBAShared */,
+				98BA04052FBB000000000405 /* KeiBAWatchShared */,
+			);
+			name = KeiBALiveActivities;
+			productName = KeiBALiveActivities;
+			productReference = 98BA03032FBA000000000303 /* KeiBALiveActivities.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		98BA04092FBB000000000409 /* KeiBAWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 98BA040A2FBB00000000040A /* Build configuration list for PBXNativeTarget "KeiBAWatch" */;
+			buildPhases = (
+				98BA04082FBB000000000408 /* Sources */,
+				98BA04062FBB000000000406 /* Frameworks */,
+				98BA04072FBB000000000407 /* Resources */,
+				98BA050D2FBC00000000050D /* Embed App Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				98BA05122FBC000000000512 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				98BA04042FBB000000000404 /* KeiBAWatch */,
+				98BA04052FBB000000000405 /* KeiBAWatchShared */,
+			);
+			name = KeiBAWatch;
+			productName = KeiBAWatch;
+			productReference = 98BA04032FBB000000000403 /* KeiBAWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
+		98BA05092FBC000000000509 /* KeiBAWatchWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 98BA050A2FBC00000000050A /* Build configuration list for PBXNativeTarget "KeiBAWatchWidgets" */;
+			buildPhases = (
+				98BA05082FBC000000000508 /* Sources */,
+				98BA05062FBC000000000506 /* Frameworks */,
+				98BA05072FBC000000000507 /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				98BA04052FBB000000000405 /* KeiBAWatchShared */,
+				98BA05042FBC000000000504 /* KeiBAWatchWidgets */,
+			);
+			name = KeiBAWatchWidgets;
+			productName = KeiBAWatchWidgets;
+			productReference = 98BA05032FBC000000000503 /* KeiBAWatchWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		9893E46B2FB52F57001F2D43 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2650;
+				LastUpgradeCheck = 2650;
+				TargetAttributes = {
+					986D4A002FC93FC7008EFF9E = {
+						CreatedOnToolsVersion = 26.5;
+					};
+					9893E4722FB52F57001F2D43 = {
+						CreatedOnToolsVersion = 26.5;
+						SystemCapabilities = {
+							com.apple.BackgroundModes = {
+								enabled = 1;
+							};
+						};
+					};
+					98BA00062FB6000000000006 = {
+						CreatedOnToolsVersion = 26.5;
+						TestTargetID = 9893E4722FB52F57001F2D43;
+					};
+					98BA03092FBA000000000309 = {
+						CreatedOnToolsVersion = 26.5;
+					};
+					98BA04092FBB000000000409 = {
+						CreatedOnToolsVersion = 26.5;
+					};
+					98BA05092FBC000000000509 = {
+						CreatedOnToolsVersion = 26.5;
+					};
+				};
+			};
+			buildConfigurationList = 9893E46E2FB52F57001F2D43 /* Build configuration list for PBXProject "KeiBA" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				ja,
+				"zh-Hans",
+				Base,
+			);
+			mainGroup = 9893E46A2FB52F57001F2D43;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				98BA01012FB7000000000101 /* XCRemoteSwiftPackageReference "AudioStreaming" */,
+			);
+			preferredProjectObjectVersion = 100;
+			productRefGroup = 9893E4742FB52F57001F2D43 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				9893E4722FB52F57001F2D43 /* KeiBA */,
+				98BA03092FBA000000000309 /* KeiBALiveActivities */,
+				98BA04092FBB000000000409 /* KeiBAWatch */,
+				98BA05092FBC000000000509 /* KeiBAWatchWidgets */,
+				98BA00062FB6000000000006 /* KeiBATests */,
+				986D4A002FC93FC7008EFF9E /* KeiBAiOSWidgetsExtension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		986D49FF2FC93FC7008EFF9E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		9893E4712FB52F57001F2D43 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		98BA00052FB6000000000005 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		98BA03072FBA000000000307 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		98BA04072FBB000000000407 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		98BA05072FBC000000000507 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		986D49FD2FC93FC7008EFF9E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		9893E46F2FB52F57001F2D43 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		98BA00032FB6000000000003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		98BA03082FBA000000000308 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		98BA04082FBB000000000408 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		98BA05082FBC000000000508 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		986D4A142FC93FC9008EFF9E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 986D4A002FC93FC7008EFF9E /* KeiBAiOSWidgetsExtension */;
+			targetProxy = 986D4A132FC93FC9008EFF9E /* PBXContainerItemProxy */;
+		};
+		98BA00082FB6000000000008 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9893E4722FB52F57001F2D43 /* KeiBA */;
+			targetProxy = 98BA00072FB6000000000007 /* PBXContainerItemProxy */;
+		};
+		98BA04112FBB000000000411 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			platformFilter = ios;
+			target = 98BA04092FBB000000000409 /* KeiBAWatch */;
+			targetProxy = 98BA04102FBB000000000410 /* PBXContainerItemProxy */;
+		};
+		98BA05122FBC000000000512 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 98BA05092FBC000000000509 /* KeiBAWatchWidgets */;
+			targetProxy = 98BA05102FBC000000000510 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		986D4A172FC93FC9008EFF9E /* Debug configuration for PBXNativeTarget "KeiBAiOSWidgetsExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = KeiBAiOSWidgetsExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3CKCL389SP;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = KeiBAiOSWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = KeiBAiOSWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = os.kei.KeiBA.KeiBAiOSWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		986D4A182FC93FC9008EFF9E /* Release configuration for PBXNativeTarget "KeiBAiOSWidgetsExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = KeiBAiOSWidgetsExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3CKCL389SP;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = KeiBAiOSWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = KeiBAiOSWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = os.kei.KeiBA.KeiBAiOSWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		9893E47E2FB52F59001F2D43 /* Debug configuration for PBXProject "KeiBA" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 3CKCL389SP;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		9893E47F2FB52F59001F2D43 /* Release configuration for PBXProject "KeiBA" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 3CKCL389SP;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		9893E4812FB52F59001F2D43 /* Debug configuration for PBXNativeTarget "KeiBA" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = keiba;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = "KeiBA/Support/KeiBA-iOS.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = "KeiBA/Support/KeiBA-iOS.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "KeiBA/Support/KeiBA-macOS.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3CKCL389SP;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				"EXCLUDED_ARCHS[sdk=macosx*]" = x86_64;
+				GENERATE_INFOPLIST_FILE = YES;
+				"GENERATE_INFOPLIST_FILE[sdk=iphoneos*]" = NO;
+				"GENERATE_INFOPLIST_FILE[sdk=iphonesimulator*]" = NO;
+				"INFOPLIST_FILE[sdk=iphoneos*]" = "KeiBA/Support/KeiBA-iOS-Info.plist";
+				"INFOPLIST_FILE[sdk=iphonesimulator*]" = "KeiBA/Support/KeiBA-iOS-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = KeiBA;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-framework",
+					AppIntents,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = os.kei.KeiBA;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		9893E4822FB52F59001F2D43 /* Release configuration for PBXNativeTarget "KeiBA" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = keiba;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = "KeiBA/Support/KeiBA-iOS.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = "KeiBA/Support/KeiBA-iOS.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "KeiBA/Support/KeiBA-macOS.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3CKCL389SP;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				"EXCLUDED_ARCHS[sdk=macosx*]" = x86_64;
+				GENERATE_INFOPLIST_FILE = YES;
+				"GENERATE_INFOPLIST_FILE[sdk=iphoneos*]" = NO;
+				"GENERATE_INFOPLIST_FILE[sdk=iphonesimulator*]" = NO;
+				"INFOPLIST_FILE[sdk=iphoneos*]" = "KeiBA/Support/KeiBA-iOS-Info.plist";
+				"INFOPLIST_FILE[sdk=iphonesimulator*]" = "KeiBA/Support/KeiBA-iOS-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = KeiBA;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-framework",
+					AppIntents,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = os.kei.KeiBA;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		98BA00092FB6000000000009 /* Debug configuration for PBXNativeTarget "KeiBATests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3CKCL389SP;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(BUILD_DIR)/../../SourcePackages/checkouts/AudioStreaming/AudioCodecs/include",
+					"$(PROJECT_DIR)/.build/xcode-sourcepackages/checkouts/AudioStreaming/AudioCodecs/include",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=iphoneos*]" = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+					"$(BUILT_PRODUCTS_DIR)/KeiBA.app",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=iphonesimulator*]" = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+					"$(BUILT_PRODUCTS_DIR)/KeiBA.app",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+					"$(BUILT_PRODUCTS_DIR)/KeiBA.app/Contents/MacOS",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-framework",
+					AppIntents,
+				);
+				"OTHER_LDFLAGS[sdk=iphoneos*]" = (
+					"$(inherited)",
+					"$(BUILT_PRODUCTS_DIR)/AudioCodecs.o",
+					"$(BUILT_PRODUCTS_DIR)/KeiBA.app/KeiBA.debug.dylib",
+				);
+				"OTHER_LDFLAGS[sdk=iphonesimulator*]" = (
+					"$(inherited)",
+					"$(BUILT_PRODUCTS_DIR)/AudioCodecs.o",
+					"$(BUILT_PRODUCTS_DIR)/KeiBA.app/KeiBA.debug.dylib",
+				);
+				"OTHER_LDFLAGS[sdk=macosx*]" = (
+					"$(inherited)",
+					"$(BUILT_PRODUCTS_DIR)/KeiBA.app/Contents/MacOS/KeiBA.debug.dylib",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = os.kei.KeiBATests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "";
+			};
+			name = Debug;
+		};
+		98BA000A2FB60000000000A /* Release configuration for PBXNativeTarget "KeiBATests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3CKCL389SP;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(BUILD_DIR)/../../SourcePackages/checkouts/AudioStreaming/AudioCodecs/include",
+					"$(PROJECT_DIR)/.build/xcode-sourcepackages/checkouts/AudioStreaming/AudioCodecs/include",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=iphoneos*]" = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+					"$(BUILT_PRODUCTS_DIR)/KeiBA.app",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=iphonesimulator*]" = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+					"$(BUILT_PRODUCTS_DIR)/KeiBA.app",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+					"$(BUILT_PRODUCTS_DIR)/KeiBA.app/Contents/MacOS",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-framework",
+					AppIntents,
+				);
+				"OTHER_LDFLAGS[sdk=iphoneos*]" = (
+					"$(inherited)",
+					"$(BUILT_PRODUCTS_DIR)/AudioCodecs.o",
+					"$(BUILT_PRODUCTS_DIR)/KeiBA.app/KeiBA.debug.dylib",
+				);
+				"OTHER_LDFLAGS[sdk=iphonesimulator*]" = (
+					"$(inherited)",
+					"$(BUILT_PRODUCTS_DIR)/AudioCodecs.o",
+					"$(BUILT_PRODUCTS_DIR)/KeiBA.app/KeiBA.debug.dylib",
+				);
+				"OTHER_LDFLAGS[sdk=macosx*]" = (
+					"$(inherited)",
+					"$(BUILT_PRODUCTS_DIR)/KeiBA.app/Contents/MacOS/KeiBA.debug.dylib",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = os.kei.KeiBATests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "";
+			};
+			name = Release;
+		};
+		98BA030B2FBA00000000030B /* Debug configuration for PBXNativeTarget "KeiBALiveActivities" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = KeiBALiveActivities/KeiBALiveActivities.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3CKCL389SP;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = KeiBALiveActivities/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = os.kei.KeiBA.LiveActivities;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		98BA030C2FBA00000000030C /* Release configuration for PBXNativeTarget "KeiBALiveActivities" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = KeiBALiveActivities/KeiBALiveActivities.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3CKCL389SP;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = KeiBALiveActivities/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = os.kei.KeiBA.LiveActivities;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		98BA040B2FBB00000000040B /* Debug configuration for PBXNativeTarget "KeiBAWatch" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = keiba;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = KeiBAWatch/KeiBAWatch.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3CKCL389SP;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = KeiBA;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = os.kei.KeiBA;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = os.kei.KeiBA.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Debug;
+		};
+		98BA040C2FBB00000000040C /* Release configuration for PBXNativeTarget "KeiBAWatch" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = keiba;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = KeiBAWatch/KeiBAWatch.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3CKCL389SP;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = KeiBA;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = os.kei.KeiBA;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = os.kei.KeiBA.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
+		98BA050B2FBC00000000050B /* Debug configuration for PBXNativeTarget "KeiBAWatchWidgets" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = KeiBAWatchWidgets/KeiBAWatchWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3CKCL389SP;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = KeiBAWatchWidgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = os.kei.KeiBA.watchkitapp.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Debug;
+		};
+		98BA050C2FBC00000000050C /* Release configuration for PBXNativeTarget "KeiBAWatchWidgets" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = KeiBAWatchWidgets/KeiBAWatchWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3CKCL389SP;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = KeiBAWatchWidgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = os.kei.KeiBA.watchkitapp.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		986D4A162FC93FC9008EFF9E /* Build configuration list for PBXNativeTarget "KeiBAiOSWidgetsExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				986D4A172FC93FC9008EFF9E /* Debug configuration for PBXNativeTarget "KeiBAiOSWidgetsExtension" */,
+				986D4A182FC93FC9008EFF9E /* Release configuration for PBXNativeTarget "KeiBAiOSWidgetsExtension" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		9893E46E2FB52F57001F2D43 /* Build configuration list for PBXProject "KeiBA" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9893E47E2FB52F59001F2D43 /* Debug configuration for PBXProject "KeiBA" */,
+				9893E47F2FB52F59001F2D43 /* Release configuration for PBXProject "KeiBA" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		9893E4802FB52F59001F2D43 /* Build configuration list for PBXNativeTarget "KeiBA" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9893E4812FB52F59001F2D43 /* Debug configuration for PBXNativeTarget "KeiBA" */,
+				9893E4822FB52F59001F2D43 /* Release configuration for PBXNativeTarget "KeiBA" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		98BA000B2FB60000000000B /* Build configuration list for PBXNativeTarget "KeiBATests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				98BA00092FB6000000000009 /* Debug configuration for PBXNativeTarget "KeiBATests" */,
+				98BA000A2FB60000000000A /* Release configuration for PBXNativeTarget "KeiBATests" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		98BA030A2FBA00000000030A /* Build configuration list for PBXNativeTarget "KeiBALiveActivities" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				98BA030B2FBA00000000030B /* Debug configuration for PBXNativeTarget "KeiBALiveActivities" */,
+				98BA030C2FBA00000000030C /* Release configuration for PBXNativeTarget "KeiBALiveActivities" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		98BA040A2FBB00000000040A /* Build configuration list for PBXNativeTarget "KeiBAWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				98BA040B2FBB00000000040B /* Debug configuration for PBXNativeTarget "KeiBAWatch" */,
+				98BA040C2FBB00000000040C /* Release configuration for PBXNativeTarget "KeiBAWatch" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		98BA050A2FBC00000000050A /* Build configuration list for PBXNativeTarget "KeiBAWatchWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				98BA050B2FBC00000000050B /* Debug configuration for PBXNativeTarget "KeiBAWatchWidgets" */,
+				98BA050C2FBC00000000050C /* Release configuration for PBXNativeTarget "KeiBAWatchWidgets" */,
+			);
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		98BA01012FB7000000000101 /* XCRemoteSwiftPackageReference "AudioStreaming" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/dimitris-c/AudioStreaming.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.4.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		98BA01022FB7000000000102 /* AudioStreaming */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 98BA01012FB7000000000101 /* XCRemoteSwiftPackageReference "AudioStreaming" */;
+			productName = AudioStreaming;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 9893E46B2FB52F57001F2D43 /* Project object */;
+}

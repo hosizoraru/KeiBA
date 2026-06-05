@@ -53,7 +53,7 @@ playground.xcworkspace
 *.cer
 
 # Generated baselines (review and commit manually)
-KeiBAOSTests/BA/Snapshot/Baselines/*-actual.png
+KeiBATests/BA/Snapshot/Baselines/*-actual.png
 
 # Temporary files
 *.tmp
