@@ -242,6 +242,23 @@ nonisolated struct BaWatchDashboardSnapshot: Codable, Equatable, Sendable {
         )
     }
 
+    func glanceSummary(at date: Date = Date()) -> BaWatchDashboardGlanceSummary {
+        BaWatchDashboardGlanceSummary(
+            currentAP: currentAP(at: date),
+            apLimit: apLimit,
+            apFullAt: apFullAt(from: date),
+            currentCafeAP: currentCafeAP(at: date),
+            cafeAPCapacity: cafeAPCapacity,
+            cafeAPFullAt: cafeAPFullAt(from: date),
+            activityRunningCount: timeline.activities.runningCount,
+            activityUpcomingCount: timeline.activities.upcomingCount,
+            featuredActivityTitle: timeline.activities.featuredItem?.title,
+            poolRunningCount: timeline.pools.runningCount,
+            poolUpcomingCount: timeline.pools.upcomingCount,
+            featuredPoolTitle: timeline.pools.featuredItem?.title
+        )
+    }
+
     private static func shortOfficeNameFallback(from officeName: String) -> String {
         if officeName.hasPrefix("Schale") {
             return "Schale"
@@ -250,6 +267,53 @@ nonisolated struct BaWatchDashboardSnapshot: Codable, Equatable, Sendable {
             return "シャーレ"
         }
         return String(officeName.prefix(2))
+    }
+}
+
+nonisolated struct BaWatchDashboardGlanceSummary: Equatable, Sendable {
+    var currentAP: Int
+    var apLimit: Int
+    var apFullAt: Date?
+    var currentCafeAP: Int
+    var cafeAPCapacity: Int
+    var cafeAPFullAt: Date?
+    var activityRunningCount: Int
+    var activityUpcomingCount: Int
+    var featuredActivityTitle: String?
+    var poolRunningCount: Int
+    var poolUpcomingCount: Int
+    var featuredPoolTitle: String?
+}
+
+nonisolated enum BaWatchCompactDurationFormatter {
+    static func text(until date: Date?, from now: Date = Date()) -> String? {
+        guard let date else { return nil }
+        return text(remaining: date.timeIntervalSince(now))
+    }
+
+    static func text(remaining interval: TimeInterval) -> String? {
+        guard interval > 0 else { return nil }
+
+        let totalMinutes = max(Int(ceil(interval / 60)), 1)
+        let days = totalMinutes / (24 * 60)
+        let hours = (totalMinutes % (24 * 60)) / 60
+        let minutes = totalMinutes % 60
+
+        if days > 0 {
+            if hours > 0 {
+                return "\(days)d \(hours)h"
+            }
+            return "\(days)d"
+        }
+
+        if hours > 0 {
+            if minutes > 0 {
+                return "\(hours)h \(minutes)m"
+            }
+            return "\(hours)h"
+        }
+
+        return "\(minutes)m"
     }
 }
 

@@ -69,6 +69,7 @@ private struct BaTimelineLargeWidget: View {
 
     var body: some View {
         if let snapshot = entry.snapshot {
+            let summary = snapshot.glanceSummary(at: entry.date)
             VStack(alignment: .leading, spacing: 9) {
                 BaWidgetHeader(snapshot: snapshot)
 
@@ -98,13 +99,13 @@ private struct BaTimelineLargeWidget: View {
                 HStack(spacing: 12) {
                     BaResourceMiniPill(
                         title: Text("ba.widget.ap.title"),
-                        value: "\(snapshot.currentAP(at: entry.date))/\(snapshot.apLimit)",
+                        value: "\(summary.currentAP)/\(summary.apLimit)",
                         systemImage: "bolt.fill",
                         tint: BaWidgetPalette.ap
                     )
                     BaResourceMiniPill(
                         title: Text("ba.widget.cafeAP.title"),
-                        value: "\(snapshot.currentCafeAP(at: entry.date))/\(snapshot.cafeAPCapacity)",
+                        value: "\(summary.currentCafeAP)/\(summary.cafeAPCapacity)",
                         systemImage: "cup.and.saucer.fill",
                         tint: BaWidgetPalette.cafeAP
                     )

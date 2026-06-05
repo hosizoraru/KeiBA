@@ -171,6 +171,93 @@ final class BaWatchDashboardSnapshotTests: XCTestCase {
         XCTAssertLessThan(cafeFullAt ?? .distantFuture, base.addingTimeInterval(24 * 60 * 60))
     }
 
+    func testWatchCompactDurationFormatterKeepsTimeLabelsBrief() {
+        let base = Date(timeIntervalSince1970: 1_800_000_000)
+
+        XCTAssertEqual(
+            BaWatchCompactDurationFormatter.text(until: base.addingTimeInterval(30), from: base),
+            "1m"
+        )
+        XCTAssertEqual(
+            BaWatchCompactDurationFormatter.text(until: base.addingTimeInterval(17 * 60), from: base),
+            "17m"
+        )
+        XCTAssertEqual(
+            BaWatchCompactDurationFormatter.text(until: base.addingTimeInterval(2 * 60 * 60 + 5 * 60), from: base),
+            "2h 5m"
+        )
+        XCTAssertEqual(
+            BaWatchCompactDurationFormatter.text(until: base.addingTimeInterval(2 * 24 * 60 * 60 + 3 * 60 * 60), from: base),
+            "2d 3h"
+        )
+        XCTAssertNil(BaWatchCompactDurationFormatter.text(until: base, from: base))
+        XCTAssertNil(BaWatchCompactDurationFormatter.text(until: nil, from: base))
+    }
+
+    func testDashboardGlanceSummaryKeepsWatchTopLevelContentLiveAndCompact() {
+        let base = Date(timeIntervalSince1970: 1_800_000_000)
+        let now = base.addingTimeInterval(BaWatchTimeMath.apRegenInterval * 2)
+        let snapshot = BaWatchDashboardSnapshot(
+            sourceUpdatedAt: base,
+            generatedAt: base,
+            officeName: "シャーレオフィス",
+            serverName: "JP",
+            teacherName: "Kei",
+            friendCode: "ARISUKEI",
+            apBaseValue: 18,
+            apLimit: 24,
+            apRegenBaseAt: base,
+            apNotificationsEnabled: true,
+            apNotifyThreshold: 20,
+            cafeLevel: 10,
+            cafeAPBaseValue: 100,
+            cafeStorageBaseAt: base,
+            cafeAPNotificationsEnabled: true,
+            cafeAPNotifyThreshold: 600,
+            activityNotificationsEnabled: true,
+            poolNotificationsEnabled: true,
+            favoriteStudentCount: 5,
+            timeline: BaTimelineGlanceSnapshot(
+                generatedAt: base,
+                activities: BaTimelineGlanceSection(
+                    runningCount: 2,
+                    upcomingCount: 1,
+                    featuredItem: BaTimelineGlanceItem(
+                        title: "総決算",
+                        status: .running,
+                        startAt: base.addingTimeInterval(-3_600),
+                        endAt: base.addingTimeInterval(3_600)
+                    )
+                ),
+                pools: BaTimelineGlanceSection(
+                    runningCount: 0,
+                    upcomingCount: 2,
+                    featuredItem: BaTimelineGlanceItem(
+                        title: "ピックアップ募集",
+                        status: .upcoming,
+                        startAt: base.addingTimeInterval(7_200),
+                        endAt: base.addingTimeInterval(86_400)
+                    )
+                )
+            )
+        )
+
+        let summary = snapshot.glanceSummary(at: now)
+
+        XCTAssertEqual(summary.currentAP, 20)
+        XCTAssertEqual(summary.apLimit, 24)
+        XCTAssertEqual(summary.apFullAt, base.addingTimeInterval(BaWatchTimeMath.apRegenInterval * 6))
+        XCTAssertEqual(summary.currentCafeAP, 100)
+        XCTAssertEqual(summary.cafeAPCapacity, BaWatchTimeMath.cafeDailyCapacity(level: 10))
+        XCTAssertEqual(summary.cafeAPFullAt, base.addingTimeInterval(21 * 60 * 60))
+        XCTAssertEqual(summary.activityRunningCount, 2)
+        XCTAssertEqual(summary.activityUpcomingCount, 1)
+        XCTAssertEqual(summary.featuredActivityTitle, "総決算")
+        XCTAssertEqual(summary.poolRunningCount, 0)
+        XCTAssertEqual(summary.poolUpcomingCount, 2)
+        XCTAssertEqual(summary.featuredPoolTitle, "ピックアップ募集")
+    }
+
     private static let onePixelPNGBase64 =
         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR4nGP4DwQACfsD/fteaysAAAAASUVORK5CYII="
 }

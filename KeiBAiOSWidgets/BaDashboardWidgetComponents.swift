@@ -29,6 +29,7 @@ struct BaWidgetHeader: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.82)
+                    .privacySensitive()
             }
 
             Spacer(minLength: 0)
@@ -57,6 +58,7 @@ struct BaWidgetCompactHeader: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.76)
+                    .privacySensitive()
             }
 
             Spacer(minLength: 0)

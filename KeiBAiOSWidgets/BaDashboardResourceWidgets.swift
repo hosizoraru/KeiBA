@@ -100,8 +100,8 @@ private struct BaAPCircularWidget: View {
 
     var body: some View {
         if let snapshot = entry.snapshot {
-            let current = snapshot.currentAP(at: entry.date)
-            Gauge(value: Double(current), in: 0...Double(max(snapshot.apLimit, 1))) {
+            let summary = snapshot.glanceSummary(at: entry.date)
+            Gauge(value: Double(summary.currentAP), in: 0...Double(max(summary.apLimit, 1))) {
                 Image(systemName: "bolt.fill")
                     .foregroundStyle(BaWidgetPalette.ap)
             } currentValueLabel: {
@@ -111,7 +111,7 @@ private struct BaAPCircularWidget: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
 
-                    Text("\(current)")
+                    Text("\(summary.currentAP)")
                         .font(.system(size: 16, weight: .bold, design: .rounded).monospacedDigit())
                         .lineLimit(1)
                         .minimumScaleFactor(0.52)
@@ -122,7 +122,7 @@ private struct BaAPCircularWidget: View {
             .tint(BaWidgetPalette.ap)
             .widgetAccentable()
             .accessibilityLabel(Text("ba.widget.ap.title"))
-            .accessibilityValue(Text("\(current)/\(snapshot.apLimit)"))
+            .accessibilityValue(Text("\(summary.currentAP)/\(summary.apLimit)"))
         } else {
             Image(systemName: "bolt.slash.fill")
         }
@@ -134,7 +134,8 @@ private struct BaAPInlineWidget: View {
 
     var body: some View {
         if let snapshot = entry.snapshot {
-            Text("AP \(snapshot.currentAP(at: entry.date))/\(snapshot.apLimit)")
+            let summary = snapshot.glanceSummary(at: entry.date)
+            Text("AP \(summary.currentAP)/\(summary.apLimit)")
         } else {
             Text("ba.widget.empty.inline")
         }
@@ -146,7 +147,7 @@ private struct BaAPRectangularWidget: View {
 
     var body: some View {
         if let snapshot = entry.snapshot {
-            let current = snapshot.currentAP(at: entry.date)
+            let summary = snapshot.glanceSummary(at: entry.date)
             VStack(alignment: .leading, spacing: 4) {
                 HStack(alignment: .firstTextBaseline, spacing: 5) {
                     Image(systemName: "bolt.fill")
@@ -160,7 +161,7 @@ private struct BaAPRectangularWidget: View {
 
                     Spacer(minLength: 4)
 
-                    Text("\(current)/\(snapshot.apLimit)")
+                    Text("\(summary.currentAP)/\(summary.apLimit)")
                         .font(.callout.monospacedDigit().weight(.bold))
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
@@ -170,13 +171,13 @@ private struct BaAPRectangularWidget: View {
 
                 HStack(alignment: .center, spacing: 7) {
                     BaWidgetCompactMeter(
-                        value: Double(current),
-                        limit: Double(max(snapshot.apLimit, 1)),
+                        value: Double(summary.currentAP),
+                        limit: Double(max(summary.apLimit, 1)),
                         tint: BaWidgetPalette.ap
                     )
                     .frame(width: 42, height: 4)
 
-                    BaWidgetFullTimeText(date: snapshot.apFullAt(from: entry.date), now: entry.date)
+                    BaWidgetFullTimeText(date: summary.apFullAt, now: entry.date)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -187,7 +188,7 @@ private struct BaAPRectangularWidget: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             .widgetAccentable()
             .accessibilityLabel(Text("ba.widget.ap.title"))
-            .accessibilityValue(Text("\(current)/\(snapshot.apLimit)"))
+            .accessibilityValue(Text("\(summary.currentAP)/\(summary.apLimit)"))
         } else {
             BaWidgetNoDataCompactView()
         }
@@ -200,27 +201,29 @@ private struct BaResourceSummaryTable: View {
     let style: BaResourceSummaryTableStyle
 
     var body: some View {
+        let summary = snapshot.glanceSummary(at: date)
+
         VStack(alignment: .leading, spacing: style.itemSpacing) {
             BaResourceSummaryRow(
                 title: Text("ba.widget.ap.title"),
-                value: "\(snapshot.currentAP(at: date))/\(snapshot.apLimit)",
-                footnote: BaWidgetFullTimeText(date: snapshot.apFullAt(from: date), now: date),
+                value: "\(summary.currentAP)/\(summary.apLimit)",
+                footnote: BaWidgetFullTimeText(date: summary.apFullAt, now: date),
                 systemImage: "bolt.fill",
                 tint: BaWidgetPalette.ap,
-                meterValue: Double(snapshot.currentAP(at: date)),
-                meterLimit: Double(max(snapshot.apLimit, 1)),
+                meterValue: Double(summary.currentAP),
+                meterLimit: Double(max(summary.apLimit, 1)),
                 style: style
             )
 
             BaResourceSummaryRow(
                 title: Text("ba.widget.cafeAP.title"),
                 shortTitle: Text("ba.widget.cafeAP.shortTitle"),
-                value: "\(snapshot.currentCafeAP(at: date))/\(snapshot.cafeAPCapacity)",
-                footnote: BaWidgetFullTimeText(date: snapshot.cafeAPFullAt(from: date), now: date),
+                value: "\(summary.currentCafeAP)/\(summary.cafeAPCapacity)",
+                footnote: BaWidgetFullTimeText(date: summary.cafeAPFullAt, now: date),
                 systemImage: "cup.and.saucer.fill",
                 tint: BaWidgetPalette.cafeAP,
-                meterValue: Double(snapshot.currentCafeAP(at: date)),
-                meterLimit: Double(max(snapshot.cafeAPCapacity, 1)),
+                meterValue: Double(summary.currentCafeAP),
+                meterLimit: Double(max(summary.cafeAPCapacity, 1)),
                 style: style,
                 labelDisplayMode: style.cafeLabelDisplayMode
             )
