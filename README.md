@@ -1,8 +1,6 @@
 # KeiBA
 
-[![CI][ci-badge]][ci-workflow]
-![Platforms][platforms-badge]
-![Swift][swift-badge]
+[![CI][ci-badge]][ci-workflow] ![Platforms][platforms-badge] ![Swift][swift-badge]
 
 KeiBA is a native Apple-platform companion app for Blue Archive players. It
 brings daily resource tracking, event timelines, student guide data, music,
