@@ -36,6 +36,13 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "咖啡厅 AP" } }
       }
     },
+    "ba.watch.cafeAP.shortTitle" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cafe" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "カフェ" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "咖啡厅" } }
+      }
+    },
     "ba.watch.connection.background" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Background" } },
@@ -97,6 +104,13 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Friend code: %@" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "フレンドコード：%@" } },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "好友码：%@" } }
+      }
+    },
+    "ba.watch.glance.nowNext" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "now / next" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "開催 / 予定" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "进行 / 即将" } }
       }
     },
     "ba.watch.notifications.ap" : {

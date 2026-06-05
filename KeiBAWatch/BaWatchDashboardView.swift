@@ -39,6 +39,7 @@ private struct BaWatchDashboardContent: View {
         List {
             Section {
                 BaWatchTeacherHeader(snapshot: snapshot)
+                BaWatchGlanceSummaryGrid(snapshot: snapshot)
             }
             .listRowBackground(Color.clear)
 
@@ -147,6 +148,126 @@ private struct BaWatchDashboardContent: View {
 
 }
 
+private struct BaWatchGlanceSummaryGrid: View {
+    let snapshot: BaWatchDashboardSnapshot
+
+    private let columns = [
+        GridItem(.flexible(), spacing: 6),
+        GridItem(.flexible(), spacing: 6),
+    ]
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 60)) { timeline in
+            let summary = snapshot.glanceSummary(at: timeline.date)
+
+            LazyVGrid(columns: columns, spacing: 6) {
+                BaWatchGlanceTile(
+                    title: Text("ba.watch.ap.title"),
+                    value: "\(summary.currentAP)/\(summary.apLimit)",
+                    systemImage: "bolt.fill",
+                    color: .green
+                ) {
+                    BaWatchRelativeStatusText(until: summary.apFullAt, now: timeline.date)
+                }
+
+                BaWatchGlanceTile(
+                    title: Text("ba.watch.cafeAP.title"),
+                    shortTitle: Text("ba.watch.cafeAP.shortTitle"),
+                    value: "\(summary.currentCafeAP)/\(summary.cafeAPCapacity)",
+                    systemImage: "cup.and.saucer.fill",
+                    color: .pink
+                ) {
+                    BaWatchRelativeStatusText(until: summary.cafeAPFullAt, now: timeline.date)
+                }
+
+                BaWatchGlanceTile(
+                    title: Text("ba.watch.timeline.activity"),
+                    value: "\(summary.activityRunningCount)/\(summary.activityUpcomingCount)",
+                    systemImage: "calendar.badge.clock",
+                    color: .blue
+                ) {
+                    Text(summary.featuredActivityTitle ?? String(localized: "ba.watch.glance.nowNext"))
+                }
+
+                BaWatchGlanceTile(
+                    title: Text("ba.watch.timeline.pool"),
+                    value: "\(summary.poolRunningCount)/\(summary.poolUpcomingCount)",
+                    systemImage: "sparkles",
+                    color: .purple
+                ) {
+                    Text(summary.featuredPoolTitle ?? String(localized: "ba.watch.glance.nowNext"))
+                }
+            }
+            .baMotion(BaMotion.numeric, value: summary)
+        }
+        .padding(.top, 2)
+    }
+}
+
+private struct BaWatchGlanceTile<Detail: View>: View {
+    let title: Text
+    let shortTitle: Text?
+    let value: String
+    let systemImage: String
+    let color: Color
+    let detail: Detail
+
+    init(
+        title: Text,
+        shortTitle: Text? = nil,
+        value: String,
+        systemImage: String,
+        color: Color,
+        @ViewBuilder detail: () -> Detail
+    ) {
+        self.title = title
+        self.shortTitle = shortTitle
+        self.value = value
+        self.systemImage = systemImage
+        self.color = color
+        self.detail = detail()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack(spacing: 5) {
+                Image(systemName: systemImage)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(color)
+                    .frame(width: 14)
+
+                ViewThatFits(in: .horizontal) {
+                    title
+                    if let shortTitle {
+                        shortTitle
+                    }
+                }
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+
+            Text(value)
+                .font(.headline.monospacedDigit())
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+                .baNumericTextTransition(value: value)
+
+            detail
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 8)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .accessibilityElement(children: .combine)
+    }
+}
+
 private struct BaWatchTeacherHeader: View {
     let snapshot: BaWatchDashboardSnapshot
 
@@ -154,25 +275,18 @@ private struct BaWatchTeacherHeader: View {
         HStack(spacing: 10) {
             BaWatchDutyAvatar(snapshot: snapshot)
 
-            VStack(alignment: .leading, spacing: 3) {
-                Text(String(format: String(localized: "ba.watch.teacher.format"), snapshot.teacherName))
-                    .font(.headline)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.78)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline, spacing: 5) {
+                    Text(String(format: String(localized: "ba.watch.teacher.format"), snapshot.teacherName))
+                        .font(.callout.weight(.semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.72)
+                        .privacySensitive()
 
-                HStack(spacing: 5) {
-                    BaWatchHeaderChip(title: snapshot.serverName, systemImage: "globe.asia.australia.fill")
-                    BaWatchHeaderChip(
-                        title: "# \(snapshot.friendCode)",
-                        systemImage: "number"
-                    )
-                    .accessibilityLabel(
-                        Text(String(format: String(localized: "ba.watch.friendCode.format"), snapshot.friendCode))
-                    )
+                    BaWatchServerBadge(title: snapshot.serverName)
                 }
-                .font(.caption2.weight(.semibold))
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
+
+                BaWatchFriendCodeLine(friendCode: snapshot.friendCode)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -182,24 +296,42 @@ private struct BaWatchTeacherHeader: View {
     }
 }
 
-private struct BaWatchHeaderChip: View {
+private struct BaWatchServerBadge: View {
     let title: String
-    let systemImage: String
 
     var body: some View {
-        Label {
-            Text(title)
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
-        } icon: {
-            Image(systemName: systemImage)
+        Text(title)
+            .font(.caption2.weight(.medium))
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 2)
+            .background(.thinMaterial, in: Capsule())
+    }
+}
+
+private struct BaWatchFriendCodeLine: View {
+    let friendCode: String
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "number")
                 .font(.caption2.weight(.semibold))
                 .symbolRenderingMode(.hierarchical)
+                .frame(width: 12)
+
+            Text(friendCode)
+                .font(.caption2.monospaced().weight(.semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .foregroundStyle(.secondary)
-        .padding(.horizontal, 7)
-        .padding(.vertical, 4)
-        .background(.thinMaterial, in: Capsule())
+        .privacySensitive()
+        .accessibilityLabel(
+            Text(String(format: String(localized: "ba.watch.friendCode.format"), friendCode))
+        )
     }
 }
 
@@ -261,7 +393,7 @@ private struct BaWatchLiveAPRow: View {
         TimelineView(.periodic(from: .now, by: 60)) { timeline in
             BaWatchGaugeRow(
                 title: Text("ba.watch.ap.title"),
-                value: "\(snapshot.currentAP(at: timeline.date)) / \(snapshot.apLimit)",
+                value: "\(snapshot.currentAP(at: timeline.date))/\(snapshot.apLimit)",
                 status: BaWatchRelativeStatusText(until: snapshot.apFullAt(from: timeline.date), now: timeline.date),
                 systemImage: "bolt.fill",
                 color: .green
@@ -277,7 +409,7 @@ private struct BaWatchLiveCafeAPRow: View {
         TimelineView(.periodic(from: .now, by: 60)) { timeline in
             BaWatchGaugeRow(
                 title: Text("ba.watch.cafeAP.title"),
-                value: "\(snapshot.currentCafeAP(at: timeline.date)) / \(snapshot.cafeAPCapacity)",
+                value: "\(snapshot.currentCafeAP(at: timeline.date))/\(snapshot.cafeAPCapacity)",
                 status: BaWatchRelativeStatusText(until: snapshot.cafeAPFullAt(from: timeline.date), now: timeline.date),
                 systemImage: "cup.and.saucer.fill",
                 color: .pink
@@ -296,8 +428,8 @@ private struct BaWatchRelativeStatusText: View {
     }
 
     var body: some View {
-        if let date, date > now {
-            Text(date, style: .relative)
+        if let text = BaWatchCompactDurationFormatter.text(until: date, from: now) {
+            Text(text)
         } else {
             Text("ba.watch.status.full")
         }
@@ -357,7 +489,7 @@ private struct BaWatchCooldownRow: View {
         guard let date, date > now else {
             return String(localized: "ba.watch.status.ready")
         }
-        return date.formatted(.relative(presentation: .numeric, unitsStyle: .abbreviated))
+        return BaWatchCompactDurationFormatter.text(until: date, from: now) ?? String(localized: "ba.watch.status.ready")
     }
 }
 
@@ -399,7 +531,9 @@ private struct BaWatchTimelineGlanceRow: View {
 
                         HStack(spacing: 4) {
                             Text(item.status.watchTitle)
-                            Text(targetDate(for: item), style: .relative)
+                            if let targetText = BaWatchCompactDurationFormatter.text(until: targetDate(for: item), from: timeline.date) {
+                                Text(targetText)
+                            }
                             if item.relatedItemCount > 0 {
                                 Text(String(format: String(localized: "ba.watch.timeline.more.format"), item.relatedItemCount))
                             }
