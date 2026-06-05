@@ -10,13 +10,17 @@
 
 ## Verification
 
-- [ ] `jq empty KeiBA/Localizable.xcstrings`
 - [ ] `git diff --check`
-- [ ] iOS simulator build
-- [ ] iOS simulator unit tests
-- [ ] macOS build and unit tests
-- [ ] watchOS simulator build
+- [ ] Documentation/community-file render check, if this is docs-only
+- [ ] `jq empty KeiBA/Localizable.xcstrings`, if localized strings changed
+- [ ] iOS simulator build, if app code or assets changed
+- [ ] iOS simulator unit tests, if app behavior changed
+- [ ] macOS build and unit tests, if app behavior changed
+- [ ] watchOS simulator build, if watch targets changed
 - [ ] Manual UI check, if visible UI changed
+
+Docs-only changes may leave app build and test boxes unchecked when no source,
+asset, project, dependency, script, or workflow behavior changed.
 
 ## Screenshots Or Recordings
 

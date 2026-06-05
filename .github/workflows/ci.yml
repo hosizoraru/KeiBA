@@ -4,7 +4,31 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - README.md
+      - CODE_OF_CONDUCT.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - SUPPORT.md
+      - Docs/**
+      - .github/ISSUE_TEMPLATE/**
+      - .github/DISCUSSION_TEMPLATE/**
+      - .github/pull_request_template.md
+      - .github/dependabot.yml
+      - .github/CODEOWNERS
   pull_request:
+    paths-ignore:
+      - README.md
+      - CODE_OF_CONDUCT.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - SUPPORT.md
+      - Docs/**
+      - .github/ISSUE_TEMPLATE/**
+      - .github/DISCUSSION_TEMPLATE/**
+      - .github/pull_request_template.md
+      - .github/dependabot.yml
+      - .github/CODEOWNERS
   workflow_dispatch:
 
 permissions:

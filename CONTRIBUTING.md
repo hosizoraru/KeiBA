@@ -57,6 +57,13 @@ Include:
 - The exact build and test commands you ran.
 - Any remaining risk, manual QA gap, or data-source assumption.
 
+Documentation-only and GitHub community-file changes can use the lighter
+verification path: run `git diff --check`, review the rendered Markdown or form
+configuration, and explain why app builds were not needed. The CI workflow is
+path-filtered for those metadata-only changes, but any source, asset, project,
+dependency, script, or workflow behavior change should still use the relevant
+Xcode checks.
+
 ## Data Source Work
 
 Parser changes should include examples from real GameKee payloads when
