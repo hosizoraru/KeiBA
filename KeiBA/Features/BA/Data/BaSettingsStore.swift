@@ -22,7 +22,7 @@ struct BaSettingsStore {
         {
             return envelope.normalized()
         }
-        return .defaults()
+        return .defaults().normalized()
     }
 
     func load() -> BaAppSettings {

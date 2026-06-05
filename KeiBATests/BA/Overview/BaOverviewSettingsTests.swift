@@ -256,6 +256,51 @@ final class BaOverviewSettingsTests: XCTestCase {
         XCTAssertEqual(normalized.flattenedSettings().nickname, "First")
     }
 
+    func testNormalizedSettingsDefaultsWatchDashboardAccountToSelectedAccount() {
+        let base = Date(timeIntervalSince1970: 1_700_000_000)
+        var cnProfile = BaServerProfile.defaults(now: base)
+        cnProfile.nickname = "CN Main"
+        var jpProfile = BaServerProfile.defaults(now: base)
+        jpProfile.nickname = "JP Main"
+
+        var envelope = BaSettingsEnvelope.defaults(now: base)
+        envelope.accounts = [
+            BaAccountProfile(id: "cn-main", server: .cn, displayName: "CN", profile: cnProfile, sortOrder: 0),
+            BaAccountProfile(id: "jp-main", server: .jp, displayName: "JP", profile: jpProfile, sortOrder: 1),
+        ]
+        envelope.selectedAccountID = "jp-main"
+        envelope.selectedServer = .jp
+        envelope.globalSettings.watchDashboardAccountID = nil
+
+        let normalized = envelope.normalized()
+
+        XCTAssertEqual(normalized.selectedAccountID, "jp-main")
+        XCTAssertEqual(normalized.globalSettings.watchDashboardAccountID, "jp-main")
+        XCTAssertEqual(normalized.watchDashboardAccount.id, "jp-main")
+    }
+
+    func testNormalizedSettingsRepairsUnavailableWatchDashboardAccount() {
+        let base = Date(timeIntervalSince1970: 1_700_000_000)
+        var cnProfile = BaServerProfile.defaults(now: base)
+        cnProfile.nickname = "CN Main"
+        var jpProfile = BaServerProfile.defaults(now: base)
+        jpProfile.nickname = "JP Disabled"
+
+        var envelope = BaSettingsEnvelope.defaults(now: base)
+        envelope.accounts = [
+            BaAccountProfile(id: "cn-main", server: .cn, displayName: "CN", profile: cnProfile, sortOrder: 0),
+            BaAccountProfile(id: "jp-disabled", server: .jp, displayName: "JP", profile: jpProfile, isEnabled: false, sortOrder: 1),
+        ]
+        envelope.selectedAccountID = "cn-main"
+        envelope.selectedServer = .cn
+        envelope.globalSettings.watchDashboardAccountID = "jp-disabled"
+
+        let normalized = envelope.normalized()
+
+        XCTAssertEqual(normalized.globalSettings.watchDashboardAccountID, "cn-main")
+        XCTAssertEqual(normalized.watchDashboardAccount.id, "cn-main")
+    }
+
     func testFriendCodeKeepsEightUppercaseLettersOrDigits() {
         XCTAssertEqual(BaFriendCodeFormat.sanitizedDraft("ab-12 cd34xyz"), "AB12CD34")
         XCTAssertEqual(BaFriendCodeFormat.normalized("ke1os26x"), "KE1OS26X")

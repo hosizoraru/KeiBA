@@ -17,22 +17,26 @@ extension BaWatchDashboardSnapshot {
         timeline: BaTimelineGlanceSnapshot? = nil
     ) {
         let envelope = userData.settingsEnvelope().normalized()
-        let profile = envelope.profile(for: envelope.selectedServer)
+        let account = envelope.watchDashboardAccount
+        let server = account.server
+        let profile = account.profile
         let globalSettings = envelope.globalSettings.normalized()
         let dutyStudent = globalSettings.dutyStudent
 
         self.init(
             sourceUpdatedAt: userData.updatedAt,
             generatedAt: now,
+            accountID: account.id,
+            accountDisplayName: BaAccountDisplayText.title(for: account),
             officeName: BaOfficeTerminology.officeName(
-                for: envelope.selectedServer,
+                for: server,
                 appLanguage: globalSettings.appLanguage
             ),
             officeShortName: BaOfficeTerminology.shortOfficeName(
-                for: envelope.selectedServer,
+                for: server,
                 appLanguage: globalSettings.appLanguage
             ),
-            serverName: envelope.selectedServer.title,
+            serverName: server.title,
             teacherName: profile.nickname,
             friendCode: profile.friendCode,
             dutyStudentName: dutyStudent?.name,
@@ -49,7 +53,7 @@ extension BaWatchDashboardSnapshot {
             cafeAPNotifyThreshold: profile.cafeApNotifyThreshold,
             nextHeadpatAvailableAt: BaTimeMath.nextHeadpatAvailable(
                 lastHeadpatAt: profile.lastHeadpatAt,
-                server: envelope.selectedServer
+                server: server
             ),
             nextInviteTicket1AvailableAt: BaTimeMath.nextInviteAvailable(lastInviteAt: profile.lastInviteTicket1At),
             nextInviteTicket2AvailableAt: BaTimeMath.nextInviteAvailable(lastInviteAt: profile.lastInviteTicket2At),

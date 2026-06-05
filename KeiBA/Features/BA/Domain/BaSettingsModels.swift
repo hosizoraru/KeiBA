@@ -168,6 +168,7 @@ nonisolated struct BaGlobalSettings: Codable, Equatable, Sendable {
     var favoriteContentIDs: Set<Int64>
     var favoriteCatalogEntries: [BaGuideCatalogEntry]
     var dutyStudent: BaDutyStudent?
+    var watchDashboardAccountID: BaAccountID?
 
     static func defaults() -> BaGlobalSettings {
         BaGlobalSettings(
@@ -191,7 +192,8 @@ nonisolated struct BaGlobalSettings: Codable, Equatable, Sendable {
             appIcon: .modern,
             favoriteContentIDs: [],
             favoriteCatalogEntries: [],
-            dutyStudent: nil
+            dutyStudent: nil,
+            watchDashboardAccountID: nil
         )
     }
 }
@@ -219,6 +221,7 @@ nonisolated extension BaGlobalSettings {
         case favoriteContentIDs
         case favoriteCatalogEntries
         case dutyStudent
+        case watchDashboardAccountID
     }
 
     init(from decoder: Decoder) throws {
@@ -245,6 +248,7 @@ nonisolated extension BaGlobalSettings {
         favoriteContentIDs = try container.decodeIfPresent(Set<Int64>.self, forKey: .favoriteContentIDs) ?? defaults.favoriteContentIDs
         favoriteCatalogEntries = try container.decodeIfPresent([BaGuideCatalogEntry].self, forKey: .favoriteCatalogEntries) ?? defaults.favoriteCatalogEntries
         dutyStudent = try container.decodeIfPresent(BaDutyStudent.self, forKey: .dutyStudent)
+        watchDashboardAccountID = try container.decodeIfPresent(BaAccountID.self, forKey: .watchDashboardAccountID)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -270,6 +274,7 @@ nonisolated extension BaGlobalSettings {
         try container.encode(favoriteContentIDs, forKey: .favoriteContentIDs)
         try container.encode(favoriteCatalogEntries, forKey: .favoriteCatalogEntries)
         try container.encodeIfPresent(dutyStudent, forKey: .dutyStudent)
+        try container.encodeIfPresent(watchDashboardAccountID, forKey: .watchDashboardAccountID)
     }
 
     func normalized() -> BaGlobalSettings {
@@ -280,6 +285,11 @@ nonisolated extension BaGlobalSettings {
             return seen.insert(entry.contentId).inserted
         }
         copy.favoriteContentIDs.formUnion(copy.favoriteCatalogEntries.map(\.contentId))
+        copy.watchDashboardAccountID = copy.watchDashboardAccountID?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if copy.watchDashboardAccountID?.isEmpty == true {
+            copy.watchDashboardAccountID = nil
+        }
         return copy
     }
 }
@@ -458,7 +468,7 @@ nonisolated struct BaSettingsEnvelope: Codable, Equatable, Sendable {
     var selectedAccountID: BaAccountID?
     var accounts: [BaAccountProfile]
 
-    static let currentSchemaVersion = 7
+    static let currentSchemaVersion = 8
 
     enum CodingKeys: String, CodingKey {
         case schemaVersion
@@ -546,6 +556,24 @@ nonisolated struct BaSettingsEnvelope: Codable, Equatable, Sendable {
             profile: fallbackProfile,
             sortOrder: 0
         )
+    }
+
+    var watchDashboardAccount: BaAccountProfile {
+        let watchAccount = globalSettings.watchDashboardAccountID.flatMap { id in
+            accounts.first { $0.id == id }
+        }
+        if let watchAccount, watchAccount.isEnabled {
+            return watchAccount
+        }
+
+        let selected = selectedAccount
+        if selected.isEnabled {
+            return selected
+        }
+
+        return accounts.first(where: \.isEnabled) ??
+            watchAccount ??
+            selected
     }
 
     var enabledAccounts: [BaAccountProfile] {

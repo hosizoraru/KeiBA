@@ -128,11 +128,11 @@ nonisolated struct BaWatchUserSnapshot: Codable, Equatable, Sendable {
 
     init(settingsEnvelope: BaSettingsEnvelope, generatedAt: Date = Date()) {
         let normalized = settingsEnvelope.normalized()
-        let currentAccount = normalized.selectedAccount
-        let currentProfile = currentAccount.profile
+        let watchAccount = normalized.watchDashboardAccount
+        let currentProfile = watchAccount.profile
         schemaVersion = Self.currentSchemaVersion
         self.generatedAt = generatedAt
-        selectedServer = currentAccount.server
+        selectedServer = watchAccount.server
         nickname = currentProfile.nickname
         friendCode = currentProfile.friendCode
         dutyStudent = normalized.globalSettings.dutyStudent
@@ -272,6 +272,7 @@ nonisolated extension BaSettingsEnvelope {
 
         copy.selectedAccountID = resolvedAccount.id
         copy.selectedServer = resolvedAccount.server
+        copy.globalSettings.watchDashboardAccountID = copy.watchDashboardAccount.id
         copy.serverProfiles = copy.serverProfilesByAccount(activeAccount: resolvedAccount)
         return copy
     }

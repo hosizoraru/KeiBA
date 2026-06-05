@@ -8,12 +8,14 @@
 import Foundation
 
 nonisolated struct BaWatchDashboardSnapshot: Codable, Equatable, Sendable {
-    static let currentSchemaVersion = 5
+    static let currentSchemaVersion = 6
     static let applicationContextKey = "ba.watch.dashboardSnapshot.v1"
 
     var schemaVersion: Int
     var sourceUpdatedAt: Date
     var generatedAt: Date
+    var accountID: String?
+    var accountDisplayName: String?
     var officeName: String
     var officeShortName: String
     var serverName: String
@@ -44,6 +46,8 @@ nonisolated struct BaWatchDashboardSnapshot: Codable, Equatable, Sendable {
         case schemaVersion
         case sourceUpdatedAt
         case generatedAt
+        case accountID
+        case accountDisplayName
         case officeName
         case officeShortName
         case serverName
@@ -75,6 +79,8 @@ nonisolated struct BaWatchDashboardSnapshot: Codable, Equatable, Sendable {
         schemaVersion: Int = currentSchemaVersion,
         sourceUpdatedAt: Date,
         generatedAt: Date = Date(),
+        accountID: String? = nil,
+        accountDisplayName: String? = nil,
         officeName: String,
         officeShortName: String? = nil,
         serverName: String,
@@ -104,6 +110,8 @@ nonisolated struct BaWatchDashboardSnapshot: Codable, Equatable, Sendable {
         self.schemaVersion = schemaVersion
         self.sourceUpdatedAt = sourceUpdatedAt
         self.generatedAt = generatedAt
+        self.accountID = accountID
+        self.accountDisplayName = accountDisplayName
         self.officeName = officeName
         self.officeShortName = officeShortName ?? Self.shortOfficeNameFallback(from: officeName)
         self.serverName = serverName
@@ -136,6 +144,8 @@ nonisolated struct BaWatchDashboardSnapshot: Codable, Equatable, Sendable {
         schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
         sourceUpdatedAt = try container.decode(Date.self, forKey: .sourceUpdatedAt)
         generatedAt = try container.decode(Date.self, forKey: .generatedAt)
+        accountID = try container.decodeIfPresent(String.self, forKey: .accountID)
+        accountDisplayName = try container.decodeIfPresent(String.self, forKey: .accountDisplayName)
         officeName = try container.decodeIfPresent(String.self, forKey: .officeName) ??
             container.decode(String.self, forKey: .serverName)
         officeShortName = try container.decodeIfPresent(String.self, forKey: .officeShortName) ??
@@ -171,6 +181,8 @@ nonisolated struct BaWatchDashboardSnapshot: Codable, Equatable, Sendable {
         try container.encode(schemaVersion, forKey: .schemaVersion)
         try container.encode(sourceUpdatedAt, forKey: .sourceUpdatedAt)
         try container.encode(generatedAt, forKey: .generatedAt)
+        try container.encodeIfPresent(accountID, forKey: .accountID)
+        try container.encodeIfPresent(accountDisplayName, forKey: .accountDisplayName)
         try container.encode(officeName, forKey: .officeName)
         try container.encode(officeShortName, forKey: .officeShortName)
         try container.encode(serverName, forKey: .serverName)

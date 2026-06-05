@@ -55,6 +55,41 @@ final class BaWatchDashboardSnapshotTests: XCTestCase {
         XCTAssertFalse(json.contains("serverProfiles"))
     }
 
+    func testDashboardSnapshotUsesConfiguredWatchAccountInsteadOfActiveAccount() throws {
+        let base = Date(timeIntervalSince1970: 1_800_000_000)
+        var cnProfile = BaServerProfile.defaults(now: base)
+        cnProfile.nickname = "CN Main"
+        cnProfile.friendCode = "cn000001"
+        cnProfile.apCurrent = 10
+        var jpProfile = BaServerProfile.defaults(now: base)
+        jpProfile.nickname = "JP Main"
+        jpProfile.friendCode = "jp000002"
+        jpProfile.apCurrent = 77
+        jpProfile.cafeLevel = 8
+
+        var envelope = BaSettingsEnvelope.defaults(now: base)
+        envelope.accounts = [
+            BaAccountProfile(id: "cn-main", server: .cn, displayName: "国服主号", profile: cnProfile, sortOrder: 0),
+            BaAccountProfile(id: "jp-main", server: .jp, displayName: "日服主号", profile: jpProfile, sortOrder: 1),
+        ]
+        envelope.selectedAccountID = "cn-main"
+        envelope.selectedServer = .cn
+        envelope.globalSettings.watchDashboardAccountID = "jp-main"
+
+        let snapshot = BaWatchDashboardSnapshot(
+            userData: envelope.userData(updatedAt: base),
+            now: base.addingTimeInterval(60)
+        )
+
+        XCTAssertEqual(snapshot.accountID, "jp-main")
+        XCTAssertEqual(snapshot.accountDisplayName, "日服主号")
+        XCTAssertEqual(snapshot.serverName, BaServer.jp.title)
+        XCTAssertEqual(snapshot.teacherName, "JP Main")
+        XCTAssertEqual(snapshot.friendCode, "JP000002")
+        XCTAssertEqual(snapshot.currentAP(at: base), 77)
+        XCTAssertEqual(snapshot.cafeLevel, 8)
+    }
+
     func testDashboardSnapshotCanCarrySmallDutyAvatarThumbnail() async throws {
         let sourcePNG = try XCTUnwrap(Data(base64Encoded: Self.onePixelPNGBase64))
         let encodedAvatarData = await BaWatchAvatarThumbnailEncoder.encodedThumbnailData(from: sourcePNG)
