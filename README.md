@@ -1,138 +1,89 @@
 # KeiBA
 
 [![CI][ci-badge]][ci-workflow]
+![Platforms][platforms-badge]
+![Swift][swift-badge]
 
-KeiBA is a native SwiftUI companion app for Blue Archive players on
-Apple platforms. It focuses on AP tracking, cafe AP, activity schedules,
-recruitment pools, student guide data, Live Activities, and memory-lobby
-music in an Apple-native interface.
+KeiBA is a native Apple-platform companion app for Blue Archive players. It
+brings daily resource tracking, event timelines, student guide data, music,
+notifications, widgets, Live Activities, and Apple Watch glances into one
+Apple-native app for iPhone, iPad, Mac, and Apple Watch.
 
-## Status
+The project is in active development and is aimed at modern Apple operating
+systems. The main app targets iOS, iPadOS, and macOS 26. The watchOS companion,
+WidgetKit surfaces, and Live Activities are kept in the same repository and are
+part of the normal local and CI verification path.
 
-KeiBA is in active development. The current app target supports iOS,
-iPadOS, and macOS 26. A watchOS 26 companion app and WidgetKit glance
-surfaces are in development and are already part of the local build and CI
-verification path. The data model is being shaped with future iCloud sync and
-lightweight cross-device surfaces in mind.
+## Highlights
 
-## Platform Baseline
+- Track AP, Cafe AP, daily reset timing, cafe visits, headpat and invite
+  cooldowns, Tactical Challenge timing, teacher identity, and per-server office
+  profiles.
+- Browse current and upcoming activities and recruitment pools from public Blue
+  Archive guide data.
+- Search and inspect student, NPC, and satellite guide entries, including
+  profiles, skills, weapon data, gallery media, and voice lines.
+- Play favorite memory-lobby music with local audio caching and system media
+  controls.
+- Schedule local reminders and expose relevant progress through Live Activities
+  and Dynamic Island.
+- Use iOS and watchOS widgets for quick AP, Cafe AP, activity, and recruitment
+  glances.
+- Sync compact dashboard snapshots from iPhone to Apple Watch through
+  WatchConnectivity.
+- Keep English, Japanese, and Simplified Chinese UI/localization surfaces close
+  to Blue Archive terminology.
 
-Deployment targets:
+## Platform Coverage
 
-- iOS 26.0+
-- iPadOS 26.0+
-- macOS 26.0+
-- watchOS 26.0+ companion target
-
-Build baseline for the current project:
-
-- Local Xcode: 26.5 (`17F42`)
-- SDKs: iOS 26.5, iOS Simulator 26.5, macOS 26.5, watchOS 26.5
-- Xcode Project Format: Xcode 26.3
-- Project `objectVersion`: 100
-- SwiftUI, Swift Concurrency, Observation, Swift Package Manager
-
-## Features
-
-- Office overview for AP, cafe AP, daily reset timing, and player identity.
-- Activity and recruitment-pool timelines with local notifications and
-  Live Activities.
-- WidgetKit widgets for office resources, activities, and recruitment pools.
-- Apple Watch companion app in development for office identity, AP, cafe AP,
-  Smart Stack widgets, timeline highlights, notification status, connection
-  state, and synced duty avatar.
-- Student catalog with search, sorting, implemented-student filters, and
-  NPC or satellite filters.
-- Student detail pages with profile, skills, weapon data, gallery media, and
-  voice lines.
-- Music page for favorite students' memory-lobby BGM with cache and system
-  media controls.
-- Local user data prepared for future multi-device sync.
-- English, Japanese, and Simplified Chinese localization surfaces for core UI
-  and BA terms.
+| Surface | Status | Notes |
+| --- | --- | --- |
+| iPhone | Active | Primary daily-use surface for overview, catalog, music, notifications, widgets, and Live Activities. |
+| iPad | Active | Shares the main app target with layouts adapted for larger windows and pointer or keyboard workflows. |
+| Mac | Active | Built from the main app target with macOS toolbar, sidebar, keyboard, pointer, and window behavior in mind. |
+| Apple Watch | In development | Companion dashboard, Smart Stack widgets, notification status, and compact AP/timeline glances. |
+| Widgets | Active | iOS dashboard widgets and watchOS Smart Stack widgets read a shared dashboard snapshot. |
+| Live Activities | Active | Reminder progress appears on the Lock Screen and Dynamic Island where supported. |
 
 ## Repository Layout
 
-```text
-KeiBA/                App source, feature modules, localization, app assets
-KeiBALiveActivities/  Widget extension for widgets, Live Activities,
-                        and Dynamic Island
-KeiBAShared/          Types shared by the app and extension
-KeiBAWatch/           watchOS companion app source and watch assets
-KeiBAWatchShared/     Codable snapshot models shared by iPhone and Watch
-KeiBAWatchWidgets/    watchOS WidgetKit extension for Smart Stack surfaces
-KeiBAiOSWidgets/      iOS WidgetKit extension for Dashboard widgets
-KeiBATests/           Unit tests for parsing, settings, notifications,
-                        media, and layout
-Docs/                   Project notes and feature coverage
-scripts/                Local maintenance scripts
-```
+| Path | Purpose |
+| --- | --- |
+| `KeiBA/` | Main app source, BA feature modules, shared UI, app assets, localization, and support code. |
+| `KeiBAShared/` | Types shared by the app and Live Activities extension. |
+| `KeiBALiveActivities/` | Widget extension for Live Activities, Lock Screen, and Dynamic Island presentation. |
+| `KeiBAiOSWidgets/` | iOS WidgetKit dashboard widgets. |
+| `KeiBAWatch/` | watchOS companion app. |
+| `KeiBAWatchShared/` | Codable dashboard snapshot models shared by iPhone, Watch, and widgets. |
+| `KeiBAWatchWidgets/` | watchOS WidgetKit / Smart Stack extension. |
+| `KeiBATests/` | Parser, settings, notification, media, widget, watch snapshot, and layout unit tests. |
+| `Docs/` | Feature coverage, platform roadmap, interop notes, widget setup, and performance baselines. |
+| `scripts/` | Local and CI maintenance scripts. |
 
-## Apple Watch Companion
+## Requirements
 
-The watchOS app is a lightweight companion surface for quick checks during the
-day. It currently focuses on:
+| Tool or platform | Baseline |
+| --- | --- |
+| Xcode | Xcode 26.5 or newer for local development. |
+| SDKs | iOS 26.5, iOS Simulator 26.5, macOS 26.5, and watchOS 26.5. |
+| Deployment targets | iOS 26.0+, iPadOS 26.0+, macOS 26.0+, watchOS 26.0+. |
+| Project format | Xcode 26.3 project format, `objectVersion` 100. |
+| Language stack | Swift, SwiftUI, Swift Concurrency, Observation, WidgetKit, ActivityKit, App Intents, WatchConnectivity, and Swift Package Manager. |
 
-- Teacher identity, server-aware office naming, friend code, and duty student.
-- AP and cafe AP values with local full-time calculation on the Watch.
-- Activity and recruitment-pool glance summaries synced from the iPhone app.
-- Smart Stack widgets for AP, cafe AP, activity, and recruitment highlights.
-- Notification preference status and iPhone-Watch connection state.
-- Duty-student avatar thumbnail sync through the shared dashboard snapshot.
-
-The iPhone app owns the main settings and sends a compact Watch dashboard
-snapshot through WatchConnectivity. The Watch app keeps the last received
-snapshot locally and shares it with the watchOS widget extension through App
-Groups, so recent AP and timeline data remain readable between syncs.
-
-## Widgets
-
-The WidgetKit extension currently provides:
-
-- Office Resources: AP, cafe AP, full-time hints, and compact Lock Screen or
-  Smart Stack accessory variants.
-- Events & Recruitment: featured activity and recruitment-pool highlights with
-  running/upcoming counts.
-
-The app writes the same lightweight dashboard snapshot to the App Group used
-by the iOS widget extension and the watchOS widget extension. Widget timelines
-refresh around AP regeneration, cafe AP hourly changes, and timeline boundary
-dates, while app-side data changes request targeted WidgetKit reloads.
-
-## Dependencies
-
-Swift Package Manager resolves packages through the Xcode project:
+Swift package dependencies are resolved through the Xcode project and pinned in
+`Package.resolved`:
 
 - [AudioStreaming](https://github.com/dimitris-c/AudioStreaming.git)
 - [ogg-binary-xcframework](https://github.com/sbooth/ogg-binary-xcframework)
 - [vorbis-binary-xcframework][vorbis-binary-xcframework]
 
-`Package.resolved` is committed so local builds and CI use the same dependency
-revisions.
+## Build Locally
 
-## Build
+Open `KeiBA.xcodeproj` in Xcode 26.5 or newer, select the `KeiBA` scheme, and
+run on an iOS 26 simulator, iPadOS 26 simulator, macOS 26, or a signed physical
+iOS/iPadOS device. Select `KeiBAWatch` to build the watchOS companion.
 
-Open `KeiBA.xcodeproj` in Xcode 26.5 or newer, select the `KeiBA` scheme,
-then build for an iOS 26 simulator, iPadOS 26 simulator, macOS 26, or an
-iOS 26 device. Select the `KeiBAWatch` scheme to build the watchOS companion
-for a watchOS 26 simulator.
-
-Release install on a connected iPhone or iPad from Xcode:
-
-1. Select the `KeiBA` scheme and the physical device in the destination menu.
-2. Open `Product > Scheme > Edit Scheme...`.
-3. Select `Run > Info`, set `Build Configuration` to `Release`, then close the sheet.
-4. Confirm `Signing & Capabilities` has the Apple team selected for the app,
-   Widget/Live Activities extension, Watch companion, and Watch widget
-   extension.
-5. Use `Product > Run` to build, sign, install, and launch the Release build on
-   the device.
-
-For a distributable build, select `Any iOS Device (arm64)`, use
-`Product > Archive`, then distribute from the Organizer with the appropriate
-Apple signing method.
-
-Command-line build examples:
+Command-line examples:
 
 ```sh
 xcodebuild build \
@@ -151,10 +102,34 @@ xcodebuild build \
   -destination 'generic/platform=watchOS Simulator'
 ```
 
-## Tests
+Release install on a connected iPhone or iPad from Xcode:
 
-Run the full unit test target from Xcode, or use macOS for a fast parser and
-domain-logic pass:
+1. Select the `KeiBA` scheme and the physical device.
+2. Open `Product > Scheme > Edit Scheme...`.
+3. Select `Run > Info`, set `Build Configuration` to `Release`, then close the
+   sheet.
+4. Confirm `Signing & Capabilities` has the Apple team selected for the app,
+   Widget/Live Activities extension, Watch companion, and Watch widget
+   extension.
+5. Use `Product > Run` to build, sign, install, and launch the Release build.
+
+For a distributable build, select `Any iOS Device (arm64)`, use
+`Product > Archive`, then distribute from Organizer with the appropriate Apple
+signing method.
+
+## Test And Validate
+
+Fast local checks:
+
+```sh
+jq empty KeiBA/Localizable.xcstrings
+jq empty KeiBALiveActivities/Localizable.xcstrings
+jq empty KeiBAWatch/Localizable.xcstrings
+jq empty KeiBAWatchWidgets/Localizable.xcstrings
+git diff --check
+```
+
+Unit test pass:
 
 ```sh
 xcodebuild test \
@@ -173,23 +148,32 @@ xcodebuild test \
   -only-testing:KeiBATests/BaCatalogFilterTests
 ```
 
-## CI
+For visible UI changes, verify on the relevant simulator or device and attach
+screenshots or recordings to the pull request. The local agent workflow for this
+checkout uses the Build iOS Apps simulator browser mirror with:
 
-GitHub Actions runs localization validation, iOS simulator build, watchOS
-simulator build, macOS build, macOS unit tests, focused Watch snapshot tests,
-widget snapshot-sharing tests, and user-data sync tests on `macos-26`.
-See [.github/workflows/ci.yml](.github/workflows/ci.yml).
+- project: `KeiBA.xcodeproj`
+- scheme: `KeiBA`
+- bundle id: `os.kei.KeiBA`
+- simulator: `iPhone 17 Pro`
 
-Pushes to `main` and manual workflow runs also upload side-load test artifacts:
+## Continuous Integration
 
-- `KeiBA-iOS-<version>-unsigned.ipa` is an unsigned iOS device payload with
-  the embedded Watch app content. It needs re-signing with a valid Apple
-  certificate and provisioning profile before installation on a physical device.
-- `KeiBA-macOS-<version>-unsigned.dmg` is an unsigned, unnotarized
-  macOS build for local smoke testing.
+GitHub Actions runs localization validation, iOS simulator build and tests,
+watchOS simulator builds, macOS build and tests, focused Watch/widget snapshot
+tests, user-data sync tests, and unsigned packaging jobs on `macos-26`.
 
-The IPA and DMG are uploaded as separate workflow artifacts so testers can
-download only the platform package they need.
+Pushes to `main` and manual workflow runs upload side-load test artifacts:
+
+- `KeiBA-iOS-<version>-unsigned.ipa`
+- `KeiBA-macOS-<version>-unsigned.dmg`
+
+These artifacts are unsigned and intended for local smoke testing or later
+re-signing. They are not notarized, TestFlight-ready, or App Store-ready
+deliverables.
+
+Documentation-only and GitHub community-file changes are path-filtered so they
+do not spend CI minutes on app builds.
 
 ## Versioning
 
@@ -207,25 +191,42 @@ The CI version resolver reads the latest merged semantic tag (`v1.2.3` or
 next patch version and append the commit distance plus short SHA to the artifact
 name.
 
-## Data And Assets
+## Data And Privacy
 
-KeiBA fetches public Blue Archive guide data from GameKee pages and APIs.
-Blue Archive names, artwork, music, voice lines, and related game assets
-belong to their respective rights holders.
-
-## Privacy
+KeiBA reads public Blue Archive guide data from GameKee pages and APIs. Blue
+Archive names, artwork, music, voice lines, and related game assets belong to
+their respective rights holders.
 
 The app stores user preferences locally today, including office settings,
 favorites, cached media metadata, Watch dashboard snapshots, synced duty-avatar
 thumbnails, widget dashboard snapshots, and notification preferences. Future
-iCloud sync work should keep account-level preferences portable across Apple
-devices.
+iCloud sync work should keep account-level preferences portable, narrow, and
+user-resettable across Apple devices.
+
+See [SECURITY.md](SECURITY.md) for vulnerability reporting and
+[SUPPORT.md](SUPPORT.md) for useful issue-reporting details.
+
+## Contributing
+
+Contributions should stay small, platform-aware, and easy to review. Start with
+[CONTRIBUTING.md](CONTRIBUTING.md), include the exact validation commands you
+ran, and attach simulator or device captures for visible UI changes.
+
+Useful project notes:
+
+- [BA feature coverage](Docs/BAFeatureCoverage.md)
+- [Platform features roadmap](Docs/Platform-Features-Roadmap.md)
+- [SwiftUI / UIKit / AppKit interop plan](Docs/SwiftUI-UIKit-AppKit-Interop-Plan.md)
+- [Widget extension setup](Docs/Widget-Extension-Setup.md)
+- [Performance baselines](Docs/Performance-Baselines.md)
 
 ## License
 
-License selection is pending. Until a license is added, all rights are
-reserved by the repository owner.
+License selection is pending. Until a license is added, all rights are reserved
+by the repository owner.
 
 [ci-badge]: https://github.com/hosizoraru/KeiBA/actions/workflows/ci.yml/badge.svg
 [ci-workflow]: https://github.com/hosizoraru/KeiBA/actions/workflows/ci.yml
+[platforms-badge]: https://img.shields.io/badge/platforms-iOS%20%7C%20iPadOS%20%7C%20macOS%20%7C%20watchOS-0a7ea4
+[swift-badge]: https://img.shields.io/badge/Swift-6-orange
 [vorbis-binary-xcframework]: https://github.com/sbooth/vorbis-binary-xcframework
