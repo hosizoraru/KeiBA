@@ -5,30 +5,36 @@ on:
     branches:
       - main
     paths-ignore:
-      - README.md
+      - README*.md
       - CODE_OF_CONDUCT.md
       - CONTRIBUTING.md
       - SECURITY.md
       - SUPPORT.md
+      - .gitignore
+      - .gitattributes
       - Docs/**
       - .github/ISSUE_TEMPLATE/**
       - .github/DISCUSSION_TEMPLATE/**
       - .github/pull_request_template.md
       - .github/dependabot.yml
       - .github/CODEOWNERS
+      - .xcodebuildmcp/**
   pull_request:
     paths-ignore:
-      - README.md
+      - README*.md
       - CODE_OF_CONDUCT.md
       - CONTRIBUTING.md
       - SECURITY.md
       - SUPPORT.md
+      - .gitignore
+      - .gitattributes
       - Docs/**
       - .github/ISSUE_TEMPLATE/**
       - .github/DISCUSSION_TEMPLATE/**
       - .github/pull_request_template.md
       - .github/dependabot.yml
       - .github/CODEOWNERS
+      - .xcodebuildmcp/**
   workflow_dispatch:
 
 permissions:

@@ -1,4 +1,10 @@
-# Xcode
+# macOS Finder and filesystem metadata
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Xcode user state and local build output
 DerivedData/
 Build/
 build/
@@ -6,57 +12,70 @@ build/
 xcuserdata/
 *.xcscmblueprint
 *.xcresult
-*.playground/playground.xcworkspace
-*.xctoolchain/
+*.xcresult/
+*.xcactivitylog
+*.xccheckout
+*.moved-aside
 
-# Swift Package Manager
+# Archives, debug symbols, and exported app artifacts
+*.xcarchive
+*.dSYM/
+*.dSYM.zip
+*.ipa
+*.pkg
+*.dmg
+
+# Swift Package Manager local caches.
+# Keep Package.resolved tracked when it belongs to the project workspace so a
+# fresh clone resolves the same package revisions as CI.
 .build/
 .swiftpm/
 Packages/
-Package.resolved
 
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-._*
+# Playgrounds and temporary timelines
+timeline.xctimeline
+playground.xcworkspace
+*.playground/playground.xcworkspace/
 
-# App artifacts
-*.ipa
-*.dSYM/
-*.dSYM.zip
-*.xcarchive
-
-# CocoaPods (if used)
+# CocoaPods and Carthage output, if either is used locally.
+# Podfile.lock and Cartfile.resolved should be reviewed intentionally if these
+# dependency managers are introduced later.
 Pods/
-Podfile.lock
-*.xcworkspace
-
-# Carthage (if used)
 Carthage/Build/
 Carthage/Checkouts/
 
-# Fastlane
+# Fastlane generated output
 fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
-fastlane/test_output
+fastlane/test_output/
 
-# Playgrounds
-timeline.xctimeline
-playground.xcworkspace
+# Local editor and agent state
+.claude/
+.codex/
+.cursor/
+.idea/
+.vscode/
+.xcodebuildmcp/
 
-# Secrets / local config
+# Secrets, signing material, and local configuration
+.env
+.env.*
 *.env
 *.p12
-*.mobileprovision
 *.cer
+*.mobileprovision
+*.provisionprofile
+*.xcconfig.local
+*.local.xcconfig
 
-# Generated baselines (review and commit manually)
-KeiBATests/BA/Snapshot/Baselines/*-actual.png
-
-# Temporary files
+# Logs and temporary files
+*.log
 *.tmp
 *.temp
 *.swp
+*.swo
 *~
+
+# Generated snapshot baselines: review and commit intentional baselines only.
+KeiBATests/BA/Snapshot/Baselines/*-actual.png
