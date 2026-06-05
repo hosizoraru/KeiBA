@@ -589,7 +589,8 @@
 				DEVELOPMENT_TEAM = 3CKCL389SP;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = KeiBAiOSWidgets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = KeiBAiOSWidgets;
+				INFOPLIST_KEY_CFBundleName = KeiBA;
+				INFOPLIST_KEY_CFBundleDisplayName = KeiBA;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -622,7 +623,8 @@
 				DEVELOPMENT_TEAM = 3CKCL389SP;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = KeiBAiOSWidgets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = KeiBAiOSWidgets;
+				INFOPLIST_KEY_CFBundleName = KeiBA;
+				INFOPLIST_KEY_CFBundleDisplayName = KeiBA;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1104,6 +1106,7 @@
 				DEVELOPMENT_TEAM = 3CKCL389SP;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleName = KeiBA;
 				INFOPLIST_KEY_CFBundleDisplayName = KeiBA;
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = os.kei.KeiBA;
 				MARKETING_VERSION = 1.0.0;
@@ -1135,6 +1138,7 @@
 				DEVELOPMENT_TEAM = 3CKCL389SP;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleName = KeiBA;
 				INFOPLIST_KEY_CFBundleDisplayName = KeiBA;
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = os.kei.KeiBA;
 				MARKETING_VERSION = 1.0.0;
