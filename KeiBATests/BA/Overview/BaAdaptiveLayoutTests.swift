@@ -24,7 +24,7 @@ final class BaAdaptiveLayoutTests: XCTestCase {
         XCTAssertEqual(regular.widthClass, .regular)
         XCTAssertEqual(regular.timelineColumnCount, 2)
         XCTAssertEqual(regular.timelineCollectionColumnCount, 2)
-        XCTAssertTrue(regular.usesTimelineCollectionLayout)
+        XCTAssertEqual(regular.usesTimelineCollectionLayout, Self.expectsNativeCollectionLayout)
         XCTAssertEqual(regular.overviewColumnCount, 2)
         XCTAssertEqual(regular.overviewInnerGridColumns.count, 2)
         XCTAssertEqual(regular.overviewSummaryGridColumns.count, 2)
@@ -74,15 +74,15 @@ final class BaAdaptiveLayoutTests: XCTestCase {
 
         let stageManagerWidth = BaAdaptiveMetrics(containerWidth: 760)
         XCTAssertEqual(stageManagerWidth.galleryCollectionColumnCount, 2)
-        XCTAssertTrue(stageManagerWidth.usesGalleryCollectionLayout)
+        XCTAssertEqual(stageManagerWidth.usesGalleryCollectionLayout, Self.expectsNativeCollectionLayout)
 
         let fullWidthIPad = BaAdaptiveMetrics(containerWidth: 1_024)
         XCTAssertEqual(fullWidthIPad.galleryCollectionColumnCount, 2)
-        XCTAssertTrue(fullWidthIPad.usesGalleryCollectionLayout)
+        XCTAssertEqual(fullWidthIPad.usesGalleryCollectionLayout, Self.expectsNativeCollectionLayout)
 
         let expandedWindow = BaAdaptiveMetrics(containerWidth: 1_180)
         XCTAssertEqual(expandedWindow.galleryCollectionColumnCount, 3)
-        XCTAssertTrue(expandedWindow.usesGalleryCollectionLayout)
+        XCTAssertEqual(expandedWindow.usesGalleryCollectionLayout, Self.expectsNativeCollectionLayout)
     }
 
     func testOverviewIdentityLayoutKeepsFriendCodeReadableOnNarrowCards() {
@@ -110,5 +110,13 @@ final class BaAdaptiveLayoutTests: XCTestCase {
     func testChunkingKeepsTimelineRowsStableForAdaptiveColumns() {
         XCTAssertEqual([1, 2, 3, 4, 5].baChunked(into: 2), [[1, 2], [3, 4], [5]])
         XCTAssertEqual([1, 2, 3].baChunked(into: 1), [[1], [2], [3]])
+    }
+
+    private static var expectsNativeCollectionLayout: Bool {
+        #if os(iOS)
+            true
+        #else
+            false
+        #endif
     }
 }
